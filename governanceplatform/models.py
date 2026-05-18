@@ -322,10 +322,12 @@ class Observer(TranslatableModel):
 
         for observer_regulation in observer_regulations:
             regulation = observer_regulation.regulation
+            sectors = observer_regulation.sectors.all()
             filter_conditions = observer_regulation.incident_rule
             conditions = filter_conditions.get("conditions", [])
 
             regulation_q = Q(sector_regulation__regulation=regulation)
+            sectors_q = Q(affected_sectors__in=sectors)
 
             if conditions:
                 for condition in conditions:
@@ -337,9 +339,9 @@ class Observer(TranslatableModel):
                     for code in condition.get("exclude", []):
                         condition_q &= ~Q(company__entity_categories__code=code)
 
-                    final_q |= regulation_q & condition_q
+                    final_q |= regulation_q & sectors_q & condition_q
             else:
-                final_q |= regulation_q
+                final_q |= regulation_q & sectors_q
 
         return base_qs.filter(final_q).distinct()
 
@@ -634,6 +636,8 @@ class ObserverRegulation(models.Model):
         on_delete=models.CASCADE,
         verbose_name=_("Legal basis"),
     )
+
+    sectors = models.ManyToManyField(Sector, blank=True, verbose_name=_("Sectors"))
     observer = models.ForeignKey(
         Observer,
         on_delete=models.CASCADE,
