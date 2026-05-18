@@ -1234,9 +1234,17 @@ for name, method in generate_display_methods(["name", "full_name", "description"
 class ObserverRegulationInline(admin.TabularInline):
     model = ObserverRegulation
     verbose_name = _("Observer regulation")
+    filter_horizontal = ("sectors",)
     verbose_name_plural = _("Observer regulations")
     extra = 0
     min_num = 0
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "sectors":
+            # exclude parent with children from the list
+            kwargs["queryset"] = Sector.objects.annotate(child_count=Count("children")).exclude(parent=None, child_count__gt=0)
+
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
 class ObserverUserInline(admin.TabularInline):
