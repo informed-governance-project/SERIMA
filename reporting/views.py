@@ -925,7 +925,7 @@ def import_risk_analysis(request):
     sector_list = get_sectors_grouped(sectors_queryset)
 
     companies_queryset = (
-        Company.objects.filter(companyuser__sectors__in=user.get_sectors().values_list("id", flat=True)).distinct()
+        Company.objects.filter(sectors__in=user.get_sectors().values_list("id", flat=True)).distinct()
         if user_in_group(user, "RegulatorUser")
         else Company.objects.all()
     )
