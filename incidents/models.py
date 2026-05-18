@@ -295,6 +295,10 @@ class SectorRegulation(TranslatableModel):
         # for exemple NIS for energy sector
         name=models.CharField(verbose_name=_("Name"), max_length=255)
     )
+    active = models.BooleanField(
+        verbose_name=_("Active"),
+        default=True,
+    )
     regulation = models.ForeignKey(
         "governanceplatform.Regulation",
         on_delete=models.CASCADE,

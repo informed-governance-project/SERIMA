@@ -261,7 +261,7 @@ class PredefinedAnswerInline(CustomTranslatableTabularInline):
     extra = 0
 
 
-@admin.action(description="Duplicate selected items")
+@admin.action(description=_("Duplicate selected items"))
 def duplicate_objects(modeladmin, request, queryset):
     config_by_model = {
         "Question": {
@@ -799,14 +799,30 @@ class SectorRegulationInline(admin.TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+@admin.action(description=_("Toggle active status of selected items"))
+def toggle_active_status(modeladmin, request, queryset):
+    for obj in queryset:
+        user = request.user
+        if user.regulators.exists() and obj.regulator not in user.regulators.all():
+            messages.warning(
+                request,
+                _("You don't have permission to change the status of %s.") % obj,
+            )
+            continue
+        obj.active = not obj.active
+        obj.save()
+
+
 @admin.register(SectorRegulation, site=admin_site)
 class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
-    list_display = ["name", "regulation", "regulator", "is_detection_date_needed"]
+    list_display = ["active", "name", "regulation", "regulator", "is_detection_date_needed"]
+    list_display_links = ["name"]
     search_fields = [
         "translations__name",
         "regulator__translations__name",
         "regulation__translations__label",
     ]
+    actions = [toggle_active_status]
     inlines = (SectorRegulationInline,)
     save_as = True
     filter_horizontal = ("sectors",)
@@ -816,6 +832,7 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
             {
                 "classes": ["wide", "extrapretty"],
                 "fields": [
+                    "active",
                     "name",
                     "is_detection_date_needed",
                 ],
