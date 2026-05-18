@@ -870,7 +870,11 @@ class SecurityMeasureAdmin(
         if db_field.name == "security_objective":
             # Regulator
             if is_user_regulator(user):
-                kwargs["queryset"] = SecurityObjective.objects.filter(creator__in=user.regulators.all()).order_by("unique_code").distinct()
+                kwargs["queryset"] = (
+                    SecurityObjective.objects.filter(creator__in=user.regulators.all(), standard_link__isnull=False)
+                    .order_by("unique_code")
+                    .distinct()
+                )
 
         if db_field.name == "maturity_level":
             # Regulator filter
