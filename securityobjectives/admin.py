@@ -400,16 +400,24 @@ class SecurityObjectiveResource(TranslationUpdateMixin, resources.ModelResource)
         ).first()
 
     def dehydrate_standard(self, obj):
+        standard = None
         if self._importing:
             cached = self._row_cache.get(id(self._current_import_row), {})
             standard = cached.get("standard")
         elif obj and obj.pk and not self._importing:
             sois = SecurityObjectivesInStandard.objects.filter(security_objective=obj).first()
-            standard = sois.standard
+            if sois:
+                standard = sois.standard
+
         if standard:
             standard.set_current_language(get_language())
             return standard.label
-        return self._current_import_row["standard"]
+        current_row = getattr(self, "_current_import_row", None)
+
+        if current_row:
+            return current_row.get("standard", "")
+
+        return ""
 
     def dehydrate_position(self, obj):
         if obj and obj.pk and not self._importing:
@@ -434,7 +442,13 @@ class SecurityObjectiveResource(TranslationUpdateMixin, resources.ModelResource)
     def dehydrate_domain_position(self, obj):
         if obj.domain and obj.domain.pk:
             return obj.domain.position
-        return self._current_import_row["domain_position"]
+
+        current_row = getattr(self, "_current_import_row", None)
+
+        if current_row:
+            return current_row.get("domain_position", "")
+
+        return ""
 
     def before_import(self, dataset, **kwargs):
         self._importing = True
