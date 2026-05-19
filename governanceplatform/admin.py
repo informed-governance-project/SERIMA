@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Count, Max, Model, Q, Value
+from django.db.models import Count, Exists, Max, Model, OuterRef, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce
 from django.http import Http404
@@ -17,6 +17,7 @@ from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from django_otp import devices_for_user, user_has_device
 from django_otp.decorators import otp_required
+from django_otp.plugins.otp_totp.models import TOTPDevice
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
@@ -924,7 +925,7 @@ class UserAdmin(admin.ModelAdmin):
             extra_context["reset_url_cookies"] = "reset-cookie-acceptation/"
         return super().changelist_view(request, extra_context=extra_context)
 
-    @admin.display(description="2FA", boolean=True)
+    @admin.display(description="2FA", boolean=True, ordering="has_2fa")
     def get_2FA_activation(self, obj):
         return bool(user_has_device(obj))
 
@@ -1052,7 +1053,7 @@ class UserAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         # stock the request
         self._request = request
-        queryset = super().get_queryset(request)
+        queryset = super().get_queryset(request).annotate(has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True)))
         user = request.user
 
         PlatformAdminGroupId = get_group_id(name="PlatformAdmin")
