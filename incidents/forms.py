@@ -98,7 +98,6 @@ class DropdownCheckboxSelectMultiple(ChoiceWidget):
     input_type = "select"
     template_name = "django/forms/widgets/dropdown_checkbox_select.html"
     option_template_name = "django/forms/widgets/dropdown_checkbox_option.html"
-    option_inherits_attrs = False
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -181,6 +180,19 @@ class QuestionForm(forms.Form):
             question_options__question=question,
             incident_workflow=(incident.get_latest_incident_workflow() if incident else incident_workflow),
         ).order_by("-timestamp")
+        previous_answer = None
+        answer_modified = False
+
+        if incident_workflow:
+            previous_answer = (
+                Answer.objects.filter(
+                    question_options__question=question,
+                    incident_workflow__incident=incident_workflow.incident,
+                    incident_workflow__timestamp__lt=incident_workflow.timestamp,
+                )
+                .order_by("-timestamp")
+                .first()
+            )
 
         if question_type in ["MULTI", "MT", "SO", "ST"]:
             if answer_queryset.exists():
@@ -191,6 +203,12 @@ class QuestionForm(forms.Form):
                     last_historic = last_historic_changes.first()
                     if last_historic.timestamp > answer_queryset.first().timestamp and last_historic.question != question_option.question:
                         initial_predefined_answers = []
+
+                answer_modified = (
+                    initial_predefined_answers != list(previous_answer.predefined_answers.all().values_list("id", flat=True))
+                    if previous_answer
+                    else False
+                )
                 initial_data = initial_predefined_answers
 
             choices = [(choice.id, choice) for choice in question.predefinedanswer_set.all().order_by("position")]
@@ -201,6 +219,9 @@ class QuestionForm(forms.Form):
 
             if question_type not in ["MULTI", "MT"]:
                 form_attrs["class"] = "form-check-input"
+
+            if answer_modified:
+                form_attrs["class"] = form_attrs.get("class", "") + " answer-modified"
 
             self.fields[field_name] = forms.MultipleChoiceField(
                 required=question_option.is_mandatory,
@@ -222,6 +243,7 @@ class QuestionForm(forms.Form):
                         last_historic = last_historic_changes.first()
                         if last_historic.timestamp > answer.timestamp and last_historic.question != question_option.question:
                             answer = ""
+                    answer_modified = str(answer) != str(previous_answer) if previous_answer else False
                     value = str(answer) if str(answer) != "" else None
                 self.fields[field_name + self.suffix_freetext] = forms.CharField(
                     required=False,
@@ -230,6 +252,7 @@ class QuestionForm(forms.Form):
                             "rows": 3,
                             "title": question.tooltip,
                             "data-bs-toggle": "tooltip",
+                            "class": "st-mt-answer-modified " if answer_modified else "",
                         }
                     ),
                     initial=str(value or ""),
@@ -242,6 +265,7 @@ class QuestionForm(forms.Form):
                     last_historic = last_historic_changes.first()
                     if last_historic.timestamp > answer.timestamp and last_historic.question != question_option.question:
                         answer = ""
+                answer_modified = str(answer) != str(previous_answer) if previous_answer else False
                 initial_data = datetime.strptime(str(answer), "%Y-%m-%d %H:%M") if str(answer) != "" else None
 
             self.fields[field_name] = forms.DateTimeField(
@@ -266,8 +290,11 @@ class QuestionForm(forms.Form):
                     last_historic = last_historic_changes.first()
                     if last_historic.timestamp > answer.timestamp and last_historic.question != question_option.question:
                         answer = ""
+                answer_modified = str(answer) != str(previous_answer) if previous_answer else False
                 initial_data = str(answer) if str(answer) != "" else None
 
+            classes = "empty_field " if not initial_data else ""
+            classes += "answer-modified " if answer_modified else ""
             self.fields[field_name] = forms.CharField(
                 required=question_option.is_mandatory,
                 widget=forms.Textarea(
@@ -275,7 +302,7 @@ class QuestionForm(forms.Form):
                         "rows": 3,
                         "title": question.tooltip,
                         "data-bs-toggle": "tooltip",
-                        "class": "empty_field" if not initial_data else "",
+                        "class": classes,
                     }
                 ),
                 initial=str(initial_data or ""),
@@ -288,12 +315,13 @@ class QuestionForm(forms.Form):
                     last_historic = last_historic_changes.first()
                     if last_historic.timestamp > answer.timestamp and last_historic.question != question_option.question:
                         answer = ""
+                answer_modified = str(answer) != str(previous_answer) if previous_answer else False
                 initial_data = list(filter(None, str(answer).split(",")))
 
             self.fields[field_name] = forms.MultipleChoiceField(
                 required=question_option.is_mandatory,
                 choices=countries if question_type == "CL" else REGIONAL_AREA,
-                widget=DropdownCheckboxSelectMultiple(),
+                widget=DropdownCheckboxSelectMultiple(attrs={"class": "answer-modified"} if answer_modified else None),
                 label=question.label,
                 initial=initial_data or [],
             )
@@ -828,6 +856,11 @@ class IncidenteDateForm(forms.ModelForm):
         if self.incident:
             i_notification_date = self.incident.incident_notification_date or None
             lastest_report = self.incident.get_latest_incident_workflow()
+            previous_report = (
+                self.incident.incidentworkflow_set.filter(timestamp__lt=lastest_report.timestamp).order_by("-timestamp").first()
+                if lastest_report
+                else None
+            )
             if lastest_report and not self.report_timeline.pk:
                 lastest_report_timeline = lastest_report.report_timeline
                 i_timezone = lastest_report_timeline.report_timeline_timezone
@@ -873,24 +906,9 @@ class IncidenteDateForm(forms.ModelForm):
                 timezone,
             )
 
-            set_initial_datetime(
-                self,
-                "incident_detection_date",
-                i_detection_date,
-                timezone,
-            )
-            set_initial_datetime(
-                self,
-                "incident_starting_date",
-                i_starting_date,
-                timezone,
-            )
-            set_initial_datetime(
-                self,
-                "incident_resolution_date",
-                i_resolution_date,
-                timezone,
-            )
+            set_initial_datetime(self, "incident_detection_date", i_detection_date, timezone, previous_report)
+            set_initial_datetime(self, "incident_starting_date", i_starting_date, timezone, previous_report)
+            set_initial_datetime(self, "incident_resolution_date", i_resolution_date, timezone, previous_report)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -974,11 +992,16 @@ def format_datetime_astimezone(datetime, timezone):
     return datetime.astimezone(timezone).strftime("%Y-%m-%d %H:%M")
 
 
-def set_initial_datetime(form, field_name, datetime_value, timezone):
+def set_initial_datetime(form, field_name, datetime_value, timezone, previous_report=None):
     if datetime_value:
         form.initial[field_name] = format_datetime_astimezone(datetime_value, timezone)
     else:
         form.fields[field_name].widget.attrs["class"] = form.fields[field_name].widget.attrs.get("class", "") + " empty_field"
+
+    if previous_report:
+        previous_value = getattr(previous_report.report_timeline, field_name)
+        if previous_value != datetime_value:
+            form.fields[field_name].widget.attrs["class"] = form.fields[field_name].widget.attrs.get("class", "") + " answer-modified"
 
 
 class QuestionOptionsInlineForm(forms.ModelForm):

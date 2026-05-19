@@ -1409,8 +1409,16 @@ class WorkflowWizardView(SessionWizardView):
                         disabled=True,
                         label=form.fields[field].label,
                         initial=initial,
+                        widget=forms.TextInput(attrs=form.fields[field].widget.attrs),
                     )
                     form.fields[field] = new_field
+
+        else:
+            for field_name in form.fields:
+                field = form.fields[field_name]
+                widget_classes = field.widget.attrs.get("class", "")
+                if "answer-modified" in widget_classes:
+                    field.widget.attrs["class"] = widget_classes.replace("answer-modified", "").strip()
 
         return form
 
