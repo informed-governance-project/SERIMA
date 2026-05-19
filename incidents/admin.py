@@ -811,8 +811,9 @@ def toggle_active_status(modeladmin, request, queryset):
 
 @admin.register(SectorRegulation, site=admin_site)
 class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
-    list_display = ["active", "name", "regulation", "regulator", "is_detection_date_needed"]
-    list_display_links = ["name"]
+    list_display = ["active", "name_display", "regulation", "regulator", "is_detection_date_needed"]
+    list_display_links = ["name_display"]
+    translated_fields = ["name"]
     search_fields = [
         "translations__name",
         "regulator__translations__name",
@@ -829,7 +830,7 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
                 "classes": ["wide", "extrapretty"],
                 "fields": [
                     "active",
-                    "name",
+                    "name_display",
                     "is_detection_date_needed",
                 ],
             },
@@ -915,6 +916,10 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
 
                 messages.warning(request, format_html(message, object_name=object_name))
         return permission
+
+
+for name, method in generate_display_methods(["name"]).items():
+    setattr(SectorRegulationAdmin, name, method)
 
 
 @admin.register(SectorRegulationWorkflowEmail, site=admin_site)
