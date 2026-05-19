@@ -748,7 +748,7 @@ def bulk_update_company_project(request, report_project_id: int):
 
     company_project_filter = CompanyProjectFilter(dashboard_project_filter_params, queryset=company_project_qs, project=project)
 
-    company_project_filter.qs.update(**{field: value})
+    company_project_filter.qs.filter(has_security_objectives=True, has_risk_assessment=True).update(**{field: value})
     reponse = {"project_id": project.id, field: value}
 
     return JsonResponse(reponse)

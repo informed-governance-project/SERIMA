@@ -256,8 +256,10 @@ class CompanyProjectDashboard(forms.ModelForm):
 
         company_project_id = self.instance.pk if self.instance else None
 
-        if self.instance and not self.instance.has_security_objectives and not self.instance.has_risk_assessment:
+        if self.instance and not self.instance.has_security_objectives or not self.instance.has_risk_assessment:
             self.fields["is_selected"].widget.attrs["disabled"] = True
+            self.fields["statistic_selected"].widget.attrs["disabled"] = True
+            self.fields["governance_report_selected"].widget.attrs["disabled"] = True
 
         for field in self.fields.values():
             field.widget.attrs.update(
