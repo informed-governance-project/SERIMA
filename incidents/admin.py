@@ -830,7 +830,7 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
                 "classes": ["wide", "extrapretty"],
                 "fields": [
                     "active",
-                    "name_display",
+                    "name",
                     "is_detection_date_needed",
                 ],
             },
