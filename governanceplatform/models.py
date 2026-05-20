@@ -696,6 +696,7 @@ class UserSession(AbstractBaseSession):
         blank=True,
         on_delete=models.CASCADE,
         related_name="sessions",
+        db_index=True,
     )
 
     @classmethod
