@@ -10,7 +10,7 @@ class Migration(migrations.Migration):
     dependencies = [
         (
             "governanceplatform",
-            "0060_alter_entitycategorytranslation_unique_together_and_more",
+            "0061_observerregulation_sectors",
         ),
     ]
 

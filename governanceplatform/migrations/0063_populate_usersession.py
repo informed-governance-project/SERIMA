@@ -49,7 +49,7 @@ def populate_user_sessions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("governanceplatform", "0061_usersession"),
+        ("governanceplatform", "0062_usersession"),
         # Ensures django_session table exists before we read from it
         ("sessions", "0001_initial"),
     ]

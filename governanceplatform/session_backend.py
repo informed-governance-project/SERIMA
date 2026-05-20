@@ -6,9 +6,9 @@ _SESSION_KEY = "_auth_user_id"
 class SessionStore(DBStore):
     @classmethod
     def get_model_class(cls):
-        from governanceplatform.models import UserSession
+        from django.apps import apps
 
-        return UserSession
+        return apps.get_model("governanceplatform", "UserSession")
 
     def create_model_instance(self, data):
         obj = super().create_model_instance(data)
