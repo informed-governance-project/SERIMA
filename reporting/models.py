@@ -572,7 +572,7 @@ class CompanyProject(models.Model):
 class GeneratedReport(models.Model):
     project = models.ForeignKey(
         Project,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         verbose_name=_("Project"),
         null=True,
         related_name="generated_report",
