@@ -812,6 +812,7 @@ def toggle_active_status(modeladmin, request, queryset):
 @admin.register(SectorRegulation, site=admin_site)
 class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
     list_display = ["active", "name_display", "regulation", "regulator", "is_detection_date_needed"]
+    readonly_fields = ["name_display"]
     list_display_links = ["name_display"]
     translated_fields = ["name"]
     search_fields = [
