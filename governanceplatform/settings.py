@@ -423,10 +423,8 @@ IMPORT_EXPORT_ESCAPE_FORMULAE_ON_EXPORT = True
 PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
 PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
 
-# Custom session backend — stores user FK for O(1) forced-logout
-SESSION_ENGINE = "governanceplatform.session_backend"
-
-# TIMEOUT
+# SESSION
+SESSION_ENGINE = "governanceplatform.sessions"
 SESSION_SAVE_EVERY_REQUEST = True  # the timeout is extended at each action
 SESSION_COOKIE_AGE = config.SESSION_COOKIE_AGE
 try:

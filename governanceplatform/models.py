@@ -690,12 +690,6 @@ class ScriptLogEntry(models.Model):
 
 
 class UserSession(AbstractBaseSession):
-    """Custom session model with an indexed FK to the owning user.
-
-    Enables O(1) forced-logout via ``UserSession.objects.filter(user=user).delete()``
-    instead of scanning and decoding the entire session table.
-    """
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -706,7 +700,7 @@ class UserSession(AbstractBaseSession):
 
     @classmethod
     def get_session_store_class(cls):
-        return importlib.import_module("governanceplatform.session_backend").SessionStore
+        return importlib.import_module("governanceplatform.sessions").SessionStore
 
     class Meta:
         verbose_name = _("User session")

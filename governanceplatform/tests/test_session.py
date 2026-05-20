@@ -1,16 +1,17 @@
+import hashlib
+import secrets
 from datetime import timedelta
 
 import pytest
 from django.utils.timezone import now
 
-from governanceplatform.models import UserSession
+from governanceplatform.models import User, UserSession
+from governanceplatform.sessions import SessionStore
 from governanceplatform.signals import force_logout_user
 
 
 @pytest.fixture
 def simple_user(db):
-    from governanceplatform.models import User
-
     return User.objects.create_user(
         email="sessiontest@example.com",
         password="password",
@@ -19,8 +20,6 @@ def simple_user(db):
 
 @pytest.fixture
 def other_user(db):
-    from governanceplatform.models import User
-
     return User.objects.create_user(
         email="other@example.com",
         password="password",
@@ -28,9 +27,6 @@ def other_user(db):
 
 
 def _make_session(user=None, expired=False):
-    import hashlib
-    import secrets
-
     key = hashlib.sha256(secrets.token_bytes(32)).hexdigest()[:40]
     expire = now() + timedelta(seconds=-1 if expired else 3600)
     return UserSession.objects.create(
@@ -65,8 +61,6 @@ def test_force_logout_noop_when_no_sessions(simple_user):
 
 @pytest.mark.django_db
 def test_session_store_sets_user_id_on_create(simple_user):
-    from governanceplatform.session_backend import SessionStore
-
     store = SessionStore()
     store["_auth_user_id"] = str(simple_user.pk)
     store.save()
@@ -78,8 +72,6 @@ def test_session_store_sets_user_id_on_create(simple_user):
 
 @pytest.mark.django_db
 def test_session_store_leaves_user_id_null_for_anonymous():
-    from governanceplatform.session_backend import SessionStore
-
     store = SessionStore()
     store["foo"] = "bar"
     store.save()

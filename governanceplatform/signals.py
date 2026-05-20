@@ -238,10 +238,5 @@ def delete_user_groups(sender, instance, **kwargs):
 
 
 def force_logout_user(user):
-    # Defer until the triggering transaction commits so a failed role-change
-    # save cannot leave the user logged out without the intended permission change.
-    # Django runs on_commit callbacks immediately when called outside a transaction.
-    from django.db import transaction
-
     user_pk = user.pk
     transaction.on_commit(lambda: UserSession.objects.filter(user_id=user_pk).delete())
