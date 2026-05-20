@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Count, OuterRef, Q, Subquery
+from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -816,6 +817,7 @@ def toggle_active_status(modeladmin, request, queryset):
 @admin.register(SectorRegulation, site=admin_site)
 class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
     list_display = ["active", "name_display", "regulation", "regulator", "is_detection_date_needed"]
+    readonly_fields = ["name_display"]
     list_display_links = ["name_display"]
     translated_fields = ["name"]
     search_fields = [
@@ -834,7 +836,7 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
                 "classes": ["wide", "extrapretty"],
                 "fields": [
                     "active",
-                    "name_display",
+                    "name",
                     "is_detection_date_needed",
                 ],
             },
@@ -867,6 +869,58 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
             },
         ),
     ]
+
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        if request.method == "POST" and "_saveasnew" in request.POST and object_id:
+            obj = self.get_object(request, object_id)
+
+            post = request.POST.copy()
+
+            # simple field
+            initial = model_to_dict(obj, fields=[f.name for f in self.model._meta.fields if f.editable])
+
+            for field, value in initial.items():
+                if field not in post:
+                    post[field] = value
+
+            # simple M2M ex:sectors
+            for m2m in self.model._meta.many_to_many:
+                post.setlist(m2m.name, [str(pk) for pk in getattr(obj, m2m.name).values_list("pk", flat=True)])
+
+            # inline of report
+            workflows = SectorRegulationWorkflow.objects.filter(sector_regulation=obj).prefetch_related("emails").order_by("position")
+
+            prefix = "sectorregulationworkflow_set"
+
+            post[f"{prefix}-TOTAL_FORMS"] = str(workflows.count())
+            post[f"{prefix}-INITIAL_FORMS"] = "0"
+            post[f"{prefix}-MIN_NUM_FORMS"] = "0"
+            post[f"{prefix}-MAX_NUM_FORMS"] = "1000"
+
+            for i, rel in enumerate(workflows):
+                # empty PK -> new object
+                post[f"{prefix}-{i}-id"] = ""
+
+                post[f"{prefix}-{i}-workflow"] = str(rel.workflow_id)
+
+                post[f"{prefix}-{i}-position"] = str(rel.position or 0)
+
+                post[f"{prefix}-{i}-delay_in_hours_before_deadline"] = str(rel.delay_in_hours_before_deadline)
+
+                post[f"{prefix}-{i}-trigger_event_before_deadline"] = rel.trigger_event_before_deadline
+
+                email_ids = rel.emails.values_list("id", flat=True)
+
+                post.setlist(f"{prefix}-{i}-emails", [str(pk) for pk in email_ids])
+
+            request.POST = post
+
+        return super().changeform_view(
+            request,
+            object_id,
+            form_url,
+            extra_context,
+        )
 
     # prevent other regulator to save the current workflow but they can duplicate
     def change_view(self, request, object_id, form_url="", extra_context=None):

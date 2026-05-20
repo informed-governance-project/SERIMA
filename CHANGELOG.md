@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `force_logout_user` O(N) session-table scan replaced by a single indexed query via a custom `UserSession` model with a `user` FK column (#758)
 ### Added
 - `pytest-cov` dev dependency; coverage collection enabled for `governanceplatform` and `incidents` apps
 - CI coverage XML report artifact upload in `pytest.yml`
