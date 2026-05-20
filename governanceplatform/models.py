@@ -707,9 +707,7 @@ class UserSession(AbstractBaseSession):
     def get_session_store_class(cls):
         import importlib
 
-        return importlib.import_module(
-            "governanceplatform.session_backend"
-        ).SessionStore
+        return importlib.import_module("governanceplatform.session_backend").SessionStore
 
     class Meta:
         verbose_name = _("User session")
