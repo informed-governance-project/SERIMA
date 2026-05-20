@@ -40,16 +40,13 @@ def run(logger=logger):
                     and incident.incident_detection_date is not None
                 ):
                     emails = SectorRegulationWorkflowEmail.objects.filter(
-                            sector_regulation_workflow__sector_regulation=incident.sector_regulation,
-                            sector_regulation_workflow__workflow=report,
-                            trigger_event="DETEC_DATE",
-                        )
+                        sector_regulation_workflow__sector_regulation=incident.sector_regulation,
+                        sector_regulation_workflow__workflow=report,
+                        trigger_event="DETEC_DATE",
+                    )
                     for email in emails:
                         dt = actual_time - incident.incident_detection_date
-                        if (
-                            math.floor(dt.total_seconds() / 60 / 60)
-                            == email.delay_in_hours
-                        ):
+                        if math.floor(dt.total_seconds() / 60 / 60) == email.delay_in_hours:
                             send_email(email.email, incident)
             # Workflow with deadline from prev workflow
             for incident_workflow in incident.get_latest_incident_workflows(timestamp_order="timestamp"):
@@ -81,10 +78,7 @@ def run(logger=logger):
                         )
                         for email in emails:
                             dt = actual_time - incident_workflow.timestamp
-                            if (
-                                math.floor(dt.total_seconds() / 60 / 60)
-                                == email.delay_in_hours
-                            ):
+                            if math.floor(dt.total_seconds() / 60 / 60) == email.delay_in_hours:
                                 send_email(email.email, incident)
                 # From notification date
                 sector_regulation_workflow = (
@@ -105,6 +99,4 @@ def run(logger=logger):
                     if math.floor(dt.total_seconds() / 60 / 60) == email.delay_in_hours:
                         send_email(email.email, incident)
         except Exception as e:
-            logger.error(
-                "Error processing incident ID %s: %s", incident.id, e, exc_info=True
-            )
+            logger.error("Error processing incident ID %s: %s", incident.id, e, exc_info=True)

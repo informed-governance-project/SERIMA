@@ -43,4 +43,4 @@ class TranslatedNameWidget(widgets.ForeignKeyWidget):
 
             if instance is not None:
                 return instance.master
-        return
+        return self.model.objects.none()

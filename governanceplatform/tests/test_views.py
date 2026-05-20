@@ -73,13 +73,13 @@ def test_user_access_admin_with_2FA(otp_client, populate_db):
     users = populate_db["users"]
     url = reverse("admin:index")
     authorized_users = [
-        u
-        for u in users
-        if user_in_group(u, "RegulatorAdmin")
-        or user_in_group(u, "RegulatorUser")
-        or user_in_group(u, "OperatorAdmin")
-        or user_in_group(u, "ObserverAdmin")
-        or user_in_group(u, "PlatformAdmin")
+        user
+        for user in users
+        if user_in_group(user, "RegulatorAdmin")
+        or user_in_group(user, "RegulatorUser")
+        or user_in_group(user, "OperatorAdmin")
+        or user_in_group(user, "ObserverAdmin")
+        or user_in_group(user, "PlatformAdmin")
     ]
     test_get_with_otp(otp_client, users, authorized_users, [], url)
 
@@ -97,31 +97,26 @@ def test_roles_addition_rights(otp_client, populate_db):
         "functionality",
         "entitycategory",
     ]
-    for u in list_admin_add_urls("governanceplatform"):
-        url = "/" + u
-        if any(model in u for model in platform_admin_rights):
-            authorized_users = [u for u in users if user_in_group(u, "PlatformAdmin")]
+    for url_path in list_admin_add_urls("governanceplatform"):
+        url = "/" + url_path
+        if any(model in url_path for model in platform_admin_rights):
+            authorized_users = [user for user in users if user_in_group(user, "PlatformAdmin")]
             test_get_with_otp(otp_client, users, authorized_users, [], url)
-        elif u == "sector":
-            authorized_users = [u for u in users if user_in_group(u, "RegulatorAdmin")]
+        elif url_path == "sector":
+            authorized_users = [user for user in users if user_in_group(user, "RegulatorAdmin")]
             test_get_with_otp(otp_client, users, authorized_users, [], url)
-        elif u == "company":
+        elif url_path == "company":
+            authorized_users = [user for user in users if user_in_group(user, "RegulatorUser") or user_in_group(user, "RegulatorAdmin")]
+            test_get_with_otp(otp_client, users, authorized_users, [], url)
+        elif url_path == "user":
             authorized_users = [
-                u
-                for u in users
-                if user_in_group(u, "RegulatorUser")
-                or user_in_group(u, "RegulatorAdmin")
-            ]
-            test_get_with_otp(otp_client, users, authorized_users, [], url)
-        elif u == "user":
-            authorized_users = [
-                u
-                for u in users
-                if user_in_group(u, "ObserverAdmin")
-                or user_in_group(u, "OperatorAdmin")
-                or user_in_group(u, "RegulatorUser")
-                or user_in_group(u, "RegulatorAdmin")
-                or user_in_group(u, "PlatformAdmin")
+                user
+                for user in users
+                if user_in_group(user, "ObserverAdmin")
+                or user_in_group(user, "OperatorAdmin")
+                or user_in_group(user, "RegulatorUser")
+                or user_in_group(user, "RegulatorAdmin")
+                or user_in_group(user, "PlatformAdmin")
             ]
             test_get_with_otp(otp_client, users, authorized_users, [], url)
 
@@ -132,14 +127,14 @@ def test_superuser_restricted_access(otp_client, populate_db):
     Verify that a superuser cannot access the platform
     """
     users = populate_db["users"]
-    for u in users:
-        u.is_superuser = True
-        u.save()
-        client = otp_client(u)
+    for user in users:
+        user.is_superuser = True
+        user.save()
+        client = otp_client(user)
         all_urls = list_urls(get_resolver().url_patterns)
         simple_urls = [url for url in all_urls if "<" not in url and "+" not in url]
         for url in simple_urls:
             response = client.get(url)
             assert response.status_code == 404
-        u.is_superuser = False
-        u.save()
+        user.is_superuser = False
+        user.save()

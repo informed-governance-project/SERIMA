@@ -137,8 +137,7 @@ def add_group_permissions(group_name, group_permissions):
 
 def update_group_permissions(group_name, permissions):
     group_permissions = permission_formatting(permissions)
-    group = add_group_permissions(group_name, group_permissions)
-    return group
+    return add_group_permissions(group_name, group_permissions)
 
 
 def update_all_group_permissions():

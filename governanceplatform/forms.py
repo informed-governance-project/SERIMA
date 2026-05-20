@@ -81,9 +81,7 @@ class CustomUserChangeForm(UserChangeForm):
             new_value = cleaned_data.get(field_name)
 
             if new_value and new_value != old_value:
-                raise forms.ValidationError(
-                    f"{field_name.capitalize()} cannot be modified."
-                )
+                raise forms.ValidationError(f"{field_name.capitalize()} cannot be modified.")
 
     def validate_groups(self, cleaned_data):
         actual_group_names = {group.name for group in self.instance.groups.all()}
@@ -93,9 +91,7 @@ class CustomUserChangeForm(UserChangeForm):
 
 
 class SelectCompany(forms.Form):
-    select_company = forms.ModelChoiceField(
-        queryset=None, required=True, label="Company"
-    )
+    select_company = forms.ModelChoiceField(queryset=None, required=True, label="Company")
 
     def __init__(self, *args, **kwargs):
         companies = kwargs.pop("companies")
@@ -150,21 +146,11 @@ class RegistrationForm(forms.ModelForm):
     captcha = CaptchaField()
     accept_terms = forms.BooleanField(
         label=_("I acknowledge and agree to the"),
-        error_messages={
-            "required": _("Accepting the Terms of Use is required for registration.")
-        },
+        error_messages={"required": _("Accepting the Terms of Use is required for registration.")},
     )
     email = forms.CharField(widget=forms.TextInput(attrs={"autocomplete": "email"}))
-    first_name = forms.CharField(
-        widget=forms.TextInput(
-            attrs={"autocomplete": "given-name", "title": _("First name")}
-        )
-    )
-    last_name = forms.CharField(
-        widget=forms.TextInput(
-            attrs={"autocomplete": "family-name", "title": _("Last name")}
-        )
-    )
+    first_name = forms.CharField(widget=forms.TextInput(attrs={"autocomplete": "given-name", "title": _("First name")}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={"autocomplete": "family-name", "title": _("Last name")}))
     field_order = (
         "email",
         "last_name",
@@ -252,15 +238,10 @@ class CustomTranslatableAdminForm(TranslatableModelForm):
     def add_default_translation_error(self):
         language_info = get_language_info(self.FALLBACK_LANGUAGE)
         fallback_language_name = language_info["name_translated"]
-        error_message = _(
-            "Default language translation (%(fallback_language_name)s) is missing. "
-            "Please add it before saving."
-        )
+        error_message = _("Default language translation (%(fallback_language_name)s) is missing. Please add it before saving.")
         self.add_error(
             None,
-            ValidationError(
-                error_message, params={"fallback_language_name": fallback_language_name}
-            ),
+            ValidationError(error_message, params={"fallback_language_name": fallback_language_name}),
         )
 
     def check_translation_duplication_entry(self):
@@ -270,14 +251,10 @@ class CustomTranslatableAdminForm(TranslatableModelForm):
 
         model = self._meta.model._parler_meta.root_model
         current_language = self.instance.get_current_language()
-        duplicate_translations = model.objects.filter(
-            **self.cleaned_data, language_code=current_language
-        )
+        duplicate_translations = model.objects.filter(**self.cleaned_data, language_code=current_language)
 
         if duplicate_translations.exists():
-            error_message = _("This %(model)s already exists.") % {
-                "model": self.instance._meta.verbose_name.lower()
-            }
+            error_message = _("This %(model)s already exists.") % {"model": self.instance._meta.verbose_name.lower()}
             self.add_error(
                 None,
                 ValidationError(error_message),
@@ -295,9 +272,7 @@ class ContactForm(forms.Form):
     email = forms.EmailField(max_length=254, required=True, disabled=True)
     message = forms.CharField(widget=forms.Textarea, required=True)
     terms_accepted = forms.BooleanField(
-        label=_(
-            "I agree that my personal data may be used for communication purposes."
-        ),
+        label=_("I agree that my personal data may be used for communication purposes."),
         required=True,
         error_messages={"required": "You must accept the use of your personal data."},
     )
@@ -318,13 +293,10 @@ class CustomObserverAdminForm(CustomTranslatableAdminForm):
         super().__init__(*args, **kwargs)
         instance = kwargs.get("instance")
         if instance and instance.rt_token:
-            self.fields["rt_token"].widget = forms.TextInput(
-                attrs={"type": "password", "class": "vTextField"}
-            )
+            self.fields["rt_token"].widget = forms.TextInput(attrs={"type": "password", "class": "vTextField"})
 
             self.fields["rt_token"].help_text = _(
-                "A token is already set. To remove it, clear the field and save. "
-                "To update it, enter a new token."
+                "A token is already set. To remove it, clear the field and save. To update it, enter a new token."
             )
 
             try:

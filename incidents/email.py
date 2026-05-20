@@ -35,23 +35,15 @@ def replace_email_variables(content, incident):
     for _i, (variable, key) in enumerate(INCIDENT_EMAIL_VARIABLES):
         if variable == "#INCIDENT_FINAL_NOTIFICATION_URL#":
             incident_id = getattr(incident, key)
-            final_notification_url = settings.PUBLIC_URL + reverse(
-                "final-notification", args=[incident_id]
-            )
+            final_notification_url = settings.PUBLIC_URL + reverse("final-notification", args=[incident_id])
             var_txt = f'<a href="{final_notification_url}">{final_notification_url}</a>'
         elif variable == "#INCIDENT_DETECTION_DATE#":
             last_report = incident.get_latest_incident_workflow()
             if not last_report:
-                var_txt = (
-                    incident.incident_detection_date.strftime("%Y-%m-%d")
-                    if incident.incident_detection_date is not None
-                    else ""
-                )
+                var_txt = incident.incident_detection_date.strftime("%Y-%m-%d") if incident.incident_detection_date is not None else ""
             else:
                 var_txt = (
-                    last_report.report_timeline.incident_detection_date.strftime(
-                        "%Y-%m-%d"
-                    )
+                    last_report.report_timeline.incident_detection_date.strftime("%Y-%m-%d")
                     if last_report.report_timeline.incident_detection_date is not None
                     else ""
                 )
@@ -61,9 +53,7 @@ def replace_email_variables(content, incident):
                 var_txt = ""
             else:
                 var_txt = (
-                    last_report.report_timeline.incident_starting_date.strftime(
-                        "%Y-%m-%d"
-                    )
+                    last_report.report_timeline.incident_starting_date.strftime("%Y-%m-%d")
                     if last_report.report_timeline.incident_starting_date is not None
                     else ""
                 )
@@ -75,9 +65,7 @@ def replace_email_variables(content, incident):
                 deadline = timezone.localtime(deadline)
                 var_txt = deadline.strftime("%Y-%m-%d %H:%M %Z")
         else:
-            var_txt = (
-                getattr(incident, key) if getattr(incident, key) is not None else ""
-            )
+            var_txt = getattr(incident, key) if getattr(incident, key) is not None else ""
             if isinstance(var_txt, date):
                 var_txt = getattr(incident, key).strftime("%Y-%m-%d")
         modify_content = modify_content.replace(variable, var_txt)
@@ -145,9 +133,7 @@ def get_recipient_list(incident):
         # Company's email
         recipient_list.append(company.email)
 
-        company_admins_qs = company.companyuser_set.filter(
-            is_company_administrator=True
-        ).select_related("user")
+        company_admins_qs = company.companyuser_set.filter(is_company_administrator=True).select_related("user")
     else:
         company_admins_qs = []
 
@@ -158,9 +144,7 @@ def get_recipient_list(incident):
     recipient_list.append(regulator.email_for_notification)
 
     # Regulator administrators' emails
-    regulator_admins_qs = regulator.regulatoruser_set.filter(
-        is_regulator_administrator=True
-    ).select_related("user")
+    regulator_admins_qs = regulator.regulatoruser_set.filter(is_regulator_administrator=True).select_related("user")
     recipient_list.extend(get_emails_from_qs(regulator_admins_qs))
 
     # Sector managers' emails
@@ -203,16 +187,12 @@ def send_email(email, incident, send_to_observers=False):
         for observer in observers:
             if observer.can_access_incident(incident):
                 if check_rt_config(observer):
-                    create_or_update_rt_ticket(
-                        observer, subject, html_content, incident
-                    )
+                    create_or_update_rt_ticket(observer, subject, html_content, incident)
                 else:
                     # Observer's mail
                     observer_emails.append(observer.email_for_notification)
                     # Observer users' email
-                    observer_user_qs = observer.observeruser_set.all().select_related(
-                        "user"
-                    )
+                    observer_user_qs = observer.observeruser_set.all().select_related("user")
                     observer_emails.extend(get_emails_from_qs(observer_user_qs))
 
         recipient_list.extend(observer_emails)
@@ -229,7 +209,7 @@ def create_or_update_rt_ticket(recipient, subject, content, incident):
         validate_rt_url(base_url)
     except ValidationError:
         logger.error("Blocked unsafe RT URL: %s", base_url)
-        return None
+        return
 
     headers = {
         "Content-Type": "application/json",
@@ -286,14 +266,12 @@ def check_rt_config(observer):
         response = requests.get(url, headers=headers, timeout=5)
         if response.status_code == 200:
             return True
-        elif response.status_code == 401:
+        if response.status_code == 401:
             logger.warning("RT token unauthorized (401) for %s", str(observer))
         elif response.status_code == 404:
             logger.warning("RT queue '%s' not found at %s", observer.rt_queue, url)
         else:
-            logger.warning(
-                "Unexpected RT response (%s): %s", response.status_code, response.text
-            )
+            logger.warning("Unexpected RT response (%s): %s", response.status_code, response.text)
         return False
     except requests.RequestException as e:
         logger.error("Error connecting to RT API: %s", e)

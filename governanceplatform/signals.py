@@ -28,24 +28,17 @@ _thread_locals.deleting_users = set()
 
 @receiver(pre_save, sender=User)
 def save_old_password(sender, instance, **kwargs):
-    if instance.pk:
-        try:
-            user = User.objects.get(pk=instance.pk)
-            if user.password != instance.password:
-                PasswordUserHistory.objects.create(
-                    user=user, hashed_password=user.password
-                )
-        except User.DoesNotExist:
-            pass
+    if not instance.pk:
+        return
+    old_password = sender.objects.filter(pk=instance.pk).values_list("password", flat=True).first()
+
+    if old_password and old_password != instance.password:
+        PasswordUserHistory.objects.create(user=instance, hashed_password=old_password)
 
 
 # Add logs for user connection
 def add_log_for_connection(sender, user, request, **kwargs):
-    if (
-        user_in_group(user, "RegulatorAdmin")
-        or user_in_group(user, "RegulatorUser")
-        or user_in_group(user, "PlatformAdmin")
-    ):
+    if user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser") or user_in_group(user, "PlatformAdmin"):
         LogEntry.objects.log_actions(
             user_id=user.id,
             queryset=User.objects.filter(id=user.id),
@@ -58,11 +51,7 @@ user_logged_in.connect(add_log_for_connection)
 
 # Add logs for user deconnection
 def log_user_logout(sender, request, user, **kwargs):
-    if (
-        user_in_group(user, "RegulatorAdmin")
-        or user_in_group(user, "RegulatorUser")
-        or user_in_group(user, "PlatformAdmin")
-    ):
+    if user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser") or user_in_group(user, "PlatformAdmin"):
         LogEntry.objects.log_actions(
             user_id=user.id,
             queryset=User.objects.filter(id=user.id),
@@ -79,9 +68,7 @@ def update_user_groups(sender, instance, created, **kwargs):
     user.is_staff = False
     user.is_superuser = False
 
-    some_company_is_administrator = user.companyuser_set.filter(
-        company=instance.company, is_company_administrator=True
-    )
+    some_company_is_administrator = user.companyuser_set.filter(company=instance.company, is_company_administrator=True)
     # force user to reconnect
     force_logout_user(user)
 
@@ -105,19 +92,13 @@ def update_user_incidents(sender, instance, **kwargs):
         and user_in_group(user, "IncidentUser")
         and company
         and company.identifier
-        and not user.companyuser_set.exclude(pk=instance.pk)
-        .exclude(approved=False)
-        .exists()
+        and not user.companyuser_set.exclude(pk=instance.pk).exclude(approved=False).exists()
     ):
         with transaction.atomic():
             current_year = date.today().year
-            incidents = user.incident_set.filter(
-                company__isnull=True, regulator__isnull=True
-            )
+            incidents = user.incident_set.filter(company__isnull=True, regulator__isnull=True)
             incidents_per_company = (
-                company.incident_set.exclude(contact_user=user)
-                .filter(incident_notification_date__year=current_year)
-                .count()
+                company.incident_set.exclude(contact_user=user).filter(incident_notification_date__year=current_year).count()
             )
             for incident in incidents:
                 sector_for_ref = ""
@@ -144,10 +125,7 @@ def force_logout_regulator_user(sender, instance, **kwargs):
     if instance.pk:
         old_instance = sender.objects.get(pk=instance.pk)
 
-        if (
-            old_instance.is_regulator_administrator
-            != instance.is_regulator_administrator
-        ):
+        if old_instance.is_regulator_administrator != instance.is_regulator_administrator:
             force_logout_user(user)
 
 
@@ -217,10 +195,7 @@ def delete_user_groups(sender, instance, **kwargs):
 
     # --- REGULATOR ---
     if sender is RegulatorUser:
-        if (
-            user.groups.filter(name="RegulatorAdmin").exists()
-            and not user.regulatoruser_set.exists()
-        ):
+        if user.groups.filter(name="RegulatorAdmin").exists() and not user.regulatoruser_set.exists():
             user.groups.remove(get_group("RegulatorAdmin"))
             user.groups.add(get_group("RegulatorUser"))
             user.is_active = False
@@ -234,12 +209,7 @@ def delete_user_groups(sender, instance, **kwargs):
 
     # --- OBSERVER  ---
     if sender is ObserverUser:
-        if (
-            user.groups.filter(name="ObserverAdmin").exists()
-            and not user.observeruser_set.filter(
-                is_observer_administrator=True
-            ).exists()
-        ):
+        if user.groups.filter(name="ObserverAdmin").exists() and not user.observeruser_set.filter(is_observer_administrator=True).exists():
             user.is_active = False
 
         user.save()
@@ -248,10 +218,7 @@ def delete_user_groups(sender, instance, **kwargs):
 
     # --- OPERATOR ---
     if sender is CompanyUser:
-        if (
-            user.groups.filter(name="OperatorAdmin").exists()
-            and not user.companyuser_set.filter(is_company_administrator=True).exists()
-        ):
+        if user.groups.filter(name="OperatorAdmin").exists() and not user.companyuser_set.filter(is_company_administrator=True).exists():
             user.groups.remove(get_group("OperatorAdmin"))
             user.groups.add(get_group("OperatorUser"))
 
@@ -264,9 +231,7 @@ def delete_user_groups(sender, instance, **kwargs):
         user.incident_set.filter(company__isnull=False).update(contact_user=None)
     else:
         user_companies = user.companyuser_set.values_list("company_id", flat=True)
-        user.incident_set.filter(company__isnull=False).exclude(
-            company__in=user_companies
-        ).update(contact_user=None)
+        user.incident_set.filter(company__isnull=False).exclude(company__in=user_companies).update(contact_user=None)
 
     user.save()
     force_logout_user(user)

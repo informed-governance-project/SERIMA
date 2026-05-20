@@ -16,9 +16,7 @@ def sector_regulation(request):
 
 class IncidentFilter(django_filters.FilterSet):
     incident_id = django_filters.CharFilter(lookup_expr="icontains")
-    affected_sectors = django_filters.MultipleChoiceFilter(
-        widget=DropdownCheckboxSelectMultiple(), label=_("Sectors")
-    )
+    affected_sectors = django_filters.MultipleChoiceFilter(widget=DropdownCheckboxSelectMultiple(), label=_("Sectors"))
     sector_regulation = django_filters.ModelChoiceFilter(queryset=sector_regulation)
 
     search = django_filters.CharFilter(method="filter_search", label=_("Search"))

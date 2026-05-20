@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - `force_logout_user` O(N) session-table scan replaced by a single indexed query via a custom `UserSession` model with a `user` FK column (#758)
+### Added
+- `pytest-cov` dev dependency; coverage collection enabled for `governanceplatform` and `incidents` apps
+- CI coverage XML report artifact upload in `pytest.yml`
+- `detect-private-key` pre-commit hook to block accidental credential commits
+
+### Changed
+- `pytest.ini`: `addopts` now includes `--cov` flags for automatic coverage reporting on every test run
+- `pytest.yml` CI: enforces 50% coverage floor (`--cov-fail-under=50`) and uploads `coverage.xml` artifact
+- `pythonapp.yml` CI: bumped `actions/checkout@v1` → `@v4` to match other workflows
+- `.gitignore`: added `.claude/`, `.env*`, `*.pem`, `*.key`, `credentials.json`, `secrets.toml`
 
 ## [0.5.14] - 2026-05-08
 

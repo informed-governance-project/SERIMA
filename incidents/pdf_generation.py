@@ -1,7 +1,6 @@
 import logging
 import os
 from collections import OrderedDict
-from typing import Dict, List
 
 from django.conf import settings
 from django.http import HttpRequest
@@ -22,11 +21,9 @@ for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
     logger.setLevel(logging.ERROR)
 
 
-def get_pdf_report(
-    incident: Incident, incident_workflow: IncidentWorkflow, request: HttpRequest
-):
+def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow, request: HttpRequest):
     # TO DO : improve for more than 2 level ?
-    sectors: Dict[str, List[str]] = {}
+    sectors: dict[str, list[str]] = {}
     # boolean to see if it's report or incident
     report_name = None
     report_timeline = None
@@ -43,8 +40,8 @@ def get_pdf_report(
             if sector_name not in sectors:
                 sectors[sector_name] = []
 
-    incident_workflows_answer: Dict[str, Dict[str, str, List[str]]] = {}
-    incident_workflows_impact: Dict[str, List[str]] = {}
+    incident_workflows_answer: dict[str, dict[str, str, list[str]]] = {}
+    incident_workflows_impact: dict[str, list[str]] = {}
     incident_workflows_answer_sorted = {}
     # display for the full incident or just a report
     if incident_workflow is None:
@@ -64,12 +61,10 @@ def get_pdf_report(
 
     for incident_workflow in report_list:
         workflow_name = incident_workflow.workflow
-        incident_workflows_answer.setdefault(workflow_name, dict())
+        incident_workflows_answer.setdefault(workflow_name, {})
         incident_workflows_impact.setdefault(workflow_name, [])
 
-        answers = Answer.objects.filter(incident_workflow=incident_workflow).order_by(
-            "question_options__position"
-        )
+        answers = Answer.objects.filter(incident_workflow=incident_workflow).order_by("question_options__position")
         for answer in answers:
             populate_questions_answers(
                 answer,
@@ -79,27 +74,18 @@ def get_pdf_report(
         for workflow_name, category_dict in incident_workflows_answer.items():
             sorted_category_dict = OrderedDict()
 
-            sorted_categories = sorted(
-                category_dict.items(), key=lambda item: item[0].position
-            )
+            sorted_categories = sorted(category_dict.items(), key=lambda item: item[0].position)
 
             for category_obj, question_dict in sorted_categories:
-                sorted_question_dict = OrderedDict(
-                    sorted(question_dict.items(), key=lambda item: item[0].position)
-                )
+                sorted_question_dict = OrderedDict(sorted(question_dict.items(), key=lambda item: item[0].position))
                 sorted_category_dict[category_obj] = sorted_question_dict
 
             incident_workflows_answer_sorted[workflow_name] = sorted_category_dict
 
         # impacts
-        incident_workflows_impact[workflow_name].extend(
-            incident_workflow.impacts.all().order_by("translations__label").distinct()
-        )
+        incident_workflows_impact[workflow_name].extend(incident_workflow.impacts.all().order_by("translations__label").distinct())
         incident_workflows_impact[workflow_name] = list(
-            {
-                impact.id: impact.label
-                for impact in incident_workflows_impact[workflow_name]
-            }.values()
+            {impact.id: impact.label for impact in incident_workflows_impact[workflow_name]}.values()
         )
 
     # Render the HTML file
@@ -131,22 +117,15 @@ def get_pdf_report(
         CSS(os.path.join(static_theme_dir, "css/report.css"), font_config=font_config),
     ]
 
-    return htmldoc.write_pdf(
-        stylesheets=stylesheets, pdf_variant="pdf/ua-1", font_config=font_config
-    )
+    return htmldoc.write_pdf(stylesheets=stylesheets, pdf_variant="pdf/ua-1", font_config=font_config)
 
 
-def populate_questions_answers(answer: Answer, preliminary_questions_answers: Dict):
+def populate_questions_answers(answer: Answer, preliminary_questions_answers: dict):
     incident_workflow_timestamp = answer.incident_workflow.timestamp
     question_option = answer.question_options
 
-    if (
-        answer.incident_workflow.timestamp < answer.question_options.updated_at
-        and answer.question_options.historic.all()
-    ):
-        old_question_option = answer.question_options.historic.filter(
-            timestamp__gte=incident_workflow_timestamp
-        ).first()
+    if answer.incident_workflow.timestamp < answer.question_options.updated_at and answer.question_options.historic.all():
+        old_question_option = answer.question_options.historic.filter(timestamp__gte=incident_workflow_timestamp).first()
         question_option = old_question_option
 
     category_label = question_option.category_option
@@ -162,16 +141,10 @@ def populate_questions_answers(answer: Answer, preliminary_questions_answers: Di
         answer_string = answer
         if question_option.question.question_type == "RL":
             REGIONAL_AREA_DICT = dict(REGIONAL_AREA)
-            region_name_list = [
-                REGIONAL_AREA_DICT.get(region_code, region_code)
-                for region_code in filter(None, str(answer).split(","))
-            ]
+            region_name_list = [REGIONAL_AREA_DICT.get(region_code, region_code) for region_code in filter(None, str(answer).split(","))]
             answer_string = " - ".join(map(str, region_name_list))
         if question_option.question.question_type == "CL":
             COUNTRY_DICT = dict(countries)
-            region_name_list = [
-                COUNTRY_DICT.get(region_code, region_code)
-                for region_code in filter(None, str(answer).split(","))
-            ]
+            region_name_list = [COUNTRY_DICT.get(region_code, region_code) for region_code in filter(None, str(answer).split(","))]
             answer_string = " - ".join(map(str, region_name_list))
         answer_list.append(answer_string)

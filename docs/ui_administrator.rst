@@ -35,7 +35,7 @@ When clicking on a module, e.g. "Impacts" as illustrated below, you see a list o
 
    Screenshot of a list page.
 
-1. Above the list is a search field, that allow to narrow the list to objects including that string, 
+1. Above the list is a search field, that allow to narrow the list to objects including that string,
 2. On the right, you can filter the list according to some attributes,
 3. Just above the filter box, some buttons if present allow you to import or export the list in several formats (JSON, CSV, etc.),
 4. A button in the same zone allows to add a new object,
@@ -75,7 +75,7 @@ Here, the standard way to create a workflow:
 
 4.   Each incident report is made of a list of ``questions``, organised in tabs called ``question category``. The  ``question category`` can be created directly in the question form. You have to create the category only one time, after you can reuse it. For a question, the ``question category`` should never remain blank.
 
-   .. note:: The ``question category`` helps for the rendering of the form for the user who submits the notification. There are different types of questions, such as FreeText or Multiple choice. Some can have ``predefined answers``. 
+   .. note:: The ``question category`` helps for the rendering of the form for the user who submits the notification. There are different types of questions, such as FreeText or Multiple choice. Some can have ``predefined answers``.
 
    .. caution::  **It's important to use one answer only for one question**. You can create the predefined answer directly in the question form.**If you want to translate in several languages, you must first fill one language, click on "save and continue editing" and go to the other language, if you don't do that you will loose the content of the predefined answer**.
 
@@ -107,8 +107,7 @@ person who submits the incident, the incident is qualified as "significative".
 
 Modification of workflow
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-During the lifecycle of a workflow, it can evolve. For that you can change the questions of each incident reports. 
-The application is keeping the history of questions and answer. So it will show the correct value in the history of the incident and in the PDF. 
+During the lifecycle of a workflow, it can evolve. For that you can change the questions of each incident reports.
+The application is keeping the history of questions and answer. So it will show the correct value in the history of the incident and in the PDF.
 
-The admin part only show the last version of the report. 
-
+The admin part only show the last version of the report.

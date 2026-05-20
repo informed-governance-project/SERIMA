@@ -94,15 +94,11 @@ urlpatterns = [
     ),
     path(
         "humans.txt",
-        TemplateView.as_view(
-            template_name="home/humans.txt", content_type="text/plain; charset=utf8"
-        ),
+        TemplateView.as_view(template_name="home/humans.txt", content_type="text/plain; charset=utf8"),
     ),
     path(
         ".well-known/security.txt",
-        TemplateView.as_view(
-            template_name="home/security.txt", content_type="text/plain; charset=utf8"
-        ),
+        TemplateView.as_view(template_name="home/security.txt", content_type="text/plain; charset=utf8"),
     ),
     # Language Selector
     path("set-language/", set_language, name="set_language"),

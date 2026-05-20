@@ -31,35 +31,20 @@ def is_deadline_exceeded(report, incident):
                     detection_date = last_report.report_timeline.incident_detection_date
             if detection_date is not None:
                 dt = actual_time - incident.incident_detection_date
-                if (
-                    math.floor(dt.total_seconds() / 60 / 60)
-                    >= sr_workflow.delay_in_hours_before_deadline
-                ):
+                if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
                     return "OUT"
         elif sr_workflow.trigger_event_before_deadline == "NOTIF_DATE":
             dt = actual_time - incident.incident_notification_date
-            if (
-                math.floor(dt.total_seconds() / 60 / 60)
-                >= sr_workflow.delay_in_hours_before_deadline
-            ):
+            if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
                 return "OUT"
-        elif (
-            sr_workflow.trigger_event_before_deadline == "PREV_WORK"
-            and incident.get_previous_workflow(report) is not False
-        ):
+        elif sr_workflow.trigger_event_before_deadline == "PREV_WORK" and incident.get_previous_workflow(report) is not False:
             previous_workflow = incident.get_previous_workflow(report)
             previous_incident_workflow = (
-                IncidentWorkflow.objects.all()
-                .filter(incident=incident, workflow=previous_workflow.workflow)
-                .order_by("-timestamp")
-                .first()
+                IncidentWorkflow.objects.all().filter(incident=incident, workflow=previous_workflow.workflow).order_by("-timestamp").first()
             )
             if previous_incident_workflow is not None:
                 dt = actual_time - previous_incident_workflow.timestamp
-                if (
-                    math.floor(dt.total_seconds() / 60 / 60)
-                    >= sr_workflow.delay_in_hours_before_deadline
-                ):
+                if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
                     return "OUT"
 
     return "UNDE"
@@ -73,9 +58,7 @@ def get_workflow_categories(
     if is_new_incident_workflow:
         category_options = (
             QuestionCategoryOptions.objects.filter(
-                id__in=workflow.questionoptions_set.values_list(
-                    "category_option", flat=True
-                ).distinct(),
+                id__in=workflow.questionoptions_set.values_list("category_option", flat=True).distinct(),
                 questionoptions__deleted_date=None,
             )
             .select_related("question_category")
@@ -127,17 +110,11 @@ def get_workflow_categories(
 
         old_categories = []
         for q in old_question_options:
-            historic = q.historic.filter(
-                timestamp__gte=incident_workflow.timestamp
-            ).first()
+            historic = q.historic.filter(timestamp__gte=incident_workflow.timestamp).first()
             if historic:
                 old_categories.append(historic.category_option)
 
-        categories_options = list(
-            OrderedDict.fromkeys(
-                chain(active_categories, old_categories, deleted_categories)
-            )
-        )
+        categories_options = list(OrderedDict.fromkeys(chain(active_categories, old_categories, deleted_categories)))
         categories_options = sorted(categories_options, key=lambda c: c.position)
         categories = [c.question_category for c in categories_options]
     else:

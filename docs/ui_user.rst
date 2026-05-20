@@ -12,7 +12,7 @@ On this page you can log in or create an account in case you have to notify an i
 
    Screenshot of the login page.
 
-If you already have an account, please use the left pane and enter your credentials (email address and password) to log in. 
+If you already have an account, please use the left pane and enter your credentials (email address and password) to log in.
 
 In case you have forgotten your password or username, please click on the link below the 'Log in' button that says '**Forgotten your password or username?**'.
 
@@ -79,14 +79,14 @@ Please click on the grey button and log in again. Provide your email address and
 
    2FA
 
-As an '**Operator**' or '**User**', this is your main page where you land whenever you open this application. 
+As an '**Operator**' or '**User**', this is your main page where you land whenever you open this application.
 Since this is your first login, there is no incident displayed in the incident dashboard.
 
 .. figure:: _static/SER_8.png
    :alt: Logged in.
    :target: _static/SER_8.png
 
-The Platform is straightforward. Use the '**ILR SERIMA Platform**' link in the top-left corner to come back to the main page at any time. 
+The Platform is straightforward. Use the '**ILR SERIMA Platform**' link in the top-left corner to come back to the main page at any time.
 
 In the top right-hand corner, you can see your name with a drop-down menu. If you click on the down-pointing arrow, the following dropdown menu appears:
 
@@ -104,14 +104,14 @@ In the top right-hand corner, you can see your name with a drop-down menu. If yo
    :alt: contextual menu darked.
    :target: _static/SER_10_240.png
 
-* **Dark theme/Light theme**: you can switch between a dark and light background by using this link. 
+* **Dark theme/Light theme**: you can switch between a dark and light background by using this link.
 
 * **Log out**: use this link to log out from the application. In case you are not active, the system will log you out for security reasons.
 
 * **Language separator**: in the top right-hand corner, you can switch between English (en), French (fr) and Dutch (nl) languages.
 
 
-Report an incident 
+Report an incident
 -------------------
 
 The main function of this module is to make it possible for you to report incidents. To report an incident, click on the ’Report an incident’ button in the top right-hand corner:
@@ -190,7 +190,7 @@ This is the page (**Incident List View**) where you can see the incident reports
 
 In case you see clickable links in the table (for instance ’NIS2 – Early Warning’ in the above screenshot), you may click on them for further information.
 
-Incident list view 
+Incident list view
 ~~~~~~~~~~~~~~~~~~~
 
 The **Incident List View** is the main screen of the application: this is the view that summarizes the list of incidents created by the operator (or end user). It is in a table format with the following columns:
@@ -235,10 +235,10 @@ You can filter all your incidents and expand/collapse the filter area. The filte
    :target: _static/SER_25.png
 
 
-Security Obejctives 
+Security Obejctives
 ---------------------
 
-The security objective self-assessment is accessible by clicking on the menu at the top of the page. 
+The security objective self-assessment is accessible by clicking on the menu at the top of the page.
 
 .. figure:: _static/SO_01.png
    :alt: Security Objectives main page.
@@ -246,7 +246,7 @@ The security objective self-assessment is accessible by clicking on the menu at 
 
 If you already had some security objective reported, you can have a list like the above. Else you need to declare a new one by clicking on the blue button **New declaration**
 
-The list is similar to the incident one. The only difference is that you have to submit your declaration by clicking on the green icon in the action menu. 
+The list is similar to the incident one. The only difference is that you have to submit your declaration by clicking on the green icon in the action menu.
 
 .. figure:: _static/SO_05.png
    :alt: Action menu.
@@ -256,24 +256,24 @@ The list is similar to the incident one. The only difference is that you have to
 The action menu above is the one before the submission:
 
 - The **blue pen** is to fill the security objective. It goes to an eye to see the security objectives when the security objectives are submitted
-- The **envelope** is going to orange when you get a message from the competent authority 
+- The **envelope** is going to orange when you get a message from the competent authority
 - The **PDF file** is here to generate a PDF file
 - The **fourth icon** is here to duplicate a security objective. It allows us to start a new evaluation from a previous one
 - The **file with the arrow** is here to submit the evaluation. When the evaluation is submitted, it's impossible to resubmit or edit
-- The **icon with the portrait** is here to see who has accessed to the evaluation 
+- The **icon with the portrait** is here to see who has accessed to the evaluation
 - The **garbage icon** is to delete an evaluation while it's not submitted
 
 
 Declare a new security objective
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After clicking, a nice pop-up appears, you have to choose the referential, the sectors and the year. 
+After clicking, a nice pop-up appears, you have to choose the referential, the sectors and the year.
 
 .. figure:: _static/SO_02.png
    :alt: Security Objectives creation.
    :target: _static/SO_02.png
 
-Click on the blue button **create** and the standard is created and you are redirected to the page to fill all the security objectives. If you want to go back to the list view of all your creations, please use the menu at the top. 
+Click on the blue button **create** and the standard is created and you are redirected to the page to fill all the security objectives. If you want to go back to the list view of all your creations, please use the menu at the top.
 
 
 Fill a security objective (SO)
@@ -287,11 +287,10 @@ This is the page to fill a SO. At the top you have the list of all the security 
    :target: _static/SO_03.png
 
 
-As you can see, security objectives can have 3 states: 
+As you can see, security objectives can have 3 states:
 
 - **Green** correctly filled
 - **Orange** filled but some information are missing
-- **Blank** not filled 
+- **Blank** not filled
 
-You have to tick the "measure in place" and put a justification to go to the green, you can switch between the different SO by clicking on the number or using the blue arrow at the bottom of the page. 
-
+You have to tick the "measure in place" and put a justification to go to the green, you can switch between the different SO by clicking on the number or using the blue arrow at the bottom of the page.

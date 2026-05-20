@@ -37,12 +37,10 @@ def get_version(request):
 
 
 def instance_configurations(request):
-    configurations = {
+    return {
         "regulator": REGULATOR_CONTACT,
         "cookiebanner": COOKIEBANNER,
     }
-
-    return configurations
 
 
 def user_modules(request):
@@ -64,18 +62,12 @@ def user_modules(request):
         # if is_user_operator(user):
         #     user_module_permissions = ["securityobjectives"]
 
-        app_module_availables = (
-            Functionality.objects.filter(regulator__isnull=False)
-            .distinct()
-            .order_by("id")
-        )
+        app_module_availables = Functionality.objects.filter(regulator__isnull=False).distinct().order_by("id")
         for module in app_module_availables:
             if module.type in user_module_permissions:
                 module_name = None
                 if hasattr(module, "safe_translation_getter"):
-                    module_name = module.safe_translation_getter(
-                        "name", language_code=get_language()
-                    )
+                    module_name = module.safe_translation_getter("name", language_code=get_language())
                 else:
                     module_name = getattr(module, "name", None)
 

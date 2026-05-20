@@ -18,18 +18,14 @@ logger = logging.getLogger(__name__)
 def run(logger=logger):
     logger.info("running log_cleaning.py")
     try:
-        log_to_delete = LogEntry.objects.filter(
-            action_time__lte=Now() - timedelta(days=LOG_RETENTION_TIME_IN_DAY)
-        )
+        log_to_delete = LogEntry.objects.filter(action_time__lte=Now() - timedelta(days=LOG_RETENTION_TIME_IN_DAY))
     except DatabaseError as e:
         logger.error("Failed to fetch log to delete: %s", e, exc_info=True)
         raise
     try:
         ScriptLogEntry.objects.create(
             object_id=None,
-            object_repr="System:Log script deletion "
-            + str(log_to_delete.count())
-            + " log(s) deleted",
+            object_repr="System:Log script deletion " + str(log_to_delete.count()) + " log(s) deleted",
             action_flag=3,
         )
     except Exception as e:

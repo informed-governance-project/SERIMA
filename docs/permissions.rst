@@ -16,7 +16,7 @@ The available roles are:
 
 
 
-Permissions 
+Permissions
 --------------------
 
 PlatformAdmin (Django super admin)
@@ -52,7 +52,7 @@ Each observer, who wants to use the incident notification module, should ask the
 RegulatorAdmin
 ~~~~~~~~~~~~~~~~
 The regulator administrator can create other regulator administrator but also regulator users for his organization.
-The regulator administrator has the responsibility to configure the regulations he is responsible for. A regulation is configured using a workflow containing various reports. Each report is a collection of questions structured using the question categories. 
+The regulator administrator has the responsibility to configure the regulations he is responsible for. A regulation is configured using a workflow containing various reports. Each report is a collection of questions structured using the question categories.
 The regulator administrator has access to any item of his organization. (Unlimited view).
 
 
@@ -83,5 +83,3 @@ An operator administrator can create other operator administrators but also oper
 OperatorUser
 ~~~~~~~~~~~~~~~~
 An operator user is responsible to deliver the required documents and information to the regulators, who are supervising him.
-
-

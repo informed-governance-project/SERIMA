@@ -1,36 +1,29 @@
 ci:
   autoupdate_schedule: monthly
+
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.12  # keep in sync with ruff version in pyproject.toml
+    hooks:
+      - id: ruff
+        args: [--fix, --output-format=full]
+      - id: ruff-format
+
+  # ── Django-specific upgrade fixer ───────────────────────────────────────────
   - repo: https://github.com/adamchainz/django-upgrade
     rev: 1.29.0
     hooks:
       - id: django-upgrade
-        args: [--target-version, '5.2']
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.20.0
-    hooks:
-      - id: pyupgrade
-        args: ["--py37-plus"]
-  - repo: https://github.com/PyCQA/isort
-    rev: 6.1.0
-    hooks:
-      - id: isort
-  - repo: https://github.com/psf/black
-    rev: 25.9.0
-    hooks:
-      - id: black
+        args: [--target-version, "6.0"]
+
+  # ── Format code blocks inside documentation ──────────────────────────────────
   - repo: https://github.com/asottile/blacken-docs
     rev: 1.20.0
     hooks:
       - id: blacken-docs
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.3.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - flake8-bugbear
-          - flake8-implicit-str-concat
-        args: ["--max-line-length=140"]
+        additional_dependencies: [black]
+
+  # ── General file hygiene ─────────────────────────────────────────────────────
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -39,13 +32,18 @@ repos:
         args: [--markdown-linebreak-ext=md]
       - id: end-of-file-fixer
       - id: check-merge-conflict
-  - repo: https://github.com/pypa/pip-audit
-    rev: v2.9.0
-    hooks:
-      -   id: pip-audit
-          args: ["-r", "docs/requirements-app.txt"]
+      - id: detect-private-key
+
+  # ── Dependency export (keeps docs/requirements-app.txt in sync) ──────────────
   - repo: https://github.com/python-poetry/poetry-plugin-export
     rev: 1.9.0
     hooks:
-    -   id: poetry-export
+      - id: poetry-export
         args: ["-f", "requirements.txt", "-o", "docs/requirements-app.txt", "--without-hashes"]
+
+  # ── Dependency CVE audit (runs against the exported requirements) ─────────────
+  - repo: https://github.com/pypa/pip-audit
+    rev: v2.9.0
+    hooks:
+      - id: pip-audit
+        args: ["-r", "docs/requirements-app.txt"]
