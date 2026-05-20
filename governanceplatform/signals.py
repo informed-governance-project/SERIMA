@@ -4,13 +4,11 @@ from threading import local
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import Group
 from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.contrib.sessions.models import Session
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save, pre_delete, pre_save
 from django.dispatch import receiver
-from django.utils.timezone import now
 
-from governanceplatform.models import User
+from governanceplatform.models import User, UserSession
 
 from .helpers import user_in_group
 from .models import CompanyUser, ObserverUser, PasswordUserHistory, RegulatorUser
@@ -240,13 +238,5 @@ def delete_user_groups(sender, instance, **kwargs):
 
 
 def force_logout_user(user):
-    user_id = str(user.id)
-
-    sessions_to_delete = [
-        session.session_key
-        for session in Session.objects.filter(expire_date__gte=now()).iterator()
-        if session.get_decoded().get("_auth_user_id") == user_id
-    ]
-
-    if sessions_to_delete:
-        Session.objects.filter(session_key__in=sessions_to_delete).delete()
+    user_pk = user.pk
+    transaction.on_commit(lambda: UserSession.objects.filter(user_id=user_pk).delete())

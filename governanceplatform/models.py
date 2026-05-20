@@ -1,8 +1,11 @@
+import importlib
 import uuid
 
 from cryptography.fernet import Fernet
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.sessions.base_session import AbstractBaseSession
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import models
@@ -684,3 +687,21 @@ class ScriptLogEntry(models.Model):
     # Define a method to return human-readable action names
     def action(self):
         return ACTION_FLAG_CHOICES.get(self.action_flag, "Unknown")
+
+
+class UserSession(AbstractBaseSession):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="sessions",
+    )
+
+    @classmethod
+    def get_session_store_class(cls):
+        return importlib.import_module("governanceplatform.sessions").SessionStore
+
+    class Meta:
+        verbose_name = _("User session")
+        verbose_name_plural = _("User sessions")
