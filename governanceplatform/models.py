@@ -1,3 +1,4 @@
+import importlib
 import uuid
 
 from cryptography.fernet import Fernet
@@ -705,8 +706,6 @@ class UserSession(AbstractBaseSession):
 
     @classmethod
     def get_session_store_class(cls):
-        import importlib
-
         return importlib.import_module("governanceplatform.session_backend").SessionStore
 
     class Meta:
