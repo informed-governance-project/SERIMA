@@ -231,6 +231,7 @@ class RiskData(models.Model):
     class Meta:
         verbose_name_plural = _("Risks")
         verbose_name = _("Risk")
+        constraints = [models.UniqueConstraint(fields=["uuid", "service"], name="unique_risk_uuid_service")]
 
 
 # Store the recommendation data
