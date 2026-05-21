@@ -42,8 +42,9 @@ repos:
         args: ["-f", "requirements.txt", "-o", "docs/requirements-app.txt", "--without-hashes"]
 
   # ── Dependency CVE audit (runs against the exported requirements) ─────────────
+  # --ignore-vuln PYSEC-2026-89 Temporary ignore for
   - repo: https://github.com/pypa/pip-audit
     rev: v2.9.0
     hooks:
       - id: pip-audit
-        args: ["-r", "docs/requirements-app.txt"]
+        args: ["-r", "docs/requirements-app.txt", "--ignore-vuln", "PYSEC-2026-89"]

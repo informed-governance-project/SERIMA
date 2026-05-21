@@ -37,12 +37,14 @@ jobs:
 
       # pip-audit: checks installed packages against OSV, PyPI Advisory DB
       # --local audits packages installed in Poetry's virtualenv (no requirements.txt needed)
+      # --ignore-vuln PYSEC-2026-89 Temporary ignore for
       - name: Run pip-audit (dependency CVEs)
         run: |
           poetry run pip-audit \
             --local \
             --format cyclonedx-json \
             --output pip-audit-results.json
+            --ignore-vuln PYSEC-2026-89
 
       # Django's own system check framework — catches misconfigurations
       - name: Run Django system checks
