@@ -1271,7 +1271,7 @@ def parsing_risk_data_json(json_file, company_reporting_obj):
             for child in children:
                 normalized_instance = get_normalized_instance(child)
                 normalized_instance["parent_uuid"] = instance["uuid"]
-            extract_risks(normalized_instance)
+                extract_risks(normalized_instance)
 
     def is_root_instance(instance):
         children = instance.get("children", [])
