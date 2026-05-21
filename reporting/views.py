@@ -1186,7 +1186,7 @@ def parsing_risk_data_json(json_file, company_reporting_obj):
                 risk.update(
                     {
                         "uuid": generate_combined_uuid([instance["uuid"], information_risk_uuid]),
-                        "risk_treatment": TREATMENT_VALUES.get(risk["kindOfMeasure"], "Unknown"),
+                        "risk_treatment": TREATMENT_VALUES.get(risk["kindOfMeasure"], "UNSET"),
                     }
                 )
 
