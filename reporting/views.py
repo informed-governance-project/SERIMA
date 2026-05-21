@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
@@ -1099,166 +1100,177 @@ def download_template(request, pk):
 
 
 def parsing_risk_data_json(json_file, company_reporting_obj):
-    LANG_VALUES = {1: "fr", 2: "en", 3: "de", 4: "nl"}
-    TREATMENT_VALUES = {
-        1: "REDUC",
-        2: "DENIE",
-        3: "ACCEP",
-        4: "SHARE",
-        5: "UNTRE",
-    }
+    with transaction.atomic():
+        LANG_VALUES = {1: "fr", 2: "en", 3: "de", 4: "nl"}
+        TREATMENT_VALUES = {
+            1: "REDUC",
+            2: "DENIE",
+            3: "ACCEP",
+            4: "SHARE",
+            5: "UNTRE",
+        }
 
-    def extract_risks(instance):
-        def create_translations(class_model, values, field_name):
-            new_object, created = class_model.objects.get_or_create(uuid=values["uuid"])
+        _translation_cache = {}
 
-            if created:
-                translations = values.get(field_name, None)
-                if not translations:
-                    return new_object
+        def extract_risks(instance):
+            def create_translations(class_model, values, field_name):
+                uuid = values["uuid"]
+                if uuid in _translation_cache:
+                    return _translation_cache[uuid]
 
-                if is_new_version and languageCode:
-                    with override(languageCode):
-                        new_object.set_current_language(languageCode)
-                        new_object.name = translations
-                else:
-                    for lang_index, lang_code in LANG_VALUES.items():
-                        name_value = translations.get(field_name + str(lang_index), None)
-                        if name_value:
-                            with override(lang_code):
-                                new_object.set_current_language(lang_code)
-                                new_object.name = name_value
+                new_object, created = class_model.objects.get_or_create(uuid=values["uuid"])
 
-                new_object.save()
+                if created:
+                    translations = values.get(field_name, None)
+                    if not translations:
+                        return new_object
 
-            return new_object
+                    if is_new_version and languageCode:
+                        with override(languageCode):
+                            new_object.set_current_language(languageCode)
+                            new_object.name = translations
+                    else:
+                        for lang_index, lang_code in LANG_VALUES.items():
+                            name_value = translations.get(field_name + str(lang_index), None)
+                            if name_value:
+                                with override(lang_code):
+                                    new_object.set_current_language(lang_code)
+                                    new_object.name = name_value
 
-        def create_service_stat(service_data):
-            new_service_asset = create_translations(AssetData, service_data, "label")
-            service_stat, _created = ServiceStat.objects.get_or_create(
-                service=new_service_asset,
-                company_reporting=company_reporting_obj,
-            )
+                    new_object.save()
 
-            return service_stat
+                    _translation_cache[uuid] = new_object
 
-        def update_average(current_avg, treated_risks, new_risks_values):
-            if len(new_risks_values) > 0:
-                total_risks = treated_risks + len(new_risks_values)
-                weighted_sum = (current_avg * treated_risks) + sum(new_risks_values)
-                return weighted_sum / total_risks
-            return current_avg
+                return new_object
 
-        def generate_information_risk_uuid(risk):
-            return risk["informationRisk"]["uuid"] if risk["informationRisk"] else risk["threat"]["uuid"] + risk["vulnerability"]["uuid"]
-
-        def calculate_risks(risk):
-            def get_risk_value(risk_value, factor):
-                risk_value = risk_value if factor else -1
-                return max(risk_value, -1)
-
-            threat = risk["threat"]
-
-            return {
-                "riskConfidentiality": get_risk_value(risk["riskIntegrity"], threat["confidentiality"]),
-                "riskIntegrity": get_risk_value(risk["riskIntegrity"], threat["integrity"]),
-                "riskAvailability": get_risk_value(risk["riskAvailability"], threat["availability"]),
-            }
-
-        risks = instance["instanceRisks"]
-        children = instance["children"]
-
-        if risks:
-            max_risk_values = []
-            treatment_values = []
-            residual_risk_values = []
-            service_stat = create_service_stat(root_service_data)
-            new_asset = create_translations(AssetData, instance, "label")
-
-            for risk in risks:
-                information_risk_uuid = generate_information_risk_uuid(risk)
-
-                new_vulnerability = create_translations(VulnerabilityData, risk["vulnerability"], "label")
-
-                new_threat = create_translations(ThreatData, risk["threat"], "label")
-                risk_values = calculate_risks(risk)
-                risk.update(risk_values)
-                risk.update(
-                    {
-                        "uuid": generate_combined_uuid([instance["uuid"], information_risk_uuid]),
-                        "risk_treatment": TREATMENT_VALUES.get(risk["kindOfMeasure"], "UNSET"),
-                    }
+            def create_service_stat(service_data):
+                new_service_asset = create_translations(AssetData, service_data, "label")
+                service_stat, _created = ServiceStat.objects.get_or_create(
+                    service=new_service_asset,
+                    company_reporting=company_reporting_obj,
                 )
 
-                if risk["cacheMaxRisk"] != -1 and risk["kindOfMeasure"] != 5:
-                    max_risk_values.append(risk["cacheMaxRisk"])
-                if risk["cacheTargetedRisk"] != -1 and risk["kindOfMeasure"] != 5:
-                    residual_risk_values.append(risk["cacheTargetedRisk"])
+                return service_stat
 
-                treatment_values.append(risk["kindOfMeasure"])
+            def update_average(current_avg, treated_risks, new_risks_values):
+                if len(new_risks_values) > 0:
+                    total_risks = treated_risks + len(new_risks_values)
+                    weighted_sum = (current_avg * treated_risks) + sum(new_risks_values)
+                    return weighted_sum / total_risks
+                return current_avg
 
-                risk_data_object, created = RiskData.objects.update_or_create(
-                    uuid=risk["uuid"],
-                    service=service_stat,
-                    defaults={
-                        "asset": new_asset,
-                        "threat": new_threat,
-                        "threat_value": risk["threatRate"],
-                        "vulnerability": new_vulnerability,
-                        "vulnerability_value": risk["vulnerabilityRate"],
-                        "residual_risk": risk["cacheTargetedRisk"],
-                        "risk_treatment": risk["risk_treatment"],
-                        "max_risk": risk["cacheMaxRisk"],
-                        "risk_c": risk["riskConfidentiality"],
-                        "risk_i": risk["riskIntegrity"],
-                        "risk_a": risk["riskAvailability"],
-                        "impact_c": instance["confidentiality"],
-                        "impact_i": instance["integrity"],
-                        "impact_a": instance["availability"],
-                    },
-                )
+            def generate_information_risk_uuid(risk):
+                if risk["informationRisk"]:
+                    return risk["informationRisk"]["uuid"]
+                return risk["threat"]["uuid"] + risk["vulnerability"]["uuid"]
 
-                for recommendation in risk["recommendations"]:
-                    (
-                        new_recommendation,
-                        created,
-                    ) = RecommendationData.objects.update_or_create(
-                        uuid=recommendation["uuid"],
+            def calculate_risks(risk):
+                def get_risk_value(risk_value, factor):
+                    risk_value = risk_value if factor else -1
+                    return max(risk_value, -1)
+
+                threat = risk["threat"]
+
+                return {
+                    "riskConfidentiality": get_risk_value(risk["riskIntegrity"], threat["confidentiality"]),
+                    "riskIntegrity": get_risk_value(risk["riskIntegrity"], threat["integrity"]),
+                    "riskAvailability": get_risk_value(risk["riskAvailability"], threat["availability"]),
+                }
+
+            risks = instance["instanceRisks"]
+            children = instance["children"]
+
+            if risks:
+                max_risk_values = []
+                treatment_values = []
+                residual_risk_values = []
+                service_stat = create_service_stat(root_service_data)
+                new_asset = create_translations(AssetData, instance, "label")
+
+                for risk in risks:
+                    information_risk_uuid = generate_information_risk_uuid(risk)
+
+                    new_vulnerability = create_translations(VulnerabilityData, risk["vulnerability"], "label")
+
+                    new_threat = create_translations(ThreatData, risk["threat"], "label")
+                    risk_values = calculate_risks(risk)
+                    risk.update(risk_values)
+                    risk.update(
+                        {
+                            "uuid": generate_combined_uuid([instance["uuid"], information_risk_uuid]),
+                            "risk_treatment": TREATMENT_VALUES.get(risk["kindOfMeasure"], "UNSET"),
+                        }
+                    )
+
+                    if risk["cacheMaxRisk"] != -1 and risk["kindOfMeasure"] != 5:
+                        max_risk_values.append(risk["cacheMaxRisk"])
+                    if risk["cacheTargetedRisk"] != -1 and risk["kindOfMeasure"] != 5:
+                        residual_risk_values.append(risk["cacheTargetedRisk"])
+
+                    treatment_values.append(risk["kindOfMeasure"])
+
+                    risk_data_object, created = RiskData.objects.update_or_create(
+                        uuid=risk["uuid"],
+                        service=service_stat,
                         defaults={
-                            "code": recommendation["code"],
-                            "description": recommendation["description"],
-                            "due_date": recommendation["duedate"],
-                            "status": recommendation["status"],
+                            "asset": new_asset,
+                            "threat": new_threat,
+                            "threat_value": risk["threatRate"],
+                            "vulnerability": new_vulnerability,
+                            "vulnerability_value": risk["vulnerabilityRate"],
+                            "residual_risk": risk["cacheTargetedRisk"],
+                            "risk_treatment": risk["risk_treatment"],
+                            "max_risk": risk["cacheMaxRisk"],
+                            "risk_c": risk["riskConfidentiality"],
+                            "risk_i": risk["riskIntegrity"],
+                            "risk_a": risk["riskAvailability"],
+                            "impact_c": instance["confidentiality"],
+                            "impact_i": instance["integrity"],
+                            "impact_a": instance["availability"],
                         },
                     )
-                    if created:
-                        risk_data_object.recommendations.add(new_recommendation)
 
-            treatment_counts = Counter(treatment_values)
+                    for recommendation in risk["recommendations"]:
+                        (
+                            new_recommendation,
+                            created,
+                        ) = RecommendationData.objects.update_or_create(
+                            uuid=recommendation["uuid"],
+                            defaults={
+                                "code": recommendation["code"],
+                                "description": recommendation["description"],
+                                "due_date": recommendation["duedate"],
+                                "status": recommendation["status"],
+                            },
+                        )
+                        if created:
+                            risk_data_object.recommendations.add(new_recommendation)
 
-            service_stat.avg_current_risks = update_average(
-                service_stat.avg_current_risks,
-                service_stat.total_treated_risks,
-                max_risk_values,
-            )
-            service_stat.avg_residual_risks = update_average(
-                service_stat.avg_residual_risks,
-                service_stat.total_treated_risks,
-                residual_risk_values,
-            )
-            service_stat.total_risks += len(risks)
-            service_stat.total_untreated_risks += treatment_counts.get(5, 0)
-            service_stat.total_treated_risks += len(risks) - treatment_counts.get(5, 0)
-            service_stat.total_reduced_risks += treatment_counts.get(1, 0)
-            service_stat.total_denied_risks += treatment_counts.get(2, 0)
-            service_stat.total_accepted_risks += treatment_counts.get(3, 0)
-            service_stat.total_shared_risks += treatment_counts.get(4, 0)
-            service_stat.save()
+                treatment_counts = Counter(treatment_values)
 
-        # Process child instances recursively
-        for child in children:
-            normalized_instance = get_normalized_instance(child)
-            normalized_instance["parent_uuid"] = instance["uuid"]
+                service_stat.avg_current_risks = update_average(
+                    service_stat.avg_current_risks,
+                    service_stat.total_treated_risks,
+                    max_risk_values,
+                )
+                service_stat.avg_residual_risks = update_average(
+                    service_stat.avg_residual_risks,
+                    service_stat.total_treated_risks,
+                    residual_risk_values,
+                )
+                service_stat.total_risks += len(risks)
+                service_stat.total_untreated_risks += treatment_counts.get(5, 0)
+                service_stat.total_treated_risks += len(risks) - treatment_counts.get(5, 0)
+                service_stat.total_reduced_risks += treatment_counts.get(1, 0)
+                service_stat.total_denied_risks += treatment_counts.get(2, 0)
+                service_stat.total_accepted_risks += treatment_counts.get(3, 0)
+                service_stat.total_shared_risks += treatment_counts.get(4, 0)
+                service_stat.save()
+
+            # Process child instances recursively
+            for child in children:
+                normalized_instance = get_normalized_instance(child)
+                normalized_instance["parent_uuid"] = instance["uuid"]
             extract_risks(normalized_instance)
 
     def is_root_instance(instance):
