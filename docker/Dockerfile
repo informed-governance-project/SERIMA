@@ -67,6 +67,8 @@ COPY --chown=www-data --from=npmbuilder /app/node_modules /app/static/npm_compon
 
 COPY --chown=www-data governanceplatform /app/governanceplatform
 COPY --chown=www-data incidents /app/incidents
+COPY --chown=www-data securityobjectives /app/securityobjectives
+COPY --chown=www-data reporting /app/reporting
 COPY --chown=www-data locale /app/locale
 COPY --chown=www-data static /app/static
 COPY --chown=www-data templates /app/templates
