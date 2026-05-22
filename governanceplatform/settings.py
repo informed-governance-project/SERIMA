@@ -257,8 +257,6 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 WSGI_APPLICATION = "governanceplatform.wsgi.application"
 
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -545,6 +543,11 @@ try:
 except AttributeError:
     CELERY_ACCEPT_CONTENT = ["json"]
     CELERY_TASK_SERIALIZER = "json"
+
+try:
+    KALEIDO_CONCURRENCY_PER_WORKER = config.KALEIDO_CONCURRENCY_PER_WORKER
+except AttributeError:
+    KALEIDO_CONCURRENCY_PER_WORKER = 1
 
 # Paths for deliveries
 try:

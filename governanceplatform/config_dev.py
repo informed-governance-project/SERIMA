@@ -204,16 +204,10 @@ CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 PATH_FOR_REPORTING_PDF = f"{os.getcwd()}/tmp/"
+KALEIDO_CONCURRENCY_PER_WORKER = int(os.getenv("KALEIDO_CONCURRENCY_PER_WORKER", "1"))
 
 # Email adress for contact form
 EMAIL_FOR_CONTACT = "email@nisinp.nisinp"
-
-# CELERY config
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
-
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
 
 # Path for deliveries
 PATH_FOR_REPORTING_PDF = "/tmp/"

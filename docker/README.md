@@ -110,6 +110,7 @@ before the actual Django runtime init and application startup.
 - `CELERY_BROKER_URL`: defaults to 'redis://redis:6379/0'
 - `CELERY_RESULT_BACKEND`: defaults to 'redis://redis:6379/1'
 - `CELERY_CONCURRENCY`: defaults to `3`
+- `KALEIDO_CONCURRENCY_PER_WORKER`: defaults to `1`
 - `SUPERUSER_EMAIL` and `SUPERUSER_PASSWORD`: if *both* are set, Django initial
   superuser is created (password can be updated in Django WebUI afterwards),
   the initial creation is only performed if user does **not** already exist
