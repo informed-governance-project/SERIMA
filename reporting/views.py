@@ -1,6 +1,5 @@
 import json
 import uuid
-from collections import Counter, defaultdict
 from urllib.parse import quote as urlquote
 
 import redis
@@ -52,9 +51,9 @@ from .globals import (
     ALLOWED_PROJECT_DASHBOARD_SORT_FIELDS,
     CELERY_TASK_STATUS,
 )
-from .helpers import create_entry_log, generate_combined_uuid
+from .helpers import create_entry_log
+from .import_risk_analysis import parsing_risk_data_json
 from .models import (
-    AssetData,
     CompanyProject,
     CompanyReporting,
     GeneratedReport,
@@ -63,12 +62,7 @@ from .models import (
     ObservationRecommendation,
     ObservationRecommendationThrough,
     Project,
-    RecommendationData,
-    RiskData,
-    ServiceStat,
     Template,
-    ThreatData,
-    VulnerabilityData,
 )
 from .tasks import (
     cleanup_files,
@@ -1008,7 +1002,8 @@ def import_risk_analysis(request):
                         add_new_report_recommendations(company, sector, year, report_recommendations, user, "COPY")
 
                 try:
-                    parsing_risk_data_json(json_file, company_reporting_obj)
+                    with transaction.atomic():
+                        parsing_risk_data_json(json_file, company_reporting_obj)
                 except Exception as e:
                     messages.error(request, f"Parsing error: {str(e)}")
                     return HttpResponseRedirect(request.headers.get("referer"))
@@ -1097,292 +1092,6 @@ def download_template(request, pk):
     )
     response["Content-Disposition"] = f'attachment; filename="template_{template.language}.docx"'
     return response
-
-
-def parsing_risk_data_json(json_file, company_reporting_obj):
-    with transaction.atomic():
-        LANG_VALUES = {1: "fr", 2: "en", 3: "de", 4: "nl"}
-        TREATMENT_VALUES = {
-            1: "REDUC",
-            2: "DENIE",
-            3: "ACCEP",
-            4: "SHARE",
-            5: "UNTRE",
-        }
-
-        _translation_cache = {}
-
-        def extract_risks(instance):
-            def create_translations(class_model, values, field_name):
-                uuid = values["uuid"]
-                if uuid in _translation_cache:
-                    return _translation_cache[uuid]
-
-                new_object, created = class_model.objects.get_or_create(uuid=values["uuid"])
-
-                if created:
-                    translations = values.get(field_name, None)
-                    if not translations:
-                        return new_object
-
-                    if is_new_version and languageCode:
-                        with override(languageCode):
-                            new_object.set_current_language(languageCode)
-                            new_object.name = translations
-                    else:
-                        for lang_index, lang_code in LANG_VALUES.items():
-                            name_value = translations.get(field_name + str(lang_index), None)
-                            if name_value:
-                                with override(lang_code):
-                                    new_object.set_current_language(lang_code)
-                                    new_object.name = name_value
-
-                    new_object.save()
-
-                    _translation_cache[uuid] = new_object
-
-                return new_object
-
-            def create_service_stat(service_data):
-                new_service_asset = create_translations(AssetData, service_data, "label")
-                service_stat, _created = ServiceStat.objects.get_or_create(
-                    service=new_service_asset,
-                    company_reporting=company_reporting_obj,
-                )
-
-                return service_stat
-
-            def update_average(current_avg, treated_risks, new_risks_values):
-                if len(new_risks_values) > 0:
-                    total_risks = treated_risks + len(new_risks_values)
-                    weighted_sum = (current_avg * treated_risks) + sum(new_risks_values)
-                    return weighted_sum / total_risks
-                return current_avg
-
-            def generate_information_risk_uuid(risk):
-                if risk["informationRisk"]:
-                    return risk["informationRisk"]["uuid"]
-                return risk["threat"]["uuid"] + risk["vulnerability"]["uuid"]
-
-            def calculate_risks(risk):
-                def get_risk_value(risk_value, factor):
-                    risk_value = risk_value if factor else -1
-                    return max(risk_value, -1)
-
-                threat = risk["threat"]
-
-                return {
-                    "riskConfidentiality": get_risk_value(risk["riskIntegrity"], threat["confidentiality"]),
-                    "riskIntegrity": get_risk_value(risk["riskIntegrity"], threat["integrity"]),
-                    "riskAvailability": get_risk_value(risk["riskAvailability"], threat["availability"]),
-                }
-
-            risks = instance["instanceRisks"]
-            children = instance["children"]
-
-            if risks:
-                max_risk_values = []
-                treatment_values = []
-                residual_risk_values = []
-                service_stat = create_service_stat(root_service_data)
-                new_asset = create_translations(AssetData, instance, "label")
-
-                for risk in risks:
-                    information_risk_uuid = generate_information_risk_uuid(risk)
-
-                    new_vulnerability = create_translations(VulnerabilityData, risk["vulnerability"], "label")
-
-                    new_threat = create_translations(ThreatData, risk["threat"], "label")
-                    risk_values = calculate_risks(risk)
-                    risk.update(risk_values)
-                    risk.update(
-                        {
-                            "uuid": generate_combined_uuid([instance["uuid"], information_risk_uuid]),
-                            "risk_treatment": TREATMENT_VALUES.get(risk["kindOfMeasure"], "UNSET"),
-                        }
-                    )
-
-                    if risk["cacheMaxRisk"] != -1 and risk["kindOfMeasure"] != 5:
-                        max_risk_values.append(risk["cacheMaxRisk"])
-                    if risk["cacheTargetedRisk"] != -1 and risk["kindOfMeasure"] != 5:
-                        residual_risk_values.append(risk["cacheTargetedRisk"])
-
-                    treatment_values.append(risk["kindOfMeasure"])
-
-                    risk_data_object, created = RiskData.objects.update_or_create(
-                        uuid=risk["uuid"],
-                        service=service_stat,
-                        defaults={
-                            "asset": new_asset,
-                            "threat": new_threat,
-                            "threat_value": risk["threatRate"],
-                            "vulnerability": new_vulnerability,
-                            "vulnerability_value": risk["vulnerabilityRate"],
-                            "residual_risk": risk["cacheTargetedRisk"],
-                            "risk_treatment": risk["risk_treatment"],
-                            "max_risk": risk["cacheMaxRisk"],
-                            "risk_c": risk["riskConfidentiality"],
-                            "risk_i": risk["riskIntegrity"],
-                            "risk_a": risk["riskAvailability"],
-                            "impact_c": instance["confidentiality"],
-                            "impact_i": instance["integrity"],
-                            "impact_a": instance["availability"],
-                        },
-                    )
-
-                    for recommendation in risk["recommendations"]:
-                        (
-                            new_recommendation,
-                            created,
-                        ) = RecommendationData.objects.update_or_create(
-                            uuid=recommendation["uuid"],
-                            defaults={
-                                "code": recommendation["code"],
-                                "description": recommendation["description"],
-                                "due_date": recommendation["duedate"],
-                                "status": recommendation["status"],
-                            },
-                        )
-                        if created:
-                            risk_data_object.recommendations.add(new_recommendation)
-
-                treatment_counts = Counter(treatment_values)
-
-                service_stat.avg_current_risks = update_average(
-                    service_stat.avg_current_risks,
-                    service_stat.total_treated_risks,
-                    max_risk_values,
-                )
-                service_stat.avg_residual_risks = update_average(
-                    service_stat.avg_residual_risks,
-                    service_stat.total_treated_risks,
-                    residual_risk_values,
-                )
-                service_stat.total_risks += len(risks)
-                service_stat.total_untreated_risks += treatment_counts.get(5, 0)
-                service_stat.total_treated_risks += len(risks) - treatment_counts.get(5, 0)
-                service_stat.total_reduced_risks += treatment_counts.get(1, 0)
-                service_stat.total_denied_risks += treatment_counts.get(2, 0)
-                service_stat.total_accepted_risks += treatment_counts.get(3, 0)
-                service_stat.total_shared_risks += treatment_counts.get(4, 0)
-                service_stat.save()
-
-            # Process child instances recursively
-            for child in children:
-                normalized_instance = get_normalized_instance(child)
-                normalized_instance["parent_uuid"] = instance["uuid"]
-                extract_risks(normalized_instance)
-
-    def is_root_instance(instance):
-        children = instance.get("children", [])
-        if is_new_version:
-            is_root = instance.get("level") == 1 and instance.get("position") == 1
-        else:
-            meta_instance = instance.get("instance", {})
-            is_root = meta_instance.get("root") == 0 and meta_instance.get("parent") == 0
-
-        return is_root and bool(children)
-
-    def get_normalized_instance(instance):
-        def get_translations_dict(values, field_name):
-            translations_dict = {}
-            for lang_index in LANG_VALUES.keys():
-                key = field_name + str(lang_index)
-                name_value = values.get(key, None)
-                if name_value:
-                    translations_dict[key] = name_value
-            return translations_dict
-
-        def get_normalized_threat(instance_risk, threats):
-            threat_data = threats.get(str(instance_risk["threat"]), {})
-            threat_data["confidentiality"] = threat_data.get("c")
-            threat_data["integrity"] = threat_data.get("i")
-            threat_data["availability"] = threat_data.get("a")
-            threat_data["label"] = get_translations_dict(threat_data, "label")
-            threat_data["description"] = get_translations_dict(threat_data, "description")
-            return threat_data
-
-        def get_normalized_vulnerability(instance_risk, vuls):
-            vulnerability_data = vuls.get(str(instance_risk["vulnerability"]), {})
-            vulnerability_data["label"] = get_translations_dict(vulnerability_data, "label")
-            vulnerability_data["description"] = (get_translations_dict(vulnerability_data, "description"),)
-            return vulnerability_data
-
-        if is_new_version:
-            normalized_instance = instance.copy()
-            asset_uuid = instance["asset"]["uuid"]
-            object_uuid = instance["object"]["uuid"]
-            parent_uuid = instance.get("parent_uuid", "")
-            normalized_instance["uuid"] = generate_combined_uuid([asset_uuid, object_uuid, parent_uuid])
-
-        else:
-            normalized_instance = defaultdict()
-            meta_instance = instance["instance"]
-            asset_uuid = meta_instance["asset"]
-            object_uuid = meta_instance["object"]
-            parent_uuid = instance.get("parent_uuid", "")
-            risks_data = instance.get("risks", {})
-            risks = risks_data if isinstance(risks_data, dict) else {}
-            children_data = instance.get("children", {})
-            children = children_data if isinstance(children_data, dict) else {}
-            instance_risks = risks.values()
-            amvs = instance.get("amvs", {})
-            threats = instance.get("threats", {})
-            vuls = instance.get("vuls", {})
-            recos_data = instance.get("recos", {})
-            recos = recos_data if isinstance(recos_data, dict) else {}
-
-            for instance_risk in instance_risks:
-                txv = instance_risk["threatRate"] * instance_risk["vulnerabilityRate"]
-                recommendation_data = recos.get(str(instance_risk["id"]), {})
-
-                instance_risk.update(
-                    {
-                        "informationRisk": amvs.get(str(instance_risk["amv"]), {}),
-                        "threat": get_normalized_threat(instance_risk, threats),
-                        "vulnerability": get_normalized_vulnerability(instance_risk, vuls),
-                        "recommendations": recommendation_data.values(),
-                        "riskConfidentiality": instance["instance"]["c"] * txv,
-                        "riskIntegrity": instance["instance"]["i"] * txv,
-                        "riskAvailability": instance["instance"]["d"] * txv,
-                    }
-                )
-
-            normalized_instance.update(
-                {
-                    "uuid": generate_combined_uuid([asset_uuid, object_uuid, parent_uuid]),
-                    "name": get_translations_dict(meta_instance, "name"),
-                    "label": get_translations_dict(meta_instance, "label"),
-                    "confidentiality": instance["instance"]["c"],
-                    "integrity": instance["instance"]["i"],
-                    "availability": instance["instance"]["d"],
-                    "instanceRisks": instance_risks,
-                    "children": children.values(),
-                }
-            )
-
-        return normalized_instance
-
-    try:
-        json_file.seek(0)
-        content = json_file.read().decode("utf-8")
-        data = json.loads(content)
-    except json.JSONDecodeError as e:
-        raise ValidationError(f"Error decoding JSON: {str(e)}")
-
-    file_version = tuple(map(int, data["monarc_version"].split(".")))
-    refactoring_version = tuple(map(int, "2.13.1".split(".")))
-    is_new_version = file_version >= refactoring_version
-    languageCode = data.get("languageCode", None)
-
-    instances = data["instances"] if is_new_version else data["instances"].values()
-
-    for instance in instances:
-        if is_root_instance(instance):
-            normalized_instance = get_normalized_instance(instance)
-            root_service_data = normalized_instance.copy()
-            normalized_instance["parent_uuid"] = normalized_instance["uuid"]
-            extract_risks(normalized_instance)
 
 
 def get_report(
