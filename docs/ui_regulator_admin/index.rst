@@ -30,4 +30,4 @@ The Site administration screen has the following parts: Administration, Governan
    incident_notification
    reporting
    security_objectives
-   recent actions
+   recent_actions
