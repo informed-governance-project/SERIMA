@@ -144,7 +144,11 @@ def get_incidents(request):
         incidents = user.observers.first().get_incidents()
     elif is_user_operator(user):
         # OperatorAdmin/User can see all the reports of the selected company.
-        incidents = incidents.filter(company__id=request.session.get("company_in_use"))
+        incidents = incidents.filter(
+            company__id=request.session.get("company_in_use"),
+            company__companyuser__user=user,
+            company__companyuser__approved=True,
+        )
     else:
         # IncidentUser can see only their reports.
         incidents = incidents.filter(contact_user=user)
