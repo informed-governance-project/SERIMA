@@ -85,7 +85,7 @@ Incident Notification Module
    ui_operator_admin
    ui_regulator_user
    ui_regulator_admin/index
-   ui_platform_admin
+   ui_platform_admin/index
 
 
 Presentation
