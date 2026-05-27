@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 
 import pytz
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 from rest_framework.exceptions import ValidationError
 
@@ -17,6 +18,24 @@ TREATMENT_VALUES = {
     4: "SHARE",
     5: "UNTRE",
 }
+
+
+def validate_json_file(original_filename: str, tmp_path: str) -> None:
+    if not original_filename.endswith(".json"):
+        raise ValidationError(_("Uploaded file is not a JSON file."))
+
+    with open(tmp_path, "rb") as json_file:
+        try:
+            json_data = json.load(json_file)
+        except json.JSONDecodeError:
+            raise ValidationError(_("Uploaded file contains invalid JSON."))
+
+        if not isinstance(json_data, dict):
+            raise ValidationError(_("JSON file must contain an object at the root."))
+
+        for required_key in ("instances", "monarc_version"):
+            if required_key not in json_data:
+                raise ValidationError(_("Missing '%(key)s' key in the JSON file.") % {"key": required_key})
 
 
 def parsing_risk_data_json(json_file, company_reporting_obj):

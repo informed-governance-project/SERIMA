@@ -14,6 +14,7 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils import formats
 from django.utils.translation import activate
 from docx import Document
@@ -34,7 +35,8 @@ from .helpers import (
     redistribute_column_widths_proportional,
     replace_toc_page_numbers,
 )
-from .models import Configuration, GeneratedReport, Project, Template
+from .import_risk_analysis import parsing_risk_data_json
+from .models import CompanyReporting, Configuration, GeneratedReport, Project, Template
 
 logger = get_task_logger(__name__)
 
@@ -523,3 +525,35 @@ def delete_project_task(project_id):
         return "Project deleted successfully"
     except Project.DoesNotExist:
         return "Project already deleted"
+
+
+@shared_task(
+    bind=True,
+    max_retries=3,
+    soft_time_limit=600,  # 10 min warning
+    time_limit=660,  # 11 min hard kill
+    acks_late=True,  # only ack after success, re-queue on worker crash
+)
+def import_risk_analysis_task(self, tmp_path, company_reporting_id):
+    try:
+        company_reporting_obj = CompanyReporting.objects.get(pk=company_reporting_id)
+
+        with open(tmp_path, "rb") as json_file:
+            with transaction.atomic():
+                parsing_risk_data_json(json_file, company_reporting_obj)
+
+        return {
+            "status": "success",
+            "company": company_reporting_obj.company.name,
+            "sector": company_reporting_obj.sector.name,
+            "year": company_reporting_obj.year,
+        }
+    except Exception as exc:
+        # Transient error — retry with exponential backoff
+        raise self.retry(exc=exc, countdown=2**self.request.retries)
+
+
+@shared_task
+def cleanup_ra_tmp_file_task(tmp_path: str) -> None:
+    if os.path.exists(tmp_path):
+        os.unlink(tmp_path)

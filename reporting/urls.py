@@ -16,6 +16,7 @@ from .views import (
     edit_report_project,
     generate_report_project,
     import_risk_analysis,
+    import_risk_analysis_status,
     report_generation_status,
     report_recommendations,
     reporting,
@@ -120,6 +121,7 @@ urlpatterns = [
     ),
     # Import risk analysis
     path("import_risk_analysis", import_risk_analysis, name="import_risk_analysis"),
+    path("import_risk_analysis_status/<str:group_id>", import_risk_analysis_status, name="import_risk_analysis_status"),
     # Current template download
     path(
         "admin/reporting/template/<int:pk>/download/",

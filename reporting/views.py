@@ -1,16 +1,17 @@
-import json
+import os
+import tempfile
 import uuid
 from urllib.parse import quote as urlquote
 
 import redis
 from celery import chain, chord, current_app, group
 from celery.exceptions import CeleryError
+from celery.result import GroupResult
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
-from django.db import transaction
 from django.forms.models import model_to_dict
 from django.http import (
     FileResponse,
@@ -52,7 +53,7 @@ from .globals import (
     CELERY_TASK_STATUS,
 )
 from .helpers import create_entry_log
-from .import_risk_analysis import parsing_risk_data_json
+from .import_risk_analysis import validate_json_file
 from .models import (
     CompanyProject,
     CompanyReporting,
@@ -66,10 +67,12 @@ from .models import (
 )
 from .tasks import (
     cleanup_files,
+    cleanup_ra_tmp_file_task,
     delete_project_task,
     generate_data,
     generate_docx_task,
     generate_pdf_task,
+    import_risk_analysis_task,
     on_chord_error,
     save_file_task,
     zip_files_task,
@@ -967,8 +970,14 @@ def import_risk_analysis(request):
             company_id = form.cleaned_data["company"]
             sector_ids = form.cleaned_data["sectors"]
             year = form.cleaned_data["year"]
+            import_task = []
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as tmp:
+                for chunk in json_file.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
             try:
-                validate_json_file(json_file)
+                validate_json_file(json_file.name, tmp_path)
             except ValidationError as e:
                 messages.error(request, f"Error: {str(e)}")
                 return HttpResponseRedirect(request.headers.get("referer"))
@@ -1002,15 +1011,23 @@ def import_risk_analysis(request):
                         add_new_report_recommendations(company, sector, year, report_recommendations, user, "COPY")
 
                 try:
-                    with transaction.atomic():
-                        parsing_risk_data_json(json_file, company_reporting_obj)
+                    import_task.append(import_risk_analysis_task.s(tmp_path, company_reporting_obj.pk))
                 except Exception as e:
+                    os.unlink(tmp_path)
                     messages.error(request, f"Parsing error: {str(e)}")
                     return HttpResponseRedirect(request.headers.get("referer"))
 
-                messages.success(request, _("Risk analysis successfully imported"))
                 CompanyProject.objects.filter(company=company, year=year, sector=sector).update(has_risk_assessment=True)
-                return HttpResponseRedirect(request.headers.get("referer"))
+
+            if import_task:
+                task_group = group(import_task)
+                group_result = task_group.apply_async()
+                group_result.save()
+                request.session["import_ra_tmp_path"] = tmp_path
+                # Fallback cleanup after 1 hour — in case status view never gets called
+                cleanup_ra_tmp_file_task.apply_async(args=[tmp_path], countdown=3600)
+
+            return JsonResponse({"import_ra_group_id": group_result.id if import_task else None})
 
     form = ImportRiskAnalysisForm(
         initial=initial or {},
@@ -1018,6 +1035,36 @@ def import_risk_analysis(request):
     )
     context = {"form": form}
     return render(request, "modals/risk_analysis_import.html", context=context)
+
+
+@login_required
+@otp_required
+@require_http_methods(["GET"])
+def import_risk_analysis_status(request, group_id):
+    result = GroupResult.restore(group_id)
+
+    if result is None:
+        return JsonResponse({"state": "UNKNOWN"})
+
+    total = len(result)
+    completed = result.completed_count()
+    is_ready = result.ready()
+    is_failed = is_ready and not result.successful()
+
+    if is_ready:
+        # Clean up tmp file — stored in session before enqueuing
+        tmp_path = request.session.pop("import_ra_tmp_path", None)
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+    return JsonResponse(
+        {
+            "state": "FAILURE" if is_failed else ("SUCCESS" if is_ready else "PROGRESS"),
+            "current": completed,
+            "total": total,
+            "percent": int((completed / total) * 100) if total else 0,
+        }
+    )
 
 
 @login_required
@@ -1126,24 +1173,6 @@ def get_report(
     if not is_multiple_files:
         return chain(*steps, cleanup_files.si(project_id, task_id))
     return chain(*steps)
-
-
-def validate_json_file(file):
-    if not file.name.endswith(".json"):
-        raise ValidationError(_("Uploaded file is not a JSON file."))
-
-    try:
-        json_data = json.load(file)
-    except json.JSONDecodeError:
-        raise ValidationError(_("Uploaded file contains invalid JSON."))
-
-    if not isinstance(json_data, dict):
-        raise ValidationError(_("JSON file must contain an object at the root."))
-
-    if "instances" not in json_data:
-        raise ValidationError(_("Missing 'instances' key in the JSON file."))
-
-    return json_data
 
 
 def validate_url_arguments(request, company_id, sector_id, year):

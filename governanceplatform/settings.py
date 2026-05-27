@@ -529,6 +529,7 @@ except AttributeError:
 
 # CELERY configuration
 CELERY_TASK_TRACK_STARTED = True
+CELERY_RESULT_EXTENDED = True
 
 try:
     CELERY_BROKER_URL = config.CELERY_BROKER_URL
