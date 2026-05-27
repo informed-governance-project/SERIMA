@@ -878,6 +878,22 @@ class UserAdmin(admin.ModelAdmin):
     actions = [reset_2FA]
     change_list_template = "admin/reset_accepted_terms.html"
 
+    # manage the administrator field for operatorAdmin
+    def get_form(self, request, obj=None, **kwargs):
+
+        if not obj and user_in_group(request.user, "OperatorAdmin"):
+
+            class DynamicForm(forms.ModelForm):
+                is_administrator = forms.BooleanField(required=False, label=_("Create this user as an administrator"))
+
+                class Meta:
+                    model = self.model
+                    fields = "__all__"
+
+            kwargs["form"] = DynamicForm
+
+        return super().get_form(request, obj, **kwargs)
+
     def get_actions(self, request):
         actions = super().get_actions(request)
         if "delete_selected" in actions:
@@ -953,6 +969,12 @@ class UserAdmin(admin.ModelAdmin):
 
     def get_fieldsets(self, request, obj=None):
 
+        if not obj and user_in_group(request.user, "OperatorAdmin"):
+            fields = list(self.standard_fieldsets[0][1]["fields"])
+            if "is_administrator" not in fields:
+                fields.append("is_administrator")
+            self.standard_fieldsets[0][1]["fields"] = fields
+            return self.standard_fieldsets
         if not obj:
             return self.standard_fieldsets
 
@@ -1144,9 +1166,10 @@ class UserAdmin(admin.ModelAdmin):
                 obj.groups.add(group)
 
             if user_in_group(user, "OperatorAdmin"):
+                is_admin = form.cleaned_data.get("is_administrator")
                 company_in_use = get_active_company_from_session(request)
                 if company_in_use:
-                    obj.companies.add(company_in_use, through_defaults={"approved": True})
+                    obj.companies.add(company_in_use, through_defaults={"approved": True, "is_company_administrator": is_admin})
                 group, _ = Group.objects.get_or_create(name="OperatorUser")
                 obj.groups.add(group)
 
