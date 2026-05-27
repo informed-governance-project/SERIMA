@@ -1050,21 +1050,28 @@ def import_risk_analysis_status(request, group_id):
     completed = result.completed_count()
     is_ready = result.ready()
     is_failed = is_ready and not result.successful()
+    rendered_messages = None
 
     if is_ready:
+        messages.success(request, _("Risk analysis successfully imported"))
         # Clean up tmp file — stored in session before enqueuing
         tmp_path = request.session.pop("import_ra_tmp_path", None)
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
+        rendered_messages = render_error_messages(request)
 
-    return JsonResponse(
-        {
-            "state": "FAILURE" if is_failed else ("SUCCESS" if is_ready else "PROGRESS"),
-            "current": completed,
-            "total": total,
-            "percent": int((completed / total) * 100) if total else 0,
-        }
-    )
+    reponse = {
+        "state": "FAILURE" if is_failed else ("SUCCESS" if is_ready else "PROGRESS"),
+        "current": completed,
+        "total": total,
+        "percent": int((completed / total) * 100) if total else 0,
+        "messages": rendered_messages if is_ready else "",
+    }
+
+    if rendered_messages:
+        reponse["messages"] = rendered_messages
+
+    return JsonResponse(reponse)
 
 
 @login_required
