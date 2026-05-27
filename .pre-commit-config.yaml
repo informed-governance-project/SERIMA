@@ -47,4 +47,4 @@ repos:
     rev: v2.9.0
     hooks:
       - id: pip-audit
-        args: ["-r", "docs/requirements-app.txt", "--ignore-vuln", "PYSEC-2026-89"]
+        args: ["-r", "docs/requirements-app.txt"]
