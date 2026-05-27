@@ -1,8 +1,10 @@
+import os
 import subprocess
 
 import kaleido
 from celery.signals import worker_process_init, worker_process_shutdown
 from celery.utils.log import get_task_logger
+from choreographer.browsers.chromium import Chromium
 from django.apps import apps
 from django.conf import settings
 from django.db.models.signals import (
@@ -180,8 +182,29 @@ def cleanup_stale_soffice(**kwargs):
 
 @worker_process_init.connect
 def init_kaleido(**kwargs):
+    original_get_cli = Chromium.get_cli
+
+    def patched_get_cli(self):
+        cli = list(original_get_cli(self))
+        proxy = (
+            os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy") or os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
+        )
+        if proxy:
+            cli.append(f"--proxy-server={proxy}")
+        cli.extend(
+            [
+                "--disable-background-networking",
+            ]
+        )
+        return cli
+
+    Chromium.get_cli = patched_get_cli
+
     try:
-        kaleido.start_sync_server(n=settings.KALEIDO_CONCURRENCY_PER_WORKER, mathjax=None)
+        kaleido.start_sync_server(
+            n=settings.KALEIDO_CONCURRENCY_PER_WORKER,
+            mathjax=False,
+        )
         logger.info("Kaleido sync server started successfully. Concurrency: %d", settings.KALEIDO_CONCURRENCY_PER_WORKER)
     except Exception as e:
         logger.critical("Kaleido failed to start: %s", e)
