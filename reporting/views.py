@@ -1060,6 +1060,10 @@ def import_risk_analysis_status(request, group_id):
             os.unlink(tmp_path)
         rendered_messages = render_error_messages(request)
 
+    if is_failed:
+        messages.error(request, _("Failed to import risk analysis. Please try again."))
+        rendered_messages = render_error_messages(request)
+
     reponse = {
         "state": "FAILURE" if is_failed else ("SUCCESS" if is_ready else "PROGRESS"),
         "current": completed,

@@ -537,6 +537,9 @@ def delete_project_task(project_id):
 def import_risk_analysis_task(self, tmp_path, company_reporting_id):
     try:
         company_reporting_obj = CompanyReporting.objects.get(pk=company_reporting_id)
+        company_name = company_reporting_obj.company.name
+        sector_name = company_reporting_obj.sector.name
+        year = company_reporting_obj.year
 
         with open(tmp_path, "rb") as json_file:
             with transaction.atomic():
@@ -544,12 +547,20 @@ def import_risk_analysis_task(self, tmp_path, company_reporting_id):
 
         return {
             "status": "success",
-            "company": company_reporting_obj.company.name,
-            "sector": company_reporting_obj.sector.name,
-            "year": company_reporting_obj.year,
+            "company": company_name,
+            "sector": sector_name,
+            "year": year,
         }
+    except CompanyReporting.DoesNotExist:
+        logger.exception("CompanyReporting [%s] not found", company_reporting_id)
+        raise
+
     except Exception as exc:
-        # Transient error — retry with exponential backoff
+        if self.request.retries >= self.max_retries:
+            logger.exception("Import risk analysis failed for [%s][%s][%s] : %s", company_name, sector_name, year, exc)
+            raise
+
+        # Transient — retry with exponential backoff
         raise self.retry(exc=exc, countdown=2**self.request.retries)
 
 
