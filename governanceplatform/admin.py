@@ -1146,7 +1146,7 @@ class UserAdmin(admin.ModelAdmin):
             if user_in_group(user, "OperatorAdmin"):
                 company_in_use = get_active_company_from_session(request)
                 if company_in_use:
-                    obj.companies.add(company_in_use)
+                    obj.companies.add(company_in_use, through_defaults={"approved": True})
                 group, _ = Group.objects.get_or_create(name="OperatorUser")
                 obj.groups.add(group)
 
