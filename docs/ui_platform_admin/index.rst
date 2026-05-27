@@ -7,9 +7,9 @@ If you are a **Platform Admin**, you can use the **Administration Console** as d
 
 There are four sections in the Administration Console: **Administration, Governance, Sites**, and **Recent Actions**.
 
-.. figure:: _static/platform_admin_images/PLAT_ADM_01.png
+.. figure:: ../_static/platform_admin_images/PLAT_ADM_01.png
    :alt: Login page.
-   :target: _static/platform_admin_images/PLAT_ADM_01.png
+   :target: ../_static/platform_admin_images/PLAT_ADM_01.png
 
 **The Platform Admin has very special rights and scope of activities as follows:**
 
