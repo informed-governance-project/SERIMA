@@ -736,10 +736,12 @@ class RegulatorIncidentWorkflowCommentForm(forms.ModelForm):
             "class": f"w-25 {select_class} review_status_selector",
         }
 
+        comment_class = "summernote empty_field" if not self.initial["comment"] else "summernote"
+
         self.fields["comment"].widget.attrs.update(
             {
                 "rows": 3,
-                "class": "empty_field" if not self.initial["comment"] else "",
+                "class": comment_class,
             }
         )
 
