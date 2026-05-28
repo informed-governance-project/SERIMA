@@ -125,8 +125,15 @@ You have two options to delete a regulator:
 2.	Click the name of the regulator on the **Select Regulator to change** screen to open the **Change Regulator** screen. Once on the Change Regulator screen, click the red **Delete** button in the lower right-hand corner. If you have the necessary permission level, the chosen regulator will be deleted from the system.
 
 
+Users
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Platform Admins can create other Platform Admins, Regulator Admins, and Observer Users. If you click the Users link in the Governance section, you will be directed to the Select User to Change screen. This screen lists all users (Platform Admins, Regulator Admins, and Observer Users) that the Regulator Admin of your SERIMA instance has set up.
+You can add new users by clicking the Add link in the Governance section or by using the Add User link in the top right-hand corner. The Add User screen appears, where you can provide basic information such as First Name, Last Name, Email Address, and Phone Number.
+After creating a user, remember to add them to one of the entities (Regulators or Observers). To do this, open the Regulator or Observer where you want to link the user. For example, to add a user to an Observer, click the Observer’s name, and on the Change Observer screen, use the Add another Observer user option to link the user to the selected Observer.
+To create Observer users, use the Observers link. To create Regulator users, use the Regulators link in the Governance section.
 
+57
 
 
 
