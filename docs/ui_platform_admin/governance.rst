@@ -128,17 +128,33 @@ You have two options to delete a regulator:
 Users
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Platform Admins can create other Platform Admins, Regulator Admins, and Observer Users. If you click the Users link in the Governance section, you will be directed to the Select User to Change screen. This screen lists all users (Platform Admins, Regulator Admins, and Observer Users) that the Regulator Admin of your SERIMA instance has set up.
-You can add new users by clicking the Add link in the Governance section or by using the Add User link in the top right-hand corner. The Add User screen appears, where you can provide basic information such as First Name, Last Name, Email Address, and Phone Number.
-After creating a user, remember to add them to one of the entities (Regulators or Observers). To do this, open the Regulator or Observer where you want to link the user. For example, to add a user to an Observer, click the Observer’s name, and on the Change Observer screen, use the Add another Observer user option to link the user to the selected Observer.
-To create Observer users, use the Observers link. To create Regulator users, use the Regulators link in the Governance section.
+**Platform Admins can create other Platform Admins, Regulator Admins, and Observer Users.** If you click the Users link in the Governance section, you will be directed to the **Select User to Change** screen. This screen lists all users (Platform Admins, Regulator Admins, and Observer Users) that the Regulator Admin of your SERIMA instance has set up.
 
-57
+You can add new users by clicking the **Add** link in the **Governance** section or by using the **Add User** link in the top right-hand corner. The **Add User** screen appears, where you can provide basic information such as First Name, Last Name, Email Address, and Phone Number.
 
+After creating a user, remember to add them to one of the entities (Regulators or Observers). To do this, open the Regulator or Observer where you want to link the user. For example, to add a user to an Observer, click the Observer’s name, and on the **Change Observer** screen, use the **Add another Observer user** option to link the user to the selected Observer.
 
+To create Observer users, use the **Observers** link. To create Regulator users, use the **Regulators** link in the Governance section.
 
+.. figure:: ../_static/platform_admin_images/PLAT_ADM_17.png
+   :alt: Add another Observer user
+   :target: ../_static/platform_admin_images/PLAT_ADM_17.png
 
+In case you have many users in your **SERIMA** instance, use the **Filter** on the right. You can filter users by regulators, observers, or roles. By default, all options are displayed. To narrow the list, click the specific link you are looking for. For example, under **By Roles**, clicking **Regulator Admin** will display only the Regulator Admins in your system.
 
+.. figure:: ../_static/platform_admin_images/PLAT_ADM_15.png
+   :alt: Filter Regulator users
+   :target: ../_static/platform_admin_images/PLAT_ADM_15.png
 
+Besides filtering, you can sort users by clicking the heading of the column you want to sort, either in ascending or descending order. To manage users, first select the checkbox in front of the user you want to modify, then choose the desired action from the **Action** dropdown menu.
 
+Export selected Users
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Select the users you want to export by checking the box next to each relevant user. Then, open the **Action** dropdown menu, choose **Export Selected Users**, and click **Go**. The selected users will be exported to a CSV file.
+
+The screenshot below shows that three out of eight users have been selected. By choosing an action from the **Action** dropdown and clicking the **Go** button, the selected action is performed: for example, **resetting 2FA** or exporting the three selected users.
+
+.. figure:: ../_static/platform_admin_images/PLAT_ADM_16.png
+   :alt: Action dropdown menu
+   :target: ../_static/platform_admin_images/PLAT_ADM_16.png
