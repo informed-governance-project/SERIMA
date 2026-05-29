@@ -72,3 +72,28 @@ def test_can_access_so(otp_client, populate_so_db):
 
     url = "/securityobjectives/declaration?id=" + str(sa.pk)
     test_get_with_otp(otp_client, users, authorized_users, unaccess_module_users, url)
+
+
+@pytest.mark.django_db
+def test_pdf_download_so(otp_client, populate_so_db):
+    """
+    Test if the PDF download is accessible to the right users
+    """
+    users = populate_so_db["users"]
+    sas = populate_so_db["sas"]
+    # authorized user
+    authorized_users = [u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu" or u.email == "regadmin@reg1.lu"]
+    # user with 404
+    unauthorized_user = [
+        u
+        for u in users
+        if u.email == "regadmin@reg2.lu"
+        or u.email == "reguser@reg2.lu"
+        or u.email == "obsadm@cert1.lu"
+        or u.email == "iu1@iu.lu"
+        or u.email == "iu2@iu.lu"
+    ]
+    # only one Standard answers in the DB
+    sa = next((u for u in sas), None)
+    url = "/securityobjectives/download/" + str(sa.id)
+    test_get_with_otp(otp_client, users, authorized_users, unauthorized_user, url)
