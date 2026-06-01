@@ -787,7 +787,9 @@ class SecurityMeasureAdminForm(TranslatableModelForm, PermissionMixin):
 
         so = cleaned_data.get("security_objective")
         ml = cleaned_data.get("maturity_level")
-        sois = SecurityObjectivesInStandard.objects.get(security_objective=so)
+        sois = None
+        if so:
+            sois = SecurityObjectivesInStandard.objects.get(security_objective=so)
 
         if sois and ml:
             if sois.standard_id != ml.standard_id:
