@@ -227,6 +227,7 @@ class ReviewForm(forms.ModelForm):
             "review_comment": forms.Textarea(
                 attrs={
                     "rows": 3,
+                    "class": "summernote",
                 }
             ),
         }
