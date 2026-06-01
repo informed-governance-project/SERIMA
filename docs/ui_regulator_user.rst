@@ -1,6 +1,8 @@
 Regulator User
 ----------------------
 
+   **A Regulator User can create Operator Admins and Operator Users and the entities in the system.**
+
 In the user interface, click the **Settings** link to go to the **Site Administration** screen (the **Administration Interface**).
 To return to the user interface, click the **Return to user interface** link in the upper right-hand corner (circled in red in the screenshot below).
 
@@ -8,7 +10,7 @@ To return to the user interface, click the **Return to user interface** link in 
    :alt: Site administration
    :target: _static/regulator_user_images/Reg_User_01.png
 
-The **Administration Console** looks very similar to the Operator Admin interface. In addition to the **Governance** section, it also includes the **Reporting** section. A Regulator User can create Operator Admins and Operator Users and the entities in the system.
+The **Administration Console** looks very similar to the Operator Admin interface. In addition to the **Governance** section, it also includes the **Reporting** section. 
 
 Governance
 ~~~~~~~~~~~~~~~
@@ -17,7 +19,8 @@ The Governance section contains two links: **Operators** and **Users**.
 Operators
 ~~~~~~~~~~~~~~~
 In the Governance section, you can manage the Operators and Users (you can add, delete, and update them).
-A Regulator User can ‘convert’ Operator Users into Operator Admins by checking the **Is Administrator** checkbox in the Contacts for Company section:
+
+   **A Regulator User can ‘convert’ Operator Users into Operator Admins by checking the -Is Administrator- checkbox in the Contacts for Company             section:**
 
 .. figure:: _static/regulator_user_images/Reg_User_05.png
    :alt: Governance - is administrator
@@ -33,12 +36,13 @@ Users
 ~~~~~~~~~~~~~~~
 Click the **Users** link to see the Users table (**Select User to view** screen). Similar to the Operator Admin, the Regulator User can also see the users linked to the operators in the system.
 
-Please check the Users chapter in the Operator Admin section for further information.
+*Please check the Users chapter in the Operator Admin section for further information.*
 
 Reporting
 ~~~~~~~~~~~~~~~
 
 In the **Reporting** section, you can set up recommendations for observations in four languages (English, French, Dutch, and German).
+
 The **Reporting module** displays a list of recommendations for regulators. It uses a shared database that all regulators can access.
 A regulator can create a recommendation, describe its purpose, and link it to a specific sector or to all sectors.
 
@@ -55,6 +59,7 @@ If you do not choose a sector, then the recommendation will be linked to all sec
    :target: _static/regulator_user_images/Reg_User_02.png
 
 You can **Save** your changes, **Save and add another** recommendation, or **Save and continue editing** to modify the recommendation further.
+
 Once your changes are saved, the application confirms that the recommendation was added successfully, and the newly created entry appears in the recommendations list, showing its name, description, and the selected sectors.
 
 .. figure:: _static/regulator_user_images/Reg_User_03.png
