@@ -1,4 +1,4 @@
-# CLAUDE.md — NISINP (Governance Platform)
+# CLAUDE.md — SERIMA (Governance Platform)
 
 ## Project Overview
 

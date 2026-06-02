@@ -1,6 +1,6 @@
 services:
   web:
-    container_name: governanceplatform-${NISINP_ENVIRONMENT?:err}
+    container_name: governanceplatform-${SERIMA_ENVIRONMENT?:err}
     image: ${SERIMA_IMAGE:-ghcr.io/informed-governance-project/serima}:${SERIMA_VERSION?:err}
     pull_policy: always
     environment: &env
