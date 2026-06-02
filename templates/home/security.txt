@@ -1,7 +1,7 @@
 # NC3 Security Contact
 
 Contact: opensource@nc3.lu
-https://github.com/informed-governance-project/NISINP/security
+https://github.com/informed-governance-project/SERIMA/security
 
 Last stable version this software always provides security updates.
 here will be no security patches for other releases (tagged or not).

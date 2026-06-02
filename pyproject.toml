@@ -51,8 +51,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/informed-governance-project/NISINP"
-Repository = "https://github.com/informed-governance-project/NISINP"
+Homepage = "https://github.com/informed-governance-project/SERIMA"
+Repository = "https://github.com/informed-governance-project/SERIMA"
 Documentation = "https://nisinp.readthedocs.io"
 
 [tool.poetry.requires-plugins]
