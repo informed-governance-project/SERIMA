@@ -1,7 +1,7 @@
 [project]
 name = "governanceplatform"
 version = "0.5.14+reporting"
-description = "Governance Platform - NISINP"
+description = "Governance Platform - SERIMA"
 readme = "README.md"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
@@ -57,7 +57,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/informed-governance-project/SERIMA"
 Repository = "https://github.com/informed-governance-project/SERIMA"
-Documentation = "https://nisinp.readthedocs.io"
+Documentation = "https://serima.readthedocs.io"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"

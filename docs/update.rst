@@ -5,7 +5,7 @@ All you have to do is:
 
 .. code-block:: bash
 
-    $ cd NISINP/
+    $ cd SERIMA/
     $ ./contrib/update.sh {APP_TAG} {THEME_TAG}
 
 Replace `{APP_TAG}` and `{THEME_TAG}` with the Git tag or branch you want to deploy for the application and theme respectively. If omitted, both default to `master`.
@@ -14,7 +14,7 @@ Or manually:
 
 .. code-block:: bash
 
-    $ cd NISINP/
+    $ cd SERIMA/
     $ git pull origin master --tags
     $ npm ci
     $ poetry install
