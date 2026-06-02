@@ -1,4 +1,4 @@
-name: serima Docker build and push to ghcr.io
+name: SERIMA Docker build and push to ghcr.io
 
 on:
   push:
