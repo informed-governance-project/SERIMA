@@ -26,7 +26,7 @@ def test_add_user_via_admin(otp_client, populate_db):
 
     for index, creator in enumerate(users, start=1):
         # new user data
-        email = f"new_user{index}@nisinp.lu"
+        email = f"new_user{index}@serima.exemple.lu"
         data = {
             "email": email,
             "first_name": "test",

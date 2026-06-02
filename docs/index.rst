@@ -20,8 +20,8 @@ Incident Notification Module
         :target: https://github.com/informed-governance-project/SERIMA/actions?query=workflow%3A%22Python+application+tests%22
         :alt: Workflow
 
-    .. image:: https://readthedocs.org/projects/nisinp/badge/?version=latest
-        :target: https://nisinp.readthedocs.io/en/latest/?badge=latest
+    .. image:: https://readthedocs.org/projects/serima/badge/?version=latest
+        :target: https://serima.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 
