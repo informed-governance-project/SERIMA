@@ -14,7 +14,9 @@ The email templates are shown as a list in a table with the columns Name, **Subj
    :alt: Select Email to Change
    :target: /_static/regulator_admin_images/Reg_Admin_23.png
 
-Click the name of the template to see its content. The screenshot below shows an example of the **New Incident Notification** template. You can see the Name, the Subject, and the Content of the email:
+Click the name of the template to see its content. The screenshot below shows an example of the **New Incident Notification** template. 
+
+You can see the **Name**, the **Subject**, and the **Content** of the email:
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_24.png
    :alt: New Incident Notification
@@ -53,7 +55,7 @@ You can set up an impact named **DNS 1h** for a one-hour DNS service outage and 
 
 If you have many impacts, you can use the **Search** and **Filter** features to find specific ones. In the Filter section on the right side of the screen, you can narrow down your impacts by sector or legal basis.
 
-
+   **How to export selected impacts?**
 
 Select the impact or impacts you want to export by checking the box next to each relevant impact. If you want to select all impacts at once, use the first checkbox on the left of the Regulations column header.
 
@@ -62,6 +64,9 @@ Then, open the **Action** dropdown menu, choose **Export Selected Impact**, and 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_27.png
    :alt: Export Selected Impact
    :target: /_static/regulator_admin_images/Reg_Admin_27.png
+.
+
+   **How to delete selected impacts?**
 
 Select the impact or impacts you want to delete by checking the box next to each relevant impact. Then, open the **Action** dropdown menu, choose **Delete Selected Impact**, and click **Go**. The selected impacts will be deleted.
 
@@ -111,7 +116,7 @@ When the status of the incident changes, the **Status update email** is sent out
    :alt: Available email templates
    :target: /_static/regulator_admin_images/Reg_Admin_33.png
 
-Next to the dropdown menus, you can see the following icons,
+Next to the dropdown menus, you can see the following icons:
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_65.png
    :alt: Notification email icons
@@ -153,6 +158,7 @@ Select the incident report or reports you want to delete by checking the box nex
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_28.png
    :alt: Delete selected Incident reports
    :target: /_static/regulator_admin_images/Reg_Admin_28.png
+
 
    **How to check the details of a report?**
 
