@@ -1,7 +1,7 @@
 Governance
 ~~~~~~~~~~~~~~~~~~~
 
-In the Governance section, you can find the following functionalities:
+In the **Governance** section, you can find the following functionalities:
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_06.png
    :alt: Governance
@@ -61,7 +61,7 @@ Click the **Operators** link to go to the **Select Operator to change** screen. 
 
 Please note that you can add new operators either by clicking the **Add** link in the **Governance** section on the left panel or by clicking the **Add Operator** button in the top right-hand corner.
 
-Once clicked, you will be directed to the Add Operator screen, where you can set up a new operator. First, provide the operator’s contact information (name, address, country, email address, and phone number). Then choose an acronym for the operator. Finally, assign entity categories to the operator.
+Once clicked, you will be directed to the **Add Operator** screen, where you can set up a new operator. First, provide the operator’s contact information (name, address, country, email address, and phone number). Then choose an acronym for the operator. Finally, assign entity categories to the operator.
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_13.png
    :alt:  Operator configuration
@@ -70,7 +70,9 @@ Once clicked, you will be directed to the Add Operator screen, where you can set
 Regulations
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-By clicking the **Regulations** link, you can view the regulations that have been set up in your SERIMA instance. **SERIMA is a multi-regulation platform**, meaning that the Platform Admin can configure as many regulations as needed.
+By clicking the **Regulations** link, you can view the regulations that have been set up in your SERIMA instance.
+
+   **SERIMA is a multi-regulation platform, meaning that the Platform Admin can configure as many regulations as needed.**
 
 Please note that, as a **Regulator Admin**, you do not have write permissions for this functionality and, therefore, cannot add or delete regulations. You can only view the regulations available in your system.
 
@@ -137,15 +139,15 @@ On the **Add User** screen, you can add new users by filling in the required fie
 
 **Please note that as a Regulator Admin, you can only create regulator users and regulator admins (you cannot create operator admins).**
 
-  *How to filter among users?*
+ **How to filter among users?**
 
 Use the Filter section on the far right. The **Show counts** link displays how many users and in what roles can be found in your platform.
 
-  *How to reset 2FA?*
+  **How to reset 2FA?**
 
 Choose a user by clicking the checkmark on the far left, before the First Name column. Then, go to the down-pointing arrow in the Action field and choose the option **Reset 2FA**.
 
-  *How to export selected users?*
+  **How to export selected users?**
 
 Choose a user by clicking the checkmark on the far left, before the First Name column. Then, go to the down-pointing arrow in the Action field and choose the option **Export selected users**.
 
