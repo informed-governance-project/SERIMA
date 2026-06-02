@@ -7,4 +7,9 @@ class GovernancePlatformConfig(AppConfig):
     verbose_name = _("Governance")
 
     def ready(self):
+        import logging
+
         from . import signals  # noqa: F401
+
+        # Increasing weasyprint.process log level before weasyprint init
+        logging.getLogger("weasyprint.progress").setLevel(logging.ERROR)

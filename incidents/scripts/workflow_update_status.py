@@ -27,16 +27,12 @@ def run(logger=logger):
 
     for incident in ongoing_incidents:
         try:
-            filled_workflow_ids = IncidentWorkflow.objects.filter(
-                incident=incident
-            ).values_list("workflow", flat=True)
+            filled_workflow_ids = IncidentWorkflow.objects.filter(incident=incident).values_list("workflow", flat=True)
 
             if not incident.sector_regulation:
                 continue
 
-            unfilled_report_ids = incident.sector_regulation.workflows.exclude(
-                id__in=filled_workflow_ids
-            ).values_list("id", flat=True)
+            unfilled_report_ids = incident.sector_regulation.workflows.exclude(id__in=filled_workflow_ids).values_list("id", flat=True)
 
             srw = SectorRegulationWorkflow.objects.filter(
                 workflow__in=unfilled_report_ids,
@@ -48,10 +44,7 @@ def run(logger=logger):
                     delay_in_hours = report.delay_in_hours_before_deadline
                     dt = report.how_late_is_the_report(incident, actual_time)
 
-                    if (
-                        dt
-                        and math.floor(dt.total_seconds() / 60 / 60) == delay_in_hours
-                    ):
+                    if dt and math.floor(dt.total_seconds() / 60 / 60) == delay_in_hours:
                         if incident.sector_regulation.report_status_changed_email:
                             send_email(
                                 incident.sector_regulation.report_status_changed_email,
@@ -67,6 +60,4 @@ def run(logger=logger):
                     )
 
         except Exception as e:
-            logger.error(
-                "Error processing incident ID %s: %s", incident.id, e, exc_info=True
-            )
+            logger.error("Error processing incident ID %s: %s", incident.id, e, exc_info=True)

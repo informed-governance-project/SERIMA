@@ -1,6 +1,7 @@
 import functools
 
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.utils.translation import gettext_lazy as _
 
@@ -35,11 +36,11 @@ def check_user_is_correct(view_func):
 
         messages.error(
             request,
-            _(
-                "The user account has currently no associated entities. Please contact the administrator."
-            ),
+            _("The user account has currently no associated entities. Please contact the administrator."),
         )
-        return redirect("logout")
+
+        logout(request)
+        return redirect("login")
 
     return _wrapped_view
 

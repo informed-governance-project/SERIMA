@@ -18,7 +18,7 @@ directly a public GitHub issue. Please email us. You can contact us at:
 opensource@nc3.lu
 
 You can also specify how you would like to be credited for your finding
-(commit message or release notes for the new release). We 
+(commit message or release notes for the new release). We
 respect your privacy and will only publicize your involvement if you
 grant us permission.
 
@@ -36,7 +36,7 @@ are performed locally thanks to `pre-commit <https://pre-commit.com>`_.
 Code **quality** is verified with tools such as *black*, *flake8* and *mypy*.
 
 Public security issues are listed
-`here <https://github.com/informed-governance-project/NISINP/issues?q=is%3Aissue+label%3Asecurity+>`_.
+`here <https://github.com/informed-governance-project/SERIMA/issues?q=is%3Aissue+label%3Asecurity+>`_.
 
 
 Audit the source code

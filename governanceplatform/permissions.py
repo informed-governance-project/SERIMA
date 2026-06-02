@@ -4,6 +4,7 @@ GROUP_PERMISSIONS = {
     "PlatformAdmin": {
         "site": ["change"],
         "logentry": ["view"],
+        "functionality": ["add", "change", "delete"],
         "user": ["add", "change", "delete"],
         "regulatoruser": ["add", "change", "delete"],
         "regulator": ["add", "change", "delete"],
@@ -12,6 +13,7 @@ GROUP_PERMISSIONS = {
         "observer": ["add", "change", "delete"],
         "observerregulation": ["add", "change", "delete"],
         "entitycategory": ["add", "change", "delete"],
+        "settingsdummy": ["view"],
     },
     "RegulatorAdmin": {
         # Administration
@@ -74,10 +76,9 @@ GROUP_PERMISSIONS = {
         "logstandardanswer": ["add", "change", "delete"],
     },
     "RegulatorUser": {
-        "user": ["add", "view", "import", "export"],
+        "user": ["add", "view"],
         "companyuser": ["add", "view", "change", "delete"],
-        "company": ["add", "view", "change", "delete"],
-        "sector": ["change"],
+        "company": ["add", "view", "change"],
         "observationrecommendation": ["add", "view", "change", "delete"],
     },
     "ObserverAdmin": {
@@ -136,8 +137,7 @@ def add_group_permissions(group_name, group_permissions):
 
 def update_group_permissions(group_name, permissions):
     group_permissions = permission_formatting(permissions)
-    group = add_group_permissions(group_name, group_permissions)
-    return group
+    return add_group_permissions(group_name, group_permissions)
 
 
 def update_all_group_permissions():

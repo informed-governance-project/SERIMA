@@ -1,72 +1,77 @@
-[tool.poetry]
+[project]
 name = "governanceplatform"
-version = "0.5.13"
+version = "0.5.14"
 description = "Governance Platform - NISINP"
-authors = [
-    "Cédric Bonhomme <cedric.bonhomme@nc3.lu>",
-    "Jérôme Lombardi <jerome.lombardi@nc3.lu>",
-    "Juan Rocha <juan.rocha@nc3.lu>",
-    "Ruslan Baidan <ruslan.baidan@nc3.lu>",
-]
-license = "AGPL-3.0-or-later"
 readme = "README.md"
-
-homepage = "https://github.com/informed-governance-project/NISINP"
-repository = "https://github.com/informed-governance-project/NISINP"
-documentation = "https://nisinp.readthedocs.io"
-
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
 keywords = ["NC3-LU", "NIS", "NIS2", "incident-notification"]
+requires-python = ">=3.12,<4"
+authors = [
+    { name = "Cédric Bonhomme", email = "cedric.bonhomme@nc3.lu" },
+    { name = "Jérôme Lombardi", email = "jerome.lombardi@nc3.lu" },
+    { name = "Juan Rocha", email = "juan.rocha@nc3.lu" },
+    { name = "Ruslan Baidan", email = "ruslan.baidan@nc3.lu" },
+]
+dependencies = [
+    "django>=6.0,<7",
+    "psycopg2-binary>=2.8.4,<3",
+    "cryptography>=48.0.0,<49",
+    "django-cors-headers>=4.3.1,<5",
+    "drf-spectacular>=0.29.0,<0.30",
+    "drf-spectacular-sidecar>=2026.4.1,<2027",
+    "django-bootstrap5>=26.2,<27",
+    "django-otp>=1.1.6,<2",
+    "django-formtools>=2.5.1,<3",
+    "django-two-factor-auth>=1.15.5,<2",
+    "phonenumbers>=9.0.27,<10",
+    "django-import-export>=4.4.0,<5",
+    "parler>=1.0.1,<2",
+    "django-parler @ git+https://github.com/informed-governance-project/django-parler.git@master",
+    "django-countries>=8.2.0,<9",
+    "weasyprint>=68.0,<69",
+    "django-extensions>=4.1,<5",
+    "django-parler-rest>=2.2,<3",
+    "python-dateutil>=2.8.2,<3",
+    "django-phonenumber-field>=8.4.0,<9",
+    "django-filter>=25.2,<26",
+    "pytz>=2026.1,<2027",
+    "plotly>=6.6.0,<7",
+    "kaleido>=1.2.0,<2",
+    "openpyxl>=3.1.5,<4",
+    "django-cookiebanner>=0.2.8,<0.3",
+    "django-health-check>=4.0.0,<5",
+    "whitenoise>=6.9.0,<7",
+    "django-simple-captcha>=0.6.2,<0.7",
+    "celery>=5.5.1,<6",
+    "redis>=7.4.0,<8",
+    "markdown>=3.10.1,<4",
+    "bleach>=6.3.0,<7",
+    "gunicorn>=26.0.0,<27",
+]
 
-[tool.poetry.dependencies]
-python = "^3.12"
-django = "^6.0"
-psycopg2-binary = "^2.8.4"
-cryptography = "^46.0.5"
-django-cors-headers = "^4.3.1"
-drf-spectacular = "^0.29.0"
-drf-spectacular-sidecar = "^2026.4.1"
-django-bootstrap5 = "^26.2"
-django-otp = "^1.1.6"
-django-formtools = "^2.5.1"
-django-two-factor-auth = "^1.15.5"
-phonenumbers = "^9.0.27"
-django-import-export = "^4.4.0"
-parler = "^1.0.1"
-django-parler = {git = "https://github.com/informed-governance-project/django-parler", branch = "master"}
-django-countries = "^8.2.0"
-weasyprint = "^68.0"
-django-extensions = "^4.1"
-django-parler-rest = "^2.2"
-python-dateutil = "^2.8.2"
-django-phonenumber-field = "^8.4.0"
-django-filter = "^25.2"
-pytz = "^2026.1"
-plotly = "^6.6.0"
-kaleido = "0.2.1"
-openpyxl = "^3.1.5"
-django-cookiebanner = "^0.2.8"
-django-health-check = "^4.0.0"
-whitenoise = "^6.9.0"
-django-simple-captcha = "^0.6.2"
-celery = "^5.5.1"
-redis = "^7.4.0"
-markdown = "^3.10.1"
-bleach = "^6.3.0"
+[project.urls]
+Homepage = "https://github.com/informed-governance-project/SERIMA"
+Repository = "https://github.com/informed-governance-project/SERIMA"
+Documentation = "https://nisinp.readthedocs.io"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
 
 [tool.poetry.group.dev.dependencies]
-flake8 = "^7.2.0"
+ruff = "^0.15.12"
 pre-commit = "^4.2.0"
-black = "^26.3.1"
-pyupgrade = "^3.19.1"
 autoflake = "^2.3.1"
-mypy = "^1.15.0"
+mypy = "<1.19"
+django-stubs = {version = "^6.0.3", extras = ["compatible-mypy"]}
 types-requests = "^2.32.0.20250515"
 pip-audit = "^2.9.0"
-isort = "^8.0.1"
 pyparsing = "^3.2.3"
 pytest = "^9.0.3"
 pytest-django = "^4.11.1"
 pytest-html = "^4.1.1"
+pytest-cov = "^6.0.0"
+
 
 [tool.poetry.group.docs]
 optional = true
@@ -77,17 +82,11 @@ sphinxcontrib-openapi = "^0.8.1"
 pydot = "^1.4.2"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.isort]
-profile = "black"
-
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 check_untyped_defs = true
 ignore_errors = false
 ignore_missing_imports = true
@@ -97,6 +96,52 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 warn_unused_configs = true
 warn_unreachable = true
-
 show_error_context = true
 pretty = true
+plugins = ["mypy_django_plugin.main"]
+exclude = [
+    "migrations/",
+    "theme/",
+    "docker/",
+    "docs/",
+    "node_modules/",
+]
+
+[tool.django-stubs]
+strict_settings = false
+django_settings_module = "governanceplatform.settings"
+
+[tool.ruff]
+exclude = ["migrations"]
+target-version = "py312"
+line-length = 140
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "Q",
+    "W",
+    "PD",
+    "TC",
+    "UP",
+    "C90",
+    "FLY",
+    "INT",
+    "ISC",
+    "ICN",
+    "LOG",
+    "NPY",
+    "PIE",
+    "PLE",
+    "PLW",
+    "PYI",
+    "RET",
+    "T20",
+    "TID",
+    "SLOT",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 36

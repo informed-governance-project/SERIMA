@@ -1,6 +1,6 @@
 import secrets
 from collections import defaultdict
-from typing import Any, Optional
+from typing import Any
 
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
@@ -50,9 +50,7 @@ def user_in_group(user, group_name) -> bool:
 
 
 def instance_user_in_group(user_instance, group_name) -> bool:
-    return any(
-        user_group.name == group_name for user_group in user_instance.groups.all()
-    )
+    return any(user_group.name == group_name for user_group in user_instance.groups.all())
 
 
 def is_user_regulator(user: User) -> bool:
@@ -67,17 +65,16 @@ def is_observer_user(user: User) -> bool:
     return user_in_group(user, "ObserverAdmin") or user_in_group(user, "ObserverUser")
 
 
-def is_observer_user_viewving_all_incident(user: User) -> bool:
-    return (is_observer_user(user)) and user.observers.first().is_receiving_all_incident
+def is_observer_user_viewing_all_incident(user: User) -> bool:
+    if not is_observer_user(user):
+        return False
+    observer = user.observers.first()
+    return observer is not None and observer.is_receiving_all_incident
 
 
-def get_active_company_from_session(request) -> Optional[Company]:
+def get_active_company_from_session(request) -> Company | None:
     company_in_use = request.session.get("company_in_use")
-    return (
-        request.user.companies.filter(id=company_in_use).first()
-        if company_in_use
-        else None
-    )
+    return request.user.companies.filter(id=company_in_use).first() if company_in_use else None
 
 
 def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
@@ -94,25 +91,14 @@ def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
     # RegulatorUser can access only incidents from accessible sectors.
     if (
         user_in_group(user, "RegulatorUser")
-        and Incident.objects.filter(
-            pk=incident.id, sector_regulation__regulator=user.regulators.first()
-        ).exists()
+        and Incident.objects.filter(pk=incident.id, sector_regulation__regulator=user.regulators.first()).exists()
     ):
-        sectors = [
-            sector
-            for sector in incident.affected_sectors.all()
-            if sector in user.get_sectors().all()
-        ]
-        if len(sectors) > 0:
-            return True
-        else:
-            return False
+        return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
+
     # RegulatorAdmin can access only incidents from accessible regulators.
     if (
         user_in_group(user, "RegulatorAdmin")
-        and Incident.objects.filter(
-            pk=incident.id, sector_regulation__regulator=user.regulators.first()
-        ).exists()
+        and Incident.objects.filter(pk=incident.id, sector_regulation__regulator=user.regulators.first()).exists()
     ):
         return True
     # OperatorAdmin/User can access only incidents related to selected company.
@@ -123,13 +109,10 @@ def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
     ):
         return True
     # IncidentUser can access their reports.
-    if (
-        user_in_group(user, "IncidentUser")
-        and Incident.objects.filter(pk=incident.id, contact_user=user).exists()
-    ):
+    if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
         return True
     # ObserverUser access all incident if he is in a observer who can access all incident.
-    if is_observer_user_viewving_all_incident(user):
+    if is_observer_user_viewing_all_incident(user):
         return True
     if is_observer_user(user):
         incident_lists = user.observers.first().get_incidents()
@@ -142,18 +125,11 @@ def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
 # check if the user is allowed to create an incident_workflow
 def can_create_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
     # if it's incident user
-    if (
-        user_in_group(user, "IncidentUser")
-        and Incident.objects.filter(pk=incident.id, contact_user=user).exists()
-    ):
+    if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
         return True
 
     # if it's the incident of the user he can create
-    if (
-        company_id
-        and incident.contact_user == user
-        and user.companyuser_set.filter(company__id=company_id, approved=True).exists()
-    ):
+    if company_id and incident.contact_user == user and user.companyuser_set.filter(company__id=company_id, approved=True).exists():
         return True
 
     # if it's regulator incident
@@ -182,18 +158,11 @@ def can_create_incident_report(user: User, incident: Incident, company_id=-1) ->
 # for regulators to add message
 def can_edit_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
     # if it's incident user
-    if (
-        user_in_group(user, "IncidentUser")
-        and Incident.objects.filter(pk=incident.id, contact_user=user).exists()
-    ):
+    if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
         return True
 
     # if it's the incident of the user he can create
-    if (
-        company_id
-        and incident.contact_user == user
-        and user.companyuser_set.filter(company__id=company_id, approved=True).exists()
-    ):
+    if company_id and incident.contact_user == user and user.companyuser_set.filter(company__id=company_id, approved=True).exists():
         return True
 
     # if it's regulator incident
@@ -216,31 +185,19 @@ def can_edit_incident_report(user: User, incident: Incident, company_id=-1) -> b
         return True
 
     # if he is the regulator admin of the incident need to be link to his regulator
-    if (
-        user_in_group(user, "RegulatorAdmin")
-        and incident.sector_regulation.regulator == user.regulators.first()
-    ):
+    if user_in_group(user, "RegulatorAdmin") and incident.sector_regulation.regulator == user.regulators.first():
         return True
     # if he is the regulator user of the incident, he need to have the sectors
-    if (
-        user_in_group(user, "RegulatorUser")
-        and incident.sector_regulation.regulator == user.regulators.first()
-    ):
-        sectors = [
-            sector
-            for sector in incident.affected_sectors.all()
-            if sector in user.get_sectors().all()
-        ]
-        if len(sectors) > 0:
-            return True
-        else:
-            return False
+    if user_in_group(user, "RegulatorUser") and incident.sector_regulation.regulator == user.regulators.first():
+        return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
 
     return False
 
 
 def set_creator(request: HttpRequest, obj: Any, change: bool) -> Any:
     regulator = request.user.regulators.first()
+    if regulator is None:
+        return obj
     if not change:
         obj.creator_name = regulator
         obj.creator_id = regulator.id
@@ -252,17 +209,21 @@ def set_creator(request: HttpRequest, obj: Any, change: bool) -> Any:
 
 
 def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool:
-    if not hasattr(request, "_can_change_or_delete_obj"):
-        request._can_change_or_delete_obj = True
-    else:
-        return request._can_change_or_delete_obj
+    # Cache per (type, pk) so multiple objects in one request are each evaluated once.
+    cache = getattr(request, "_can_change_or_delete_obj", {})
+    cache_key = (type(obj).__name__, getattr(obj, "pk", None))
+    if cache_key in cache:
+        return cache[cache_key]
+    request._can_change_or_delete_obj = cache
 
     if not obj.pk:
+        cache[cache_key] = True
         return True
 
     creator = getattr(obj, "creator", getattr(obj, "regulator", None))
 
     if not creator:
+        cache[cache_key] = True
         return True
 
     in_use = True
@@ -280,8 +241,7 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
     # [Question] Check if obj is already in use
     if isinstance(obj, Question):
         in_use = (
-            Answer.objects.filter(question_options__question=obj).exists()
-            or QuestionOptionsHistory.objects.filter(question=obj).exists()
+            Answer.objects.filter(question_options__question=obj).exists() or QuestionOptionsHistory.objects.filter(question=obj).exists()
         )
 
     # [Workflow] in_use flag is set to False
@@ -294,6 +254,7 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
 
     regulator = request.user.regulators.first()
     if creator == regulator and not in_use:
+        cache[cache_key] = True
         return True
 
     if not message:
@@ -302,8 +263,6 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
             "- This {object_name} is either in use.<br>"
             "- You are not its creator ({creator_name})"
         )
-    else:
-        message = message
 
     object_name = obj._meta.verbose_name.lower()
     creator_name = creator
@@ -316,8 +275,7 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
             creator_name=creator_name,
         ),
     )
-    request._can_change_or_delete_obj = False
-
+    cache[cache_key] = False
     return False
 
 
@@ -333,6 +291,7 @@ def filter_languages_not_translated(form):
 
 
 def get_sectors_grouped(sectors):
+    sectors = sectors.prefetch_related("children")
     categs = defaultdict(list)
     for sector in sectors:
         sector_name = sector.get_safe_translation()
@@ -344,10 +303,7 @@ def get_sectors_grouped(sectors):
         if not sector.children.exists() and not sector.parent:
             categs[sector_name].append([sector.id, sector_name])
 
-    sectors_grouped = (
-        (sector, sorted(options, key=lambda item: item[1]))
-        for sector, options in categs.items()
-    )
+    sectors_grouped = ((sector, sorted(options, key=lambda item: item[1])) for sector, options in categs.items())
 
     return sorted(sectors_grouped, key=lambda item: item[0])
 
@@ -363,9 +319,7 @@ def get_sectors_grouped(sectors):
 # These *_sort fields are case-insensitive (they ignore uppercase/lowercase when sorting).
 # If it is important to sort with case sensitivity, set orderable = False
 # and order directly by the translated field, e.g. .order_by("_label").
-def translated_queryset(
-    qs, language, default_language, translated_fields=None, orderable=False
-):
+def translated_queryset(qs, language, default_language, translated_fields=None, orderable=False):
     default_lang = default_language
     lang = language
     annotations = {}
@@ -374,12 +328,8 @@ def translated_queryset(
 
     for f in translated_fields:
         # Annotate value with the requested lang and default one
-        annotations[f"_{f}_lang"] = Max(
-            f"translations__{f}", filter=Q(translations__language_code=lang)
-        )
-        annotations[f"_{f}_default"] = Max(
-            f"translations__{f}", filter=Q(translations__language_code=default_lang)
-        )
+        annotations[f"_{f}_lang"] = Max(f"translations__{f}", filter=Q(translations__language_code=lang))
+        annotations[f"_{f}_default"] = Max(f"translations__{f}", filter=Q(translations__language_code=default_lang))
 
     qs = qs.annotate(**annotations)
 
@@ -417,7 +367,7 @@ def annotate_translated_field_from_related_models(
     lang_key = f"_{translated_field}_lang"
     default_key = f"_{translated_field}_default"
 
-    qs = qs.annotate(
+    return qs.annotate(
         **{
             lang_key: Max(
                 f"{relation_path}__translations__{translated_field}",
@@ -425,9 +375,7 @@ def annotate_translated_field_from_related_models(
             ),
             default_key: Max(
                 f"{relation_path}__translations__{translated_field}",
-                filter=Q(
-                    **{f"{relation_path}__translations__language_code": default_lang}
-                ),
+                filter=Q(**{f"{relation_path}__translations__language_code": default_lang}),
             ),
         }
     ).annotate(
@@ -439,8 +387,6 @@ def annotate_translated_field_from_related_models(
             )
         }
     )
-
-    return qs
 
 
 def generate_display_methods(translated_fields, related_fields=None):
@@ -484,9 +430,7 @@ def generate_display_methods(translated_fields, related_fields=None):
                 _method.admin_order_field = f"{rel_attr}__translations__{trans_field}"
                 return _method
 
-            methods[f"{related_attr}_display"] = make_related_method(
-                related_attr, translated_field
-            )
+            methods[f"{related_attr}_display"] = make_related_method(related_attr, translated_field)
 
     return methods
 
@@ -510,9 +454,7 @@ def render_to_string_multi_languages(
     with translation.override(settings.LANGUAGE_CODE):
         if content and object and replace_email_variables:
             context["content"] = replace_email_variables(
-                content.safe_translation_getter(
-                    "content", language_code=settings.LANGUAGE_CODE
-                ),
+                content.safe_translation_getter("content", language_code=settings.LANGUAGE_CODE),
                 object,
             )
         baseline = render_to_string(template_name, context)
@@ -524,13 +466,11 @@ def render_to_string_multi_languages(
                     content.safe_translation_getter("content", language_code=lang_code),
                     object,
                 )
-                context["content"] = markdown(
-                    text=context["content"], output_format="html"
-                )
+                context["content"] = markdown(text=context["content"], output_format="html")
                 context["content"] = sanitize_html(context["content"])
             rendered = render_to_string(template_name, context)
 
-            if rendered == baseline and lang_code not in settings.LANGUAGE_CODE:
+            if rendered == baseline and lang_code != settings.LANGUAGE_CODE:
                 continue
 
             parts.append(

@@ -12,7 +12,7 @@ class NoReusePasswordValidator:
     """
 
     def validate(self, password, user=None):
-        if user or user.pk is None:
+        if not user or user.pk is None:
             return
 
         if user.check_password(password):
@@ -21,9 +21,7 @@ class NoReusePasswordValidator:
                 code="password_same_as_current",
             )
 
-        old_passwords = user.passworduserhistory_set.all().values_list(
-            "hashed_password", flat=True
-        )
+        old_passwords = user.passworduserhistory_set.all().values_list("hashed_password", flat=True)
 
         for old_password in old_passwords:
             # Temporarily set the old hashed password
@@ -52,13 +50,7 @@ def validate_rt_url(base_url: str):
     except Exception:
         raise ValidationError(_("Invalid host"))
 
-    if (
-        ip.is_private
-        or ip.is_loopback
-        or ip.is_link_local
-        or ip.is_reserved
-        or ip.is_multicast
-    ):
+    if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
         raise ValidationError(_("Internal addresses are not allowed"))
 
     return True

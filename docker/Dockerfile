@@ -9,7 +9,6 @@ RUN npm ci
 FROM ubuntu:24.04
 
 ARG APP_VERSION
-ARG GUNICORN_VERSION=23.0
 ENV APP_VERSION=$APP_VERSION \
     DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
@@ -36,8 +35,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     libjpeg-dev \
     libopenjp2-7-dev \
+    # Chrome runtime dependencies (required by kaleido v1 for static image export)
+    libnss3 \
+    libnspr4 \
+    libatk1.0-0t64 \
+    libatk-bridge2.0-0t64 \
+    libcups2t64 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libasound2t64 \
     # Other dependencies
     gettext \
+    git \
   && rm -rf /var/lib/apt/lists/*
 
 # Both python and python3 link to python3.12
@@ -53,22 +67,22 @@ COPY --chown=www-data --from=npmbuilder /app/node_modules /app/static/npm_compon
 
 COPY --chown=www-data governanceplatform /app/governanceplatform
 COPY --chown=www-data incidents /app/incidents
-COPY --chown=www-data securityobjectives /app/securityobjectives
-COPY --chown=www-data reporting /app/reporting
 COPY --chown=www-data locale /app/locale
 COPY --chown=www-data static /app/static
 COPY --chown=www-data templates /app/templates
 
 COPY --chown=www-data pyproject.toml /app/pyproject.toml
 COPY --chown=www-data README.md /app/README.md
+COPY --chown=www-data README.md /app/LICENSE
 COPY --chown=www-data manage.py /app/manage.py
 
 RUN python -m pip install \
     --user \
     --break-system-packages \
     --no-cache-dir \
-    "gunicorn~=${GUNICORN_VERSION}" \
     .
+
+RUN plotly_get_chrome -y
 
 COPY celery_worker.py celery_beat.py docker/docker-init.sh /app/
 

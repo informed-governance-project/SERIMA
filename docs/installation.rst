@@ -70,7 +70,7 @@ NISINP
 
 .. code-block:: bash
 
-    git clone https://github.com/informed-governance-project/NISINP.git
+    git clone https://github.com/informed-governance-project/SERIMA.git
     cd NISINP
     git submodule update --init --recursive
     npm install

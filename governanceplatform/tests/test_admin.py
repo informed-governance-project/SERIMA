@@ -36,9 +36,7 @@ def test_add_user_via_admin(otp_client, populate_db):
         client = otp_client(creator)
 
         # check if the user is in a group who can create a user
-        creator_group = next(
-            (group for group in role_mapping if user_in_group(creator, group)), None
-        )
+        creator_group = next((group for group in role_mapping if user_in_group(creator, group)), None)
         if not creator_group:
             continue
 
@@ -47,6 +45,4 @@ def test_add_user_via_admin(otp_client, populate_db):
         response = client.post(url, data, follow=True)
         assert response.status_code == 200
         created_user = User.objects.get(email=email)
-        assert user_in_group(
-            created_user, expected_group
-        ), f"{creator_group} → {expected_group} expected, but got something else"
+        assert user_in_group(created_user, expected_group), f"{creator_group} → {expected_group} expected, but got something else"

@@ -84,51 +84,40 @@ def list_admin_add_urls(module_name: str):
     get the 'add/' road of the given module.
     """
     all_urls = list_urls(get_resolver().url_patterns)
-    filtered = [
-        url
-        for url in all_urls
-        if url.startswith(f"admin/{module_name}/") and url.endswith("/add/")
-    ]
-    return filtered
+    return [url for url in all_urls if url.startswith(f"admin/{module_name}/") and url.endswith("/add/")]
 
 
 def list_url_freetext_filter(freetext="", exclude=""):
     all_urls = list_urls(get_resolver().url_patterns)
-    filtered = [
-        url for url in all_urls if url.find(freetext) != -1 and url.find(exclude) == -1
-    ]
-    return filtered
+    return [url for url in all_urls if url.find(freetext) != -1 and url.find(exclude) == -1]
 
 
-def test_get_with_otp(otp_client, users=None, authorized_users=None, url=""):
+def test_get_with_otp(otp_client, users=None, authorized_users=None, module_unaccess_user=None, url=""):
     """
     Function to test the get with a connected user via 2FA
     """
     users = users or []
     authorized_users = authorized_users or []
+    module_unaccess_user = module_unaccess_user or []
     for u in users:
         client = otp_client(u)
         response = client.get(url)
         if u in authorized_users:
             assert response.status_code == 200
+        elif u in module_unaccess_user:
+            assert response.status_code == 404
         else:
             assert response.status_code in (302, 403)
 
 
 def get_unique_lookup(model, data: dict, import_not_null, only_simple_field):
-    unique_fields = [
-        f.name for f in model._meta.get_fields() if getattr(f, "unique", False)
-    ]
+    unique_fields = [f.name for f in model._meta.get_fields() if getattr(f, "unique", False)]
 
     for constraint in model._meta.constraints:
         if isinstance(constraint, models.UniqueConstraint):
             unique_fields.extend(constraint.fields)
 
-    simple_fields = [
-        f.name
-        for f in model._meta.get_fields()
-        if not (f.many_to_many or f.one_to_many or f.is_relation)
-    ]
+    simple_fields = [f.name for f in model._meta.get_fields() if not (f.many_to_many or f.one_to_many or f.is_relation)]
 
     not_null_fields = []
     if import_not_null:
@@ -144,9 +133,7 @@ def get_unique_lookup(model, data: dict, import_not_null, only_simple_field):
 
     # manage final lookup
     if only_simple_field:
-        lookup = {
-            f: data[f] for f in relevant_fields if f in data and f in simple_fields
-        }
+        lookup = {f: data[f] for f in relevant_fields if f in data and f in simple_fields}
     else:
         lookup = {f: data[f] for f in relevant_fields if f in data}
     return lookup
@@ -157,20 +144,18 @@ def get_or_create_related(related_model, val: dict):
         raise ValueError(f"Unexpected value {related_model.__name__}: {val}")
 
     lookup = get_unique_lookup(related_model, val, False, True)
-    object = None
+    found_obj = None
     if not lookup:
         # bypass when there is no unique field in the model, only get, no create
-        object = related_model.objects.filter(**lookup).first()
-        if not object:
-            raise ValueError(
-                f"Unexpected lookup for {related_model.__name__} with data={val}"
-            )
+        found_obj = related_model.objects.filter(**lookup).first()
+        if not found_obj:
+            raise ValueError(f"Unexpected lookup for {related_model.__name__} with data={val}")
 
-    if not object:
+    if not found_obj:
         obj, created = related_model.objects.get_or_create(**lookup)
     else:
         created = False
-        obj = object
+        obj = found_obj
 
     if created:
         # update other field
@@ -206,8 +191,7 @@ def import_from_json(model, data, import_not_null=False, only_simple_field=True)
             lookup = {
                 f.name: entry[f.name]
                 for f in model._meta.get_fields()
-                if f.name in entry
-                and not (f.many_to_many or f.one_to_many or f.many_to_one)
+                if f.name in entry and not (f.many_to_many or f.one_to_many or f.many_to_one)
             }
         if lookup and not only_simple_field:
             for field in model._meta.get_fields():

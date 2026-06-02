@@ -32,9 +32,7 @@ def run(logger=logger):
     try:
         ScriptLogEntry.objects.create(
             object_id=None,
-            object_repr="System:Inactive user script deletion "
-            + str(user_to_delete_qs.count())
-            + " user(s) deleted",
+            object_repr="System:Inactive user script deletion " + str(user_to_delete_qs.count()) + " user(s) deleted",
             action_flag=3,
         )
     except Exception as e:

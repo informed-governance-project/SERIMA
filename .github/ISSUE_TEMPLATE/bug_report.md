@@ -24,7 +24,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Application context**
-- Version of the application: 
+- Version of the application:
 - Role of the user:
 - Logs or where to find them:
 

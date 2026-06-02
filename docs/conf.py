@@ -18,11 +18,11 @@ os.environ["READTHEDOCS"] = "True"
 django.setup()
 
 project = "NIS Incident Notification Platform"
-copyright = "2023-2024 Luxembourg House of Cybersecurity"
+copyright = "2023-2026 Luxembourg House of Cybersecurity"
 author = "NC3 Team <info@nc3.lu>"
 
 # The full version, including alpha/beta/rc tags
-release = "0.5.13"
+release = "0.5.14"
 
 
 # -- General configuration ---------------------------------------------------
@@ -61,22 +61,15 @@ html_static_path = ["_static"]
 html_title = "NISINP"
 html_theme_options = {
     "path_to_docs": "docs",
-    "repository_url": "https://github.com/informed-governance-project/NISINP",
-    # "repository_branch": "gh-pages",  # For testing
+    "repository_url": "https://github.com/informed-governance-project/SERIMA",
     "launch_buttons": {
-        "binderhub_url": "https://github.com/informed-governance-project/NISINP",
+        "binderhub_url": "https://github.com/informed-governance-project/SERIMA",
     },
     "use_edit_page_button": True,
     "use_issues_button": True,
     "use_repository_button": True,
     "use_download_button": True,
     "home_page_in_toc": True,
-    # For testing
-    # "use_fullscreen_button": False,
-    # "single_page": True,
-    # "extra_footer": "<a href='https://google.com'>Test</a>",  # DEPRECATED KEY
-    # "extra_navbar": "<a href='https://google.com'>Test</a>",
-    # "show_navbar_depth": 2,
 }
 
 

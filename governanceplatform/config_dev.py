@@ -39,13 +39,13 @@ DATABASES = {
         "USER": os.getenv("POSTGRES_USER", "<user>"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD", "<password>"),
         "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-        "PORT": int(os.getenv("POSTGRES_PORT", 5432)),
+        "PORT": int(os.getenv("POSTGRES_PORT", "5432")),
     },
 }
 
-CSRF_TRUSTED_ORIGINS = []
-CORS_ALLOWED_ORIGINS = []
-CORS_ALLOWED_ORIGIN_REGEXES = []
+CSRF_TRUSTED_ORIGINS: list[str] = []
+CORS_ALLOWED_ORIGINS: list[str] = []
+CORS_ALLOWED_ORIGIN_REGEXES: list[str] = []
 CORS_ALLOW_METHODS = [
     "GET",
     "OPTIONS",
@@ -80,9 +80,7 @@ LOGGING = {
     },
     "formatters": {
         "app": {
-            "format": (
-                "%(asctime)s [%(levelname)-8s] (%(module)s.%(funcName)s) %(message)s"
-            ),
+            "format": ("%(asctime)s [%(levelname)-8s] (%(module)s.%(funcName)s) %(message)s"),
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     },
@@ -141,25 +139,19 @@ COOKIEBANNER = {
             "cookies": [
                 {
                     "pattern": "cookiebanner",
-                    "description": _(
-                        "Cookie used to store the user’s consent to the use of cookies."
-                    ),
+                    "description": _("Cookie used to store the user’s consent to the use of cookies."),
                     "content": _("The user’s cookie preferences."),
                     "max_age": _("6 months"),  # Set in cookie_banner.js
                 },
                 {
                     "pattern": "sessionid",
-                    "description": _(
-                        "Cookie essential for maintaining user session options."
-                    ),
+                    "description": _("Cookie essential for maintaining user session options."),
                     "content": _("Session ID"),
                     "max_age": _("15 minutes"),  # SESSION_COOKIE_AGE
                 },
                 {
                     "pattern": "csrftoken",
-                    "description": _(
-                        "Cookie used to prevent Cross-Site Request Forgery (CSRF) attacks."
-                    ),
+                    "description": _("Cookie used to prevent Cross-Site Request Forgery (CSRF) attacks."),
                     "content": _("Token"),
                     "max_age": _("15 minutes"),  # CSRF_COOKIE_AGE
                 },
@@ -190,9 +182,7 @@ SECURE_SSL_REDIRECT = False  # redirect HTTP to HTTPS
 SESSION_COOKIE_SECURE = False  # Cookies are sent via HTTPS
 CSRF_COOKIE_SECURE = False  # Secure CSRF via HTTPS
 LANGUAGE_COOKIE_SECURE = False  # Secure language cookie via HTTPS
-SECURE_PROXY_SSL_HEADER = (
-    None  # SSL proxy used e.g: ("HTTP_X_FORWARDED_PROTO", "https")
-)
+SECURE_PROXY_SSL_HEADER = None  # SSL proxy used e.g: ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Cookies configuration for HTTPONLY
 SESSION_COOKIE_HTTPONLY = True

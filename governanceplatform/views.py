@@ -94,9 +94,7 @@ def sitemap(request):
     if user.is_authenticated:
         modules[_("Home")].append({"name": _("Contact"), "url": reverse("contact")})
         if user.is_staff:
-            modules[_("Home")].append(
-                {"name": _("Settings"), "url": reverse("admin:index")}
-            )
+            modules[_("Home")].append({"name": _("Settings"), "url": reverse("admin:index")})
 
         modules[_("Account")] = [
             {"name": _("Account management"), "url": reverse("edit_account")},
@@ -149,7 +147,7 @@ def registration_view(request, *args, **kwargs):
     user = request.user
     if user.is_authenticated:
         return redirect("index")
-    elif request.method == "POST":
+    if request.method == "POST":
         form = RegistrationForm(request.POST, request=request)
         if form.is_valid():
             user = form.save()
@@ -157,11 +155,8 @@ def registration_view(request, *args, **kwargs):
             user.accepted_terms_date = Now()
             user.save()
             # default give the role IncidentUser
-            new_group, created = Group.objects.get_or_create(name="IncidentUser")
-            if new_group:
-                user.groups.add(new_group)
-            else:
-                user.groups.add(created)
+            new_group = Group.objects.get_or_create(name="IncidentUser")[0]
+            user.groups.add(new_group)
 
             # Send password reset email
             reset_form = PasswordResetForm({"email": user.email})
@@ -176,14 +171,12 @@ def registration_view(request, *args, **kwargs):
             messages.success(
                 request,
                 _(
-                    "Account created. A password reset email has been sent. "
-                    "Please check your inbox to set your password.",
+                    "Account created. A password reset email has been sent. Please check your inbox to set your password.",
                 ),
             )
 
             return redirect("login")
-        else:
-            context["form"] = form
+        context["form"] = form
 
     else:
         form = RegistrationForm(request=request)
@@ -198,27 +191,19 @@ def select_company(request):
     if request.method == "POST":
         form = SelectCompany(
             request.POST,
-            companies=request.user.companies.filter(
-                companyuser__approved=True
-            ).distinct(),
+            companies=request.user.companies.filter(companyuser__approved=True).distinct(),
         )
 
         if form.is_valid() and request.user.is_authenticated:
             user = request.user
             company_id = form.cleaned_data["select_company"].id
-            user_company = user.companyuser_set.filter(
-                company__id=company_id, approved=True
-            )
+            user_company = user.companyuser_set.filter(company__id=company_id, approved=True)
             if not user_company.exists():
-                messages.error(
-                    request, "The select company is not linked to the account."
-                )
+                messages.error(request, "The select company is not linked to the account.")
                 return logout_view(request)
 
             request.session["company_in_use"] = company_id
-            is_administrator = user_company.filter(
-                is_company_administrator=True
-            ).exists()
+            is_administrator = user_company.filter(is_company_administrator=True).exists()
             if is_administrator:
                 set_operator_admin_permissions(user)
             else:
@@ -227,10 +212,8 @@ def select_company(request):
             return index(request)
 
     else:
-        form = form = SelectCompany(
-            companies=request.user.companies.filter(
-                companyuser__approved=True
-            ).distinct(),
+        form = SelectCompany(
+            companies=request.user.companies.filter(companyuser__approved=True).distinct(),
         )
 
     return render(request, "registration/select_company.html", {"form": form})
@@ -267,12 +250,7 @@ def contact(request):
             lastname = form.cleaned_data["lastname"]
             phone = form.cleaned_data["phone"]
             email = form.cleaned_data["email"]
-            full_message = (
-                f"Nom : {firstname} {lastname}\n"
-                f"Email : {email}\n"
-                f"Téléphone : {phone or 'Non renseigné'}\n\n"
-                f"Message :\n{message}"
-            )
+            full_message = f"Nom : {firstname} {lastname}\nEmail : {email}\nTéléphone : {phone or 'Non renseigné'}\n\nMessage :\n{message}"
             requestor_email = form.cleaned_data["email"].strip()
             email = EmailMessage(
                 subject=_("%(name)s Contact page") % {"name": settings.SITE_NAME},
@@ -286,11 +264,10 @@ def contact(request):
 
             messages.success(request, _("Your message has been sent."))
             return redirect("contact")
-        else:
-            captcha_errors = form.errors.get("captcha")
-            if captcha_errors:
-                messages.error(request, _("Invalid captcha"))
-            context["form"] = form
+        captcha_errors = form.errors.get("captcha")
+        if captcha_errors:
+            messages.error(request, _("Invalid captcha"))
+        context["form"] = form
     else:
         form = ContactForm(user=user)
         context["form"] = form

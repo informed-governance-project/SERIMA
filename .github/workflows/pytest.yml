@@ -36,17 +36,17 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout theme
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: informed-governance-project/default-theme
           ref: dev
           path: default-theme
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -72,4 +72,11 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          poetry run pytest --disable-warnings -v
+          poetry run pytest --disable-warnings -v --cov-report=xml --cov-fail-under=50
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
