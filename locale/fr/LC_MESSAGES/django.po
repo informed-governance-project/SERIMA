@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-27 11:50+0200\n"
+"POT-Creation-Date: 2026-06-02 08:54+0200\n"
 "PO-Revision-Date: 2026-05-19 11:49+0000\n"
 "Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
 "Language: fr\n"
@@ -86,31 +86,35 @@ msgstr "Opérateurs"
 msgid "Roles"
 msgstr "Rôles"
 
-#: governanceplatform/admin.py:910
+#: governanceplatform/admin.py:887
+msgid "Create this user as an administrator"
+msgstr ""
+
+#: governanceplatform/admin.py:926
 msgid "Cookies acceptation has been reseted"
 msgstr "L'acceptation des cookies a été réinitialisée"
 
-#: governanceplatform/admin.py:918
+#: governanceplatform/admin.py:934
 msgid "Terms acceptation has been reset"
 msgstr "L'acceptation des conditions d'utilisation a été réinitialisée"
 
-#: governanceplatform/admin.py:982 governanceplatform/models.py:695
+#: governanceplatform/admin.py:1004 governanceplatform/models.py:695
 msgid "Additional information"
 msgstr "Informations complémentaires"
 
-#: governanceplatform/admin.py:1237 governanceplatform/models.py:682
+#: governanceplatform/admin.py:1260 governanceplatform/models.py:682
 msgid "Observer regulation"
 msgstr "Régulation de l'observateur"
 
-#: governanceplatform/admin.py:1239 governanceplatform/models.py:683
+#: governanceplatform/admin.py:1262 governanceplatform/models.py:683
 msgid "Observer regulations"
 msgstr "Régulations de l'observateur"
 
-#: governanceplatform/admin.py:1253 governanceplatform/models.py:592
+#: governanceplatform/admin.py:1276 governanceplatform/models.py:592
 msgid "Observer user"
 msgstr "Observateur utilisateur"
 
-#: governanceplatform/admin.py:1254 governanceplatform/models.py:593
+#: governanceplatform/admin.py:1277 governanceplatform/models.py:593
 msgid "Observer users"
 msgstr "Utilisateurs d'un observateur"
 
@@ -574,7 +578,7 @@ msgstr "Intitulé"
 msgid "Regulations"
 msgstr "Régulations"
 
-#: governanceplatform/models.py:624 incidents/forms.py:1021
+#: governanceplatform/models.py:624 incidents/forms.py:1023
 #: incidents/models.py:467 reporting/admin.py:108 reporting/forms.py:141
 #: securityobjectives/models.py:240
 msgid "Regulation"
@@ -791,15 +795,15 @@ msgid "Email type"
 msgstr "Type de courriel"
 
 #: incidents/admin.py:662 incidents/models.py:207
-#: securityobjectives/admin.py:958 securityobjectives/models.py:197
+#: securityobjectives/admin.py:960 securityobjectives/models.py:197
 msgid "Content"
 msgstr "Contenu"
 
-#: incidents/admin.py:669 securityobjectives/admin.py:968
+#: incidents/admin.py:669 securityobjectives/admin.py:970
 msgid "HTML preview"
 msgstr "Aperçu HTML"
 
-#: incidents/admin.py:672 securityobjectives/admin.py:971
+#: incidents/admin.py:672 securityobjectives/admin.py:973
 msgid "No preview yet"
 msgstr "Pas encore d'aperçu"
 
@@ -863,8 +867,8 @@ msgstr "Rechercher"
 msgid "Add details"
 msgstr "Ajouter des précisions"
 
-#: incidents/forms.py:283 incidents/forms.py:609 incidents/forms.py:814
-#: incidents/forms.py:821 incidents/forms.py:828 incidents/forms.py:835
+#: incidents/forms.py:283 incidents/forms.py:609 incidents/forms.py:816
+#: incidents/forms.py:823 incidents/forms.py:830 incidents/forms.py:837
 msgid "Date format yyyy-mm-dd hh:mm"
 msgstr "Format de date AAAA-MM-JJ HH:MM"
 
@@ -899,7 +903,7 @@ msgstr ""
 msgid "Send notification to"
 msgstr "Envoyer la notification à"
 
-#: incidents/forms.py:598 incidents/forms.py:806
+#: incidents/forms.py:598 incidents/forms.py:808
 msgid "Select the incident time zone"
 msgstr "Sélectionner la zone horaire de l’incident"
 
@@ -918,48 +922,48 @@ msgstr "Réussi"
 msgid "Revision required"
 msgstr "Améliorations requises"
 
-#: incidents/forms.py:813
+#: incidents/forms.py:815
 msgid "Incident notification date"
 msgstr "Date de la notification d'incident"
 
-#: incidents/forms.py:820 incidents/models.py:800
+#: incidents/forms.py:822 incidents/models.py:800
 msgid "Incident detection date"
 msgstr "Date de détection de l’incident"
 
-#: incidents/forms.py:827
+#: incidents/forms.py:829
 msgid "Incident start date"
 msgstr "Date de début de l’incident"
 
-#: incidents/forms.py:834 incidents/models.py:802
+#: incidents/forms.py:836 incidents/models.py:802
 msgid "Incident resolution date"
 msgstr "Date de résolution de l'incident"
 
-#: incidents/forms.py:922
+#: incidents/forms.py:924
 msgid "Starting date cannot be after detection date."
 msgstr "La date de début ne peut pas être postérieure à la date de détection."
 
-#: incidents/forms.py:928
+#: incidents/forms.py:930
 msgid "Resolution date cannot be before detection date."
 msgstr ""
 "La date de résolution ne peut pas être postérieure à la date de détection."
 
-#: incidents/forms.py:1026 incidents/models.py:356 incidents/models.py:530
+#: incidents/forms.py:1028 incidents/models.py:356 incidents/models.py:530
 msgid "Workflow"
 msgstr "Workflow"
 
-#: incidents/forms.py:1032 incidents/models.py:378 incidents/models.py:443
+#: incidents/forms.py:1034 incidents/models.py:378 incidents/models.py:443
 msgid "Report"
 msgstr "Rapport"
 
-#: incidents/forms.py:1039
+#: incidents/forms.py:1041
 msgid "File format"
 msgstr "Format du fichier"
 
-#: incidents/forms.py:1060
+#: incidents/forms.py:1062
 msgid "From"
 msgstr "De"
 
-#: incidents/forms.py:1068
+#: incidents/forms.py:1070
 msgid "To"
 msgstr "à"
 
@@ -1415,7 +1419,7 @@ msgid "Project name"
 msgstr "Nom du projet"
 
 #: reporting/forms.py:147 reporting/models.py:402 reporting/models.py:492
-#: securityobjectives/admin.py:621 securityobjectives/admin.py:864
+#: securityobjectives/admin.py:621 securityobjectives/admin.py:866
 #: securityobjectives/models.py:66 securityobjectives/models.py:283
 #: securityobjectives/models.py:380
 msgid "Standard"
@@ -2064,7 +2068,7 @@ msgstr "La valeur de l'année n'est pas valide"
 msgid "Invalid year. Please provide a valid year."
 msgstr "Année non valide. Veuillez indiquer une année valide."
 
-#: securityobjectives/admin.py:794
+#: securityobjectives/admin.py:796
 msgid "Standard of security objective and maturity level must be the same"
 msgstr ""
 "Le standard des objectifs de sécurité et des niveaux de maturité doit être "
