@@ -4,8 +4,8 @@ project.
 Before starting to contribute please install the Git hook scripts:
 
 ```bash
-$ git clone https://github.com/informed-governance-project/NISINP
-$ cd NISINP/
+$ git clone https://github.com/informed-governance-project/SERIMA
+$ cd SERIMA/
 $ poetry install
 $ poetry shell
 $ pre-commit install

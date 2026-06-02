@@ -61,9 +61,9 @@ html_static_path = ["_static"]
 html_title = "NISINP"
 html_theme_options = {
     "path_to_docs": "docs",
-    "repository_url": "https://github.com/informed-governance-project/NISINP",
+    "repository_url": "https://github.com/informed-governance-project/SERIMA",
     "launch_buttons": {
-        "binderhub_url": "https://github.com/informed-governance-project/NISINP",
+        "binderhub_url": "https://github.com/informed-governance-project/SERIMA",
     },
     "use_edit_page_button": True,
     "use_issues_button": True,

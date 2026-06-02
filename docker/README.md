@@ -99,7 +99,7 @@ before the actual Django runtime init and application startup.
 `NISINP_VERSION=vX.Y.Z NISINP_ENVIRONMENT=prod docker-compose up -d`
 
 - `NISINP_VERSION` (required): which tag to deploy
-- `NISINP_IMAGE`: container image path (without version) (defaults to `ghcr.io/informed-governance-project/nisinp`)
+- `NISINP_IMAGE`: container image path (without version) (defaults to `ghcr.io/informed-governance-project/serima`)
 - `NISINP_ENVIRONMENT` (required): identifier for your environment, mainly for container naming
 - `THEME_IMAGE`: theme container image path (without version) (defaults to `ghcr.io/informed-governance-project/default-theme`)
 - `THEME_VERSION` (required): whith theme tag to deploy
