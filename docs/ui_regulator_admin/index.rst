@@ -21,6 +21,8 @@ The Site administration screen has the following parts: **Administration (1), Go
    :alt: Regulator Admin - Site administration
    :target: ../_static/regulator_admin_images/Reg_Admin_02.png
 
+
+
 .. toctree::
    :maxdepth: 2
    :hidden:
