@@ -34,4 +34,4 @@ Please read the [CONTRIBUTING](CONTRIBUTING.md) instructions.
 ## License
 
 This software is licensed under
-[GNU Affero General Public License version 3](LICENCE)
+[GNU Affero General Public License version 3](LICENSE)
