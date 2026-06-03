@@ -10,10 +10,6 @@
 
 ## Description
 
-[SERIMA](https://github.com/informed-governance-project/SERIMA)
-is part of the [NC3-LU](https://github.com/NC3-LU) Incident Notification Platform.
-
-
 A platform for national regulators and Operators of Essential Services (Energy, Transport, etc.)
 in the context of [NIS 2](https://www.europarl.europa.eu/thinktank/en/document/EPRS_BRI(2021)689333).
 Different regulations are supported.
@@ -38,4 +34,4 @@ Please read the [CONTRIBUTING](CONTRIBUTING.md) instructions.
 ## License
 
 This software is licensed under
-[GNU Affero General Public License version 3](https://www.gnu.org/licenses/agpl-3.0.html)
+[GNU Affero General Public License version 3](LICENCE)
