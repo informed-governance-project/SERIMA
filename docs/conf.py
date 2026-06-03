@@ -59,17 +59,27 @@ html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 
 html_title = "SERIMA"
+
+# Theme options for sphinx_book_theme
+# html_theme_options = {
+#     "path_to_docs": "docs",
+#     "repository_url": "https://github.com/informed-governance-project/SERIMA",
+#     "launch_buttons": {
+#         "binderhub_url": "https://github.com/informed-governance-project/SERIMA",
+#     },
+#     "use_edit_page_button": True,
+#     "use_issues_button": True,
+#     "use_repository_button": True,
+#     "use_download_button": True,
+#     "home_page_in_toc": True,
+# }
+
+# Theme options for sphinx_rtd_theme
 html_theme_options = {
-    "path_to_docs": "docs",
-    "repository_url": "https://github.com/informed-governance-project/SERIMA",
-    "launch_buttons": {
-        "binderhub_url": "https://github.com/informed-governance-project/SERIMA",
-    },
-    "use_edit_page_button": True,
-    "use_issues_button": True,
-    "use_repository_button": True,
-    "use_download_button": True,
-    "home_page_in_toc": True,
+    "style_nav_header_background": "#e40521",
+    "prev_next_buttons_location": "both",
+    "github_url": "https://github.com/informed-governance-project/SERIMA",
+    "version_selector": False,
 }
 
 
