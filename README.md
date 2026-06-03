@@ -7,6 +7,7 @@
 [![Workflow](https://github.com/informed-governance-project/SERIMA/workflows/Python%20application%20tests/badge.svg?style=flat-square)](https://github.com/informed-governance-project/SERIMA/actions?query=workflow%3A%22Python+application+tests%22)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Documentation Status](https://readthedocs.org/projects/serima/badge/?version=latest)](https://serima.readthedocs.io/en/latest/?badge=latest)
+[![Translation status](https://weblate.nc3.lu/widget/serima/svg-badge.svg)](https://weblate.nc3.lu/engage/serima/)
 
 ## Description
 
