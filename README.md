@@ -18,7 +18,7 @@ Different regulations are supported.
 This project is lead by [NC3-LU](https://www.nc3.lu).
 Developed in partnership with [ILR.lu](https://web.ilr.lu) and [IBPT.be](https://www.ibpt.be).
 
-![List of incidents from the regulator view.](docs/_static/screenshot_incidents-page.png)
+![List of incidents from the regulator view.](docs/_static/home_page.png)
 
 ## Documentation
 
