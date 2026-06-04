@@ -7,4 +7,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "governanceplatform.settings")
 app = Celery("governanceplatform")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
-app.autodiscover_tasks(["reporting", "incidents", "governanceplatform", "securityobjectives"])
+app.autodiscover_tasks(
+    [
+        "reporting",
+        "incidents",
+        "governanceplatform",
+        "securityobjectives",
+        "import_export_extensions",
+    ]
+)

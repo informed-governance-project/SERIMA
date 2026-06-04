@@ -9,6 +9,9 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ExportActionModelAdmin, ImportExportModelAdmin
+from import_export.widgets import ForeignKeyWidget
+from import_export_extensions.admin import CeleryImportExportMixin
+from import_export_extensions.resources import CeleryModelResource
 from markdown import markdown
 from parler.forms import TranslatableModelForm
 
@@ -24,7 +27,7 @@ from governanceplatform.mixins import (
     PermissionMixin,
     TranslationUpdateMixin,
 )
-from governanceplatform.models import Regulation
+from governanceplatform.models import Regulation, User
 from governanceplatform.widgets import TranslatedNameWidget
 from securityobjectives.models import (
     Domain,
@@ -642,10 +645,26 @@ for name, method in generate_display_methods(["description", "objective"], [("do
     setattr(SecurityObjectiveAdmin, name, method)
 
 
-class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
+class SecurityObjectiveWidget(ForeignKeyWidget):
+    def clean(self, value, row=None, *args, **kwargs):
+        resource = kwargs.get("resource")
+        creator_id = getattr(resource, "user_id", None)
+        user = User.objects.get(pk=creator_id)
+        creator = user.regulators.all().first()
+
+        if not value or not creator:
+            return None
+
+        return SecurityObjective.objects.get(
+            unique_code=value,
+            creator=creator,
+        )
+
+
+class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.request = kwargs.pop("request", None)
+        self.user_id = kwargs.pop("user_id", None)
 
     standard = fields.Field(
         column_name="standard",
@@ -653,7 +672,11 @@ class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
     )
     security_objective = fields.Field(
         column_name="security_objective",
-        attribute="security_objective",
+        attribute="security_objective_unique_code",
+        widget=SecurityObjectiveWidget(
+            SecurityObjective,
+            field="unique_code",
+        ),
     )
     maturity_level = fields.Field(
         column_name="maturity_level",
@@ -674,6 +697,10 @@ class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
         column_name="evidence",
         attribute="evidence",
     )
+
+    def import_obj(self, row, instance_loader, **kwargs):
+        kwargs["resource"] = self
+        return super().import_obj(row, instance_loader, **kwargs)
 
     def dehydrate_maturity_level_color(self, obj):
         if hasattr(self, "_current_import_row") and self._current_import_row["maturity_level_color"] is not None:
@@ -696,17 +723,17 @@ class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
             return self._current_import_row["standard"]
         return SecurityObjectivesInStandard.objects.filter(security_objective=obj.security_objective).first().standard
 
-    def skip_row(self, instance, original, row, import_validation_errors=None):
-        # Object already in used we don't change
-        if instance and instance.pk and self.request:
-            return not can_change_or_delete_obj(self.request, instance)
+    # def skip_row(self, instance, original, row, import_validation_errors=None):
+    #     # Object already in used we don't change
+    #     if instance and instance.pk and self.request:
+    #         return not can_change_or_delete_obj(self.request, instance)
 
-        return super().skip_row(
-            instance,
-            original,
-            row,
-            import_validation_errors=import_validation_errors,
-        )
+    #     return super().skip_row(
+    #         instance,
+    #         original,
+    #         row,
+    #         import_validation_errors=import_validation_errors,
+    #     )
 
     def after_init_instance(self, instance, new, row, **kwargs):
         creator = kwargs.get("creator")
@@ -800,12 +827,13 @@ class SecurityMeasureAdminForm(TranslatableModelForm, PermissionMixin):
 
 @admin.register(SecurityMeasure, site=admin_site)
 class SecurityMeasureAdmin(
+    CeleryImportExportMixin,
     FunctionalityMixin,
     PermissionMixin,
     CustomTranslatableAdmin,
     ImportMixin,
-    ImportExportModelAdmin,
-    ExportActionModelAdmin,
+    # ImportExportModelAdmin,
+    # ExportActionModelAdmin,
 ):
     form = SecurityMeasureAdminForm
     resource_class = SecurityMeasureResource
@@ -861,7 +889,7 @@ class SecurityMeasureAdmin(
 
     def get_resource_kwargs(self, request, *args, **kwargs):
         # This passes the current request object to the Resource's __init__
-        return {"request": request}
+        return {"user_id": request.user.pk}
 
     @admin.display(description=_("Standard"))
     def standard_display(self, obj):

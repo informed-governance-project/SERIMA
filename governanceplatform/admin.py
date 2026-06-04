@@ -18,6 +18,9 @@ from django.utils.translation import gettext_lazy as _
 from django_otp import devices_for_user, user_has_device
 from django_otp.decorators import otp_required
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from import_export_extensions.admin.model_admins.export_job_admin import ExportJobAdmin
+from import_export_extensions.admin.model_admins.import_job_admin import ImportJobAdmin
+from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
@@ -108,6 +111,8 @@ class CustomAdminSite(admin.AdminSite):
 
 
 admin_site = CustomAdminSite()
+admin_site.register(ImportJob, ImportJobAdmin)
+admin_site.register(ExportJob, ExportJobAdmin)
 
 
 class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmin):

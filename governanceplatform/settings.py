@@ -150,6 +150,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_static",
     "two_factor",
     "import_export",
+    "import_export_extensions",
     "parler",
     "phonenumber_field",
     "django_filters",
@@ -718,3 +719,6 @@ try:
     REFERRER_POLICY = config.REFERRER_POLICY
 except AttributeError:
     REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# import export celery
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000000
