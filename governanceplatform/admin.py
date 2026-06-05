@@ -270,6 +270,7 @@ class CompanyUserInline(admin.TabularInline):
                 )
 
             if user_in_group(user, "OperatorAdmin"):
+                company_in_use = get_active_company_from_session(request)
                 kwargs["queryset"] = (
                     User.objects.exclude(
                         groups__in=[
@@ -280,7 +281,7 @@ class CompanyUserInline(admin.TabularInline):
                             regulatorUserGroupId,
                         ]
                     )
-                    .filter(companies__in=request.user.companies.all())
+                    .filter(companies__in=[company_in_use])
                     .exclude(id=user.id)
                     .distinct()
                     .order_by("email")
@@ -347,9 +348,10 @@ class CompanyUserInline(admin.TabularInline):
         user = request.user
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
+            company_in_use = get_active_company_from_session(request)
             return (
                 queryset.filter(
-                    company__in=request.user.companies.filter(companyuser__is_company_administrator=True),
+                    company=company_in_use,
                 )
                 .exclude(user=user)
                 .distinct()
@@ -738,11 +740,8 @@ class UserCompaniesListFilter(SimpleListFilter):
         companies = Company.objects.all()
         user = request.user
         # Platform Admin
-        if user_in_group(user, "PlatformAdmin") or user_in_group(user, "ObserverAdmin"):
+        if not is_user_regulator(user):
             companies = Company.objects.none()
-        # Operator Admin
-        if user_in_group(user, "OperatorAdmin"):
-            companies = user.companies.filter(companyuser__is_company_administrator=True)
 
         return [(company.id, company.name) for company in companies]
 
@@ -962,8 +961,6 @@ class UserAdmin(admin.ModelAdmin):
             return ("get_regulators",) + readonly_fields
         if is_observer_user(obj):
             return ("get_observers",) + readonly_fields
-        if is_user_operator(obj):
-            return ("get_companies",) + readonly_fields
 
         return readonly_fields
 
@@ -1064,6 +1061,7 @@ class UserAdmin(admin.ModelAdmin):
             list_display = [field for field in list_display if field not in fields_to_exclude]
         if user_in_group(request.user, "OperatorAdmin"):
             fields_to_exclude = [
+                "get_companies",
                 "get_regulators",
                 "get_observers",
                 "is_active",
@@ -1122,8 +1120,9 @@ class UserAdmin(admin.ModelAdmin):
             return queryset.filter(Q(observers=user.observers.first()))
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
+            company_in_use = get_active_company_from_session(request)
             return queryset.filter(
-                companies__in=request.user.companies.filter(companyuser__is_company_administrator=True),
+                companies__in=[company_in_use],
             ).distinct()
         return queryset
 
