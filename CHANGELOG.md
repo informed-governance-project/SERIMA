@@ -5,20 +5,33 @@ All notable changes to SERIMA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.15] - 2026-06-08
 
 ### Fixed
 - `force_logout_user` O(N) session-table scan replaced by a single indexed query via a custom `UserSession` model with a `user` FK column (#758)
+- Operator logs now only show operator activity, excluding regulator and observer actions (#791)
+- Operator user is now directly approved when created by operator admin (#785)
+- Workflow "Save as New" content is now pre-configured correctly (#778)
+- 500 error when creating a new user (#771)
+
 ### Added
 - `pytest-cov` dev dependency; coverage collection enabled for `governanceplatform` and `incidents` apps
 - CI coverage XML report artifact upload in `pytest.yml`
 - `detect-private-key` pre-commit hook to block accidental credential commits
+- Possibility to format frontend text in incident notification (#638)
+- Function to prevent the use of old regulations (#767)
+- Option to make a new user an admin when created by an operator admin (#786)
+- Sector assignment for observer users (#689)
+- Accessibility declaration updated from 22/05/2026 (#795)
 
 ### Changed
 - `pytest.ini`: `addopts` now includes `--cov` flags for automatic coverage reporting on every test run
 - `pytest.yml` CI: enforces 50% coverage floor (`--cov-fail-under=50`) and uploads `coverage.xml` artifact
 - `pythonapp.yml` CI: bumped `actions/checkout@v1` → `@v4` to match other workflows
 - `.gitignore`: added `.claude/`, `.env*`, `*.pem`, `*.key`, `credentials.json`, `secrets.toml`
+- An operator no longer sees all companies in which a user is configured (#792)
+- Repository renamed to `SERIMA`; references updated in Docker Compose, local Git configuration, and website links (#779)
+- Code review with Claude AI (#761)
 
 ## [0.5.14] - 2026-05-08
 
@@ -542,6 +555,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+
+[0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15
 [0.5.14]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.13...v0.5.14
 [0.5.13]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.12...v0.5.13
 [0.5.12]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.11...v0.5.12
