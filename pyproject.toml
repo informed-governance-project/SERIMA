@@ -1,6 +1,6 @@
 [project]
 name = "governanceplatform"
-version = "0.5.14"
+version = "0.5.15"
 description = "Governance Platform - SERIMA"
 readme = "README.md"
 license = "AGPL-3.0-or-later"
