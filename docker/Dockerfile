@@ -51,7 +51,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libasound2t64 \
     # Other dependencies
     gettext \
-    git \
   && rm -rf /var/lib/apt/lists/*
 
 # Both python and python3 link to python3.12

@@ -960,14 +960,14 @@ test = ["pytest", "ruff"]
 
 [[package]]
 name = "cyclonedx-python-lib"
-version = "11.8.0"
+version = "11.9.0"
 description = "Python library for CycloneDX"
 optional = false
 python-versions = "<4.0,>=3.9"
 groups = ["dev"]
 files = [
-    {file = "cyclonedx_python_lib-11.8.0-py3-none-any.whl", hash = "sha256:a326b575acbb3aa1040986307a4ae282ff27f99ffcbdfdaaf8de10ee85e97f01"},
-    {file = "cyclonedx_python_lib-11.8.0.tar.gz", hash = "sha256:a8935b06dfe53d80efd47b5f6a202eb678cea00f2930e94e3710f2c1510166c9"},
+    {file = "cyclonedx_python_lib-11.9.0-py3-none-any.whl", hash = "sha256:80620df4d11628458b7a17523b3f62be4663779babf51c82fe0ca7a32e3d0633"},
+    {file = "cyclonedx_python_lib-11.9.0.tar.gz", hash = "sha256:5d3b54834bbdfa2538b0e7eeda243f43c136d0a324d175fd8d6ec8685ee81f3c"},
 ]
 
 [package.dependencies]
@@ -1252,17 +1252,13 @@ description = "Simple Django model translations without nasty hacks, featuring n
 optional = false
 python-versions = "*"
 groups = ["main"]
-files = []
-develop = false
+files = [
+    {file = "django_parler-2.4-py3-none-any.whl", hash = "sha256:0fff7185d581790d7063cbe0f7c57a399517d5ec976536b6c6bc06cf8ad4b956"},
+    {file = "django_parler-2.4.tar.gz", hash = "sha256:6c70f853cf19c09fd72d9a10aa784ae57da9094178c650eab0c5d30c0a48be40"},
+]
 
 [package.dependencies]
 Django = ">=5.1"
-
-[package.source]
-type = "git"
-url = "https://github.com/informed-governance-project/django-parler.git"
-reference = "master"
-resolved_reference = "ee9c88e88a0eaec908fd598b38853765cfc68fb2"
 
 [[package]]
 name = "django-parler-rest"
@@ -4096,4 +4092,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4"
-content-hash = "68f73b39712cde7caf2afa897ff2446fb12bee6ed66f4cdd06182e5919561bef"
+content-hash = "03665c80aa0e682b103b3bee5effac192624c2650679c1b5b879a1458a1cdb76"

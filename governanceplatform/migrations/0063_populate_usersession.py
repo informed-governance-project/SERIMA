@@ -17,8 +17,13 @@ def populate_user_sessions(apps, schema_editor):
     from django.utils.timezone import now
 
     UserSession = apps.get_model("governanceplatform", "UserSession")
+    User = apps.get_model("governanceplatform", "User")
     Session = apps.get_model("sessions", "Session")
     db = schema_editor.connection.alias
+
+    existing_user_ids = set(
+        User.objects.using(db).values_list("id", flat=True)
+    )
 
     rows = Session.objects.using(db).filter(expire_date__gt=now()).values_list(
         "session_key", "session_data", "expire_date"
@@ -32,6 +37,9 @@ def populate_user_sessions(apps, schema_editor):
         try:
             user_id = int(raw_id) if raw_id is not None else None
         except (TypeError, ValueError):
+            user_id = None
+
+        if user_id not in existing_user_ids:
             user_id = None
 
         to_create.append(
