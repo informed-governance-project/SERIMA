@@ -4,14 +4,14 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-08 09:11+0200\n"
-"PO-Revision-Date: 2026-05-30 07:28+0000\n"
-"Last-Translator: Sascha Maurer <Sascha.maurer+RegAdmin@ilr.lu>\n"
+"PO-Revision-Date: 2026-06-08 08:09+0000\n"
+"Last-Translator: Pascal Bertrand <Pascal.bertrand+RegAdmin@ilr.lu>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #: governanceplatform/admin.py:71 governanceplatform/context_processors.py:30
 #: governanceplatform/views.py:97
@@ -88,7 +88,7 @@ msgstr "Rollen"
 
 #: governanceplatform/admin.py:886
 msgid "Create this user as an administrator"
-msgstr ""
+msgstr "Diesen Benutzer als Administrator anlegen"
 
 #: governanceplatform/admin.py:925
 msgid "Cookies acceptation has been reseted"
@@ -842,7 +842,7 @@ msgstr "Aktivierungsstatus der ausgewählten Elemente umschalten"
 #: incidents/admin.py:810
 #, python-format
 msgid "You don't have permission to change the status of %s."
-msgstr ""
+msgstr "Sie haben keine Berechtigung, den Status von %s zu ändern."
 
 #: incidents/admin.py:964
 #, python-brace-format
@@ -1634,7 +1634,7 @@ msgstr "Die JSON-Datei muss ein Objekt an der Wurzel enthalten."
 #: reporting/import_risk_analysis.py:38
 #, python-format
 msgid "Missing '%(key)s' key in the JSON file."
-msgstr ""
+msgstr "Der Schlüssel „%(key)s“ fehlt in der JSON-Datei."
 
 #: reporting/models.py:33
 msgid "Comment"
@@ -2056,6 +2056,8 @@ msgstr "Risikoanalyse erfolgreich importiert"
 #: reporting/views.py:1064
 msgid "Failed to import risk analysis. Please try again."
 msgstr ""
+"Der Import der Risikoanalyse ist fehlgeschlagen. Bitte versuchen Sie es "
+"erneut."
 
 #: reporting/views.py:1198
 msgid "No company found"
