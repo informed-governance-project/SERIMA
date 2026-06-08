@@ -27,7 +27,7 @@ dependencies = [
     "phonenumbers>=9.0.27,<10",
     "django-import-export>=4.4.0,<5",
     "parler>=1.0.1,<2",
-    "django-parler @ git+https://github.com/informed-governance-project/django-parler.git@master",
+    "django-parler>=2.4,<3",
     "django-countries>=8.2.0,<9",
     "weasyprint>=69.0,<70",
     "django-extensions>=4.1,<5",
