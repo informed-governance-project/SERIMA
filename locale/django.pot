@@ -453,7 +453,7 @@ msgstr ""
 msgid "Regulator"
 msgstr ""
 
-#: governanceplatform/models.py:282
+#: governanceplatform/models.py:265
 msgid "Receives all incident notifications"
 msgstr ""
 

@@ -472,7 +472,7 @@ msgstr "E-mailadres voor melding van incidenten"
 msgid "Regulator"
 msgstr "Regulator"
 
-#: governanceplatform/models.py:282
+#: governanceplatform/models.py:265
 msgid "Receives all incident notifications"
 msgstr "Ontvangt alle incidentmeldingen"
 

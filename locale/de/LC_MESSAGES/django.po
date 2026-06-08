@@ -474,7 +474,7 @@ msgstr "E-Mail-Adresse für die Vorfallsmeldung"
 msgid "Regulator"
 msgstr "Regulierungsbehörde"
 
-#: governanceplatform/models.py:282
+#: governanceplatform/models.py:265
 msgid "Receives all incident notifications"
 msgstr "Erhält alle Vorfallmeldungen"
 

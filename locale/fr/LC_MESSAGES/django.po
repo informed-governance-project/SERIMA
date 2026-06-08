@@ -474,7 +474,7 @@ msgstr "Adresse électronique pour la notification d’incidents"
 msgid "Regulator"
 msgstr "Régulateur"
 
-#: governanceplatform/models.py:282
+#: governanceplatform/models.py:265
 msgid "Receives all incident notifications"
 msgstr "Reçoit toutes les notifications d’incident"
 
