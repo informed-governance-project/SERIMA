@@ -71,9 +71,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
         or u.email == "regadmin@reg1.lu"
     ]
     # asectorial workflow
-    incident = next(
-        (u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None
-    )
+    incident = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
     url = "/incidents/download-pdf/" + str(incident.id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)
 
@@ -84,9 +82,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
         incident.affected_sectors.add(sector)
         incident.save()
         regulator_user = next((u for u in users if u.email == "reguser@reg1.lu"), None)
-        ru = RegulatorUser.objects.get(
-            user=regulator_user, regulator=regulator_user.regulators.first()
-        )
+        ru = RegulatorUser.objects.get(user=regulator_user, regulator=regulator_user.regulators.first())
         if ru:
             url = "/incidents/download-pdf/" + str(incident.id)
             authorized_users.append(regulator_user)
@@ -111,12 +107,8 @@ def test_can_access_incident_function(populate_incident_db):
         or u.email == "regadmin@reg1.lu"
     ]
     # asectorial workflow
-    incident_operator = next(
-        (u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None
-    )
-    incident_regulator = next(
-        (u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None
-    )
+    incident_operator = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
+    incident_regulator = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
 
     for u in users:
         company = -1
@@ -135,9 +127,7 @@ def test_can_access_incident_function(populate_incident_db):
     if sector:
         incident_operator.affected_sectors.add(sector)
         incident_operator.save()
-        ru = RegulatorUser.objects.get(
-            user=regulator_user, regulator=regulator_user.regulators.first()
-        )
+        ru = RegulatorUser.objects.get(user=regulator_user, regulator=regulator_user.regulators.first())
         if ru:
             authorized_users.append(regulator_user)
             ru.sectors.add(sector)
@@ -172,16 +162,10 @@ def test_can_create_incident_report_function(populate_incident_db):
     """
     users = populate_incident_db["users"]
     incidents = populate_incident_db["incidents"]
-    incident_operator = next(
-        (u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None
-    )
-    incident_regulator = next(
-        (u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None
-    )
+    incident_operator = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
+    incident_regulator = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
     # operator admin
-    authorized_users = [
-        u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu"
-    ]
+    authorized_users = [u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu"]
     # operator incident
     for u in users:
         company = -1
@@ -193,11 +177,7 @@ def test_can_create_incident_report_function(populate_incident_db):
             assert can_create_incident_report(u, incident_operator, company) is False
 
     # emulate an incident submitted by a RegulatorUser
-    authorized_users = [
-        u
-        for u in users
-        if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"
-    ]
+    authorized_users = [u for u in users if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"]
     for u in users:
         if u in authorized_users:
             assert can_create_incident_report(u, incident_regulator, -1) is True
@@ -212,38 +192,22 @@ def test_can_edit_incident_report_function(populate_incident_db):
     """
     users = populate_incident_db["users"]
     incidents = populate_incident_db["incidents"]
-    incident_operator = next(
-        (u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None
-    )
-    incident_regulator = next(
-        (u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None
-    )
+    incident_operator = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
+    incident_regulator = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
     if incident_operator:
         authorized_users = [
-            u
-            for u in users
-            if u.email == "opadmin@com1.lu"
-            or u.email == "opuser@com1.lu"
-            or u.email == "regadmin@reg1.lu"
+            u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu" or u.email == "regadmin@reg1.lu"
         ]
         for u in users:
             company_id = -1
             if u.companies.first() is not None:
                 company_id = u.companies.first().id
             if u in authorized_users:
-                assert (
-                    can_edit_incident_report(u, incident_operator, company_id) is True
-                )
+                assert can_edit_incident_report(u, incident_operator, company_id) is True
             else:
-                assert (
-                    can_edit_incident_report(u, incident_operator, company_id) is False
-                )
+                assert can_edit_incident_report(u, incident_operator, company_id) is False
     if incident_regulator:
-        authorized_users = [
-            u
-            for u in users
-            if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"
-        ]
+        authorized_users = [u for u in users if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"]
         for u in users:
             if u in authorized_users:
                 assert can_edit_incident_report(u, incident_regulator, -1) is True
@@ -268,9 +232,7 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
         or u.email == "regadmin@reg1.lu"
     ]
     # operator incident
-    incident = next(
-        (u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None
-    )
+    incident = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
     url = "/incidents/access_log/" + str(incident.id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)
 
@@ -282,8 +244,6 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
         or u.email == "regadmin@reg1.lu"
     ]
     # regulator incident
-    incident = next(
-        (u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None
-    )
+    incident = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
     url = "/incidents/access_log/" + str(incident.id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)

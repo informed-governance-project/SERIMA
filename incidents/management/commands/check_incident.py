@@ -52,16 +52,11 @@ class Command(BaseCommand):
             ]
 
             # column width
-            col_widths = [
-                max(len(row[col]) for row in ([headers] + rows))
-                for col in range(len(headers))
-            ]
+            col_widths = [max(len(row[col]) for row in ([headers] + rows)) for col in range(len(headers))]
 
             # Line formatting
             def format_row(row):
-                return " | ".join(
-                    row[col].ljust(col_widths[col]) for col in range(len(headers))
-                )
+                return " | ".join(row[col].ljust(col_widths[col]) for col in range(len(headers)))
 
             self.stdout.write(self.style.SUCCESS(format_row(headers)))
             self.stdout.write("-" * (sum(col_widths) + (3 * (len(headers) - 1))))
@@ -75,14 +70,10 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING("No incidents to delete."))
                 return
 
-            confirm = input(
-                f"Are you sure you want to delete {count} incidents? [y/N]: "
-            )
+            confirm = input(f"Are you sure you want to delete {count} incidents? [y/N]: ")
             if confirm.lower() != "y":
                 self.stdout.write(self.style.NOTICE("Deletion cancelled."))
                 return
 
             incidents.delete()
-            self.stdout.write(
-                self.style.SUCCESS(f"{count} incidents without workflows deleted")
-            )
+            self.stdout.write(self.style.SUCCESS(f"{count} incidents without workflows deleted"))

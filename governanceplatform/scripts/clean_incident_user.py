@@ -23,14 +23,12 @@ def run(logger=logger):
         IncidentUserGrouId = Group.objects.get(name="IncidentUser").id
         not_logged_user_to_delete_qs = User.objects.filter(
             last_login__isnull=True,
-            date_joined__lte=Now()
-            - timedelta(days=DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT),
+            date_joined__lte=Now() - timedelta(days=DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT),
             groups__in=[IncidentUserGrouId],
             incident__isnull=True,
         )
         logged_user_to_delete_qs = User.objects.filter(
-            last_login__lte=Now()
-            - timedelta(days=DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT),
+            last_login__lte=Now() - timedelta(days=DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT),
             last_login__isnull=False,
             groups__in=[IncidentUserGrouId],
             incident__isnull=True,
@@ -40,14 +38,10 @@ def run(logger=logger):
         raise
 
     try:
-        deleted_number = (
-            not_logged_user_to_delete_qs.count() + logged_user_to_delete_qs.count()
-        )
+        deleted_number = not_logged_user_to_delete_qs.count() + logged_user_to_delete_qs.count()
         ScriptLogEntry.objects.create(
             object_id=None,
-            object_repr="System:IncidentUser script deletion "
-            + str(deleted_number)
-            + " user(s) deleted",
+            object_repr="System:IncidentUser script deletion " + str(deleted_number) + " user(s) deleted",
             action_flag=3,
         )
     except Exception as e:

@@ -39,9 +39,7 @@ def translate(text):
 # get the incident workflow by workflow and incident to see the historic for operator
 @register.filter
 def get_incident_workflow_by_workflow(incident, workflow):
-    queryset = IncidentWorkflow.objects.filter(
-        incident=incident, workflow=workflow
-    ).order_by("-timestamp")
+    queryset = IncidentWorkflow.objects.filter(incident=incident, workflow=workflow).order_by("-timestamp")
 
     if not queryset:
         return None
@@ -49,9 +47,7 @@ def get_incident_workflow_by_workflow(incident, workflow):
     data = list(queryset.values("id", "timestamp", "review_status", "comment"))
 
     for item in data:
-        review_status = REPORT_STATUS_MAP.get(
-            item["review_status"], REPORT_STATUS_MAP["UNDE"]
-        )
+        review_status = REPORT_STATUS_MAP.get(item["review_status"], REPORT_STATUS_MAP["UNDE"])
         item["timestamp"] = item["timestamp"].isoformat()
         item["css_class"] = review_status["class"]
         item["review_status"] = review_status["label"]

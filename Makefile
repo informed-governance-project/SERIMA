@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
 VERSION?=$(shell git describe --exact-match --tags 2>/dev/null || echo "latest" )
-IMAGE?=local/nisinp
+IMAGE?=local/serima
 
 .PHONY: image
 

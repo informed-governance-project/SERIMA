@@ -1,4 +1,4 @@
-name: NISINP Docker build and push to ghcr.io
+name: SERIMA Docker build and push to ghcr.io
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  TEST_IMAGE_FULLNAME: "nisinp:test"
+  TEST_IMAGE_FULLNAME: "serima:test"
 
 jobs:
   build:
@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build for test
         uses: docker/build-push-action@v6
@@ -61,7 +61,7 @@ jobs:
           docker run --rm --network=host -e DEBUG=false
           -v $PWD/governanceplatform/config_dev.py:/app/governanceplatform/config.py:ro
           --detach
-          --name nisinp-test
+          --name serima-test
           ${{ env.TEST_IMAGE_FULLNAME }}
 
       - name: Check healthz endpoint
@@ -71,7 +71,7 @@ jobs:
 
       - name: Stop test application
         run: >
-          docker stop nisinp-test || true
+          docker stop serima-test || true
 
       - name: Log into registry ${{ env.REGISTRY }}
         if: github.event_name != 'pull_request'

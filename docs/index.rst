@@ -5,7 +5,7 @@ Incident Notification Module
 .. only:: html
 
     .. image:: https://img.shields.io/github/release/informed-governance-project/governance-platform.svg?style=flat-square
-        :target: https://github.com/informed-governance-project/NISINP/releases/latest
+        :target: https://github.com/informed-governance-project/SERIMA/releases/latest
         :alt: Latest release
 
     .. image:: https://img.shields.io/github/license/informed-governance-project/governance-platform.svg?style=flat-square
@@ -13,15 +13,15 @@ Incident Notification Module
         :alt: License
 
     .. image:: https://img.shields.io/github/stars/informed-governance-project/governance-platform.svg?style=flat-square
-        :target: https://github.com/informed-governance-project/NISINP/stargazers
+        :target: https://github.com/informed-governance-project/SERIMA/stargazers
         :alt: Stars
 
-    .. image:: https://github.com/informed-governance-project/NISINP/workflows/Python%20application%20tests/badge.svg?style=flat-square
-        :target: https://github.com/informed-governance-project/NISINP/actions?query=workflow%3A%22Python+application+tests%22
+    .. image:: https://github.com/informed-governance-project/SERIMA/workflows/Python%20application%20tests/badge.svg?style=flat-square
+        :target: https://github.com/informed-governance-project/SERIMA/actions?query=workflow%3A%22Python+application+tests%22
         :alt: Workflow
 
-    .. image:: https://readthedocs.org/projects/nisinp/badge/?version=latest
-        :target: https://nisinp.readthedocs.io/en/latest/?badge=latest
+    .. image:: https://readthedocs.org/projects/serima/badge/?version=latest
+        :target: https://serima.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
 
@@ -79,7 +79,7 @@ Developed in partnership with `ILR.lu <https://web.ilr.lu>`_ and
 
 This document is intended to be a documentation for operators and users of the module.
 If you find errors or omission, please don't hesitate to submit
-`an issue <https://github.com/informed-governance-project/NISINP/issues/new?labels=documentation&template=bug_report.md>`_
+`an issue <https://github.com/informed-governance-project/SERIMA/issues/new?labels=documentation&template=bug_report.md>`_
 or open a pull request with a fix.
 
 

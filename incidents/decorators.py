@@ -36,9 +36,7 @@ def check_user_is_correct(view_func):
 
         messages.error(
             request,
-            _(
-                "The user account has currently no associated entities. Please contact the administrator."
-            ),
+            _("The user account has currently no associated entities. Please contact the administrator."),
         )
 
         logout(request)

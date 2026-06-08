@@ -38,7 +38,7 @@ are performed locally thanks to `pre-commit <https://pre-commit.com>`_.
 Code **quality** is verified with tools such as *black*, *flake8* and *mypy*.
 
 Public security issues are listed
-`here <https://github.com/informed-governance-project/NISINP/issues?q=is%3Aissue+label%3Asecurity+>`_.
+`here <https://github.com/informed-governance-project/SERIMA/issues?q=is%3Aissue+label%3Asecurity+>`_.
 
 
 Audit on the source code

@@ -56,26 +56,16 @@ def populate_incident_db(populate_db, create_incident):
 
     # Create questions
     populate_db["incidents_questions"] = import_from_json(Question, questions)
-    populate_db["incidents_predefined_answers"] = import_from_json(
-        PredefinedAnswer, predefined_answers
-    )
-    populate_db["incidents_question_category"] = import_from_json(
-        QuestionCategory, question_category
-    )
+    populate_db["incidents_predefined_answers"] = import_from_json(PredefinedAnswer, predefined_answers)
+    populate_db["incidents_question_category"] = import_from_json(QuestionCategory, question_category)
 
     # Create reports
-    populate_db["incidents_question_category_options"] = import_from_json(
-        QuestionCategoryOptions, question_category_option, True, False
-    )
+    populate_db["incidents_question_category_options"] = import_from_json(QuestionCategoryOptions, question_category_option, True, False)
     populate_db["incidents_reports"] = import_from_json(Workflow, reports)
-    populate_db["incidents_question_options"] = import_from_json(
-        QuestionOptions, question_options, True, False
-    )
+    populate_db["incidents_question_options"] = import_from_json(QuestionOptions, question_options, True, False)
 
     # Create Workflows
-    populate_db["incidents_workflows"] = import_from_json(
-        SectorRegulation, workflows, True, False
-    )
+    populate_db["incidents_workflows"] = import_from_json(SectorRegulation, workflows, True, False)
     import_from_json(SectorRegulationWorkflow, workflows_reports, True, False)
 
     # Create impacts

@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Count, OuterRef, Q, Subquery
+from django.forms.models import model_to_dict
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -157,18 +158,13 @@ class LogEntryAdmin(admin.ModelAdmin):
         if module_permission and obj is not None and obj.action_time:
             actual_time = timezone.now()
             dt = actual_time - obj.action_time
-            if (
-                math.floor(dt.total_seconds() / 60 / 60 / 24)
-                >= LOG_RETENTION_TIME_IN_DAY
-            ):
+            if math.floor(dt.total_seconds() / 60 / 60 / 24) >= LOG_RETENTION_TIME_IN_DAY:
                 return True
         return super().has_delete_permission(request, obj)
 
     def has_view_permission(self, request, obj=None):
         user = request.user
-        return user_in_group(user, "PlatformAdmin") or user_in_group(
-            user, "RegulatorAdmin"
-        )
+        return user_in_group(user, "PlatformAdmin") or user_in_group(user, "RegulatorAdmin")
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
@@ -178,9 +174,7 @@ class LogEntryAdmin(admin.ModelAdmin):
 
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
-            return queryset.filter(
-                Q(action_flag=7) | Q(user__groups__in=[PlatformAdminGroupId])
-            ).distinct()
+            return queryset.filter(Q(action_flag=7) | Q(user__groups__in=[PlatformAdminGroupId])).distinct()
 
         # Regulator Admin
         if user_in_group(user, "RegulatorAdmin"):
@@ -246,9 +240,7 @@ class QuestionOptionsInline(PermissionMixin, admin.TabularInline):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "category_option" and not request.POST:
             kwargs["queryset"] = (
-                QuestionCategoryOptions.objects.filter(
-                    questionoptions__report=self.parent_obj
-                )
+                QuestionCategoryOptions.objects.filter(questionoptions__report=self.parent_obj)
                 .exclude(questionoptions__report=None)
                 .distinct()
             )
@@ -256,9 +248,7 @@ class QuestionOptionsInline(PermissionMixin, admin.TabularInline):
         if db_field.name == "question" and not request.POST:
             lang = getattr(request, "LANGUAGE_CODE", "en")
             queryset = Question.objects.all()
-            qs = translated_queryset(
-                queryset, lang, PARLER_DEFAULT_LANGUAGE_CODE, ["label", "tooltip"], True
-            )
+            qs = translated_queryset(queryset, lang, PARLER_DEFAULT_LANGUAGE_CODE, ["label", "tooltip"], True)
             kwargs["queryset"] = qs.order_by("_label_sort")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -272,7 +262,7 @@ class PredefinedAnswerInline(CustomTranslatableTabularInline):
     extra = 0
 
 
-@admin.action(description="Duplicate selected items")
+@admin.action(description=_("Duplicate selected items"))
 def duplicate_objects(modeladmin, request, queryset):
     config_by_model = {
         "Question": {
@@ -317,14 +307,8 @@ def duplicate_objects(modeladmin, request, queryset):
                 for related_object in obj._meta.related_objects:
                     accessor_name = related_object.get_accessor_name()
 
-                    if (
-                        accessor_name in related_objects_to_copy
-                        and related_object.one_to_many
-                        and related_object.auto_created
-                    ):
-                        reverse_fk_data[accessor_name] = list(
-                            getattr(obj, accessor_name).all()
-                        )
+                    if accessor_name in related_objects_to_copy and related_object.one_to_many and related_object.auto_created:
+                        reverse_fk_data[accessor_name] = list(getattr(obj, accessor_name).all())
                 original_label = getattr(obj, label_field)
                 obj.pk = None
 
@@ -351,9 +335,7 @@ def duplicate_objects(modeladmin, request, queryset):
                             related_translations = list(related_obj.translations.all())
 
                         related_obj.pk = None
-                        field_name = related_obj._meta.get_field(
-                            related_object.field.name
-                        ).name
+                        field_name = related_obj._meta.get_field(related_object.field.name).name
                         setattr(related_obj, field_name, obj)
                         related_obj.save()
 
@@ -363,9 +345,7 @@ def duplicate_objects(modeladmin, request, queryset):
                                 t.master = related_obj
                                 t.save()
 
-                messages.success(
-                    request, f"Successfully duplicated {original_label} {model_name}"
-                )
+                messages.success(request, f"Successfully duplicated {original_label} {model_name}")
         except Exception as e:
             logger.exception("Error duplicating object %s: %s", obj.pk, e)
             messages.error(request, f"Error duplicating '{obj}': {str(e)}")
@@ -381,8 +361,7 @@ class QuestionTypeListFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value() is not None:
             return queryset.filter(question_type=self.value())
-        else:
-            return queryset
+        return queryset
 
 
 @admin.register(Question, site=admin_site)
@@ -417,14 +396,15 @@ class QuestionAdmin(
     list_filter = [QuestionTypeListFilter]
 
     def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return ("creator",)
-        return ()
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if obj and "creator" not in readonly_fields:
+            readonly_fields.append("creator")
+        return readonly_fields
 
     def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        if obj:
-            return fields + ["creator"]
+        fields = list(super().get_fields(request, obj))
+        if obj and "creator" not in fields:
+            fields.append("creator")
         return fields
 
     def save_model(self, request, obj, form, change):
@@ -473,9 +453,7 @@ class ImpactSectorListFilter(SimpleListFilter):
     parameter_name = "sectors"
 
     def lookups(self, request, model_admin):
-        sectors = Sector.objects.annotate(child_count=Count("children")).exclude(
-            parent=None, child_count__gt=0
-        )
+        sectors = Sector.objects.annotate(child_count=Count("children")).exclude(parent=None, child_count__gt=0)
         sectors_list = []
 
         for sector in sectors:
@@ -484,9 +462,8 @@ class ImpactSectorListFilter(SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(
-                Q(sectors=self.value()) | Q(sectors__parent=self.value())
-            ).distinct()
+            return queryset.filter(Q(sectors=self.value()) | Q(sectors__parent=self.value())).distinct()
+        return queryset
 
 
 class ImpactRegulationListFilter(SimpleListFilter):
@@ -496,14 +473,13 @@ class ImpactRegulationListFilter(SimpleListFilter):
     def lookups(self, request, model_admin):
         return [
             (regulation.id, regulation.label)
-            for regulation in Regulation.objects.translated(get_language()).order_by(
-                "translations__label"
-            )
+            for regulation in Regulation.objects.translated(get_language()).order_by("translations__label")
         ]
 
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(Q(regulations=self.value()))
+        return queryset
 
 
 @admin.register(Impact, site=admin_site)
@@ -577,9 +553,7 @@ class ImpactAdmin(CustomTranslatableAdmin):
             .distinct()
         )
 
-    @admin.display(
-        description=_("Regulations"), ordering="regulations__translations__label"
-    )
+    @admin.display(description=_("Regulations"), ordering="regulations__translations__label")
     def get_regulations(self, obj):
         return ", ".join([c.label for c in obj.regulations.all()])
 
@@ -587,11 +561,7 @@ class ImpactAdmin(CustomTranslatableAdmin):
     def get_sector_name(self, obj):
         sectors = []
         for sector in obj.sectors.all():
-            sector_name = (
-                sector.parent.get_safe_translation()
-                if sector.parent
-                else sector.get_safe_translation()
-            )
+            sector_name = sector.parent.get_safe_translation() if sector.parent else sector.get_safe_translation()
             sectors.append(sector_name)
 
         return sectors
@@ -607,9 +577,7 @@ class ImpactAdmin(CustomTranslatableAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "sectors":
             # exclude parent with children from the list
-            kwargs["queryset"] = Sector.objects.annotate(
-                child_count=Count("children")
-            ).exclude(parent=None, child_count__gt=0)
+            kwargs["queryset"] = Sector.objects.annotate(child_count=Count("children")).exclude(parent=None, child_count__gt=0)
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
@@ -631,16 +599,12 @@ class EmailRegulatorListFilter(SimpleListFilter):
     parameter_name = "creator_id"
 
     def lookups(self, request, model_admin):
-        return [
-            (regulator.id, regulator.name)
-            for regulator in Regulator.objects.translated(get_language()).order_by(
-                "translations__name"
-            )
-        ]
+        return [(regulator.id, regulator.name) for regulator in Regulator.objects.translated(get_language()).order_by("translations__name")]
 
     def queryset(self, request, queryset):
         if self.value():
             return queryset.filter(Q(creator_id=self.value()))
+        return queryset
 
 
 class EmailTypeListFilter(SimpleListFilter):
@@ -658,25 +622,16 @@ class EmailTypeListFilter(SimpleListFilter):
     def queryset(self, request, queryset):
         emails_ids = None
         if self.value() == "REMINDER":
-            emails_ids = SectorRegulationWorkflowEmail.objects.values_list(
-                "email__id", flat=True
-            )
+            emails_ids = SectorRegulationWorkflowEmail.objects.values_list("email__id", flat=True)
         elif self.value() == "OPEN":
-            emails_ids = SectorRegulation.objects.values_list(
-                "opening_email__id", flat=True
-            )
+            emails_ids = SectorRegulation.objects.values_list("opening_email__id", flat=True)
         elif self.value() == "CLOSE":
-            emails_ids = SectorRegulation.objects.values_list(
-                "closing_email__id", flat=True
-            )
+            emails_ids = SectorRegulation.objects.values_list("closing_email__id", flat=True)
         elif self.value() == "STATUS":
-            emails_ids = SectorRegulation.objects.values_list(
-                "report_status_changed_email__id", flat=True
-            )
+            emails_ids = SectorRegulation.objects.values_list("report_status_changed_email__id", flat=True)
         if emails_ids is None:
             return queryset
-        else:
-            return queryset.filter(pk__in=emails_ids)
+        return queryset.filter(pk__in=emails_ids)
 
 
 @admin.register(Email, site=admin_site)
@@ -777,9 +732,10 @@ class WorkflowAdmin(PermissionMixin, CustomTranslatableAdmin):
     ]
 
     def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return ("creator",)
-        return ()
+        readonly_fields = list(super().get_readonly_fields(request, obj))
+        if obj and "creator" not in readonly_fields:
+            readonly_fields.append("creator")
+        return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))
@@ -810,14 +766,10 @@ class WorkflowAdmin(PermissionMixin, CustomTranslatableAdmin):
         permission = super().has_delete_permission(request, obj)
         if obj and permission:
             permission = bool(
-                can_change_or_delete_obj(request, obj)
-                and not Answer.objects.filter(incident_workflow__workflow=obj).exists()
+                can_change_or_delete_obj(request, obj) and not Answer.objects.filter(incident_workflow__workflow=obj).exists()
             )
             if not permission and request._can_change_or_delete_obj:
-                message = _(
-                    "<strong>Deletion forbidden</strong><br>"
-                    "- This {object_name} is either in use.<br>"
-                )
+                message = _("<strong>Deletion forbidden</strong><br>- This {object_name} is either in use.<br>")
                 object_name = obj._meta.verbose_name.lower()
 
                 messages.warning(request, format_html(message, object_name=object_name))
@@ -844,14 +796,32 @@ class SectorRegulationInline(admin.TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+@admin.action(description=_("Toggle active status of selected items"))
+def toggle_active_status(modeladmin, request, queryset):
+    for obj in queryset:
+        user = request.user
+        if user.regulators.exists() and obj.regulator not in user.regulators.all():
+            messages.warning(
+                request,
+                _("You don't have permission to change the status of %s.") % obj,
+            )
+            continue
+        obj.active = not obj.active
+        obj.save()
+
+
 @admin.register(SectorRegulation, site=admin_site)
 class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
-    list_display = ["name", "regulation", "regulator", "is_detection_date_needed"]
+    list_display = ["active", "name_display", "regulation", "regulator", "is_detection_date_needed"]
+    readonly_fields = ["name_display"]
+    list_display_links = ["name_display"]
+    translated_fields = ["name"]
     search_fields = [
         "translations__name",
         "regulator__translations__name",
         "regulation__translations__label",
     ]
+    actions = [toggle_active_status]
     inlines = (SectorRegulationInline,)
     save_as = True
     filter_horizontal = ("sectors",)
@@ -861,6 +831,7 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
             {
                 "classes": ["wide", "extrapretty"],
                 "fields": [
+                    "active",
                     "name",
                     "is_detection_date_needed",
                 ],
@@ -895,6 +866,58 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
         ),
     ]
 
+    def changeform_view(self, request, object_id=None, form_url="", extra_context=None):
+        if request.method == "POST" and "_saveasnew" in request.POST and object_id:
+            obj = self.get_object(request, object_id)
+
+            post = request.POST.copy()
+
+            # simple field
+            initial = model_to_dict(obj, fields=[f.name for f in self.model._meta.fields if f.editable])
+
+            for field, value in initial.items():
+                if field not in post:
+                    post[field] = value
+
+            # simple M2M ex:sectors
+            for m2m in self.model._meta.many_to_many:
+                post.setlist(m2m.name, [str(pk) for pk in getattr(obj, m2m.name).values_list("pk", flat=True)])
+
+            # inline of report
+            workflows = SectorRegulationWorkflow.objects.filter(sector_regulation=obj).prefetch_related("emails").order_by("position")
+
+            prefix = "sectorregulationworkflow_set"
+
+            post[f"{prefix}-TOTAL_FORMS"] = str(workflows.count())
+            post[f"{prefix}-INITIAL_FORMS"] = "0"
+            post[f"{prefix}-MIN_NUM_FORMS"] = "0"
+            post[f"{prefix}-MAX_NUM_FORMS"] = "1000"
+
+            for i, rel in enumerate(workflows):
+                # empty PK -> new object
+                post[f"{prefix}-{i}-id"] = ""
+
+                post[f"{prefix}-{i}-workflow"] = str(rel.workflow_id)
+
+                post[f"{prefix}-{i}-position"] = str(rel.position or 0)
+
+                post[f"{prefix}-{i}-delay_in_hours_before_deadline"] = str(rel.delay_in_hours_before_deadline)
+
+                post[f"{prefix}-{i}-trigger_event_before_deadline"] = rel.trigger_event_before_deadline
+
+                email_ids = rel.emails.values_list("id", flat=True)
+
+                post.setlist(f"{prefix}-{i}-emails", [str(pk) for pk in email_ids])
+
+            request.POST = post
+
+        return super().changeform_view(
+            request,
+            object_id,
+            form_url,
+            extra_context,
+        )
+
     # prevent other regulator to save the current workflow but they can duplicate
     def change_view(self, request, object_id, form_url="", extra_context=None):
         extra_context = extra_context or {}
@@ -915,9 +938,7 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
         if db_field.name == "regulation":
             # Regulator Admin
             if user_in_group(user, "RegulatorAdmin"):
-                kwargs["queryset"] = Regulation.objects.filter(
-                    regulators__in=user.regulators.all()
-                )
+                kwargs["queryset"] = Regulation.objects.filter(regulators__in=user.regulators.all())
 
         if db_field.name == "regulator":
             # Regulator Admin
@@ -929,9 +950,7 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "sectors":
             # exclude parent with children from the list
-            kwargs["queryset"] = Sector.objects.annotate(
-                child_count=Count("children")
-            ).exclude(parent=None, child_count__gt=0)
+            kwargs["queryset"] = Sector.objects.annotate(child_count=Count("children")).exclude(parent=None, child_count__gt=0)
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
@@ -946,14 +965,15 @@ class SectorRegulationAdmin(PermissionMixin, CustomTranslatableAdmin):
             permission = can_change_or_delete_obj(request, obj, header_message)
 
             if not permission and request._can_change_or_delete_obj:
-                message = _(
-                    "<strong>Deletion forbidden</strong><br>"
-                    "- This {object_name} is either in use.<br>"
-                )
+                message = _("<strong>Deletion forbidden</strong><br>- This {object_name} is either in use.<br>")
                 object_name = obj._meta.verbose_name.lower()
 
                 messages.warning(request, format_html(message, object_name=object_name))
         return permission
+
+
+for name, method in generate_display_methods(["name"]).items():
+    setattr(SectorRegulationAdmin, name, method)
 
 
 @admin.register(SectorRegulationWorkflowEmail, site=admin_site)
@@ -976,9 +996,7 @@ class SectorRegulationWorkflowEmailAdmin(CustomTranslatableAdmin):
         if db_field.name == "sector_regulation_workflow":
             # Regulator Admin
             kwargs["queryset"] = (
-                SectorRegulationWorkflow.objects.all()
-                .order_by("sector_regulation__translations__name", "workflow__name")
-                .distinct()
+                SectorRegulationWorkflow.objects.all().order_by("sector_regulation__translations__name", "workflow__name").distinct()
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 

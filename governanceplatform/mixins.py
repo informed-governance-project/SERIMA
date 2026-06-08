@@ -31,9 +31,7 @@ class PermissionMixin:
             permission = can_change_or_delete_obj(request, obj)
         return permission
 
-    def render_change_form(
-        self, request, context, add=False, change=False, form_url="", obj=None
-    ):
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
         has_permission = obj and not self.has_change_permission(request, obj)
         if has_permission:
             context.update(
@@ -50,9 +48,7 @@ class PermissionMixin:
 
 
 class ShowReminderForTranslationsMixin:
-    reminder_message = _(
-        "Save your changes before you leave the tab of the respective language."
-    )
+    reminder_message = _("Save your changes before you leave the tab of the respective language.")
 
     def _add_reminder_message(self, request):
         messages.warning(request, self.reminder_message)

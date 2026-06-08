@@ -96,11 +96,11 @@ before the actual Django runtime init and application startup.
 
 ## Startup
 
-`NISINP_VERSION=vX.Y.Z NISINP_ENVIRONMENT=prod docker-compose up -d`
+`SERIMA_VERSION=vX.Y.Z SERIMA_ENVIRONMENT=prod docker-compose up -d`
 
-- `NISINP_VERSION` (required): which tag to deploy
-- `NISINP_IMAGE`: container image path (without version) (defaults to `ghcr.io/informed-governance-project/nisinp`)
-- `NISINP_ENVIRONMENT` (required): identifier for your environment, mainly for container naming
+- `SERIMA_VERSION` (required): which tag to deploy
+- `SERIMA_IMAGE`: container image path (without version) (defaults to `ghcr.io/informed-governance-project/serima`)
+- `SERIMA_ENVIRONMENT` (required): identifier for your environment, mainly for container naming
 - `THEME_IMAGE`: theme container image path (without version) (defaults to `ghcr.io/informed-governance-project/default-theme`)
 - `THEME_VERSION` (required): whith theme tag to deploy
 - `POSTGRES_PASSWORD` (required): postgres db user password

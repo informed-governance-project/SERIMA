@@ -103,7 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
         continueButton.addEventListener('click', function () {
             clear_session_storage = true;
             const urlParams = new URLSearchParams(window.location.href.split('?')[1]);
-            language_code = urlParams.get('language');
+            const language_code = urlParams.get('language');
             removeCurrentTabData(language_code)
 
         });

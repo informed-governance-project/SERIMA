@@ -22,7 +22,7 @@ copyright = "2023-2026 Luxembourg House of Cybersecurity"
 author = "NC3 Team <info@nc3.lu>"
 
 # The full version, including alpha/beta/rc tags
-release = "0.5.14"
+release = "0.5.15"
 
 
 # -- General configuration ---------------------------------------------------
@@ -58,25 +58,18 @@ html_theme = "sphinx_book_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
-html_title = "NISINP"
+html_title = "SERIMA"
 html_theme_options = {
     "path_to_docs": "docs",
-    "repository_url": "https://github.com/informed-governance-project/NISINP",
-    # "repository_branch": "gh-pages",  # For testing
+    "repository_url": "https://github.com/informed-governance-project/SERIMA",
     "launch_buttons": {
-        "binderhub_url": "https://github.com/informed-governance-project/NISINP",
+        "binderhub_url": "https://github.com/informed-governance-project/SERIMA",
     },
     "use_edit_page_button": True,
     "use_issues_button": True,
     "use_repository_button": True,
     "use_download_button": True,
     "home_page_in_toc": True,
-    # For testing
-    # "use_fullscreen_button": False,
-    # "single_page": True,
-    # "extra_footer": "<a href='https://google.com'>Test</a>",  # DEPRECATED KEY
-    # "extra_navbar": "<a href='https://google.com'>Test</a>",
-    # "show_navbar_depth": 2,
 }
 
 
@@ -87,7 +80,7 @@ latex_engine = "pdflatex"
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "nisinp.tex", "NIS Incident Notification Platform", "NC3-LU", "howto"),
+    ("index", "SERIMA.tex", "NIS Incident Notification Platform", "NC3-LU", "howto"),
 ]
 
 latex_show_urls = True

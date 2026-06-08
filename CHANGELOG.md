@@ -1,9 +1,37 @@
 # Changelog
 
-All notable changes to NISINP are documented in this file.
+All notable changes to SERIMA are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.5.15] - 2026-06-08
+
+### Fixed
+- `force_logout_user` O(N) session-table scan replaced by a single indexed query via a custom `UserSession` model with a `user` FK column (#758)
+- Operator logs now only show operator activity, excluding regulator and observer actions (#791)
+- Operator user is now directly approved when created by operator admin (#785)
+- Workflow "Save as New" content is now pre-configured correctly (#778)
+- 500 error when creating a new user (#771)
+
+### Added
+- `pytest-cov` dev dependency; coverage collection enabled for `governanceplatform` and `incidents` apps
+- CI coverage XML report artifact upload in `pytest.yml`
+- `detect-private-key` pre-commit hook to block accidental credential commits
+- Possibility to format frontend text in incident notification (#638)
+- Function to prevent the use of old regulations (#767)
+- Option to make a new user an admin when created by an operator admin (#786)
+- Sector assignment for observer users (#689)
+- Accessibility declaration updated from 22/05/2026 (#795)
+
+### Changed
+- `pytest.ini`: `addopts` now includes `--cov` flags for automatic coverage reporting on every test run
+- `pytest.yml` CI: enforces 50% coverage floor (`--cov-fail-under=50`) and uploads `coverage.xml` artifact
+- `pythonapp.yml` CI: bumped `actions/checkout@v1` → `@v4` to match other workflows
+- `.gitignore`: added `.claude/`, `.env*`, `*.pem`, `*.key`, `credentials.json`, `secrets.toml`
+- An operator no longer sees all companies in which a user is configured (#792)
+- Repository renamed to `SERIMA`; references updated in Docker Compose, local Git configuration, and website links (#779)
+- Code review with Claude AI (#761)
 
 ## [0.5.14] - 2026-05-08
 
@@ -516,7 +544,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2023-09-14
 
 ### Added
-- Initial release of the NISINP governance platform
+- Initial release of the SERIMA governance platform
 - User management with PlatformAdmin, RegulatorAdmin, RegulatorUser, OperatorAdmin, OperatorUser, and ObserverUser roles
 - Incident notification workflow with multi-step reports
 - Two-factor authentication (TOTP via `django-otp`)
@@ -527,48 +555,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
-[0.5.14]: https://github.com/informed-governance-project/NISINP/compare/v0.5.13...v0.5.14
-[0.5.13]: https://github.com/informed-governance-project/NISINP/compare/v0.5.12...v0.5.13
-[0.5.12]: https://github.com/informed-governance-project/NISINP/compare/v0.5.11...v0.5.12
-[0.5.11]: https://github.com/informed-governance-project/NISINP/compare/v0.5.10...v0.5.11
-[0.5.10]: https://github.com/informed-governance-project/NISINP/compare/v0.5.9...v0.5.10
-[0.5.9]: https://github.com/informed-governance-project/NISINP/compare/v0.5.8...v0.5.9
-[0.5.8]: https://github.com/informed-governance-project/NISINP/compare/v0.5.7...v0.5.8
-[0.5.7]: https://github.com/informed-governance-project/NISINP/compare/v0.5.6...v0.5.7
-[0.5.6]: https://github.com/informed-governance-project/NISINP/compare/v0.5.5...v0.5.6
-[0.5.5]: https://github.com/informed-governance-project/NISINP/compare/v0.5.4...v0.5.5
-[0.5.4]: https://github.com/informed-governance-project/NISINP/compare/v0.5.3...v0.5.4
-[0.5.3]: https://github.com/informed-governance-project/NISINP/compare/v0.5.2...v0.5.3
-[0.5.2]: https://github.com/informed-governance-project/NISINP/compare/v0.3.9...v0.5.2
-[0.3.9]: https://github.com/informed-governance-project/NISINP/compare/v0.3.8...v0.3.9
-[0.3.8]: https://github.com/informed-governance-project/NISINP/compare/v0.3.7...v0.3.8
-[0.3.7]: https://github.com/informed-governance-project/NISINP/compare/v0.3.6...v0.3.7
-[0.3.6]: https://github.com/informed-governance-project/NISINP/compare/v0.3.5...v0.3.6
-[0.3.5]: https://github.com/informed-governance-project/NISINP/compare/v0.3.4...v0.3.5
-[0.3.4]: https://github.com/informed-governance-project/NISINP/compare/v0.3.3...v0.3.4
-[0.3.3]: https://github.com/informed-governance-project/NISINP/compare/v0.3.2...v0.3.3
-[0.3.2]: https://github.com/informed-governance-project/NISINP/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/informed-governance-project/NISINP/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/informed-governance-project/NISINP/compare/v0.2.9...v0.3.0
-[0.2.9]: https://github.com/informed-governance-project/NISINP/compare/v0.2.8...v0.2.9
-[0.2.8]: https://github.com/informed-governance-project/NISINP/compare/v0.2.7...v0.2.8
-[0.2.7]: https://github.com/informed-governance-project/NISINP/compare/v0.2.6...v0.2.7
-[0.2.6]: https://github.com/informed-governance-project/NISINP/compare/v0.2.5...v0.2.6
-[0.2.5]: https://github.com/informed-governance-project/NISINP/compare/v0.2.4...v0.2.5
-[0.2.4]: https://github.com/informed-governance-project/NISINP/compare/v0.2.3...v0.2.4
-[0.2.3]: https://github.com/informed-governance-project/NISINP/compare/v0.2.2...v0.2.3
-[0.2.2]: https://github.com/informed-governance-project/NISINP/compare/v0.2.1...v0.2.2
-[0.2.1]: https://github.com/informed-governance-project/NISINP/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/informed-governance-project/NISINP/compare/v0.1.12...v0.2.0
-[0.1.12]: https://github.com/informed-governance-project/NISINP/compare/v0.1.11...v0.1.12
-[0.1.11]: https://github.com/informed-governance-project/NISINP/compare/v0.1.10...v0.1.11
-[0.1.10]: https://github.com/informed-governance-project/NISINP/compare/v0.1.9...v0.1.10
-[0.1.9]: https://github.com/informed-governance-project/NISINP/compare/v0.1.7...v0.1.9
-[0.1.7]: https://github.com/informed-governance-project/NISINP/compare/v0.1.6...v0.1.7
-[0.1.6]: https://github.com/informed-governance-project/NISINP/compare/v0.1.5...v0.1.6
-[0.1.5]: https://github.com/informed-governance-project/NISINP/compare/v0.1.4...v0.1.5
-[0.1.4]: https://github.com/informed-governance-project/NISINP/compare/v0.1.3...v0.1.4
-[0.1.3]: https://github.com/informed-governance-project/NISINP/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/informed-governance-project/NISINP/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/informed-governance-project/NISINP/compare/v0.1.0...v0.1.1
-[0.1.0]: https://github.com/informed-governance-project/NISINP/releases/tag/v0.1.0
+
+[0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15
+[0.5.14]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.13...v0.5.14
+[0.5.13]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.12...v0.5.13
+[0.5.12]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.11...v0.5.12
+[0.5.11]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.10...v0.5.11
+[0.5.10]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.9...v0.5.10
+[0.5.9]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.8...v0.5.9
+[0.5.8]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.7...v0.5.8
+[0.5.7]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.6...v0.5.7
+[0.5.6]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.5...v0.5.6
+[0.5.5]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.4...v0.5.5
+[0.5.4]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.3...v0.5.4
+[0.5.3]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.2...v0.5.3
+[0.5.2]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.9...v0.5.2
+[0.3.9]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.8...v0.3.9
+[0.3.8]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.7...v0.3.8
+[0.3.7]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.6...v0.3.7
+[0.3.6]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.5...v0.3.6
+[0.3.5]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.4...v0.3.5
+[0.3.4]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.2...v0.3.3
+[0.3.2]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.1...v0.3.2
+[0.3.1]: https://github.com/informed-governance-project/SERIMA/compare/v0.3.0...v0.3.1
+[0.3.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.9...v0.3.0
+[0.2.9]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.8...v0.2.9
+[0.2.8]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.7...v0.2.8
+[0.2.7]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.6...v0.2.7
+[0.2.6]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.5...v0.2.6
+[0.2.5]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.4...v0.2.5
+[0.2.4]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.3...v0.2.4
+[0.2.3]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.2...v0.2.3
+[0.2.2]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.1...v0.2.2
+[0.2.1]: https://github.com/informed-governance-project/SERIMA/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.12...v0.2.0
+[0.1.12]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.11...v0.1.12
+[0.1.11]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.10...v0.1.11
+[0.1.10]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.7...v0.1.9
+[0.1.7]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.5...v0.1.6
+[0.1.5]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.4...v0.1.5
+[0.1.4]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.2...v0.1.3
+[0.1.2]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.1...v0.1.2
+[0.1.1]: https://github.com/informed-governance-project/SERIMA/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/informed-governance-project/SERIMA/releases/tag/v0.1.0

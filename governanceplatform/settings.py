@@ -10,14 +10,18 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import logging
 import os
+import sys
+
+logger = logging.getLogger(__name__)
 
 DJANGO_CI = os.getenv("DJANGO_CI") == "True"
 try:
-    import governanceplatform.config as config  # type: ignore
+    import governanceplatform.config as config
 except ModuleNotFoundError as exc:  # pragma: no cover
     if DJANGO_CI:
-        import governanceplatform.config_dev as config  # type: ignore
+        import governanceplatform.config_dev as config
     else:
         raise ImportError("The configuration file cannot be found") from exc
 
@@ -71,9 +75,7 @@ try:
 
     COOKIEBANNER = config.COOKIEBANNER
 
-    MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER = (
-        config.MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER
-    )
+    MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER = config.MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER
     try:
         LOG_RETENTION_TIME_IN_DAY = config.LOG_RETENTION_TIME_IN_DAY
     except AttributeError:
@@ -95,10 +97,9 @@ try:
     PARLER_LANGUAGES = config.PARLER_LANGUAGES
     PARLER_ENABLE_CACHING = False
 
-except AttributeError as e:
-    print("Please check you configuration file for the missing configuration variable:")
-    print(f"  {e}")
-    exit(1)
+except AttributeError:
+    logger.error("Missing configuration variable. Please check your configuration file.", exc_info=True)
+    sys.exit(1)
 
 try:
     CSRF_TRUSTED_ORIGINS = config.CSRF_TRUSTED_ORIGINS
@@ -114,10 +115,9 @@ try:
     if LOG_DIRECTORY:
         # if not logging in stdout
         os.makedirs(LOG_DIRECTORY, exist_ok=True)
-except Exception as e:
-    print("Impossible to create the log directory:")
-    print(f"  {e}")
-    exit(1)
+except Exception:
+    logger.error("Impossible to create the log directory.", exc_info=True)
+    sys.exit(1)
 
 
 # Application definition
@@ -182,7 +182,6 @@ SPECTACULAR_SETTINGS = {
 }
 
 GRAPH_MODELS = {
-    # "all_applications": True,
     "app_labels": ["governanceplatform", "incidents"],
     "group_models": True,
 }
@@ -249,7 +248,7 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 WSGI_APPLICATION = "governanceplatform.wsgi.application"
 
 
-DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -322,9 +321,6 @@ CORS_EXPOSE_HEADERS = [
 # Default settings
 BOOTSTRAP5 = {
     # The complete URL to the Bootstrap CSS file.
-    # Note that a URL can be either a string
-    # ("https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"),
-    # or a dict with keys `url`, `integrity` and `crossorigin` like the default value below.
     "css_url": {
         "url": "/static/npm_components/bootstrap/dist/css/bootstrap.min.css",
         "crossorigin": "anonymous",
@@ -427,7 +423,8 @@ IMPORT_EXPORT_ESCAPE_FORMULAE_ON_EXPORT = True
 PHONENUMBER_DEFAULT_FORMAT = "INTERNATIONAL"
 PHONENUMBER_DB_FORMAT = "INTERNATIONAL"
 
-# TIMEOUT
+# SESSION
+SESSION_ENGINE = "governanceplatform.sessions"
 SESSION_SAVE_EVERY_REQUEST = True  # the timeout is extended at each action
 SESSION_COOKIE_AGE = config.SESSION_COOKIE_AGE
 try:
@@ -563,9 +560,7 @@ except AttributeError:
     RT_SECRET_KEY = HASH_KEY
 
 try:
-    DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT = (
-        config.DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT
-    )
+    DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT = config.DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT
 except AttributeError:
     DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT = 90
 

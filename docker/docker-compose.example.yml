@@ -1,7 +1,7 @@
 services:
   web:
-    container_name: governanceplatform-${NISINP_ENVIRONMENT?:err}
-    image: ${NISINP_IMAGE:-ghcr.io/informed-governance-project/nisinp}:${NISINP_VERSION?:err}
+    container_name: governanceplatform-${SERIMA_ENVIRONMENT?:err}
+    image: ${SERIMA_IMAGE:-ghcr.io/informed-governance-project/serima}:${SERIMA_VERSION?:err}
     pull_policy: always
     environment: &env
       DEBUG: "false"
@@ -28,7 +28,7 @@ services:
     user: "33:33"
 
   db:
-    container_name: governanceplatform-postgres-${NISINP_ENVIRONMENT?:err}
+    container_name: governanceplatform-postgres-${SERIMA_ENVIRONMENT?:err}
     image: postgres:15
     environment: *env
     restart: unless-stopped
@@ -37,15 +37,15 @@ services:
       # enable the below volume if you want to load a pg_dump at init
       #- ./volumes/postgres/initdb.d:/docker-entrypoint-initdb.d
   theme:
-    container_name: governanceplatform-theme-${NISINP_ENVIRONMENT?:err}
+    container_name: governanceplatform-theme-${SERIMA_ENVIRONMENT?:err}
     image: ${THEME_IMAGE:-ghcr.io/informed-governance-project/default-theme}:${THEME_VERSION?:err}
     volumes:
       - theme:/app/theme
     restart: no
 
   celery-worker:
-    container_name: governanceplatform-celery-worker-${NISINP_ENVIRONMENT?:err}
-    image: ${NISINP_IMAGE:-ghcr.io/informed-governance-project/nisinp}:${NISINP_VERSION?:err}
+    container_name: governanceplatform-celery-worker-${SERIMA_ENVIRONMENT?:err}
+    image: ${SERIMA_IMAGE:-ghcr.io/informed-governance-project/serima}:${SERIMA_VERSION?:err}
     pull_policy: always
     environment: *env
     command: worker
@@ -59,8 +59,8 @@ services:
       - db
 
   celery-beat:
-    container_name: governanceplatform-celery-beat-${NISINP_ENVIRONMENT?:err}
-    image: ${NISINP_IMAGE:-ghcr.io/informed-governance-project/nisinp}:${NISINP_VERSION?:err}
+    container_name: governanceplatform-celery-beat-${SERIMA_ENVIRONMENT?:err}
+    image: ${SERIMA_IMAGE:-ghcr.io/informed-governance-project/serima}:${SERIMA_VERSION?:err}
     pull_policy: always
     environment: *env
     command: beat
@@ -73,7 +73,7 @@ services:
       - celery-worker
 
   redis:
-    container_name: governanceplatform-redis-${NISINP_ENVIRONMENT?:err}
+    container_name: governanceplatform-redis-${SERIMA_ENVIRONMENT?:err}
     image: docker.io/redis:7-alpine
     volumes:
       - ./volumes/redis/data:/data

@@ -25,3 +25,16 @@ theme/
 static/npm_components
 volumes/
 dump.rdb
+
+# Claude Code local config (machine-specific, not shared)
+.claude/
+
+# Secret / credential files
+.env
+.env.*
+*.pem
+*.key
+id_rsa
+id_ed25519
+credentials.json
+secrets.toml

@@ -16,7 +16,7 @@ If you have credentials and don't remember the password please use the link: 'Fo
 
 At the first login, you need to activate the 2FA.
 
-Standard functionnality 
+Standard functionnality
 -----------------------------------
 
 .. figure:: _static/ui_platform_admin.png
@@ -25,9 +25,9 @@ Standard functionnality
 
    Main page.
 
-To see the standard function, have a look to the Administrator interface. 
+To see the standard function, have a look to the Administrator interface.
 
-Definition of observers 
+Definition of observers
 -----------------------------------
 
 To define the rules of incident reception for observer, you need firt to create ``Entity categories`` (e.g. Private, Public, Critical infrastructure, etc.).
@@ -47,12 +47,12 @@ To define the rules of incident reception for observer, you need firt to create 
 
    Observer regulation.
 
-For observer regulation you need to define: 
+For observer regulation you need to define:
 
 1. The regulation concerned by the rules
 2. The incident rules. The incident rules has to be defined as a JSON format following this structure:
 
-.. code-block:: 
+.. code-block::
 
     {
         "conditions":[
@@ -70,10 +70,10 @@ For observer regulation you need to define:
         ]
     }
 
-In the case above the regulation receive the incident which are ``PUBLIC`` **OR** the incidents which are ``PRIVATE`` and ``CRITICAL_INFRA`` (e.g. NIS2 AND (PUBLIC OR(PRIVATE AND NOT CRITICAL_INFRA))). 
+In the case above the regulation receive the incident which are ``PUBLIC`` **OR** the incidents which are ``PRIVATE`` and ``CRITICAL_INFRA`` (e.g. NIS2 AND (PUBLIC OR(PRIVATE AND NOT CRITICAL_INFRA))).
 PRIVATE, CRITICAL_INFRA and PUBLIC are ``code`` from ``Entity Category``.
 
-If the observer should receive all incidents of a regulation the ``incident rules`` should be {}. 
+If the observer should receive all incidents of a regulation the ``incident rules`` should be {}.
 
 .. figure:: _static/ui_observer_regulation_CER.png
    :alt: Observer regulation.
@@ -81,9 +81,9 @@ If the observer should receive all incidents of a regulation the ``incident rule
 
    Observer regulation.
 
-If incidents should be excluded, the tag exclude can be used in the JSON 
+If incidents should be excluded, the tag exclude can be used in the JSON
 
-.. code-block:: 
+.. code-block::
 
     {
         "conditions":[
@@ -99,4 +99,4 @@ If incidents should be excluded, the tag exclude can be used in the JSON
     }
 
 
-In the case above if we link to the regulation NIS2 we receive the incident from PRIVATE only and PRIVATE which are not CRITICAL_INFRA (e.g. NIS2 AND PRIVATE AND NOT CRITICAL_INFRA). 
+In the case above if we link to the regulation NIS2 we receive the incident from PRIVATE only and PRIVATE which are not CRITICAL_INFRA (e.g. NIS2 AND PRIVATE AND NOT CRITICAL_INFRA).
