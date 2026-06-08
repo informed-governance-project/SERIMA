@@ -74,7 +74,7 @@ services:
 
   redis:
     container_name: governanceplatform-redis-${SERIMA_ENVIRONMENT?:err}
-    image: docker.io/redis:7-alpine
+    image: docker.io/redis:8-alpine
     volumes:
       - ./volumes/redis/data:/data
     restart: unless-stopped
