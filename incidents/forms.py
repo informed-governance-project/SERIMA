@@ -276,6 +276,7 @@ class QuestionForm(forms.Form):
                         "data-bs-toggle": "tooltip",
                         "append": "fa fa-calendar",
                         "icon_toggle": True,
+                        "class": "answer-modified" if answer_modified else "",
                     },
                 ),
                 required=question_option.is_mandatory,
