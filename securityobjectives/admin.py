@@ -647,24 +647,37 @@ for name, method in generate_display_methods(["description", "objective"], [("do
 
 class SecurityObjectiveWidget(ForeignKeyWidget):
     def clean(self, value, row=None, *args, **kwargs):
-        resource = kwargs.get("resource")
-        creator_id = getattr(resource, "user_id", None)
-        user = User.objects.get(pk=creator_id)
-        creator = user.regulators.all().first()
+        # Already resolved to an instance in before_import_row — pass through
+        if isinstance(value, SecurityObjective):
+            return value
 
-        if not value or not creator:
+        if not value:
             return None
 
-        return SecurityObjective.objects.get(
+        resource = kwargs.get("resource")
+        creator_id = getattr(resource, "user_id", None)
+        if not creator_id:
+            return None
+
+        try:
+            user = User.objects.get(pk=creator_id)
+        except User.DoesNotExist:
+            return None
+
+        creator = user.regulators.first()
+        if not creator:
+            return None
+
+        return SecurityObjective.objects.filter(
             unique_code=value,
             creator=creator,
-        )
+        ).first()
 
 
 class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user_id = kwargs.pop("user_id", None)
+        self.user_id = self.resource_init_kwargs.get("user_id")
 
     standard = fields.Field(
         column_name="standard",
@@ -672,7 +685,7 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
     )
     security_objective = fields.Field(
         column_name="security_objective",
-        attribute="security_objective_unique_code",
+        attribute="security_objective",
         widget=SecurityObjectiveWidget(
             SecurityObjective,
             field="unique_code",
@@ -697,6 +710,29 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
         column_name="evidence",
         attribute="evidence",
     )
+
+    def get_or_init_instance(self, instance_loader, row):
+        """
+        Use the already-resolved SO and ML instances from before_import_row
+        to find or create a SecurityMeasure instance directly.
+        """
+        so = row.get("security_objective")
+        ml = row.get("maturity_level")
+        position = row.get("position")
+
+        if so and ml and position is not None:
+            try:
+                instance = SecurityMeasure.objects.get(
+                    security_objective=so,
+                    maturity_level__translations__label=ml,
+                    position=position,
+                )
+                return instance, False  # False = not new
+            except SecurityMeasure.DoesNotExist:
+                pass
+
+        instance = SecurityMeasure()
+        return instance, True
 
     def import_obj(self, row, instance_loader, **kwargs):
         kwargs["resource"] = self
@@ -737,16 +773,35 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
 
     def after_init_instance(self, instance, new, row, **kwargs):
         creator = kwargs.get("creator")
+        # Derive creator from user_id when running inside a Celery task
+        if creator is None and self.user_id:
+            try:
+                user = User.objects.get(pk=self.user_id)
+                creator = user.regulators.first()
+            except User.DoesNotExist:
+                pass
         if instance and creator:
             instance.creator = creator
             instance.creator_name = creator.name
 
-    # link the correct object to the row
+    def _get_creator(self, kwargs):
+        """Resolve creator from kwargs or fall back to user_id (Celery path)."""
+        creator = kwargs.get("creator")
+        if creator is None and self.user_id:
+            try:
+                user = User.objects.get(pk=self.user_id)
+                creator = user.regulators.first()
+            except User.DoesNotExist:
+                pass
+        return creator
+
     def before_import_row(self, row, **kwargs):
         self._current_import_row = row
-        creator = kwargs.get("creator")
+        creator = self._get_creator(kwargs)
         lang = get_language() or "en"
-        if row["standard"]:
+
+        standard = None
+        if row["standard"] and creator:
             standard = Standard.objects.filter(
                 translations__label=row["standard"],
                 regulator=creator,
@@ -890,6 +945,11 @@ class SecurityMeasureAdmin(
     def get_resource_kwargs(self, request, *args, **kwargs):
         # This passes the current request object to the Resource's __init__
         return {"user_id": request.user.pk}
+
+    def get_import_resource_kwargs(self, request, **kwargs):
+        kwargs = super().get_import_resource_kwargs(request, **kwargs)
+        kwargs["user_id"] = request.user.pk
+        return kwargs
 
     @admin.display(description=_("Standard"))
     def standard_display(self, obj):
