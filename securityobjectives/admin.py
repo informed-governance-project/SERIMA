@@ -28,6 +28,7 @@ from governanceplatform.mixins import (
     TranslationUpdateMixin,
 )
 from governanceplatform.models import Regulation, User
+from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 from governanceplatform.widgets import TranslatedNameWidget
 from securityobjectives.models import (
     Domain,
@@ -678,6 +679,7 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.user_id = self.resource_init_kwargs.get("user_id")
+        self.lang = self.resource_init_kwargs.get("lang")
 
     standard = fields.Field(
         column_name="standard",
@@ -717,14 +719,15 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
         to find or create a SecurityMeasure instance directly.
         """
         so = row.get("security_objective")
-        ml = row.get("maturity_level")
+        ml = row.get("maturity_level_obj")
+
         position = row.get("position")
 
         if so and ml and position is not None:
             try:
                 instance = SecurityMeasure.objects.get(
                     security_objective=so,
-                    maturity_level__translations__label=ml,
+                    maturity_level=ml,
                     position=position,
                 )
                 return instance, False  # False = not new
@@ -773,6 +776,7 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
 
     def after_init_instance(self, instance, new, row, **kwargs):
         creator = kwargs.get("creator")
+        lang = self.lang
         # Derive creator from user_id when running inside a Celery task
         if creator is None and self.user_id:
             try:
@@ -783,6 +787,7 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
         if instance and creator:
             instance.creator = creator
             instance.creator_name = creator.name
+            instance.set_current_language(lang)
 
     def _get_creator(self, kwargs):
         """Resolve creator from kwargs or fall back to user_id (Celery path)."""
@@ -798,7 +803,7 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
     def before_import_row(self, row, **kwargs):
         self._current_import_row = row
         creator = self._get_creator(kwargs)
-        lang = get_language() or "en"
+        lang = self.lang
 
         standard = None
         if row["standard"] and creator:
@@ -833,6 +838,7 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
                     if match:
                         ml.color = row["maturity_level_color"]
                 ml.save()
+                row["maturity_level_obj"] = ml
             if row["evidence"] is None:
                 row["evidence"] = ""
         return super().before_import_row(row, **kwargs)
@@ -949,6 +955,7 @@ class SecurityMeasureAdmin(
     def get_import_resource_kwargs(self, request, **kwargs):
         kwargs = super().get_import_resource_kwargs(request, **kwargs)
         kwargs["user_id"] = request.user.pk
+        kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
         return kwargs
 
     @admin.display(description=_("Standard"))
