@@ -276,6 +276,13 @@ class Standard(TranslatableModel):
 
     def __str__(self):
         label_translation = self.safe_translation_getter("label", any_language=True)
+        if label_translation:
+            return label_translation
+
+        fallback_languages = self.get_fallback_languages() or []
+
+        if fallback_languages:
+            label_translation = self.get_translation(fallback_languages[0]).label
         return label_translation or ""
 
     class Meta:
