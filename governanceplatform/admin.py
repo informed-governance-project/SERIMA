@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
@@ -878,7 +880,7 @@ class UserAdmin(admin.ModelAdmin):
     change_list_template = "admin/reset_accepted_terms.html"
 
     # manage the administrator field for operatorAdmin
-    def get_form(self, request, obj=None, **kwargs):
+    def get_form(self, request, obj=None, change=False, **kwargs):
 
         if not obj and user_in_group(request.user, "OperatorAdmin"):
 
@@ -891,7 +893,7 @@ class UserAdmin(admin.ModelAdmin):
 
             kwargs["form"] = DynamicForm
 
-        return super().get_form(request, obj, **kwargs)
+        return super().get_form(request, obj, change, **kwargs)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -965,15 +967,14 @@ class UserAdmin(admin.ModelAdmin):
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
-
-        if not obj and user_in_group(request.user, "OperatorAdmin"):
-            fields = list(self.standard_fieldsets[0][1]["fields"])
-            if "is_administrator" not in fields:
-                fields.append("is_administrator")
-            self.standard_fieldsets[0][1]["fields"] = fields
-            return self.standard_fieldsets
         if not obj:
-            return self.standard_fieldsets
+            fieldsets = deepcopy(self.standard_fieldsets)
+            if user_in_group(request.user, "OperatorAdmin"):
+                fields = list(fieldsets[0][1]["fields"])
+                if "is_administrator" not in fields:
+                    fields.append("is_administrator")
+                fieldsets[0][1]["fields"] = fields
+            return fieldsets
 
         user = request.user
         use_admin_fieldsets = False
