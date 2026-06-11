@@ -117,9 +117,6 @@ class SecurityObjective(TranslatableModel, models.Model):
     unique_code = models.CharField(
         verbose_name=_("Unique code"),
         max_length=255,
-        blank=True,
-        default=None,
-        null=True,
     )
     # when we want to delete a SO we need to check if it has been answered if yes, archived instead of delete
     is_archived = models.BooleanField(default=False, verbose_name=_("is archived"))
