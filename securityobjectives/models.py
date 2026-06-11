@@ -11,7 +11,7 @@ from .globals import STANDARD_ANSWER_REVIEW_STATUS
 # Maturity level : define a matury (e.g. sophisticated)
 class MaturityLevel(TranslatableModel):
     translations = TranslatedFields(
-        label=models.CharField(verbose_name=_("Label"), max_length=255, blank=True, default=None, null=True),
+        label=models.CharField(verbose_name=_("Label"), max_length=255),
     )
     level = models.IntegerField(verbose_name=_("Level"), default=0)
     standard = models.ForeignKey(
@@ -58,7 +58,7 @@ class MaturityLevel(TranslatableModel):
 # Domain : To categorize the security objectives
 class Domain(TranslatableModel):
     translations = TranslatedFields(
-        label=models.CharField(verbose_name=_("Label"), max_length=255, blank=True, default=None, null=True),
+        label=models.CharField(verbose_name=_("Label"), max_length=255),
     )
     position = models.IntegerField(verbose_name=_("Position"), default=0)
     standard = models.ForeignKey(
@@ -111,9 +111,6 @@ class SecurityObjective(TranslatableModel, models.Model):
         objective=models.CharField(
             verbose_name=_("Objective"),
             max_length=255,
-            blank=True,
-            default=None,
-            null=True,
         ),
         description=models.TextField(verbose_name=_("Description")),
     )
@@ -227,8 +224,8 @@ class SecurityObjectiveEmail(TranslatableModel, models.Model):
 # Standard : A group of security objectives
 class Standard(TranslatableModel):
     translations = TranslatedFields(
-        label=models.CharField(verbose_name=_("Label"), max_length=255, blank=True, default=None, null=True),
-        description=models.TextField(verbose_name=_("Description")),
+        label=models.CharField(verbose_name=_("Label"), max_length=255),
+        description=models.TextField(verbose_name=_("Description"), blank=True, default=None, null=True),
     )
     regulator = models.ForeignKey(
         "governanceplatform.regulator",
