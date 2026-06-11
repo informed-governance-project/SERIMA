@@ -120,7 +120,13 @@ for name, method in generate_display_methods(["label"], [("standard", "label")])
     setattr(DomainAdmin, name, method)
 
 
-class StandardResource(TranslationUpdateMixin, resources.ModelResource):
+class StandardResource(CeleryModelResource, TranslationUpdateMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_id = self.resource_init_kwargs.get("user_id")
+        self.lang = self.resource_init_kwargs.get("lang")
+        self.regulator = self._get_creator(kwargs)
+
     label = fields.Field(
         column_name="label",
         attribute="label",
@@ -135,10 +141,134 @@ class StandardResource(TranslationUpdateMixin, resources.ModelResource):
         widget=TranslatedNameWidget(Regulation, field="label"),
     )
 
-    def after_init_instance(self, instance, new, row, **kwargs):
+    def get_or_init_instance(self, instance_loader, row):
+        """
+        Use the standard get in before_import function
+        """
+        # TO DO : switch on the securitymeasure aspect to really see update etc.
+        return self.standard, False
+
+    def _get_creator(self, kwargs):
+        """Resolve creator from kwargs or fall back to user_id (Celery path)."""
         creator = kwargs.get("creator")
-        if instance and creator:
-            instance.regulator = creator
+        if creator is None and self.user_id:
+            try:
+                user = User.objects.get(pk=self.user_id)
+                creator = user.regulators.first()
+            except User.DoesNotExist:
+                pass
+        return creator
+
+    def before_import(self, dataset, **kwargs):
+        # TO DO : raise error when there is no existing standard
+        lang = self.lang
+        first_row = dataset[0]
+        regulator = self.regulator
+        standard_label = first_row[dataset.headers.index("label")]
+        standard_description = first_row[dataset.headers.index("description")]
+        regulation = Regulation.objects.filter(
+            regulators=regulator,
+            translations__label=first_row[dataset.headers.index("regulation")],
+            translations__language_code=lang,
+        ).first()
+        standard = Standard.objects.get(
+            regulation=regulation,
+            translations__label=standard_label,
+            translations__description=standard_description,
+            translations__language_code=lang,
+            regulator=regulator,
+        )
+        self.standard = standard
+
+    def before_import_row(self, row, **kwargs):
+        if self.standard and self.regulator and self.lang:
+            # Domain
+            if row["domain"] and row["domain_position"]:
+                domain, _created = Domain.objects.update_or_create(
+                    standard=self.standard,
+                    position=row["domain_position"],
+                    creator=self.regulator,
+                )
+                domain.set_current_language(self.lang)
+                domain.label = row["domain"]
+                domain.save()
+                row["domain_obj"] = domain
+            # security objective
+            if (
+                row["domain_obj"]
+                and row["security_objective_unique_code"]
+                and row["security_objective_objective"]
+                and row["security_objective_position"]
+                and row["security_objective_priority"]
+                and row["security_objective_description"]
+            ):
+                so, _created = SecurityObjective.objects.update_or_create(
+                    unique_code=row["security_objective_unique_code"],
+                    domain=row["domain_obj"],
+                    creator=self.regulator,
+                )
+                so.set_current_language(self.lang)
+                so.description = row["security_objective_description"]
+                so.objective = row["security_objective_objective"]
+                so.save()
+                row["so_obj"] = so
+                sois, _created = SecurityObjectivesInStandard.objects.update_or_create(
+                    security_objective=so,
+                    standard=self.standard,
+                    position=row["security_objective_position"],
+                    priority=row["security_objective_priority"],
+                )
+                row["sois_obj"] = sois
+            # maturity level
+            if row["maturity_level"] and row["maturity_level_level"] is not None:
+                ml, _created = MaturityLevel.objects.update_or_create(
+                    standard=self.standard,
+                    creator=self.regulator,
+                    level=row["maturity_level_level"],
+                )
+                ml.set_current_language(self.lang)
+                ml.label = row["maturity_level"]
+                if row["maturity_level_color"]:
+                    match = re.match(r"^#(?:[0-9a-fA-F]{3}){1,2}$", row["maturity_level_color"])
+                    if match:
+                        ml.color = row["maturity_level_color"]
+                ml.save()
+                row["ml_obj"] = ml
+            # security measure
+            if (
+                row["ml_obj"]
+                and row["so_obj"]
+                and row["security_measure_description"]
+                and row["security_measure_evidence"]
+                and row["security_measure_position"]
+            ):
+                sm, _created = SecurityMeasure.objects.update_or_create(
+                    security_objective=row["so_obj"],
+                    maturity_level=row["ml_obj"],
+                    position=row["security_measure_position"],
+                    creator=self.regulator,
+                )
+                sm.set_current_language(self.lang)
+                sm.description = row["security_measure_description"]
+                sm.evidence = row["security_measure_evidence"]
+                sm.save()
+                row["sm_obj"] = sm
+
+        return super().before_import_row(row, **kwargs)
+
+    def after_init_instance(self, instance, new, row, **kwargs):
+        regulator = kwargs.get("creator")
+        lang = self.lang
+        # Derive regulator from user_id when running inside a Celery task
+        if regulator is None and self.user_id:
+            try:
+                user = User.objects.get(pk=self.user_id)
+                regulator = user.regulators.first()
+            except User.DoesNotExist:
+                pass
+        if instance and regulator:
+            instance.regulator = regulator
+            instance.set_current_language(lang)
 
     class Meta:
         model = Standard
@@ -182,11 +312,7 @@ class SecurityObjectiveInline(admin.TabularInline):
 
 
 @admin.register(Standard, site=admin_site)
-class StandardAdmin(
-    FunctionalityMixin,
-    PermissionMixin,
-    CustomTranslatableAdmin,
-):
+class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin, ImportMixin):
     resource_class = StandardResource
     should_escape_html = False
     list_display = ["label_display", "description_display", "regulator"]
@@ -219,6 +345,15 @@ class StandardAdmin(
             },
         ),
     ]
+
+    def has_import_permission(self, request):
+        return True
+
+    def get_import_resource_kwargs(self, request, **kwargs):
+        kwargs = super().get_import_resource_kwargs(request, **kwargs)
+        kwargs["user_id"] = request.user.pk
+        kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
+        return kwargs
 
     def get_inline_instances(self, request, obj=None):
         inline_instances = super().get_inline_instances(request, obj)

@@ -721,4 +721,4 @@ except AttributeError:
     REFERRER_POLICY = "strict-origin-when-cross-origin"
 
 # import export celery
-DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000000
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000000000
