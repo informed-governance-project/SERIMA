@@ -40,7 +40,7 @@ from securityobjectives.models import (
     Standard,
 )
 
-from .mixins import ImportMixin
+from .mixins import CreatorMixin
 
 
 class DomainResource(TranslationUpdateMixin, resources.ModelResource):
@@ -69,6 +69,7 @@ class DomainResource(TranslationUpdateMixin, resources.ModelResource):
 class DomainAdmin(
     FunctionalityMixin,
     PermissionMixin,
+    CreatorMixin,
     CustomTranslatableAdmin,
     ExportActionModelAdmin,
 ):
@@ -108,12 +109,6 @@ class DomainAdmin(
         if obj:
             return fields + ["creator"]
         return fields
-
-    # save by default the regulator
-    def save_model(self, request, obj, form, change):
-        user = request.user
-        obj.creator = user.regulators.first()
-        super().save_model(request, obj, form, change)
 
 
 for name, method in generate_display_methods(["label"], [("standard", "label")]).items():
@@ -312,7 +307,7 @@ class SecurityObjectiveInline(admin.TabularInline):
 
 
 @admin.register(Standard, site=admin_site)
-class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin, ImportMixin):
+class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin):
     resource_class = StandardResource
     should_escape_html = False
     list_display = ["label_display", "description_display", "regulator"]
@@ -422,6 +417,7 @@ class MaturityLevelResource(TranslationUpdateMixin, resources.ModelResource):
 class MaturityLevelAdmin(
     FunctionalityMixin,
     PermissionMixin,
+    CreatorMixin,
     CustomTranslatableAdmin,
 ):
     resource_class = MaturityLevelResource
@@ -472,12 +468,6 @@ class MaturityLevelAdmin(
         if obj:
             return fields + ["creator"]
         return fields
-
-    # save by default the regulator
-    def save_model(self, request, obj, form, change):
-        user = request.user
-        obj.creator = user.regulators.first()
-        super().save_model(request, obj, form, change)
 
 
 for name, method in generate_display_methods(["label"], [("standard", "label")]).items():
@@ -696,8 +686,8 @@ class SecurityObjectiveResource(TranslationUpdateMixin, resources.ModelResource)
 class SecurityObjectiveAdmin(
     FunctionalityMixin,
     PermissionMixin,
+    CreatorMixin,
     CustomTranslatableAdmin,
-    ImportMixin,
     ImportExportModelAdmin,
     ExportActionModelAdmin,
 ):
@@ -1026,8 +1016,8 @@ class SecurityMeasureAdmin(
     CeleryImportExportMixin,
     FunctionalityMixin,
     PermissionMixin,
+    CreatorMixin,
     CustomTranslatableAdmin,
-    ImportMixin,
     # ImportExportModelAdmin,
     # ExportActionModelAdmin,
 ):
@@ -1162,8 +1152,8 @@ class SOEmailResource(TranslationUpdateMixin, resources.ModelResource):
 class SOEmailAdmin(
     FunctionalityMixin,
     PermissionMixin,
+    CreatorMixin,
     CustomTranslatableAdmin,
-    ImportMixin,
     ExportActionModelAdmin,
 ):
     list_display = [
