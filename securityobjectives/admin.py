@@ -10,7 +10,7 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
-from import_export.admin import ExportActionModelAdmin, ImportExportModelAdmin
+from import_export.admin import ExportActionModelAdmin
 from import_export.resources import Diff
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
@@ -19,7 +19,6 @@ from parler.forms import TranslatableModelForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
 from governanceplatform.helpers import (
-    can_change_or_delete_obj,
     generate_display_methods,
     is_user_regulator,
     sanitize_html,
@@ -624,12 +623,6 @@ for name, method in generate_display_methods(["label"], [("standard", "label")])
 
 
 class SecurityObjectiveResource(TranslationUpdateMixin, resources.ModelResource):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.request = kwargs.pop("request", None)
-        self._row_cache = {}
-        self._importing = False
-
     objective = fields.Field(
         column_name="objective",
         attribute="objective",
@@ -659,162 +652,11 @@ class SecurityObjectiveResource(TranslationUpdateMixin, resources.ModelResource)
     )
     priority = fields.Field(column_name="priority", attribute="priority")
 
-    def get_instance(self, instance_loader, row):
-        """
-        Allows to define uniqueness: (unique_code, creator)
-        without needing ‘creator’ in the file.
-        """
-        if not self.request:
-            return None
-        user = self.request.user
-        cr = None
-        if user:
-            cr = user.regulators.first()
-        if cr is None:
-            return None
-        return self._meta.model.objects.filter(
-            unique_code=row.get("unique_code"),
-            creator=cr,
-        ).first()
-
-    def dehydrate_standard(self, obj):
-        standard = None
-        if self._importing:
-            cached = self._row_cache.get(id(self._current_import_row), {})
-            standard = cached.get("standard")
-        elif obj and obj.pk and not self._importing:
-            sois = SecurityObjectivesInStandard.objects.filter(security_objective=obj).first()
-            if sois:
-                standard = sois.standard
-
-        if standard:
-            standard.set_current_language(get_language())
-            return standard.label
-        current_row = getattr(self, "_current_import_row", None)
-
-        if current_row:
-            return current_row.get("standard", "")
-
-        return ""
-
-    def dehydrate_position(self, obj):
-        if obj and obj.pk and not self._importing:
-            sois = SecurityObjectivesInStandard.objects.filter(
-                security_objective=obj,
-            ).first()
-            if sois:
-                return sois.position
-            return None
-        return self._current_import_row["position"]
-
-    def dehydrate_priority(self, obj):
-        if obj and obj.pk and not self._importing:
-            sois = SecurityObjectivesInStandard.objects.filter(
-                security_objective=obj,
-            ).first()
-            if sois:
-                return sois.priority
-            return None
-        return self._current_import_row["priority"]
-
-    def dehydrate_domain_position(self, obj):
-        if obj.domain and obj.domain.pk:
-            return obj.domain.position
-
-        current_row = getattr(self, "_current_import_row", None)
-
-        if current_row:
-            return current_row.get("domain_position", "")
-
-        return ""
-
-    def before_import(self, dataset, **kwargs):
-        self._importing = True
-
-    def after_import(self, dataset, result, **kwargs):
-        self._importing = False
-
-    def skip_row(self, instance, original, row, import_validation_errors=None):
-        # Object already in used we don't change
-        if instance and instance.pk and self.request:
-            return not can_change_or_delete_obj(self.request, instance)
-
-        return super().skip_row(
-            instance,
-            original,
-            row,
-            import_validation_errors=import_validation_errors,
-        )
-
     def after_init_instance(self, instance, new, row, **kwargs):
         creator = kwargs.get("creator")
         if instance and creator:
             instance.creator = creator
             instance.creator_name = creator.name
-
-    # link the correct object to the row
-    def before_import_row(self, row, **kwargs):
-        self._current_import_row = row
-        creator = kwargs.get("creator")
-        lang = get_language() or "en"
-        row["creator"] = creator
-        if row["standard"]:
-            standard = (
-                Standard.objects.filter(
-                    regulator=creator,
-                )
-                .translated(lang, label=row["standard"])
-                .first()
-            )
-            if standard:
-                self._row_cache[id(row)] = {
-                    "standard": standard,
-                }
-            if standard:
-                if row["domain"] and row["domain_position"]:
-                    domain = Domain.objects.filter(standard=standard, position=row["domain_position"]).first()
-                    if not domain:
-                        domain = Domain.objects.create(
-                            standard=standard,
-                            position=row["domain_position"],
-                            creator=creator,
-                        )
-                    domain.set_current_language(lang)
-                    domain.label = row["domain"]
-                    domain.save()
-                    row["domain_object"] = domain
-
-        return super().before_import_row(row, **kwargs)
-
-    # if there is a standard get it and save the SO
-    def after_import_row(self, row, row_result, **kwargs):
-        if hasattr(self, "_current_import_row"):
-            del self._current_import_row
-        so = SecurityObjective.objects.get(pk=row_result.object_id)
-        cached = self._row_cache.pop(id(row), {})
-        standard = cached.get("standard")
-        if standard and so:
-            # force to link to the correct domain
-            if row["domain_object"]:
-                domain = row["domain_object"]
-                so.domain = domain
-                so.save()
-                domain.standard = standard
-                domain.save()
-            sois = SecurityObjectivesInStandard.objects.filter(
-                security_objective=so,
-                standard=standard,
-            ).first()
-            if not sois:
-                sois = SecurityObjectivesInStandard.objects.create(
-                    security_objective=so,
-                    standard=standard,
-                )
-            if row["priority"] and row["priority"] is not None:
-                sois.priority = row["priority"]
-            if row["position"] and row["position"] is not None:
-                sois.position = row["position"]
-            sois.save()
 
     class Meta:
         model = SecurityObjective
@@ -837,8 +679,6 @@ class SecurityObjectiveAdmin(
     PermissionMixin,
     CreatorMixin,
     CustomTranslatableAdmin,
-    ImportExportModelAdmin,
-    ExportActionModelAdmin,
 ):
     resource_class = SecurityObjectiveResource
     should_escape_html = False
@@ -875,26 +715,10 @@ class SecurityObjectiveAdmin(
         "description",
     ]
 
-    def has_import_permission(self, request):
-        return request.user.has_perm("securityobjectives.add_securityobjective")
-
-    def has_export_permission(self, request):
-        return request.user.has_perm("securityobjectives.view_securityobjective")
-
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return ("creator",)
         return ()
-
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        if obj:
-            return fields + ["creator"]
-        return fields
-
-    def get_resource_kwargs(self, request, *args, **kwargs):
-        # This passes the current request object to the Resource's __init__
-        return {"request": request}
 
     @admin.display(description=_("Standard"))
     def standard_display(self, obj):
