@@ -144,6 +144,27 @@ class StandardDiff(Diff):
             before_domain = existing_domain.label or ""
         after_domain = row.get("domain") or ""
 
+        # security objective
+        before_so_objective = ""
+        before_so_description = ""
+        before_so_position = ""
+        before_so_priority = ""
+        existing_so = SecurityObjective.objects.filter(
+            unique_code=row.get("security_objective_unique_code"), creator=resource.regulator
+        ).first()
+        if existing_so:
+            existing_so.set_current_language(resource.lang)
+            before_so_objective = existing_so.objective or ""
+            before_so_description = existing_so.description or ""
+            existing_sois = SecurityObjectivesInStandard.objects.filter(standard=resource.standard, security_objective=existing_so).first()
+            if existing_sois:
+                before_so_position = existing_sois.position or ""
+                before_so_priority = existing_sois.priority or ""
+        after_so_obejctive = row.get("security_objective_objective") or ""
+        after_so_description = row.get("security_objective_description") or ""
+        after_so_position = row.get("security_objective_position") or ""
+        after_so_priority = row.get("security_objective_priority") or ""
+
         # Maturity level
         existing_ml = MaturityLevel.objects.filter(
             standard=resource.standard,
@@ -155,8 +176,40 @@ class StandardDiff(Diff):
             before_ml = existing_ml.label or ""
         after_ml = row.get("maturity_level") or ""
 
-        self.left_extra = [before_domain, before_ml]
-        self.right_extra = [after_domain, after_ml]
+        # security measures
+        before_sm_evidence = ""
+        before_sm_description = ""
+        if existing_so and existing_ml:
+            existing_sm = SecurityMeasure.objects.filter(
+                security_objective=existing_so, maturity_level=existing_ml, position=row.get("security_measure_position")
+            ).first()
+        if existing_sm:
+            existing_sm.set_current_language(resource.lang)
+            before_sm_evidence = existing_sm.evidence or ""
+            before_sm_description = existing_sm.description or ""
+        after_sm_evidence = row.get("security_measure_evidence")
+        after_sm_description = row.get("security_measure_description")
+
+        self.left_extra = [
+            before_domain,
+            before_so_objective,
+            before_so_description,
+            before_so_position,
+            before_so_priority,
+            before_ml,
+            before_sm_description,
+            before_sm_evidence,
+        ]
+        self.right_extra = [
+            after_domain,
+            after_so_obejctive,
+            after_so_description,
+            after_so_position,
+            after_so_priority,
+            after_ml,
+            after_sm_description,
+            after_sm_evidence,
+        ]
 
     def as_html(self):
         # Diff standard
@@ -200,7 +253,6 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         """
         Use the standard get in before_import function
         """
-        # TO DO : switch on the securitymeasure aspect to really see update etc.
         return self.standard, False
 
     def _get_creator(self, kwargs):
@@ -217,8 +269,14 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
     def get_diff_headers(self):
         headers = super().get_diff_headers()
         headers += [
-            "domain",
-            "maturity_level",
+            _("domain"),
+            _("Security objective objective"),
+            _("Security objective description"),
+            _("Security objective position"),
+            _("Security objective priority"),
+            _("maturity_level"),
+            _("Security measure description"),
+            _("Security measure evidence"),
         ]
         return headers
 
