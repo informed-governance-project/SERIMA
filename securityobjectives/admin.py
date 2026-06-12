@@ -12,7 +12,6 @@ from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ExportActionModelAdmin, ImportExportModelAdmin
 from import_export.resources import Diff
-from import_export.widgets import ForeignKeyWidget
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
 from markdown import markdown
@@ -921,41 +920,7 @@ for name, method in generate_display_methods(["description", "objective"], [("do
     setattr(SecurityObjectiveAdmin, name, method)
 
 
-class SecurityObjectiveWidget(ForeignKeyWidget):
-    def clean(self, value, row=None, *args, **kwargs):
-        # Already resolved to an instance in before_import_row — pass through
-        if isinstance(value, SecurityObjective):
-            return value
-
-        if not value:
-            return None
-
-        resource = kwargs.get("resource")
-        creator_id = getattr(resource, "user_id", None)
-        if not creator_id:
-            return None
-
-        try:
-            user = User.objects.get(pk=creator_id)
-        except User.DoesNotExist:
-            return None
-
-        creator = user.regulators.first()
-        if not creator:
-            return None
-
-        return SecurityObjective.objects.filter(
-            unique_code=value,
-            creator=creator,
-        ).first()
-
-
-class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user_id = self.resource_init_kwargs.get("user_id")
-        self.lang = self.resource_init_kwargs.get("lang")
-
+class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
     standard = fields.Field(
         column_name="standard",
         attribute="standard",
@@ -963,10 +928,6 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
     security_objective = fields.Field(
         column_name="security_objective",
         attribute="security_objective",
-        widget=SecurityObjectiveWidget(
-            SecurityObjective,
-            field="unique_code",
-        ),
     )
     maturity_level = fields.Field(
         column_name="maturity_level",
@@ -988,67 +949,6 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
         attribute="evidence",
     )
 
-    def get_or_init_instance(self, instance_loader, row):
-        """
-        Use the already-resolved SO and ML instances from before_import_row
-        to find or create a SecurityMeasure instance directly.
-        """
-        so = row.get("security_objective")
-        ml = row.get("maturity_level_obj")
-
-        position = row.get("position")
-
-        if so and ml and position is not None:
-            try:
-                instance = SecurityMeasure.objects.get(
-                    security_objective=so,
-                    maturity_level=ml,
-                    position=position,
-                )
-                return instance, False  # False = not new
-            except SecurityMeasure.DoesNotExist:
-                pass
-
-        instance = SecurityMeasure()
-        return instance, True
-
-    def import_obj(self, row, instance_loader, **kwargs):
-        kwargs["resource"] = self
-        return super().import_obj(row, instance_loader, **kwargs)
-
-    def dehydrate_maturity_level_color(self, obj):
-        if hasattr(self, "_current_import_row") and self._current_import_row["maturity_level_color"] is not None:
-            return self._current_import_row["maturity_level_color"]
-        if hasattr(self, "_current_import_row") and self._current_import_row["maturity_level_color"] is None:
-            return ""
-        if obj.maturity_level and obj.maturity_level.pk:
-            return obj.maturity_level.color
-        return self._current_import_row["maturity_level_color"]
-
-    def dehydrate_maturity_level_level(self, obj):
-        if hasattr(self, "_current_import_row"):
-            return self._current_import_row["maturity_level_level"]
-        if obj.maturity_level and obj.maturity_level.pk:
-            return obj.maturity_level.level
-        return self._current_import_row["maturity_level_level"]
-
-    def dehydrate_standard(self, obj):
-        if hasattr(self, "_current_import_row"):
-            return self._current_import_row["standard"]
-        return SecurityObjectivesInStandard.objects.filter(security_objective=obj.security_objective).first().standard
-
-    # def skip_row(self, instance, original, row, import_validation_errors=None):
-    #     # Object already in used we don't change
-    #     if instance and instance.pk and self.request:
-    #         return not can_change_or_delete_obj(self.request, instance)
-
-    #     return super().skip_row(
-    #         instance,
-    #         original,
-    #         row,
-    #         import_validation_errors=import_validation_errors,
-    #     )
-
     def after_init_instance(self, instance, new, row, **kwargs):
         creator = kwargs.get("creator")
         lang = self.lang
@@ -1064,65 +964,6 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
             instance.creator_name = creator.name
             instance.set_current_language(lang)
 
-    def _get_creator(self, kwargs):
-        """Resolve creator from kwargs or fall back to user_id (Celery path)."""
-        creator = kwargs.get("creator")
-        if creator is None and self.user_id:
-            try:
-                user = User.objects.get(pk=self.user_id)
-                creator = user.regulators.first()
-            except User.DoesNotExist:
-                pass
-        return creator
-
-    def before_import_row(self, row, **kwargs):
-        self._current_import_row = row
-        creator = self._get_creator(kwargs)
-        lang = self.lang
-
-        standard = None
-        if row["standard"] and creator:
-            standard = Standard.objects.filter(
-                translations__label=row["standard"],
-                regulator=creator,
-            ).first()
-        if standard:
-            if row["security_objective"] and creator:
-                so = SecurityObjective.objects.filter(
-                    unique_code=row["security_objective"],
-                    standard=standard,
-                    creator=creator,
-                ).first()
-                row["security_objective"] = so
-            if row["maturity_level"] and row["maturity_level_level"] is not None and creator:
-                ml = MaturityLevel.objects.filter(
-                    standard=standard,
-                    level=row["maturity_level_level"],
-                ).first()
-                if not ml:
-                    ml = MaturityLevel.objects.create(
-                        standard=standard,
-                        creator=creator,
-                        level=row["maturity_level_level"],
-                    )
-                ml.set_current_language(lang)
-                ml.label = row["maturity_level"]
-                # add the color of domain if present of the import
-                if row["maturity_level_color"]:
-                    match = re.match(r"^#(?:[0-9a-fA-F]{3}){1,2}$", row["maturity_level_color"])
-                    if match:
-                        ml.color = row["maturity_level_color"]
-                ml.save()
-                row["maturity_level_obj"] = ml
-            if row["evidence"] is None:
-                row["evidence"] = ""
-        return super().before_import_row(row, **kwargs)
-
-    # erase the temporary variable
-    def after_import_row(self, row, row_result, **kwargs):
-        if hasattr(self, "_current_import_row"):
-            del self._current_import_row
-
     class Meta:
         model = SecurityMeasure
         fields = (
@@ -1135,7 +976,6 @@ class SecurityMeasureResource(CeleryModelResource, TranslationUpdateMixin):
             "description",
             "evidence",
         )
-        import_id_fields = ("security_objective", "maturity_level", "position")
 
 
 # add a custom form for SecurityMeasure to ensure that
@@ -1163,13 +1003,10 @@ class SecurityMeasureAdminForm(TranslatableModelForm, PermissionMixin):
 
 @admin.register(SecurityMeasure, site=admin_site)
 class SecurityMeasureAdmin(
-    CeleryImportExportMixin,
     FunctionalityMixin,
     PermissionMixin,
     CreatorMixin,
     CustomTranslatableAdmin,
-    # ImportExportModelAdmin,
-    # ExportActionModelAdmin,
 ):
     form = SecurityMeasureAdminForm
     resource_class = SecurityMeasureResource
@@ -1204,34 +1041,12 @@ class SecurityMeasureAdmin(
         "evidence",
     ]
 
-    def has_import_permission(self, request):
-        return request.user.has_perm("securityobjectives.add_securitymeasure")
-
-    def has_export_permission(self, request):
-        return request.user.has_perm("securityobjectives.view_securitymeasure")
-
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return ("creator", "security_objective")
         return ()
 
-    def get_fields(self, request, obj=None):
-        fields = super().get_fields(request, obj)
-        if obj:
-            return fields + ["creator"]
-        return fields
-
     translated_fields = ["description"]
-
-    def get_resource_kwargs(self, request, *args, **kwargs):
-        # This passes the current request object to the Resource's __init__
-        return {"user_id": request.user.pk}
-
-    def get_import_resource_kwargs(self, request, **kwargs):
-        kwargs = super().get_import_resource_kwargs(request, **kwargs)
-        kwargs["user_id"] = request.user.pk
-        kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
-        return kwargs
 
     @admin.display(description=_("Standard"))
     def standard_display(self, obj):
