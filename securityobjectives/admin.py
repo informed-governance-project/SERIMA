@@ -177,6 +177,7 @@ class StandardDiff(Diff):
         # security measures
         before_sm_evidence = ""
         before_sm_description = ""
+        existing_sm = None
         if existing_so and existing_ml:
             existing_sm = SecurityMeasure.objects.filter(
                 security_objective=existing_so, maturity_level=existing_ml, position=row.get("security_measure_position")
@@ -489,7 +490,11 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         ),
     ]
 
+    # TO DO set the correct permission
     def has_import_permission(self, request):
+        return True
+
+    def has_export_permission(self, request):
         return True
 
     def get_import_resource_kwargs(self, request, **kwargs):
