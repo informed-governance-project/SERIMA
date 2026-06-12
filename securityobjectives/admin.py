@@ -1,14 +1,17 @@
 import re
 
+from diff_match_patch import diff_match_patch
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from django.utils.encoding import force_str
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ExportActionModelAdmin, ImportExportModelAdmin
+from import_export.resources import Diff
 from import_export.widgets import ForeignKeyWidget
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
@@ -115,6 +118,63 @@ for name, method in generate_display_methods(["label"], [("standard", "label")])
     setattr(DomainAdmin, name, method)
 
 
+# class to show the difference when importing a standard to go through the subclass
+class StandardDiff(Diff):
+    def __init__(self, resource, instance, new):
+        super().__init__(resource, instance, new)
+        self.resource = resource
+        self.left_extra = []
+        self.right_extra = []
+
+    def compare_with(self, resource, instance):
+        super().compare_with(resource, instance)
+
+    def compare_with_row(self, row):
+        """Manualy called by import row to calculate custom diff"""
+        resource = self.resource
+
+        # Domain
+        existing_domain = Domain.objects.filter(
+            standard=resource.standard,
+            position=row.get("domain_position"),
+        ).first()
+        before_domain = ""
+        if existing_domain:
+            existing_domain.set_current_language(resource.lang)
+            before_domain = existing_domain.label or ""
+        after_domain = row.get("domain") or ""
+
+        # Maturity level
+        existing_ml = MaturityLevel.objects.filter(
+            standard=resource.standard,
+            level=row.get("maturity_level_level"),
+        ).first()
+        before_ml = ""
+        if existing_ml:
+            existing_ml.set_current_language(resource.lang)
+            before_ml = existing_ml.label or ""
+        after_ml = row.get("maturity_level") or ""
+
+        self.left_extra = [before_domain, before_ml]
+        self.right_extra = [after_domain, after_ml]
+
+    def as_html(self):
+        # Diff standard
+        data = super().as_html()
+
+        # Diff custom
+        dmp = diff_match_patch()
+        for v1, v2 in zip(self.left_extra, self.right_extra):
+            original = v1
+            if original != v2 and self.new:
+                original = ""
+            diff = dmp.diff_main(force_str(original), force_str(v2))
+            dmp.diff_cleanupSemantic(diff)
+            data.append(mark_safe(dmp.diff_prettyHtml(diff)))
+
+        return data
+
+
 class StandardResource(CeleryModelResource, TranslationUpdateMixin):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -154,6 +214,34 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
                 pass
         return creator
 
+    def get_diff_headers(self):
+        headers = super().get_diff_headers()
+        headers += [
+            "domain",
+            "maturity_level",
+        ]
+        return headers
+
+    def import_row(self, row, instance_loader, **kwargs):
+        # Patch : use the class for diff
+        original_diff_class = self.get_diff_class()
+
+        class PatchedDiff(original_diff_class):
+            def compare_with(self, resource, instance):
+                super().compare_with(resource, instance)
+                # Inject custom diff
+                self.compare_with_row(row)
+
+        self._patched_diff_class = PatchedDiff
+        result = super().import_row(row, instance_loader, **kwargs)
+        self._patched_diff_class = None
+        return result
+
+    def get_diff_class(self):
+        if hasattr(self, "_patched_diff_class") and self._patched_diff_class:
+            return self._patched_diff_class
+        return StandardDiff
+
     def before_import(self, dataset, **kwargs):
         # TO DO : raise error when there is no existing standard
         lang = self.lang
@@ -176,6 +264,10 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         self.standard = standard
 
     def before_import_row(self, row, **kwargs):
+        dry_run = kwargs.get("dry_run", False)
+
+        if dry_run:
+            return super().before_import_row(row, **kwargs)
         if self.standard and self.regulator and self.lang:
             # Domain
             if row["domain"] and row["domain_position"]:
