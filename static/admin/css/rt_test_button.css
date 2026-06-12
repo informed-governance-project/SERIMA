@@ -1,0 +1,17 @@
+.field-rt_test_button label {
+    color: var(--body-bg);
+}
+
+.button {
+    padding: 8px 12px !important;
+}
+
+#rt-test-result {
+    margin-left: 12px;
+    font-weight: bold;
+}
+
+#rt-test-help {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
