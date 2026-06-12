@@ -248,6 +248,45 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         widget=TranslatedNameWidget(Regulation, field="label"),
     )
 
+    # manage header for export
+    EXTRA_EXPORT_COLUMNS = [
+        "domain",
+        "domain_position",
+        "security_objective_unique_code",
+        "security_objective_objective",
+        "security_objective_description",
+        "security_objective_position",
+        "security_objective_priority",
+        "maturity_level",
+        "maturity_level_level",
+        "maturity_level_color",
+        "security_measure_position",
+        "security_measure_description",
+        "security_measure_evidence",
+    ]
+
+    def get_export_order(self):
+        """Inject extra columns."""
+        base_order = super().get_export_order()
+        return base_order + tuple(self.EXTRA_EXPORT_COLUMNS)
+
+    def get_export_fields(self, selected_fields=None):
+        """
+        Override to include the extra columns that are not
+        in self.fields (no actual fields declared for them)
+        """
+        from import_export.fields import Field
+
+        base_fields = super().get_export_fields(selected_fields)
+
+        # filter user selection
+        for col in self.EXTRA_EXPORT_COLUMNS:
+            if selected_fields is None or col in selected_fields:
+                f = Field(column_name=col, attribute=col, readonly=True)
+                base_fields.append(f)
+
+        return base_fields
+
     def get_or_init_instance(self, instance_loader, row):
         """
         Use the standard get in before_import function
@@ -414,6 +453,99 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
             instance.regulator = regulator
             instance.set_current_language(lang)
 
+    def export(self, queryset=None, *args, **kwargs):
+        from tablib import Dataset
+
+        lang = self.lang
+
+        # CeleryModelResource inject selected field in kwargs
+        user_selected = kwargs.get("export_fields", None)
+
+        if user_selected:
+            selected_field_names = list(user_selected)
+        else:
+            # Rien sélectionné = tout exporter
+            selected_field_names = ["label", "description", "regulation"] + self.EXTRA_EXPORT_COLUMNS
+
+        base_headers = [col for col in ["label", "description", "regulation"] if col in selected_field_names]
+        selected_extra = [col for col in self.EXTRA_EXPORT_COLUMNS if col in selected_field_names]
+
+        headers = base_headers + selected_extra
+        dataset = Dataset(headers=headers)
+
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        for standard in queryset:
+            measures = (
+                SecurityMeasure.objects.filter(security_objective__standard_link__standard=standard)
+                .select_related(
+                    "security_objective__domain",
+                    "security_objective__standard_link",
+                    "maturity_level",
+                )
+                .order_by(
+                    "security_objective__domain__position",
+                    "security_objective__unique_code",
+                    "maturity_level__level",
+                    "position",
+                )
+            )
+
+            if not measures.exists():
+                dataset.append(self._build_row(standard, lang, selected_field_names=selected_field_names))
+                continue
+
+            for measure in measures:
+                dataset.append(self._build_row(standard, lang, measure, selected_field_names=selected_field_names))
+
+        return dataset
+
+    def _build_row(self, standard, lang, measure=None, selected_field_names=None):
+        standard.set_current_language(lang)
+
+        # All possible values, sorted by column name
+        all_values = {
+            "label": standard.label or "",
+            "description": standard.description or "",
+            "regulation": (standard.regulation.safe_translation_getter("label", language_code=lang) or "" if standard.regulation else ""),
+        }
+
+        if measure is not None:
+            so = measure.security_objective
+            so.set_current_language(lang)
+            domain = so.domain
+            domain.set_current_language(lang)
+            ml = measure.maturity_level
+            ml.set_current_language(lang)
+            sois = SecurityObjectivesInStandard.objects.filter(security_objective=so, standard=standard).first()
+
+            all_values.update(
+                {
+                    "domain": domain.label or "",
+                    "domain_position": domain.position or "",
+                    "security_objective_unique_code": so.unique_code or "",
+                    "security_objective_objective": so.objective or "",
+                    "security_objective_description": so.description or "",
+                    "security_objective_position": sois.position if sois else "",
+                    "security_objective_priority": sois.priority if sois else "",
+                    "maturity_level": ml.label or "",
+                    "maturity_level_level": ml.level if ml.level is not None else "",
+                    "maturity_level_color": ml.color or "",
+                    "security_measure_position": measure.position or "",
+                    "security_measure_description": measure.description or "",
+                    "security_measure_evidence": measure.evidence or "",
+                }
+            )
+        else:
+            # Leave this line blank for extras if no measures are available
+            all_values.update({col: "" for col in self.EXTRA_EXPORT_COLUMNS})
+
+        # Returns only the selected columns, in the correct order
+        if selected_field_names:
+            return [all_values.get(col, "") for col in selected_field_names if col in all_values]
+        return list(all_values.values())
+
     class Meta:
         model = Standard
         fields = ("label", "description", "regulation")
@@ -500,6 +632,11 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
     def get_import_resource_kwargs(self, request, **kwargs):
         kwargs = super().get_import_resource_kwargs(request, **kwargs)
         kwargs["user_id"] = request.user.pk
+        kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
+        return kwargs
+
+    def get_export_resource_kwargs(self, request, **kwargs):
+        kwargs = super().get_export_resource_kwargs(request, **kwargs)
         kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
         return kwargs
 
