@@ -219,7 +219,7 @@ def create_or_update_rt_ticket(recipient, subject, content, incident):
     }
 
     try:
-        ticket = RTTicket.objects.filter(incident=incident, observer=recipient).first()
+        ticket = RTTicket.objects.filter(incident=incident, observer=recipient).first() if incident else None
         is_new_ticket = ticket is None
         if is_new_ticket:
             url = f"{base_url}/REST/2.0/ticket"
@@ -237,10 +237,10 @@ def create_or_update_rt_ticket(recipient, subject, content, incident):
                 "ContentType": "text/html",
             }
 
-        response = requests.post(url, json=payload, headers=headers, timeout=5)
+        response = requests.post(url, json=payload, headers=headers, timeout=(3, 15))
 
         if response.ok:
-            if is_new_ticket and response.status_code == 201:
+            if incident and is_new_ticket and response.status_code == 201:
                 ticket_data = response.json()
                 RTTicket.objects.create(
                     incident=incident,
@@ -265,7 +265,7 @@ def check_rt_config(observer):
         "Authorization": f"token {observer.rt_token}",
     }
     try:
-        response = requests.get(url, headers=headers, timeout=5)
+        response = requests.get(url, headers=headers, timeout=(3, 5))
         if response.status_code == 200:
             return True
         if response.status_code == 401:
