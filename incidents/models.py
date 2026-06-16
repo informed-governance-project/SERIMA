@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import pytz
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Deferrable
 from django.utils import timezone
@@ -11,6 +12,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from governanceplatform.settings import TIME_ZONE
 
 from .globals import (
+    CONDITIONAL_QUESTION_TYPES,
     INCIDENT_EMAIL_TRIGGER_EVENT,
     INCIDENT_STATUS,
     QUESTION_TYPES,
@@ -194,6 +196,78 @@ class PredefinedAnswer(TranslatableModel):
     class Meta:
         verbose_name_plural = _("Question - predefined answers")
         verbose_name = _("Question - predefined answer")
+
+
+class ConditionalQuestionOption(models.Model):
+    question_options = models.ForeignKey(
+        "QuestionOptions",
+        verbose_name=_("Question"),
+        on_delete=models.CASCADE,
+        related_name="conditional_triggers",
+    )
+    predefined_answer = models.ForeignKey(
+        PredefinedAnswer,
+        verbose_name=_("Selected answer"),
+        on_delete=models.CASCADE,
+        related_name="conditional_questions",
+    )
+    next_question_options = models.ForeignKey(
+        "QuestionOptions",
+        verbose_name=_("Next question"),
+        on_delete=models.CASCADE,
+        related_name="conditional_targets",
+    )
+
+    # name of the regulator who create the object
+    creator_name = models.CharField(
+        verbose_name=_("Creator name"),
+        max_length=255,
+        blank=True,
+        default=None,
+        null=True,
+    )
+    creator = models.ForeignKey(
+        "governanceplatform.regulator",
+        verbose_name=_("Creator"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+    )
+
+    def clean(self):
+        if self.question_options_id and self.predefined_answer_id:
+            if self.predefined_answer.question_id != self.question_options.question_id:
+                raise ValidationError(_("The selected answer does not belong to this question."))
+
+        if self.question_options_id and self.question_options.question.question_type not in CONDITIONAL_QUESTION_TYPES:
+            raise ValidationError(_("Conditional questions are only available for single and multiple choice questions."))
+
+        if self.question_options_id and self.next_question_options_id:
+            if self.question_options.category_option.question_category_id != (
+                self.next_question_options.category_option.question_category_id
+            ):
+                raise ValidationError(_("The conditional question must be in the same category as the current question."))
+
+            if self.question_options_id == self.next_question_options_id:
+                raise ValidationError(_("A question cannot redirect to itself."))
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.question_options} -> [{self.predefined_answer}] -> {self.next_question_options}"
+
+    class Meta:
+        verbose_name_plural = _("Conditional questions")
+        verbose_name = _("Conditional question")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["question_options", "predefined_answer"],
+                name="Unique_ConditionalQuestionOption_per_answer",
+            ),
+        ]
 
 
 # Email sent from regulator to operator
@@ -978,6 +1052,7 @@ class QuestionOptionsHistory(models.Model):
     timestamp = models.DateTimeField(verbose_name=_("Timestamp"), default=timezone.now)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     is_mandatory = models.BooleanField(default=False, verbose_name=_("Mandatory"))
+    is_conditional = models.BooleanField(default=False, verbose_name=_("Conditional display"))
     position = models.IntegerField(verbose_name=_("Position"))
     category_option = models.ForeignKey(
         QuestionCategoryOptions,
@@ -993,6 +1068,7 @@ class QuestionOptions(models.Model):
     report = models.ForeignKey(Workflow, on_delete=models.CASCADE, null=True, blank=True)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     is_mandatory = models.BooleanField(default=False, verbose_name=_("Mandatory"))
+    is_conditional = models.BooleanField(default=False, verbose_name=_("Conditional display"))
     position = models.IntegerField(verbose_name=_("Position"))
     category_option = models.ForeignKey(
         QuestionCategoryOptions,
@@ -1029,6 +1105,7 @@ class QuestionOptions(models.Model):
                 history = QuestionOptionsHistory.objects.create(
                     question=old.question,
                     is_mandatory=old.is_mandatory,
+                    is_conditional=old.is_conditional,
                     position=old.position,
                     category_option=old.category_option,
                 )
