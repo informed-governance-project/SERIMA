@@ -40,6 +40,7 @@ GROUP_PERMISSIONS = {
         "questionoptions": ["add", "change", "delete"],
         "questioncategory": ["add", "change", "delete"],
         "questioncategoryoptions": ["add", "change", "delete"],
+        "conditionalquestionoption": ["add", "change", "delete"],
         "sectorregulationworkflowemail": ["add", "change", "delete"],
         "sectorregulationworkflow": ["add", "change", "delete"],
         # Reporting
