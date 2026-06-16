@@ -9,6 +9,8 @@ from django.core.exceptions import FieldDoesNotExist, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Count, OuterRef, Q, Subquery
 from django.forms.models import model_to_dict
+from django.http import Http404, JsonResponse
+from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -37,9 +39,10 @@ from governanceplatform.settings import (
     LOG_RETENTION_TIME_IN_DAY,
     PARLER_DEFAULT_LANGUAGE_CODE,
 )
-from incidents.forms import QuestionOptionsInlineForm
+from incidents.forms import ConditionalQuestionOptionForm, QuestionOptionsInlineForm
 from incidents.models import (
     Answer,
+    ConditionalQuestionOption,
     Email,
     Impact,
     PredefinedAnswer,
@@ -53,7 +56,7 @@ from incidents.models import (
     Workflow,
 )
 
-from .globals import QUESTION_TYPES
+from .globals import CONDITIONAL_QUESTION_TYPES, QUESTION_TYPES
 
 logger = logging.getLogger(__name__)
 
@@ -422,11 +425,11 @@ for name, method in generate_display_methods(
 
 @admin.register(QuestionOptions, site=admin_site)
 class QuestionOptionsAdmin(admin.ModelAdmin):
-    list_display = ["position", "question", "is_mandatory", "category_option"]
+    list_display = ["position", "question", "is_mandatory", "is_conditional", "category_option"]
     list_display_links = ["position", "question"]
     ordering = ["position"]
     fields = [
-        ("position", "is_mandatory"),
+        ("position", "is_mandatory", "is_conditional"),
         "question",
         "category_option",
     ]
@@ -435,6 +438,139 @@ class QuestionOptionsAdmin(admin.ModelAdmin):
     # Hidden from register models list
     def has_module_permission(self, request):
         return False
+
+
+@admin.register(ConditionalQuestionOption, site=admin_site)
+class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
+    form = ConditionalQuestionOptionForm
+    list_display = ["get_workflow", "question_options", "predefined_answer", "next_question_options", "creator"]
+    list_filter = ["question_options__report", "question_options__category_option__question_category"]
+    search_fields = [
+        "question_options__question__translations__label",
+        "question_options__question__reference",
+        "predefined_answer__translations__predefined_answer",
+        "next_question_options__question__translations__label",
+        "next_question_options__question__reference",
+    ]
+    fields = ["report", "question_options", "predefined_answer", "next_question_options"]
+
+    class Media:
+        js = ["admin/js/conditional_question_option.js"]
+
+    @admin.display(description=_("Workflow"), ordering="question_options__report__name")
+    def get_workflow(self, obj):
+        return obj.question_options.report.name
+
+    def save_model(self, request, obj, form, change):
+        set_creator(request, obj, change)
+        super().save_model(request, obj, form, change)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        user = request.user
+        form.base_fields["report"].queryset = (
+            Workflow.objects.filter(
+                questionoptions__is_conditional=True,
+                creator=user.regulators.first(),
+            )
+            .order_by("name")
+            .distinct()
+        )
+
+        return form
+
+    def _add_info_message(self, request):
+        info_message = _(
+            "To create a conditional question, the question must exist in an incident report and be marked as "
+            "“Conditional display”. Please select a report first to load available questions. "
+            "Only reports containing conditional questions are displayed."
+        )
+        messages.info(request, info_message)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        self._add_info_message(request)
+        return super().change_view(request, object_id, form_url, extra_context)
+
+    def add_view(self, request, form_url="", extra_context=None):
+        self._add_info_message(request)
+        return super().add_view(request, form_url, extra_context)
+
+    def get_urls(self):
+        urls = [
+            path(
+                "report-questions/<int:report_id>/",
+                self.admin_site.admin_view(self.report_questions_view),
+                name="incidents_conditionalquestionoption_report_questions",
+            ),
+            path(
+                "dependent-options/<int:question_options_id>/",
+                self.admin_site.admin_view(self.dependent_options_view),
+                name="incidents_conditionalquestionoption_dependent_options",
+            ),
+        ]
+        return urls + super().get_urls()
+
+    def report_questions_view(self, request, report_id):
+        if not self.has_change_permission(request):
+            raise Http404()
+
+        questions = (
+            QuestionOptions.objects.filter(
+                deleted_date=None,
+                report_id=report_id,
+                question__question_type__in=CONDITIONAL_QUESTION_TYPES,
+                is_conditional=False,
+                category_option__questionoptions__is_conditional=True,
+                category_option__questionoptions__report_id=report_id,
+            )
+            .select_related("question", "category_option__question_category")
+            .order_by("category_option__position", "position")
+        )
+
+        return JsonResponse(
+            {
+                "questions": [
+                    {
+                        "id": q.pk,
+                        "label": str(q.question),
+                        "category": str(q.category_option.question_category),
+                    }
+                    for q in questions
+                ]
+            }
+        )
+
+    def dependent_options_view(self, request, question_options_id):
+        if not self.has_change_permission(request):
+            raise Http404()
+        try:
+            question_options = QuestionOptions.objects.select_related("question", "category_option__question_category", "report").get(
+                pk=question_options_id
+            )
+        except QuestionOptions.DoesNotExist:
+            return JsonResponse({"answers": [], "next_questions": []})
+
+        answers = PredefinedAnswer.objects.filter(question=question_options.question).order_by("position")
+
+        next_questions = (
+            QuestionOptions.objects.filter(
+                deleted_date=None,
+                is_conditional=True,
+                report=question_options.report,
+                category_option__question_category=question_options.category_option.question_category,
+            )
+            .exclude(pk=question_options.pk)
+            .select_related("question")
+            .order_by("category_option__position", "position")
+        )
+
+        return JsonResponse(
+            {
+                "answers": [{"id": answer.pk, "label": str(answer)} for answer in answers],
+                "next_questions": [{"id": q.pk, "label": str(q.question)} for q in next_questions],
+            }
+        )
 
 
 @admin.register(QuestionCategoryOptions, site=admin_site)
