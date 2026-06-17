@@ -305,7 +305,7 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         return creator
 
     def get_diff_headers(self):
-        headers = super().get_diff_headers()
+        headers = super().get_diff_headers()[:3]
         headers += [
             _("domain"),
             _("Security objective objective"),

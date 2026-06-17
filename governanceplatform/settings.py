@@ -722,3 +722,22 @@ except AttributeError:
 
 # import export celery
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000000000
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    # import export extensions storage for export and import in admin
+    "django_import_export_extensions": {
+        "BACKEND": "django.core.files.storage.filesystem.FileSystemStorage",
+        "OPTIONS": {
+            "location": PATH_FOR_REPORTING_PDF,
+            "base_url": "/securityobjectives/settings-export-files/",
+        },
+    },
+}
+
+MEDIA_URL = PATH_FOR_REPORTING_PDF

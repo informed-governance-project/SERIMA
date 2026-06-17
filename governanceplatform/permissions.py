@@ -66,7 +66,7 @@ GROUP_PERMISSIONS = {
         "domain": ["add", "change", "delete"],
         "securityobjective": ["add", "change", "delete", "view"],
         "securityobjectiveemail": ["add", "change", "delete"],
-        "standard": ["add", "change", "delete"],
+        "standard": ["add", "change", "delete", "view"],
         "securityobjectivesinstandard": ["add", "change", "delete"],
         "securitymeasure": ["add", "change", "delete", "view"],
         "securityobjectivestatus": ["add", "change", "delete"],
