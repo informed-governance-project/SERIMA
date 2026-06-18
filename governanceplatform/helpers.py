@@ -251,7 +251,7 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
 
     # [ConditionalQuestionOption] in_use flag is set to False
     if isinstance(obj, ConditionalQuestionOption):
-        in_use = False
+        in_use = obj.is_in_use()
 
     # [Sector Regulation] Check if obj is already in use
     if isinstance(obj, SectorRegulation):
