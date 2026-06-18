@@ -24,6 +24,7 @@ from .helpers import get_workflow_categories
 from .models import (
     Answer,
     ConditionalQuestionOption,
+    ConditionalQuestionOptionsHistory,
     Impact,
     Incident,
     IncidentWorkflow,
@@ -245,10 +246,40 @@ class QuestionForm(forms.Form):
 
             # build a mapping {predefined_answer_id: next_question_options_id}
             # for any conditional jumps configured on this question_option
-            conditional_map = {
-                c.predefined_answer_id: c.next_question_options_id
-                for c in question_option.conditional_triggers.select_related("next_question_options").all()
-            }
+            conditional_map = {}
+            all_triggers = question_option.conditional_triggers.all()
+            historic_triggers = ConditionalQuestionOptionsHistory.objects.filter(question_options_id=question_option.id)
+            if not all_triggers.exists() and not historic_triggers.exists():
+                conditional_map = None
+            else:
+                current_triggers = all_triggers.filter(deleted_at__isnull=True).select_related("next_question_options")
+                deleted_triggers = all_triggers.filter(deleted_at__isnull=False).select_related("next_question_options")
+                if current_triggers.exists():
+                    conditional_map.update(
+                        {
+                            c.predefined_answer_id: c.next_question_options_id
+                            for c in current_triggers
+                            if c.next_question_options.is_conditional
+                        }
+                    )
+
+                if answer_queryset.first() and not is_new_incident_workflow:
+                    if deleted_triggers.exists():
+                        conditional_map.update(
+                            {
+                                c.predefined_answer_id: c.next_question_options_id
+                                for c in deleted_triggers
+                                if c.deleted_at > answer_queryset.first().timestamp
+                            }
+                        )
+                    if historic_triggers.exists():
+                        conditional_map.update(
+                            {
+                                c.predefined_answer_id: c.next_question_options_id
+                                for c in historic_triggers
+                                if c.timestamp > answer_queryset.first().timestamp
+                            }
+                        )
 
             if question_type not in ["MULTI", "MT"]:
                 form_attrs["class"] = "form-check-input"
@@ -431,6 +462,7 @@ class QuestionForm(forms.Form):
                         "is_mandatory": historic.is_mandatory,
                         "is_conditional": historic.is_conditional,
                         "position": historic.position,
+                        "conditional_map": {c.predefined_answer_id: c.next_question_options_id for c in historic.conditional_maps.all()},
                     }
                     category_question_options.append(SimpleNamespace(**old_question_option))
                     category_question_options = sorted(category_question_options, key=lambda c: c.position)
