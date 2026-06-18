@@ -461,6 +461,10 @@ class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
     def get_workflow(self, obj):
         return obj.question_options.report.name
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.exclude(deleted_at__isnull=False)
+
     def save_model(self, request, obj, form, change):
         set_creator(request, obj, change)
         super().save_model(request, obj, form, change)
@@ -472,6 +476,7 @@ class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
         form.base_fields["report"].queryset = (
             Workflow.objects.filter(
                 questionoptions__is_conditional=True,
+                questionoptions__deleted_date__isnull=True,
                 creator=user.regulators.first(),
             )
             .order_by("name")
@@ -522,6 +527,7 @@ class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
                 question__question_type__in=CONDITIONAL_QUESTION_TYPES,
                 is_conditional=False,
                 category_option__questionoptions__is_conditional=True,
+                category_option__questionoptions__deleted_date__isnull=True,
                 category_option__questionoptions__report_id=report_id,
             )
             .select_related("question", "category_option__question_category")
