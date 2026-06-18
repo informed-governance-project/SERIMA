@@ -1292,10 +1292,14 @@ def create_standard_answer_group(company, sectors, standard):
 @login_required
 @permission_required("securityobjectives.view_standard")
 def download_admin_file(request, path):
+    base = os.path.realpath(settings.PATH_FOR_REPORTING_PDF)
     full_path = os.path.join(settings.PATH_FOR_REPORTING_PDF, path)
 
+    if not full_path.startswith(base + os.sep):
+        raise Http404()
+
     if not os.path.exists(full_path):
-        raise Http404
+        raise Http404()
 
     content_type, _ = mimetypes.guess_type(full_path)
     content_type = content_type or "application/octet-stream"
