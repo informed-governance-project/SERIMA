@@ -204,7 +204,7 @@ class QuestionForm(forms.Form):
         if is_new_incident_workflow:
             last_historic_changes = QuestionOptionsHistory.objects.filter(questionoptions__id=question_option.id).order_by("-timestamp")
         answer_queryset = Answer.objects.filter(
-            question_options__question=question,
+            question_options_id=question_option.id,
             incident_workflow=(incident.get_latest_incident_workflow() if incident else incident_workflow),
         ).order_by("-timestamp")
         previous_answer = None
@@ -247,7 +247,12 @@ class QuestionForm(forms.Form):
             # build a mapping {predefined_answer_id: next_question_options_id}
             # for any conditional jumps configured on this question_option
             conditional_map = {}
-            all_triggers = question_option.conditional_triggers.all()
+
+            all_triggers = (
+                question_option.conditional_triggers.all()
+                if hasattr(question_option, "conditional_triggers")
+                else ConditionalQuestionOption.objects.none()
+            )
             historic_triggers = ConditionalQuestionOptionsHistory.objects.filter(question_options_id=question_option.id)
             if not all_triggers.exists() and not historic_triggers.exists():
                 conditional_map = None
