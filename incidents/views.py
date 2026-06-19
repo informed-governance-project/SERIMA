@@ -21,7 +21,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
-from django.utils.translation import get_language
+from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django_countries import countries
@@ -1526,17 +1526,15 @@ class WorkflowWizardView(SessionWizardView):
                     )
             if review_status is not None:
                 incident_workflow.review_status = review_status
-                review_status_txt = next(
-                    (label for code, label in WORKFLOW_REVIEW_STATUS if code == review_status),
-                    None,
-                )
-                create_entry_log(
-                    user,
-                    self.incident,
-                    incident_workflow,
-                    "REVIEW STATUS: " + review_status_txt,
-                    self.request,
-                )
+                with override(PARLER_DEFAULT_LANGUAGE_CODE):
+                    status_label = dict(WORKFLOW_REVIEW_STATUS).get(review_status, "")
+                    create_entry_log(
+                        user,
+                        self.incident,
+                        incident_workflow,
+                        f"REVIEW STATUS: {status_label}",
+                        self.request,
+                    )
             incident_workflow.save()
             create_entry_log(
                 user,
