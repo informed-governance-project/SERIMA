@@ -622,12 +622,11 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         ),
     ]
 
-    # TO DO set the correct permission
     def has_import_permission(self, request):
-        return True
+        return request.user.has_perm("securityobjectives.add_standard")
 
     def has_export_permission(self, request):
-        return True
+        return request.user.has_perm("securityobjectives.view_standard")
 
     def get_import_resource_kwargs(self, request, **kwargs):
         kwargs = super().get_import_resource_kwargs(request, **kwargs)
