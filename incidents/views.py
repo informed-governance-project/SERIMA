@@ -1566,6 +1566,12 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
 
         incident.save()
 
+    question_options_map = (
+        QuestionOptions.objects.filter(report=workflow).select_related("question").prefetch_related("conditional_targets").in_bulk()
+    )
+
+    all_predefined_answer_ids = {int(val) for v in questions_data.values() if isinstance(v, list) for val in v if str(val).isdigit()}
+
     for key, value in questions_data.items():
         question_id = None
         try:
@@ -1573,24 +1579,27 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
         except (ValueError, TypeError):
             continue
         if question_id:
-            predefined_answers = []
-            question_option = QuestionOptions.objects.get(pk=key)
+            question_option = question_options_map.get(question_id)
             question = question_option.question
             question_type = question.question_type
+
+            # Check if predefined answer was selected for conditional questions
+            if question_option.is_conditional:
+                required_predefined_answers_list = {c.predefined_answer_id for c in question_option.conditional_targets.all()}
+                if not required_predefined_answers_list.intersection(all_predefined_answer_ids):
+                    continue
+
+            predefined_answers = []
 
             if question_type == "FREETEXT":
                 answer = value
             elif question_type == "DATE":
-                if value:
-                    answer = value.strftime("%Y-%m-%d %H:%M")
-                else:
-                    answer = None
+                answer = value.strftime("%Y-%m-%d %H:%M") if value else None
             elif question_type == "CL" or question_type == "RL":
                 answer = ",".join(map(str, value))
             else:  # MULTI
-                for val in value:
-                    predefined_answers.append(PredefinedAnswer.objects.get(pk=val))
-                answer = questions_data.get(key + "_freetext_answer", None)
+                predefined_answers = list(PredefinedAnswer.objects.filter(pk__in=value))
+                answer = questions_data.get(f"{key}_freetext_answer", None)
             answer_object = Answer.objects.create(
                 incident_workflow=incident_workflow,
                 question_options=question_option,
