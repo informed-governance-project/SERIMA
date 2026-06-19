@@ -1415,6 +1415,7 @@ class WorkflowWizardView(SessionWizardView):
                         initial=initial,
                         widget=forms.TextInput(attrs=form.fields[field].widget.attrs),
                     )
+                    new_field.is_conditional = form.fields[field].is_conditional
                     form.fields[field] = new_field
 
         else:
