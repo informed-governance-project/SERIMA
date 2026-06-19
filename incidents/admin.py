@@ -532,6 +532,7 @@ class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
             )
             .select_related("question", "category_option__question_category")
             .order_by("category_option__position", "position")
+            .distinct()
         )
 
         return JsonResponse(
