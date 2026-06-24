@@ -3,6 +3,7 @@ import re
 from diff_match_patch import diff_match_patch
 from django.contrib import admin
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Q
 from django.utils.encoding import force_str
 from django.utils.html import format_html
@@ -698,6 +699,12 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         user = request.user
         obj.regulator = user.regulators.first()
         super().save_model(request, obj, form, change)
+
+    # ensure to use the normal delete to go through the function which also delete SO
+    def delete_queryset(self, request, queryset):
+        with transaction.atomic():
+            for standard in queryset:
+                standard.delete()  # appelle ton delete() custom
 
 
 for name, method in generate_display_methods(["label", "description"]).items():

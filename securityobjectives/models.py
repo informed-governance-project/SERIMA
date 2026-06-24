@@ -1,5 +1,5 @@
 from colorfield.fields import ColorField
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Deferrable
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -267,6 +267,13 @@ class Standard(TranslatableModel):
         default=None,
         related_name="security_objective_closure_email",
     )
+
+    def delete(self, *args, **kwargs):
+        with transaction.atomic():
+            # fetch SOs before deletion
+            security_objectives = SecurityObjective.objects.filter(standard_link__standard=self)
+            security_objectives.delete()
+            super().delete(*args, **kwargs)
 
     def __str__(self):
         label_translation = self.safe_translation_getter("label", any_language=True)
