@@ -11,6 +11,7 @@ from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ExportActionModelAdmin
+from import_export.exceptions import ImportExportError
 from import_export.resources import Diff
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
@@ -339,24 +340,46 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         return StandardDiff
 
     def before_import(self, dataset, **kwargs):
-        # TO DO : raise error when there is no existing standard
         lang = self.lang
         first_row = dataset[0]
         regulator = self.regulator
         standard_label = first_row[dataset.headers.index("label")]
-        standard_description = first_row[dataset.headers.index("description")]
         regulation = Regulation.objects.filter(
             regulators=regulator,
             translations__label=first_row[dataset.headers.index("regulation")],
             translations__language_code=lang,
         ).first()
-        standard = Standard.objects.get(
-            regulation=regulation,
-            translations__label=standard_label,
-            translations__description=standard_description,
-            translations__language_code=lang,
-            regulator=regulator,
-        )
+        if not regulation:
+            raise ImportExportError(
+                _("Regulation '%(label)s' does not exist. Check your data.")
+                % {
+                    "label": first_row[dataset.headers.index("regulation")],
+                }
+            )
+
+        try:
+            standard = Standard.objects.get(
+                regulation=regulation,
+                translations__label=standard_label,
+                translations__language_code=lang,
+                regulator=regulator,
+            )
+        except Standard.DoesNotExist:
+            raise ImportExportError(
+                _("The standard '%(label)s' is not find for regulation '%(regulation)s' and this regulator.")
+                % {
+                    "label": standard_label,
+                    "regulation": regulation,
+                }
+            )
+        except Standard.MultipleObjectsReturned:
+            raise ImportExportError(
+                _("Several '%(label)s' have been found. Check your data.")
+                % {
+                    "label": standard_label,
+                }
+            )
+
         self.standard = standard
 
     def before_import_row(self, row, **kwargs):
