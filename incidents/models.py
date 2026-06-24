@@ -1131,15 +1131,13 @@ class QuestionOptions(models.Model):
         if self.pk and self.answer_set.exists() and not self.is_deleted():
             old = QuestionOptions.objects.get(pk=self.pk)
 
-            has_changed = (
-                old.question != self.question
-                or old.is_mandatory != self.is_mandatory
-                or old.is_conditional != self.is_conditional
-                or old.position != self.position
-                or old.category_option != self.category_option
+            structural_change = (
+                old.question != self.question or old.is_conditional != self.is_conditional or old.category_option != self.category_option
             )
 
-            if has_changed:
+            secondary_change = old.is_mandatory != self.is_mandatory or old.position != self.position
+
+            if structural_change or secondary_change:
                 with transaction.atomic():
                     history = QuestionOptionsHistory.objects.create(
                         question=old.question,
@@ -1149,6 +1147,8 @@ class QuestionOptions(models.Model):
                         category_option=old.category_option,
                     )
 
+                    self.historic.add(history)
+
                     triggers = (
                         old.conditional_triggers.all()
                         if old.conditional_triggers.exists()
@@ -1157,7 +1157,7 @@ class QuestionOptions(models.Model):
                         else None
                     )
 
-                    if triggers:
+                    if triggers and structural_change:
                         ConditionalQuestionOptionsHistory.objects.bulk_create(
                             [
                                 ConditionalQuestionOptionsHistory(
@@ -1171,8 +1171,6 @@ class QuestionOptions(models.Model):
                         )
 
                         triggers.delete()
-
-                    self.historic.add(history)
 
         if not self.is_deleted():
             self.updated_at = timezone.now()
