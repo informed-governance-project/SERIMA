@@ -1062,6 +1062,15 @@ class ConditionalQuestionOption(models.Model):
             if self.question_options_id == self.next_question_options_id:
                 raise ValidationError(_("A question cannot redirect to itself."))
 
+            if ConditionalQuestionOption.objects.filter(question_options=self.next_question_options_id).exclude(pk=self.pk).exists():
+                raise ValidationError(
+                    _(
+                        "The target question is already used as a trigger in another "
+                        "conditional jump. Conditional questions are limited to one "
+                        "level of depth."
+                    )
+                )
+
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
