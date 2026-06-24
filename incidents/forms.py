@@ -251,7 +251,7 @@ class QuestionForm(forms.Form):
             all_triggers = (
                 question_option.conditional_triggers.all()
                 if hasattr(question_option, "conditional_triggers")
-                else ConditionalQuestionOption.objects.none()
+                else ConditionalQuestionOption.objects.filter(question_options_id=question_option.id)
             )
             historic_triggers = ConditionalQuestionOptionsHistory.objects.filter(question_options_id=question_option.id)
             if not all_triggers.exists() and not historic_triggers.exists():
