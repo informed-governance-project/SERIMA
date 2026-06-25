@@ -3,9 +3,9 @@ from collections import Counter, defaultdict
 from datetime import datetime
 
 import pytz
+from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
-from rest_framework.exceptions import ValidationError
 
 from .helpers import generate_combined_uuid
 from .models import AssetData, RecommendationData, RiskData, ServiceStat, ThreatData, VulnerabilityData

@@ -979,13 +979,27 @@ def import_risk_analysis(request):
             try:
                 validate_json_file(json_file.name, tmp_path)
             except ValidationError as e:
-                messages.error(request, f"Error: {str(e)}")
-                return HttpResponseRedirect(request.headers.get("referer"))
+                messages.error(request, e.message)
+                rendered_messages = render_error_messages(request)
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "messages": rendered_messages,
+                    },
+                    status=400,
+                )
 
             for sector_id in sector_ids:
                 validate_result = validate_url_arguments(request, company_id, sector_id, year)
                 if isinstance(validate_result, HttpResponseRedirect):
-                    return HttpResponseRedirect(request.headers.get("referer"))
+                    rendered_messages = render_error_messages(request)
+                    return JsonResponse(
+                        {
+                            "success": False,
+                            "messages": rendered_messages,
+                        },
+                        status=400,
+                    )
 
                 company, sector, year = validate_result
                 company_sectors = Sector.objects.all()
@@ -1015,7 +1029,14 @@ def import_risk_analysis(request):
                 except Exception as e:
                     os.unlink(tmp_path)
                     messages.error(request, f"Parsing error: {str(e)}")
-                    return HttpResponseRedirect(request.headers.get("referer"))
+                    rendered_messages = render_error_messages(request)
+                    return JsonResponse(
+                        {
+                            "success": False,
+                            "messages": rendered_messages,
+                        },
+                        status=400,
+                    )
 
                 CompanyProject.objects.filter(company=company, year=year, sector=sector).update(has_risk_assessment=True)
 
