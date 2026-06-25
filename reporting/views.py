@@ -981,6 +981,7 @@ def import_risk_analysis(request):
             except ValidationError as e:
                 messages.error(request, e.message)
                 rendered_messages = render_error_messages(request)
+                os.unlink(tmp_path)
                 return JsonResponse(
                     {
                         "success": False,
@@ -993,6 +994,7 @@ def import_risk_analysis(request):
                 validate_result = validate_url_arguments(request, company_id, sector_id, year)
                 if isinstance(validate_result, HttpResponseRedirect):
                     rendered_messages = render_error_messages(request)
+                    os.unlink(tmp_path)
                     return JsonResponse(
                         {
                             "success": False,
