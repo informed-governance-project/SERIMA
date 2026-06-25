@@ -17,6 +17,8 @@ QUESTION_TYPES = [
     ("DATE", "Date picker"),
 ]
 
+CONDITIONAL_QUESTION_TYPES = ["MULTI", "SO", "MT", "ST"]
+
 
 # The variables to use in the email template in the admin interface, and the corresponding attribute
 INCIDENT_EMAIL_VARIABLES = [

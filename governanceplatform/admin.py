@@ -1463,6 +1463,9 @@ class ObserverAdmin(CustomTranslatableAdmin):
         return custom_urls + urls
 
     def test_rt_connection_view(self, request, observer_id):
+        if not self.has_change_permission(request):
+            raise Http404()
+
         if request.method != "POST":
             return JsonResponse({"success": False, "message": _("Method not allowed.")}, status=405)
 
