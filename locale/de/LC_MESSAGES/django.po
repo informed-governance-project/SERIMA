@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-25 13:45+0200\n"
+"POT-Creation-Date: 2026-06-25 13:49+0200\n"
 "PO-Revision-Date: 2026-06-08 08:09+0000\n"
 "Last-Translator: Pascal Bertrand <Pascal.bertrand+RegAdmin@ilr.lu>\n"
 "Language: de\n"
@@ -918,7 +918,6 @@ msgid "Date format yyyy-mm-dd hh:mm"
 msgstr "Datumsformat JJJJ-MM-TT HH:MM"
 
 #: incidents/forms.py:483 incidents/models.py:488
-#| msgid "Entity name"
 msgid "Legal Entity Name"
 msgstr ""
 
@@ -1011,12 +1010,10 @@ msgid "To"
 msgstr "Zu"
 
 #: incidents/forms.py:1199 incidents/models.py:1018
-#| msgid "Predefined answer"
 msgid "Selected answer"
 msgstr ""
 
 #: incidents/forms.py:1203 incidents/models.py:1024
-#| msgid "Question"
 msgid "Next question"
 msgstr ""
 
@@ -1347,7 +1344,6 @@ msgid "Conditional display"
 msgstr ""
 
 #: incidents/models.py:1029
-#| msgid "Deleted date"
 msgid "Deleted at"
 msgstr ""
 
@@ -1378,12 +1374,10 @@ msgid ""
 msgstr ""
 
 #: incidents/models.py:1094
-#| msgid "Additional information"
 msgid "Conditional questions"
 msgstr ""
 
 #: incidents/models.py:1095
-#| msgid "Additional information"
 msgid "Conditional question"
 msgstr ""
 
@@ -2175,42 +2169,34 @@ msgid "Invalid year. Please provide a valid year."
 msgstr "Ungültiges Jahr. Bitte geben Sie ein gültiges Jahr an."
 
 #: securityobjectives/admin.py:312
-#| msgid "Domain"
 msgid "domain"
 msgstr ""
 
 #: securityobjectives/admin.py:313
-#| msgid "Security objectives excluded"
 msgid "Security objective objective"
 msgstr ""
 
 #: securityobjectives/admin.py:314
-#| msgid "Security objectives"
 msgid "Security objective description"
 msgstr ""
 
 #: securityobjectives/admin.py:315
-#| msgid "Security objectives"
 msgid "Security objective position"
 msgstr ""
 
 #: securityobjectives/admin.py:316
-#| msgid "Security objectives"
 msgid "Security objective priority"
 msgstr ""
 
 #: securityobjectives/admin.py:317
-#| msgid "Maturity level"
 msgid "maturity_level"
 msgstr ""
 
 #: securityobjectives/admin.py:318
-#| msgid "Security Measures"
 msgid "Security measure description"
 msgstr ""
 
 #: securityobjectives/admin.py:319
-#| msgid "Security Measure"
 msgid "Security measure evidence"
 msgstr ""
 
