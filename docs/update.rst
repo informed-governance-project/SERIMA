@@ -8,14 +8,14 @@ All you have to do is:
     $ cd SERIMA/
     $ ./contrib/update.sh {APP_TAG} {THEME_TAG}
 
-Replace `{APP_TAG}` and `{THEME_TAG}` with the Git tag or branch you want to deploy for the application and theme respectively. If omitted, both default to `master`.
+Replace `{APP_TAG}` and `{THEME_TAG}` with the Git tag or branch you want to deploy for the application and theme respectively. If omitted, both default to `main`.
 
 Or manually:
 
 .. code-block:: bash
 
     $ cd SERIMA/
-    $ git pull origin master --tags
+    $ git pull origin main --tags
     $ npm ci
     $ poetry install
     $ poetry run python manage.py collectstatic

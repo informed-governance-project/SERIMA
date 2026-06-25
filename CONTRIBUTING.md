@@ -24,7 +24,7 @@ There is one main branch: what we consider as stable with frequent updates as
 hot-fixes.
 
 Features are developed in separated branches and then regularly merged into the
-master stable branch.
+main stable branch.
 
 If your contribution require some documentation changes, a pull-request in order
 to update the documentation is strongly recommended.
