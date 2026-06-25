@@ -1280,12 +1280,33 @@ def create_standard_answer_group(company, sectors, standard):
     sector = Sector.objects.get(id=sector_id) if sector_id else None
     sector_for_ref = sector.parent.acronym[:3] if sector and sector.parent else ""
     subsector_for_ref = sector.acronym[:3] if sector else ""
-    group_by_company = company.standardanswergroup_set.filter(notification_date__year=date.today().year).count() if company else 1
-    group_by_company += 1
-    number_of_group = f"{group_by_company:04}"
+    # common prefix
+    group_id_prefix = f"{company_for_ref}_{framework_for_ref}_{sector_for_ref}_{subsector_for_ref}_"
+    current_year = date.today().year
+
+    existing_groups = (
+        company.standardanswergroup_set.filter(
+            group_id__startswith=group_id_prefix,
+            group_id__endswith=f"_{current_year}",
+        )
+        if company
+        else StandardAnswerGroup.objects.none()
+    )
+
+    max_number = 0
+    for group in existing_groups:
+        try:
+            # group_id format: {company}_{framework}_{sector}_{subsector}_{NNNN}_{year}
+            number_part = group.group_id.split("_")[-2]
+            max_number = max(max_number, int(number_part))
+        except (IndexError, ValueError):
+            pass
+
+    number_of_group = f"{max_number + 1:04}"
+
     return StandardAnswerGroup.objects.create(
         company=company,
-        group_id=(f"{company_for_ref}_{framework_for_ref}_{sector_for_ref}_{subsector_for_ref}_{number_of_group}_{date.today().year}"),
+        group_id=(f"{company_for_ref}_{framework_for_ref}_{sector_for_ref}_{subsector_for_ref}_{number_of_group}_{current_year}"),
     )
 
 
