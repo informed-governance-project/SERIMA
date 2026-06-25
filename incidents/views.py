@@ -59,7 +59,7 @@ from governanceplatform.settings import (
 from .decorators import check_user_is_correct, regulator_role_required
 from .email import send_email, send_html_email
 from .filters import IncidentFilter
-from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, get_forms_list
+from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
 from .globals import (
     ALLOWED_SORT_FIELDS,
     REGIONAL_AREA,
@@ -818,14 +818,14 @@ def export_incidents(request):
                     "Legal basis": str(incident.sector_regulation.regulation),
                     "Significative impact": ("yes" if incident.is_significative_impact else "no"),
                     "Incident Status": incident.get_incident_status_display(),
-                    "Incident notification manager": ", ".join(
+                    "Contact Information": ", ".join(
                         [
                             f"{incident.contact_firstname} {incident.contact_lastname}",
                             incident.contact_email,
                             incident.contact_telephone,
                         ]
                     ),
-                    "Incident technical contact": ", ".join(
+                    "Technical Contact Information": ", ".join(
                         [
                             f"{incident.technical_firstname} {incident.technical_lastname}",
                             incident.technical_email,
@@ -1469,6 +1469,10 @@ class WorkflowWizardView(SessionWizardView):
                     continue
                 form = self.get_form(step)
                 self.storage.set_step_data(step, self.process_step(form))
+
+        # Temporarily store the regulator's comment until the form is submitted
+        if not self.read_only and isinstance(form, RegulatorIncidentWorkflowCommentForm):
+            self.storage.set_step_data(current_step, self.process_step(form))
 
         return super().render_goto_step(goto_step, **kwargs)
 

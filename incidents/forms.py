@@ -480,7 +480,7 @@ class QuestionForm(forms.Form):
 class ContactForm(forms.Form):
     company_name = forms.CharField(
         required=True,
-        label=_("Name of the Operator"),
+        label=_("Legal Entity Name"),
         max_length=100,
         widget=forms.TextInput(attrs={"class": "company_name"}),
     )

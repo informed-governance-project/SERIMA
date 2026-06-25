@@ -2,10 +2,10 @@ name: SERIMA Docker build and push to ghcr.io
 
 on:
   push:
-    branches: [ 'master' ]
+    branches: [ 'main' ]
     tags: [ 'v*.*', 'v*.*.*', 'v*.*.*-*' ]
   pull_request:
-    branches: [ 'master' ]
+    branches: [ 'main' ]
 
 env:
   REGISTRY: ghcr.io
