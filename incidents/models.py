@@ -485,7 +485,7 @@ class Incident(models.Model):
     incident_notification_date = models.DateTimeField(default=timezone.now)
     incident_detection_date = models.DateTimeField(blank=True, null=True)
     incident_last_update = models.DateTimeField(blank=True, null=True)
-    company_name = models.CharField(max_length=100, verbose_name=_("Name of the Operator"))
+    company_name = models.CharField(max_length=100, verbose_name=_("Legal Entity Name"))
     company = models.ForeignKey(
         "governanceplatform.Company",
         verbose_name=_("Operator"),

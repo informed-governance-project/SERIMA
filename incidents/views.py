@@ -818,14 +818,14 @@ def export_incidents(request):
                     "Legal basis": str(incident.sector_regulation.regulation),
                     "Significative impact": ("yes" if incident.is_significative_impact else "no"),
                     "Incident Status": incident.get_incident_status_display(),
-                    "Incident notification manager": ", ".join(
+                    "Contact Information": ", ".join(
                         [
                             f"{incident.contact_firstname} {incident.contact_lastname}",
                             incident.contact_email,
                             incident.contact_telephone,
                         ]
                     ),
-                    "Incident technical contact": ", ".join(
+                    "Technical Contact Information": ", ".join(
                         [
                             f"{incident.technical_firstname} {incident.technical_lastname}",
                             incident.technical_email,
