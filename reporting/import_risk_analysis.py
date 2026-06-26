@@ -33,9 +33,14 @@ def validate_json_file(original_filename: str, tmp_path: str) -> None:
         if not isinstance(json_data, dict):
             raise ValidationError(_("JSON file must contain an object at the root."))
 
-        for required_key in ("instances", "monarc_version"):
-            if required_key not in json_data:
-                raise ValidationError(_("Missing '%(key)s' key in the JSON file.") % {"key": required_key})
+    if "monarc_version" not in json_data:
+        raise ValidationError(_("Missing 'monarc_version' key in the JSON file."))
+
+    if "type" not in json_data:
+        raise ValidationError(_("Missing 'type' key in the JSON file."))
+
+    if "instance" not in json_data and "instances" not in json_data:
+        raise ValidationError(_("JSON file must contain either 'instance' or 'instances'."))
 
 
 def parsing_risk_data_json(json_file, company_reporting_obj):
@@ -51,7 +56,12 @@ def parsing_risk_data_json(json_file, company_reporting_obj):
     is_new_version = file_version >= refactoring_version
     language_code = data.get("languageCode", None)
     _translation_cache = {}
-    instances = data["instances"] if is_new_version else data["instances"].values()
+    instances = []
+    if data["type"] == "instance":
+        instance = data["instance"] if is_new_version else _normalize_json(data)
+        instances.append(instance)
+    elif data["type"] == "anr":
+        instances = data["instances"] if is_new_version else data["instances"].values()
 
     for instance in instances:
         if _is_root_instance(instance, is_new_version):
@@ -59,6 +69,15 @@ def parsing_risk_data_json(json_file, company_reporting_obj):
             root_service_data = normalized_instance.copy()
             normalized_instance["parent_uuid"] = normalized_instance["uuid"]
             _extract_risks(normalized_instance, root_service_data, company_reporting_obj, is_new_version, language_code, _translation_cache)
+
+
+def _normalize_json(data):
+    normalize_instance = data["instance"].copy()
+
+    for key in ("risks", "children", "amvs", "threats", "vuls", "recos"):
+        normalize_instance[key] = data.get(key, {})
+
+    return normalize_instance
 
 
 def _is_root_instance(instance, is_new_version):
