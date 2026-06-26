@@ -57,11 +57,11 @@ def parsing_risk_data_json(json_file, company_reporting_obj):
     language_code = data.get("languageCode", None)
     _translation_cache = {}
     instances = []
-    if data["type"] == "instance":
-        instance = data["instance"] if is_new_version else _normalize_json(data)
+    if data.get("type") == "instance":
+        instance = data.get("instance", {}) if is_new_version else _normalize_json(data)
         instances.append(instance)
     elif data["type"] == "anr":
-        instances = data["instances"] if is_new_version else data["instances"].values()
+        instances = data.get("instances", []) if is_new_version else data.get("instances", {}).values()
 
     for instance in instances:
         if _is_root_instance(instance, is_new_version):
