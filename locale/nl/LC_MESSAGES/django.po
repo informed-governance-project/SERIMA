@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-06-25 13:49+0200\n"
-"PO-Revision-Date: 2026-05-09 10:27+0000\n"
+"PO-Revision-Date: 2026-06-26 09:28+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.15.2\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #: governanceplatform/admin.py:77 governanceplatform/context_processors.py:30
 #: governanceplatform/views.py:97
@@ -89,7 +89,7 @@ msgstr "Rollen"
 
 #: governanceplatform/admin.py:894
 msgid "Create this user as an administrator"
-msgstr ""
+msgstr "Maak de gebruiker aan als administrator"
 
 #: governanceplatform/admin.py:933
 msgid "Cookies acceptation has been reseted"
@@ -121,31 +121,31 @@ msgstr "Waarnemer gebruikers"
 
 #: governanceplatform/admin.py:1450
 msgid "Test RT Connection"
-msgstr ""
+msgstr "RT-verbinding testen"
 
 #: governanceplatform/admin.py:1451
 msgid "Before testing the connection, make sure to save the RT configuration."
-msgstr ""
+msgstr "Sla de RT-configuratie op voordat u de verbinding test."
 
 #: governanceplatform/admin.py:1470
 msgid "Method not allowed."
-msgstr ""
+msgstr "Methode niet toegstaan."
 
 #: governanceplatform/admin.py:1475
 msgid "Observer not found."
-msgstr ""
+msgstr "Waarnemer niet gevonden."
 
 #: governanceplatform/admin.py:1480
 msgid "Permission denied."
-msgstr ""
+msgstr "Toestemming geweigerd."
 
 #: governanceplatform/admin.py:1502
 msgid "RT connection successful."
-msgstr ""
+msgstr "RT-verbinding succesvol."
 
 #: governanceplatform/admin.py:1504
 msgid "RT connection failed. Check URL, queue and token."
-msgstr ""
+msgstr "RT-verbinding mislukt. Controleer URL, wachtrij en token."
 
 #: governanceplatform/apps.py:7
 msgid "Governance"
@@ -651,11 +651,11 @@ msgstr "Logbestanden van scriptuitvoering"
 
 #: governanceplatform/models.py:724
 msgid "User session"
-msgstr ""
+msgstr "Gebruikerssessie"
 
 #: governanceplatform/models.py:725
 msgid "User sessions"
-msgstr ""
+msgstr "Gebruikerssessies"
 
 #: governanceplatform/validators.py:20
 msgid "Your new password must differ from your current password."
@@ -797,7 +797,7 @@ msgstr "Vooraf gedefinieerde antwoorden"
 
 #: incidents/admin.py:268
 msgid "Duplicate selected items"
-msgstr ""
+msgstr "Geselecteerde items kopiëren"
 
 #: incidents/admin.py:358 incidents/models.py:112
 msgid "Question Type"
@@ -872,12 +872,12 @@ msgstr "Incidentrapporten"
 
 #: incidents/admin.py:946
 msgid "Toggle active status of selected items"
-msgstr ""
+msgstr "Stel de actieve status van de geselecteerde items in"
 
 #: incidents/admin.py:953
 #, python-format
 msgid "You don't have permission to change the status of %s."
-msgstr ""
+msgstr "U hebt geen toestemming om de status van %s te wijzigen."
 
 #: incidents/admin.py:1107
 #, python-brace-format
@@ -1136,7 +1136,7 @@ msgstr "E-mail voor indiening"
 
 #: incidents/models.py:301
 msgid "Active"
-msgstr ""
+msgstr "Actief"
 
 #: incidents/models.py:317
 msgid "Incident detection date required"
@@ -1719,7 +1719,7 @@ msgstr "JSON-bestand moet een object bevatten in de root."
 #: reporting/import_risk_analysis.py:38
 #, python-format
 msgid "Missing '%(key)s' key in the JSON file."
-msgstr ""
+msgstr "Ontbrekende '%(key)s'-sleutel in het JSON-bestand."
 
 #: reporting/models.py:33
 msgid "Comment"
@@ -1937,80 +1937,80 @@ msgstr "Volledige gebruikersnaam"
 #: reporting/models.py:381 reporting/models.py:534 reporting/models.py:546
 #: reporting/models.py:577
 msgid "Project"
-msgstr ""
+msgstr "Project"
 
 #: reporting/models.py:416
 msgid "This regulator already has this standard configured."
-msgstr ""
+msgstr "Deze regulator heeft deze norm al geconfigureerd."
 
 #: reporting/models.py:425 reporting/models.py:430
 #: securityobjectives/admin.py:768 securityobjectives/models.py:23
 msgid "Color"
-msgstr ""
+msgstr "Kleur"
 
 #: reporting/models.py:429
 msgid "Colors"
-msgstr ""
+msgstr "Kleuren"
 
 #: reporting/models.py:443
 msgid "Language"
-msgstr ""
+msgstr "Taal"
 
 #: reporting/models.py:446
 msgid "File"
-msgstr ""
+msgstr "Bestand"
 
 #: reporting/models.py:451
 msgid "Templates DOCX"
-msgstr ""
+msgstr "DOCX-sjablonen"
 
 #: reporting/models.py:452
 msgid "Template DOCX"
-msgstr ""
+msgstr "DOCX-sjabloon"
 
 #: reporting/models.py:465
 msgid "Task Status"
-msgstr ""
+msgstr "Status taak"
 
 #: reporting/models.py:472
 msgid "Created at"
-msgstr ""
+msgstr "Gemaakt op"
 
 #: reporting/models.py:477
 msgid "Author"
-msgstr ""
+msgstr "Auteur"
 
 #: reporting/models.py:500
 msgid "Years"
-msgstr ""
+msgstr "Jaren"
 
 #: reporting/models.py:517
 msgid "Export format"
-msgstr ""
+msgstr "Exportformaat"
 
 #: reporting/models.py:533
 msgid "Projects"
-msgstr ""
+msgstr "Projecten"
 
 #: reporting/models.py:554
 msgid "Is selected"
-msgstr ""
+msgstr "Is geselecteerd"
 
 #: reporting/models.py:555
 msgid "Has security objectives"
-msgstr ""
+msgstr "Heeft beveiligingsdoelstellingen"
 
 #: reporting/models.py:556
 msgid "Has risk assessment"
-msgstr ""
+msgstr "Heeft risicobeoordeling"
 
 #: reporting/models.py:557
 msgid "Statistics"
-msgstr ""
+msgstr "Statistieken"
 
 #: reporting/models.py:558
 msgid "Governance report"
-msgstr ""
+msgstr "Governancerapport"
 
 #: reporting/models.py:586
 msgid "Filename"
@@ -2021,30 +2021,32 @@ msgid ""
 "Report generation is in progress for this project. Please cancel the report "
 "generation before deleting the project."
 msgstr ""
+"Er wordt een rapport aangemaakt voor dit project. Annuleer de aanmaak van "
+"rapporten voordat u het project verwijdert."
 
 #: reporting/views.py:422
 msgid "The project has been deleted."
-msgstr ""
+msgstr "Het project is verwijderd."
 
 #: reporting/views.py:425
 msgid "Project not found"
-msgstr ""
+msgstr "Project niet gevonden"
 
 #: reporting/views.py:439
 msgid "No project found"
-msgstr ""
+msgstr "Geen project gevonden"
 
 #: reporting/views.py:445 reporting/views.py:636
 msgid "Failed to start report generation. Please try again."
-msgstr ""
+msgstr "Kan de aanmaak van rapporten niet starten. Probeer het opnieuw."
 
 #: reporting/views.py:451
 msgid "Report generation is already in progress for this project."
-msgstr ""
+msgstr "Voor dit project worden reeds rapporten aangemaakt."
 
 #: reporting/views.py:456
 msgid "Missing high risk rate threshold or ranking value"
-msgstr ""
+msgstr "Drempel voor hoog risico of rankschikkingswaarde ontbreekt"
 
 #: reporting/views.py:468
 msgid "Nothing selected"
@@ -2069,37 +2071,39 @@ msgstr "Geen gegevens gevonden voor risicorapport"
 
 #: reporting/views.py:582
 msgid "No report template"
-msgstr ""
+msgstr "Geen rapportsjablonen"
 
 #: reporting/views.py:598
 msgid "annual_report"
-msgstr ""
+msgstr "jaarlijks_verslag"
 
 #: reporting/views.py:627
 msgid ""
 "Reports are being generated with some issues. Please check the error log in "
 "the download zip file for more details."
 msgstr ""
+"De rapporten worden met enkele problemen gegenereerd. Controleer de "
+"foutenlog in het te downloaden zip-bestand voor meer details."
 
 #: reporting/views.py:630
 msgid "Reports are being generated."
-msgstr ""
+msgstr "De rapporten worden gegenereerd."
 
 #: reporting/views.py:633
 msgid "Report is being generated."
-msgstr ""
+msgstr "Het rapport wordt gegenereerd."
 
 #: reporting/views.py:665
 msgid "Report generation failed."
-msgstr ""
+msgstr "De aanmaak van rapporten is mislukt."
 
 #: reporting/views.py:668
 msgid "The report has been generated successfully."
-msgstr ""
+msgstr "Het rapport werd succesvol gegenereerd."
 
 #: reporting/views.py:671
 msgid "Report generation was cancelled."
-msgstr ""
+msgstr "De aanmaak van rapporten werd geannuleerd."
 
 #: reporting/views.py:817
 msgid "Recommendations have been added successfully"
@@ -2108,12 +2112,12 @@ msgstr "Aanbevelingen werden toegevoegd"
 #: reporting/views.py:851
 #, python-format
 msgid "No recommendations from %s"
-msgstr ""
+msgstr "Geen aanbevelingen van %s"
 
 #: reporting/views.py:857
 #, python-format
 msgid "Recommendations have been copied from %s"
-msgstr ""
+msgstr "Aanbevelingen werden gekopieerd van %s"
 
 #: reporting/views.py:888
 msgid "No report recommendation found"
@@ -2133,7 +2137,7 @@ msgstr "De risicoanalyse werd geïmporteerd"
 
 #: reporting/views.py:1085
 msgid "Failed to import risk analysis. Please try again."
-msgstr ""
+msgstr "Import van de risicoanalyse is mislukt. Probeer het opnieuw."
 
 #: reporting/views.py:1219
 msgid "No company found"
@@ -2224,7 +2228,7 @@ msgstr "Niveau"
 
 #: securityobjectives/models.py:24
 msgid "Color used in reporting module (hexadecimal format)"
-msgstr ""
+msgstr "Kleur gebruikt in de rapporteringsmodule (hexadecimaal formaat)"
 
 #: securityobjectives/models.py:47
 msgid "Maturity levels"
