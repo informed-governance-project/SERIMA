@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-25 13:49+0200\n"
+"POT-Creation-Date: 2026-06-26 15:17+0200\n"
 "PO-Revision-Date: 2026-06-02 10:27+0000\n"
 "Last-Translator: Edgar Dugourd <Edd@ilr.lu>\n"
 "Language: fr\n"
@@ -1412,7 +1412,7 @@ msgstr "L'incident est clos"
 #: incidents/views.py:541 incidents/views.py:574 incidents/views.py:618
 #: incidents/views.py:663 incidents/views.py:694 reporting/views.py:111
 #: reporting/views.py:505 reporting/views.py:913 reporting/views.py:938
-#: reporting/views.py:945 reporting/views.py:1250
+#: reporting/views.py:945 reporting/views.py:1252
 #: securityobjectives/views.py:815 securityobjectives/views.py:821
 #: securityobjectives/views.py:1036
 msgid "Forbidden"
@@ -1721,10 +1721,17 @@ msgstr "Le fichier téléchargé contient un JSON invalide."
 msgid "JSON file must contain an object at the root."
 msgstr "Le fichier JSON doit contenir un objet à la racine."
 
-#: reporting/import_risk_analysis.py:38
-#, python-format
-msgid "Missing '%(key)s' key in the JSON file."
-msgstr "La clé « %(key)s » est manquante dans le fichier JSON."
+#: reporting/import_risk_analysis.py:37
+msgid "Missing 'monarc_version' key in the JSON file."
+msgstr ""
+
+#: reporting/import_risk_analysis.py:40
+msgid "Missing 'type' key in the JSON file."
+msgstr ""
+
+#: reporting/import_risk_analysis.py:43
+msgid "JSON file must contain either 'instance' or 'instances'."
+msgstr ""
 
 #: reporting/models.py:33
 msgid "Comment"
@@ -2137,27 +2144,27 @@ msgstr "La recommandation a été supprimée."
 msgid "Invalid request"
 msgstr "Requête non valide"
 
-#: reporting/views.py:1077
+#: reporting/views.py:1079
 msgid "Risk analysis successfully imported"
 msgstr "Analyse des risques importée avec succès"
 
-#: reporting/views.py:1085
+#: reporting/views.py:1087
 msgid "Failed to import risk analysis. Please try again."
 msgstr "L'import de l'analyse des risques a échoué. Veuillez réessayer."
 
-#: reporting/views.py:1219
+#: reporting/views.py:1221
 msgid "No company found"
 msgstr "Aucune entreprise trouvée"
 
-#: reporting/views.py:1228
+#: reporting/views.py:1230
 msgid "No sector found"
 msgstr "Aucun secteur trouvé"
 
-#: reporting/views.py:1237
+#: reporting/views.py:1239
 msgid "Year value is not a valid number"
 msgstr "La valeur de l'année n'est pas valide"
 
-#: reporting/views.py:1245
+#: reporting/views.py:1247
 msgid "Invalid year. Please provide a valid year."
 msgstr "Année non valide. Veuillez indiquer une année valide."
 
