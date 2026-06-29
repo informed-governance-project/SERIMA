@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import Count, Exists, Max, Model, OuterRef, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils import timezone, translation
@@ -123,7 +123,6 @@ class CustomImportJobAdmin(ImportJobAdmin):
             response = super().import_job_progress_view(request, job_id, **kwargs)
         except (KeyError, TypeError):
             # Construct the answer with the correct value
-            from django.http import JsonResponse
             from import_export_extensions.models import ImportJob as ImportJobModel
 
             try:
@@ -140,11 +139,46 @@ class CustomImportJobAdmin(ImportJobAdmin):
 
 @admin.register(ExportJob, site=admin_site)
 class CustomExportJobAdmin(ExportJobAdmin):
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<int:job_id>/download-and-delete/",
+                self.admin_site.admin_view(self.download_and_delete_view),
+                name="exportjob_download_and_delete",
+            ),
+        ]
+        return custom_urls + urls
+
+    def download_and_delete_view(self, request, job_id):
+        try:
+            job = ExportJob.objects.get(pk=job_id)
+        except ExportJob.DoesNotExist:
+            raise Http404
+
+        if not job.data_file:
+            raise Http404
+
+        filename = job.data_file.name.split("/")[-1]
+
+        # Lire le contenu en mémoire avant de supprimer
+        with job.data_file.open("rb") as f:
+            content = f.read()
+
+        # Supprimer le fichier et la référence
+        job.data_file.delete(save=True)
+
+        response = HttpResponse(
+            content,
+            content_type="application/octet-stream",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
     def export_job_progress_view(self, request, job_id, **kwargs):
         try:
             response = super().export_job_progress_view(request, job_id, **kwargs)
         except (KeyError, TypeError):
-            from django.http import JsonResponse
             from import_export_extensions.models import ExportJob as ExportJobModel
 
             try:
