@@ -488,7 +488,7 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         if user_selected:
             selected_field_names = list(user_selected)
         else:
-            # Rien sélectionné = tout exporter
+            # nothing selected, export all
             selected_field_names = ["label", "description", "regulation"] + self.EXTRA_EXPORT_COLUMNS
 
         base_headers = [col for col in ["label", "description", "regulation"] if col in selected_field_names]
@@ -499,6 +499,11 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
 
         if queryset is None:
             queryset = self.get_queryset()
+
+        # progress bar calculation
+        measures_qs = SecurityMeasure.objects.filter(security_objective__standard_link__standard__in=queryset)
+        self.total_objects_count = measures_qs.count() or queryset.count()
+        self.current_object_number = 0
 
         for standard in queryset:
             measures = (
@@ -518,10 +523,12 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
 
             if not measures.exists():
                 dataset.append(self._build_row(standard, lang, selected_field_names=selected_field_names))
+                self.update_task_state(state="EXPORTING")
                 continue
 
             for measure in measures:
                 dataset.append(self._build_row(standard, lang, measure, selected_field_names=selected_field_names))
+                self.update_task_state(state="EXPORTING")
 
         return dataset
 

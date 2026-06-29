@@ -114,8 +114,48 @@ class CustomAdminSite(admin.AdminSite):
 
 
 admin_site = CustomAdminSite()
-admin_site.register(ImportJob, ImportJobAdmin)
-admin_site.register(ExportJob, ExportJobAdmin)
+
+
+@admin.register(ImportJob, site=admin_site)
+class CustomImportJobAdmin(ImportJobAdmin):
+    def import_job_progress_view(self, request, job_id, **kwargs):
+        try:
+            response = super().import_job_progress_view(request, job_id, **kwargs)
+        except (KeyError, TypeError):
+            # Construct the answer with the correct value
+            from django.http import JsonResponse
+            from import_export_extensions.models import ImportJob as ImportJobModel
+
+            try:
+                job = ImportJobModel.objects.get(id=job_id)
+                response = JsonResponse({"status": job.import_status.title()})
+            except ImportJobModel.DoesNotExist:
+                response = JsonResponse({"status": "Unknown"})
+
+        # no cache to be sure the progress bar is not blocking
+        response["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response["Pragma"] = "no-cache"
+        return response
+
+
+@admin.register(ExportJob, site=admin_site)
+class CustomExportJobAdmin(ExportJobAdmin):
+    def export_job_progress_view(self, request, job_id, **kwargs):
+        try:
+            response = super().export_job_progress_view(request, job_id, **kwargs)
+        except (KeyError, TypeError):
+            from django.http import JsonResponse
+            from import_export_extensions.models import ExportJob as ExportJobModel
+
+            try:
+                job = ExportJobModel.objects.get(id=job_id)
+                response = JsonResponse({"status": job.export_status.title()})
+            except ExportJobModel.DoesNotExist:
+                response = JsonResponse({"status": "Unknown"})
+
+        response["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response["Pragma"] = "no-cache"
+        return response
 
 
 class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmin):
