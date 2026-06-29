@@ -72,10 +72,13 @@ def parsing_risk_data_json(json_file, company_reporting_obj):
 
 
 def _normalize_json(data):
-    normalize_instance = data["instance"].copy()
+    normalize_instance = {}
 
-    for key in ("risks", "children", "amvs", "threats", "vuls", "recos"):
+    for key in ("instance", "risks", "children", "amvs", "threats", "vuls", "recos"):
         normalize_instance[key] = data.get(key, {})
+
+    # Remove parent value from root instance
+    normalize_instance["instance"]["parent"] = 0
 
     return normalize_instance
 
