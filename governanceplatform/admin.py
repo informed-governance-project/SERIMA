@@ -29,6 +29,7 @@ from parler.admin import TranslatableAdmin, TranslatableTabularInline
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 from incidents.decorators import check_user_is_correct
 from incidents.email import check_rt_config, create_or_update_rt_ticket, send_html_email
+from securityobjectives.helpers import delete_file_and_parents
 
 from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
 from .formset import CompanyUserInlineFormset
@@ -161,12 +162,10 @@ class CustomExportJobAdmin(ExportJobAdmin):
 
         filename = job.data_file.name.split("/")[-1]
 
-        # Lire le contenu en mémoire avant de supprimer
         with job.data_file.open("rb") as f:
             content = f.read()
 
-        # Supprimer le fichier et la référence
-        job.data_file.delete(save=True)
+        delete_file_and_parents(job.data_file, f"export data_file (job {job.pk})")
 
         response = HttpResponse(
             content,
