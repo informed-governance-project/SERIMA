@@ -269,16 +269,25 @@ def declaration(request):
             if form.is_valid():
                 try:
                     security_objective = SecurityObjective.objects.get(pk=id_object)
+                    field_value = form.cleaned_data[field_name]
                     field_to_update = {field_name: form.cleaned_data[field_name]}
-                    so_status_obj, created = SecurityObjectiveStatus.objects.update_or_create(
-                        standard_answer=standard_answer,
-                        security_objective=security_objective,
-                        defaults={
-                            **field_to_update,
-                            "standard_answer": standard_answer,
-                            "security_objective": security_objective,
-                        },
-                    )
+                    created = False
+                    if field_name == "status" and field_value == SecurityObjectiveStatusForm.ALL_PASS:
+                        SecurityObjectiveStatus.objects.filter(standard_answer=standard_answer).update(status="PASS")
+
+                    elif field_name == "status" and field_value == SecurityObjectiveStatusForm.ALL_FAIL:
+                        SecurityObjectiveStatus.objects.filter(standard_answer=standard_answer).update(status="FAIL")
+
+                    else:
+                        so_status_obj, created = SecurityObjectiveStatus.objects.update_or_create(
+                            standard_answer=standard_answer,
+                            security_objective=security_objective,
+                            defaults={
+                                **field_to_update,
+                                "standard_answer": standard_answer,
+                                "security_objective": security_objective,
+                            },
+                        )
 
                     standard_answer.last_update = timezone.now()
                     if is_user_regulator(user):

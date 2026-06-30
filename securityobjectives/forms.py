@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from incidents.forms import DropdownCheckboxSelectMultiple
 
-from .models import SecurityObjectiveStatus, StandardAnswer
+from .models import StandardAnswer
 
 
 class SecurityObjectiveAnswerForm(forms.Form):
@@ -63,23 +63,35 @@ class SecurityObjectiveAnswerForm(forms.Form):
                 self.initial["review_comment"] = None
 
 
-class SecurityObjectiveStatusForm(forms.ModelForm):
-    class Meta:
-        model = SecurityObjectiveStatus
-        fields = ["status", "actions"]
-        widgets = {
-            "status": forms.Select(
-                attrs={
-                    "class": "so_status_form so-input-field",
-                }
-            ),
-            "actions": forms.Textarea(
-                attrs={
-                    "class": "so_actions_form so-input-field",
-                    "placeholder": "",
-                }
-            ),
-        }
+class SecurityObjectiveStatusForm(forms.Form):
+    ALL_FAIL = "ALL_FAIL"
+    ALL_PASS = "ALL_PASS"
+
+    status = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("NOT_REVIEWED", _("Not reviewed")),
+            ("PASS", _("Passed")),
+            ("FAIL", _("Fail")),
+            ("ALL_PASS", _("All pass")),
+            ("ALL_FAIL", _("All fail")),
+        ],
+        widget=forms.Select(
+            attrs={
+                "class": "so_status_form so-input-field",
+            }
+        ),
+    )
+
+    actions = forms.CharField(
+        required=False,
+        widget=forms.Textarea(
+            attrs={
+                "class": "so_actions_form so-input-field",
+                "placeholder": "",
+            }
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
         initial = kwargs.get("initial", None)
@@ -90,9 +102,6 @@ class SecurityObjectiveStatusForm(forms.ModelForm):
             field_classes = field.widget.attrs.get("class", "")
             field.widget.attrs.update({"class": f"{field_classes} readonly_field"})
             field.disabled = True
-
-        self.fields["status"].required = False
-        self.fields["actions"].required = False
 
         if initial:
             is_readonly = initial.get("is_readonly", True)
