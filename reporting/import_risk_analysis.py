@@ -306,14 +306,16 @@ def _save_risks_to_db(built, service_stat):
     )
 
     risk_data_by_uuid = {
-        risk_obj.uuid: risk_obj
+        str(risk_obj.uuid): risk_obj
         for risk_obj in RiskData.objects.filter(
             uuid__in=built["risk_uuids"],
             service=service_stat,
         )
     }
 
-    rec_data_by_uuid = {rec_obj.uuid: rec_obj for rec_obj in RecommendationData.objects.filter(uuid__in=built["seen_recommendation_uuids"])}
+    rec_data_by_uuid = {
+        str(rec_obj.uuid): rec_obj for rec_obj in RecommendationData.objects.filter(uuid__in=built["seen_recommendation_uuids"])
+    }
 
     RiskRecommendationM2M = RiskData.recommendations.through
 
