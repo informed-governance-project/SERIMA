@@ -18,6 +18,7 @@ import psutil
 from django.db.models import Avg, Count, F, Min, OuterRef, Q, Subquery
 from django.db.models.functions import Floor
 from django.forms.models import model_to_dict
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from docx import Document
 from docx.oxml import OxmlElement
@@ -561,7 +562,7 @@ def get_risk_data(cleaned_data):
                     {
                         "code": recommendation.code,
                         "description": recommendation.description,
-                        "due_date": recommendation.due_date.strftime("%d/%m/%Y"),
+                        "due_date": timezone.localtime(recommendation.due_date).strftime("%d/%m/%Y"),
                     },
                 )
 
