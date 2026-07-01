@@ -73,8 +73,8 @@ class SecurityObjectiveStatusForm(forms.Form):
             ("NOT_REVIEWED", _("Not reviewed")),
             ("PASS", _("Passed")),
             ("FAIL", _("Fail")),
-            ("ALL_PASS", _("All pass")),
-            ("ALL_FAIL", _("All fail")),
+            ("ALL_PASS", _("All passed")),
+            ("ALL_FAIL", _("All revision required")),
         ],
         widget=forms.Select(
             attrs={
