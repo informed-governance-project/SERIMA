@@ -26,6 +26,8 @@ def cleanup_old_export_files(job_pk: int):
         return  # status changed (e.g. rerun), don't touch it
 
     delete_file_and_parents(job.data_file, f"export data_file (job {job_pk})")
+    if job:
+        job.delete()
 
 
 @shared_task
@@ -35,8 +37,7 @@ def cleanup_unconfirmed_import_file(job_pk: int):
     except ImportJob.DoesNotExist:
         return
 
-    if job.import_status != ImportJob.ImportStatus.PARSED:
-        return
-
     delete_file_and_parents(job.data_file, f"import data_file (unconfirmed job {job_pk})")
     delete_file_and_parents(job.input_errors_file, f"import input_errors_file (unconfirmed job {job_pk})")
+    if job:
+        job.delete()

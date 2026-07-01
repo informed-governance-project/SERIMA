@@ -12,6 +12,7 @@ def cleanup_import_job_files(sender, instance, **kwargs):
         sender.ImportStatus.PARSE_ERROR,
         sender.ImportStatus.INPUT_ERROR,
         sender.ImportStatus.CANCELLED,
+        sender.ImportStatus.PARSED,
     }
 
     if instance.import_status == sender.ImportStatus.PARSED:
