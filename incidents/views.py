@@ -21,6 +21,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
+from django.utils.dateparse import parse_datetime
 from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
@@ -1430,6 +1431,8 @@ class WorkflowWizardView(SessionWizardView):
     def get_context_data(self, form, **kwargs):
         user = self.request.user
         context = super().get_context_data(form=form, **kwargs)
+        raw_date = self.storage.extra_data.get("autosave_comment_date")
+        context["autosave_comment_date"] = parse_datetime(raw_date) if raw_date else None
 
         if self.workflow is not None:
             context["action"] = "Edit" if self.read_only or (is_user_regulator(user) and not self.is_regulator_incident) else "Create"
@@ -1472,7 +1475,9 @@ class WorkflowWizardView(SessionWizardView):
 
         # Temporarily store the regulator's comment until the form is submitted
         if not self.read_only and isinstance(form, RegulatorIncidentWorkflowCommentForm):
+            autosave_date = timezone.now()
             self.storage.set_step_data(current_step, self.process_step(form))
+            self.storage.extra_data["autosave_comment_date"] = autosave_date.isoformat()
 
         return super().render_goto_step(goto_step, **kwargs)
 
