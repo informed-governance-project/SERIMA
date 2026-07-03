@@ -1044,7 +1044,13 @@ class IncidentStatusForm(forms.ModelForm):
         self.fields["incident_status"].required = False
         self.fields["is_significative_impact"].required = False
 
-        self.fields["is_significative_impact"].label = _("Change the impact")
+        self.fields["is_significative_impact"].label = _("Set to significant impact")
+        if self.initial.get("is_significative_impact"):
+            self.fields["is_significative_impact"].label = _("Set to no significant impact")
+
+        self.fields["incident_status"].label = _("Set to Active")
+        if self.initial.get("incident_status") == "GOING":
+            self.fields["incident_status"].label = _("Set to Inactive")
 
         self.fields["incident_id"].widget.attrs = {
             "class": "form-control-sm incident-input-field ",
@@ -1054,10 +1060,11 @@ class IncidentStatusForm(forms.ModelForm):
         self.fields["is_significative_impact"].widget.attrs = {
             "class": "large-checkbox incident-input-field is_significative_impact_checkbox",
             "data-incident-id": self.instance.pk,
+            "id": f"is_significative_impact_{self.instance.pk}",
         }
 
         if self.instance.incident_status == "CLOSE":
-            self.fields["is_significative_impact"].widget.attrs["disabled"] = "true"
+            self.fields["is_significative_impact"].disabled = True
 
     class Meta:
         model = Incident
