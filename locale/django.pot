@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-26 15:17+0200\n"
+"POT-Creation-Date: 2026-07-03 16:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,136 +17,136 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: governanceplatform/admin.py:77 governanceplatform/context_processors.py:30
+#: governanceplatform/admin.py:78 governanceplatform/context_processors.py:30
 #: governanceplatform/views.py:97
 msgid "Settings"
 msgstr ""
 
-#: governanceplatform/admin.py:173 governanceplatform/admin.py:174
+#: governanceplatform/admin.py:246 governanceplatform/admin.py:247
 msgid "Django Settings"
 msgstr ""
 
-#: governanceplatform/admin.py:251
+#: governanceplatform/admin.py:324
 msgid "Contact for company"
 msgstr ""
 
-#: governanceplatform/admin.py:252
+#: governanceplatform/admin.py:325
 msgid "Contacts for company"
 msgstr ""
 
-#: governanceplatform/admin.py:396 governanceplatform/admin.py:861
-#: governanceplatform/admin.py:874
+#: governanceplatform/admin.py:469 governanceplatform/admin.py:934
+#: governanceplatform/admin.py:947
 msgid "Contact information"
 msgstr ""
 
-#: governanceplatform/admin.py:407
+#: governanceplatform/admin.py:480
 msgid "Configuration information"
 msgstr ""
 
-#: governanceplatform/admin.py:416 governanceplatform/models.py:182
+#: governanceplatform/admin.py:489 governanceplatform/models.py:182
 #: governanceplatform/models.py:648
 msgid "Entity categories"
 msgstr ""
 
-#: governanceplatform/admin.py:425 governanceplatform/models.py:83
+#: governanceplatform/admin.py:498 governanceplatform/models.py:83
 #: governanceplatform/models.py:660 incidents/admin.py:595
 #: incidents/admin.py:663 incidents/admin.py:998 incidents/filters.py:19
 #: incidents/forms.py:693 incidents/models.py:48 incidents/models.py:316
-#: incidents/views.py:1047 reporting/admin.py:65 reporting/filters.py:31
+#: incidents/views.py:1048 reporting/admin.py:65 reporting/filters.py:31
 #: reporting/forms.py:47 reporting/forms.py:166 reporting/models.py:323
 #: reporting/models.py:497 securityobjectives/filters.py:21
-#: securityobjectives/forms.py:138 securityobjectives/forms.py:181
-#: securityobjectives/forms.py:209 securityobjectives/models.py:435
+#: securityobjectives/forms.py:147 securityobjectives/forms.py:190
+#: securityobjectives/forms.py:218 securityobjectives/models.py:435
 msgid "Sectors"
 msgstr ""
 
-#: governanceplatform/admin.py:497
+#: governanceplatform/admin.py:570
 msgid "Suggestion to Link a User Account with Your Company"
 msgstr ""
 
-#: governanceplatform/admin.py:688
+#: governanceplatform/admin.py:761
 msgid "Reset 2FA"
 msgstr ""
 
-#: governanceplatform/admin.py:706 governanceplatform/models.py:259
+#: governanceplatform/admin.py:779 governanceplatform/models.py:259
 #: governanceplatform/models.py:407 governanceplatform/models.py:611
 #: governanceplatform/models.py:614 incidents/models.py:552
-#: incidents/views.py:1046
+#: incidents/views.py:1047
 msgid "Regulators"
 msgstr ""
 
-#: governanceplatform/admin.py:725 governanceplatform/models.py:378
+#: governanceplatform/admin.py:798 governanceplatform/models.py:378
 #: governanceplatform/models.py:450 governanceplatform/models.py:583
 #: governanceplatform/models.py:664
 msgid "Observer"
 msgstr ""
 
-#: governanceplatform/admin.py:744 governanceplatform/models.py:224
+#: governanceplatform/admin.py:817 governanceplatform/models.py:224
 #: governanceplatform/models.py:402
 msgid "Operators"
 msgstr ""
 
-#: governanceplatform/admin.py:764 governanceplatform/models.py:457
+#: governanceplatform/admin.py:837 governanceplatform/models.py:457
 msgid "Roles"
 msgstr ""
 
-#: governanceplatform/admin.py:894
+#: governanceplatform/admin.py:967
 msgid "Create this user as an administrator"
 msgstr ""
 
-#: governanceplatform/admin.py:933
+#: governanceplatform/admin.py:1006
 msgid "Cookies acceptation has been reseted"
 msgstr ""
 
-#: governanceplatform/admin.py:941
+#: governanceplatform/admin.py:1014
 msgid "Terms acceptation has been reset"
 msgstr ""
 
-#: governanceplatform/admin.py:1008 governanceplatform/models.py:695
+#: governanceplatform/admin.py:1081 governanceplatform/models.py:695
 msgid "Additional information"
 msgstr ""
 
-#: governanceplatform/admin.py:1266 governanceplatform/models.py:682
+#: governanceplatform/admin.py:1339 governanceplatform/models.py:682
 msgid "Observer regulation"
 msgstr ""
 
-#: governanceplatform/admin.py:1268 governanceplatform/models.py:683
+#: governanceplatform/admin.py:1341 governanceplatform/models.py:683
 msgid "Observer regulations"
 msgstr ""
 
-#: governanceplatform/admin.py:1282 governanceplatform/models.py:592
+#: governanceplatform/admin.py:1355 governanceplatform/models.py:592
 msgid "Observer user"
 msgstr ""
 
-#: governanceplatform/admin.py:1283 governanceplatform/models.py:593
+#: governanceplatform/admin.py:1356 governanceplatform/models.py:593
 msgid "Observer users"
 msgstr ""
 
-#: governanceplatform/admin.py:1450
+#: governanceplatform/admin.py:1523
 msgid "Test RT Connection"
 msgstr ""
 
-#: governanceplatform/admin.py:1451
+#: governanceplatform/admin.py:1524
 msgid "Before testing the connection, make sure to save the RT configuration."
 msgstr ""
 
-#: governanceplatform/admin.py:1470
+#: governanceplatform/admin.py:1543
 msgid "Method not allowed."
 msgstr ""
 
-#: governanceplatform/admin.py:1475
+#: governanceplatform/admin.py:1548
 msgid "Observer not found."
 msgstr ""
 
-#: governanceplatform/admin.py:1480
+#: governanceplatform/admin.py:1553
 msgid "Permission denied."
 msgstr ""
 
-#: governanceplatform/admin.py:1502
+#: governanceplatform/admin.py:1575
 msgid "RT connection successful."
 msgstr ""
 
-#: governanceplatform/admin.py:1504
+#: governanceplatform/admin.py:1577
 msgid "RT connection failed. Check URL, queue and token."
 msgstr ""
 
@@ -204,7 +204,7 @@ msgid "Cookie used to prevent Cross-Site Request Forgery (CSRF) attacks."
 msgstr ""
 
 #: governanceplatform/config.py:161 governanceplatform/config_dev.py:156
-#: governanceplatform/forms.py:310 governanceplatform/models.py:304
+#: governanceplatform/forms.py:342 governanceplatform/models.py:304
 msgid "Token"
 msgstr ""
 
@@ -239,63 +239,63 @@ msgstr ""
 msgid "Modules"
 msgstr ""
 
-#: governanceplatform/forms.py:21 governanceplatform/forms.py:152
+#: governanceplatform/forms.py:26 governanceplatform/forms.py:184
 msgid "First name"
 msgstr ""
 
-#: governanceplatform/forms.py:26 governanceplatform/forms.py:153
+#: governanceplatform/forms.py:31 governanceplatform/forms.py:185
 msgid "Last name"
 msgstr ""
 
-#: governanceplatform/forms.py:31 governanceplatform/models.py:170
+#: governanceplatform/forms.py:36 governanceplatform/models.py:170
 #: governanceplatform/models.py:397
 msgid "Phone number"
 msgstr ""
 
-#: governanceplatform/forms.py:36 governanceplatform/models.py:167
+#: governanceplatform/forms.py:41 governanceplatform/models.py:167
 #: governanceplatform/models.py:386
 msgid "Email address"
 msgstr ""
 
-#: governanceplatform/forms.py:43 incidents/models.py:935
+#: governanceplatform/forms.py:48 incidents/models.py:935
 #: reporting/models.py:377 securityobjectives/models.py:531
 msgid "Role"
 msgstr ""
 
-#: governanceplatform/forms.py:106 incidents/models.py:242
+#: governanceplatform/forms.py:111 incidents/models.py:242
 #: incidents/models.py:448
 msgid "Email"
 msgstr ""
 
-#: governanceplatform/forms.py:148 governanceplatform/forms.py:265
+#: governanceplatform/forms.py:180 governanceplatform/forms.py:297
 msgid "I acknowledge and agree to the"
 msgstr ""
 
-#: governanceplatform/forms.py:149
+#: governanceplatform/forms.py:181
 msgid "Accepting the Terms of Use is required for registration."
 msgstr ""
 
-#: governanceplatform/forms.py:210
+#: governanceplatform/forms.py:242
 msgid "There is an issue, please verify your e-mail"
 msgstr ""
 
-#: governanceplatform/forms.py:241
+#: governanceplatform/forms.py:273
 #, python-format
 msgid ""
 "Default language translation (%(fallback_language_name)s) is missing. Please "
 "add it before saving."
 msgstr ""
 
-#: governanceplatform/forms.py:257
+#: governanceplatform/forms.py:289
 #, python-format
 msgid "This %(model)s already exists."
 msgstr ""
 
-#: governanceplatform/forms.py:275
+#: governanceplatform/forms.py:307
 msgid "I agree that my personal data may be used for communication purposes."
 msgstr ""
 
-#: governanceplatform/forms.py:299
+#: governanceplatform/forms.py:331
 msgid ""
 "A token is already set. To remove it, clear the field and save. To update "
 "it, enter a new token."
@@ -582,7 +582,7 @@ msgstr ""
 msgid "Regulations"
 msgstr ""
 
-#: governanceplatform/models.py:624 incidents/forms.py:1099
+#: governanceplatform/models.py:624 incidents/forms.py:1108
 #: incidents/models.py:469 reporting/admin.py:108 reporting/forms.py:141
 #: securityobjectives/models.py:234
 msgid "Regulation"
@@ -694,7 +694,7 @@ msgstr ""
 msgid "Create account"
 msgstr ""
 
-#: governanceplatform/views.py:95 incidents/views.py:1044
+#: governanceplatform/views.py:95 incidents/views.py:1045
 #: reporting/globals.py:15
 msgid "Contact"
 msgstr ""
@@ -755,7 +755,7 @@ msgstr ""
 msgid "Invalid captcha"
 msgstr ""
 
-#: incidents/admin.py:226 incidents/forms.py:1195 incidents/models.py:158
+#: incidents/admin.py:226 incidents/forms.py:1204 incidents/models.py:158
 #: incidents/models.py:166 incidents/models.py:1012
 msgid "Question"
 msgstr ""
@@ -780,7 +780,7 @@ msgstr ""
 msgid "Question Type"
 msgstr ""
 
-#: incidents/admin.py:460 incidents/forms.py:1104 incidents/models.py:358
+#: incidents/admin.py:460 incidents/forms.py:1113 incidents/models.py:358
 #: incidents/models.py:532
 msgid "Workflow"
 msgstr ""
@@ -794,7 +794,7 @@ msgid ""
 msgstr ""
 
 #: incidents/admin.py:647 incidents/admin.py:864 incidents/admin.py:977
-#: securityobjectives/admin.py:630
+#: securityobjectives/admin.py:637
 msgid "General"
 msgstr ""
 
@@ -811,20 +811,20 @@ msgid "Email type"
 msgstr ""
 
 #: incidents/admin.py:805 incidents/models.py:209
-#: securityobjectives/admin.py:1140 securityobjectives/models.py:191
+#: securityobjectives/admin.py:1147 securityobjectives/models.py:191
 msgid "Content"
 msgstr ""
 
-#: incidents/admin.py:812 securityobjectives/admin.py:1150
+#: incidents/admin.py:812 securityobjectives/admin.py:1157
 msgid "HTML preview"
 msgstr ""
 
-#: incidents/admin.py:815 securityobjectives/admin.py:1153
+#: incidents/admin.py:815 securityobjectives/admin.py:1160
 msgid "No preview yet"
 msgstr ""
 
 #: incidents/admin.py:871 incidents/admin.py:1004
-#: securityobjectives/admin.py:637
+#: securityobjectives/admin.py:644
 msgid "Notification Email"
 msgstr ""
 
@@ -918,8 +918,8 @@ msgid "Select date and time"
 msgstr ""
 
 #: incidents/forms.py:798 incidents/globals.py:47 incidents/globals.py:55
-#: incidents/globals.py:76 securityobjectives/globals.py:6
-#: securityobjectives/models.py:493
+#: incidents/globals.py:76 securityobjectives/forms.py:74
+#: securityobjectives/globals.py:6 securityobjectives/models.py:493
 msgid "Passed"
 msgstr ""
 
@@ -952,32 +952,48 @@ msgstr ""
 msgid "Resolution date cannot be before detection date."
 msgstr ""
 
-#: incidents/forms.py:1110 incidents/forms.py:1191 incidents/models.py:380
+#: incidents/forms.py:1047
+msgid "Set to significant impact"
+msgstr ""
+
+#: incidents/forms.py:1049
+msgid "Set to no significant impact"
+msgstr ""
+
+#: incidents/forms.py:1051
+msgid "Set to Active"
+msgstr ""
+
+#: incidents/forms.py:1053
+msgid "Set to Inactive"
+msgstr ""
+
+#: incidents/forms.py:1119 incidents/forms.py:1200 incidents/models.py:380
 #: incidents/models.py:445
 msgid "Report"
 msgstr ""
 
-#: incidents/forms.py:1117
+#: incidents/forms.py:1126
 msgid "File format"
 msgstr ""
 
-#: incidents/forms.py:1138
+#: incidents/forms.py:1147
 msgid "From"
 msgstr ""
 
-#: incidents/forms.py:1146
+#: incidents/forms.py:1155
 msgid "To"
 msgstr ""
 
-#: incidents/forms.py:1199 incidents/models.py:1018
+#: incidents/forms.py:1208 incidents/models.py:1018
 msgid "Selected answer"
 msgstr ""
 
-#: incidents/forms.py:1203 incidents/models.py:1024
+#: incidents/forms.py:1212 incidents/models.py:1024
 msgid "Next question"
 msgstr ""
 
-#: incidents/globals.py:40 reporting/helpers.py:580
+#: incidents/globals.py:40 reporting/helpers.py:581
 msgid "Closed"
 msgstr ""
 
@@ -1032,7 +1048,7 @@ msgid "Impact"
 msgstr ""
 
 #: incidents/models.py:73 incidents/models.py:543 incidents/models.py:833
-#: incidents/views.py:1446
+#: incidents/views.py:1449
 msgid "Impacts"
 msgstr ""
 
@@ -1256,7 +1272,7 @@ msgstr ""
 msgid "Report timeline timezone"
 msgstr ""
 
-#: incidents/models.py:836 incidents/views.py:1450
+#: incidents/models.py:836 incidents/views.py:1453
 msgid "Comment/Explanation"
 msgstr ""
 
@@ -1348,61 +1364,61 @@ msgstr ""
 msgid "A question cannot be both mandatory and conditionally displayed."
 msgstr ""
 
-#: incidents/views.py:322
+#: incidents/views.py:323
 msgid "Missing data, incident report not created."
 msgstr ""
 
-#: incidents/views.py:329 incidents/views.py:416
+#: incidents/views.py:330 incidents/views.py:417
 msgid "Workflow not found"
 msgstr ""
 
-#: incidents/views.py:333 incidents/views.py:419 incidents/views.py:495
-#: incidents/views.py:537 incidents/views.py:570 incidents/views.py:659
+#: incidents/views.py:334 incidents/views.py:420 incidents/views.py:496
+#: incidents/views.py:538 incidents/views.py:571 incidents/views.py:660
 msgid "Incident not found"
 msgstr ""
 
-#: incidents/views.py:337 incidents/views.py:422
+#: incidents/views.py:338 incidents/views.py:423
 msgid "The incident has been closed"
 msgstr ""
 
-#: incidents/views.py:341 incidents/views.py:348 incidents/views.py:395
-#: incidents/views.py:426 incidents/views.py:436 incidents/views.py:480
-#: incidents/views.py:541 incidents/views.py:574 incidents/views.py:618
-#: incidents/views.py:663 incidents/views.py:694 reporting/views.py:111
+#: incidents/views.py:342 incidents/views.py:349 incidents/views.py:396
+#: incidents/views.py:427 incidents/views.py:437 incidents/views.py:481
+#: incidents/views.py:542 incidents/views.py:575 incidents/views.py:619
+#: incidents/views.py:664 incidents/views.py:695 reporting/views.py:111
 #: reporting/views.py:505 reporting/views.py:913 reporting/views.py:938
 #: reporting/views.py:945 reporting/views.py:1252
-#: securityobjectives/views.py:815 securityobjectives/views.py:821
-#: securityobjectives/views.py:1036
+#: securityobjectives/views.py:824 securityobjectives/views.py:830
+#: securityobjectives/views.py:1045
 msgid "Forbidden"
 msgstr ""
 
-#: incidents/views.py:366 incidents/views.py:372 incidents/views.py:410
-#: incidents/views.py:433 incidents/views.py:614
+#: incidents/views.py:367 incidents/views.py:373 incidents/views.py:411
+#: incidents/views.py:434 incidents/views.py:615
 msgid "No incident report could be found."
 msgstr ""
 
-#: incidents/views.py:590 incidents/views.py:634
-#: securityobjectives/views.py:784
+#: incidents/views.py:591 incidents/views.py:635
+#: securityobjectives/views.py:793
 msgid "An error occurred while generating the report."
 msgstr ""
 
-#: incidents/views.py:669
+#: incidents/views.py:670
 msgid "The incident has been deleted."
 msgstr ""
 
-#: incidents/views.py:671
+#: incidents/views.py:672
 msgid "The incident could not be deleted."
 msgstr ""
 
-#: incidents/views.py:682
+#: incidents/views.py:683
 msgid "An error occurred while deleting the incident."
 msgstr ""
 
-#: incidents/views.py:785 incidents/views.py:883
+#: incidents/views.py:786 incidents/views.py:884
 msgid "No incidents available for export."
 msgstr ""
 
-#: incidents/views.py:934
+#: incidents/views.py:935
 #, python-brace-format
 msgid ""
 "A total of {count} incidents were exported from regulation {regulation} "
@@ -1410,26 +1426,26 @@ msgid ""
 "{to_date}.)"
 msgstr ""
 
-#: incidents/views.py:958
+#: incidents/views.py:959
 #, python-brace-format
 msgid "[{site}] New incident mass export"
 msgstr ""
 
-#: incidents/views.py:1007
+#: incidents/views.py:1008
 msgid ""
 "The daily limit of incident reports has been reached. Please try again "
 "tomorrow."
 msgstr ""
 
-#: incidents/views.py:1045
+#: incidents/views.py:1046
 msgid "Legal bases"
 msgstr ""
 
-#: incidents/views.py:1048
+#: incidents/views.py:1049
 msgid "Detection date"
 msgstr ""
 
-#: incidents/views.py:1438
+#: incidents/views.py:1441
 msgid "Incident Timeline"
 msgstr ""
 
@@ -1446,13 +1462,13 @@ msgid "JSON File"
 msgstr ""
 
 #: reporting/forms.py:33 reporting/models.py:24 reporting/models.py:541
-#: securityobjectives/forms.py:167 securityobjectives/models.py:369
+#: securityobjectives/forms.py:176 securityobjectives/models.py:369
 msgid "Company"
 msgstr ""
 
 #: reporting/forms.py:41 reporting/globals.py:30
-#: securityobjectives/forms.py:133 securityobjectives/forms.py:175
-#: securityobjectives/forms.py:203
+#: securityobjectives/forms.py:142 securityobjectives/forms.py:184
+#: securityobjectives/forms.py:212
 msgid "Year"
 msgstr ""
 
@@ -1465,7 +1481,7 @@ msgid "Project name"
 msgstr ""
 
 #: reporting/forms.py:147 reporting/models.py:402 reporting/models.py:492
-#: securityobjectives/admin.py:894 securityobjectives/admin.py:1046
+#: securityobjectives/admin.py:901 securityobjectives/admin.py:1053
 #: securityobjectives/models.py:66 securityobjectives/models.py:291
 #: securityobjectives/models.py:388
 msgid "Standard"
@@ -1642,23 +1658,23 @@ msgstr ""
 msgid "Running"
 msgstr ""
 
-#: reporting/helpers.py:572
+#: reporting/helpers.py:573
 msgid "Postponed"
 msgstr ""
 
-#: reporting/helpers.py:575
+#: reporting/helpers.py:576
 msgid "To check"
 msgstr ""
 
-#: reporting/helpers.py:578
+#: reporting/helpers.py:579
 msgid "New"
 msgstr ""
 
-#: reporting/helpers.py:605
+#: reporting/helpers.py:606
 msgid "All services"
 msgstr ""
 
-#: reporting/helpers.py:828 reporting/helpers.py:925
+#: reporting/helpers.py:829 reporting/helpers.py:926
 msgid "average"
 msgstr ""
 
@@ -1909,7 +1925,7 @@ msgid "This regulator already has this standard configured."
 msgstr ""
 
 #: reporting/models.py:425 reporting/models.py:430
-#: securityobjectives/admin.py:768 securityobjectives/models.py:23
+#: securityobjectives/admin.py:775 securityobjectives/models.py:23
 msgid "Color"
 msgstr ""
 
@@ -2088,7 +2104,7 @@ msgstr ""
 msgid "The report recommendation has been deleted."
 msgstr ""
 
-#: reporting/views.py:953 securityobjectives/views.py:831
+#: reporting/views.py:953 securityobjectives/views.py:840
 msgid "Invalid request"
 msgstr ""
 
@@ -2165,11 +2181,27 @@ msgstr ""
 msgid "Several '%(label)s' have been found. Check your data."
 msgstr ""
 
-#: securityobjectives/admin.py:994
+#: securityobjectives/admin.py:1001
 msgid "Standard of security objective and maturity level must be the same"
 msgstr ""
 
-#: securityobjectives/forms.py:125 securityobjectives/forms.py:161
+#: securityobjectives/forms.py:73 securityobjectives/models.py:492
+msgid "Not reviewed"
+msgstr ""
+
+#: securityobjectives/forms.py:75 securityobjectives/models.py:494
+msgid "Fail"
+msgstr ""
+
+#: securityobjectives/forms.py:76
+msgid "All passed"
+msgstr ""
+
+#: securityobjectives/forms.py:77
+msgid "All revision required"
+msgstr ""
+
+#: securityobjectives/forms.py:134 securityobjectives/forms.py:170
 msgid "Evaluation Framework"
 msgstr ""
 
@@ -2309,14 +2341,6 @@ msgstr ""
 msgid "Security objectives statement"
 msgstr ""
 
-#: securityobjectives/models.py:492
-msgid "Not reviewed"
-msgstr ""
-
-#: securityobjectives/models.py:494
-msgid "Fail"
-msgstr ""
-
 #: securityobjectives/models.py:502
 msgid "Score"
 msgstr ""
@@ -2329,7 +2353,7 @@ msgstr ""
 msgid "It is completely filled out"
 msgstr ""
 
-#: securityobjectives/views.py:178 securityobjectives/views.py:796
+#: securityobjectives/views.py:178 securityobjectives/views.py:805
 msgid "No data available"
 msgstr ""
 
@@ -2338,40 +2362,52 @@ msgid "Standard does not exist"
 msgstr ""
 
 #: securityobjectives/views.py:227 securityobjectives/views.py:231
-#: securityobjectives/views.py:454 securityobjectives/views.py:548
-#: securityobjectives/views.py:578 securityobjectives/views.py:593
-#: securityobjectives/views.py:690 securityobjectives/views.py:709
+#: securityobjectives/views.py:463 securityobjectives/views.py:557
+#: securityobjectives/views.py:587 securityobjectives/views.py:602
+#: securityobjectives/views.py:699 securityobjectives/views.py:718
 msgid "Declaration not found"
 msgstr ""
 
-#: securityobjectives/views.py:449
+#: securityobjectives/views.py:458
 msgid "No sectors data available"
 msgstr ""
 
-#: securityobjectives/views.py:529
+#: securityobjectives/views.py:538
 msgid "The security objectives declaration has been duplicated."
 msgstr ""
 
-#: securityobjectives/views.py:559
+#: securityobjectives/views.py:568
 msgid "The security objectives declaration has been submitted."
 msgstr ""
 
-#: securityobjectives/views.py:576
+#: securityobjectives/views.py:585
 msgid "The security objectives declaration has been deleted."
 msgstr ""
 
-#: securityobjectives/views.py:627
+#: securityobjectives/views.py:636
 msgid "The security objectives review has been sent."
 msgstr ""
 
-#: securityobjectives/views.py:851
+#: securityobjectives/views.py:860
 msgid "Error opening the file: {}"
 msgstr ""
 
-#: securityobjectives/views.py:870
+#: securityobjectives/views.py:879
 msgid "No users for this company"
 msgstr ""
 
-#: securityobjectives/views.py:898
+#: securityobjectives/views.py:907
 msgid "An error occurred while importing the declaration file."
+msgstr ""
+
+#: templates/admin/import_export_extensions/celery_export_results.html:7
+msgid "There are some errors during data exporting:"
+msgstr ""
+
+#: templates/admin/import_export_extensions/celery_export_results.html:16
+msgid "You can download exported data with following link"
+msgstr ""
+
+#: templates/admin/import_export_extensions/celery_export_results.html:20
+msgid "Download export data"
 msgstr ""
