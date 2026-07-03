@@ -1044,6 +1044,8 @@ class IncidentStatusForm(forms.ModelForm):
         self.fields["incident_status"].required = False
         self.fields["is_significative_impact"].required = False
 
+        self.fields["is_significative_impact"].label = _("Change the impact")
+
         self.fields["incident_id"].widget.attrs = {
             "class": "form-control-sm incident-input-field ",
             "data-incident-id": self.instance.pk,
