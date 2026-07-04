@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-03 16:41+0200\n"
-"PO-Revision-Date: 2026-06-26 09:28+0000\n"
+"PO-Revision-Date: 2026-07-04 15:28+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -639,7 +639,7 @@ msgstr "Activiteit"
 
 #: governanceplatform/models.py:693
 msgid "Object id"
-msgstr "Object-ID"
+msgstr "Object id"
 
 #: governanceplatform/models.py:694
 msgid "Object representation"
@@ -815,6 +815,10 @@ msgid ""
 "to load available questions. Only reports containing conditional questions "
 "are displayed."
 msgstr ""
+"Om een voorwaardelijke vraag aan te maken, moet de vraag in een "
+"incidentrapport voorkomen en gemarkeerd zijn als „Voorwaardelijke weergave”. "
+"Selecteer eerst een rapport om de beschikbare vragen te laden. Er worden "
+"alleen rapporten weergegeven die voorwaardelijke vragen bevatten."
 
 #: incidents/admin.py:647 incidents/admin.py:864 incidents/admin.py:977
 #: securityobjectives/admin.py:637
@@ -908,11 +912,11 @@ msgstr "Voeg details toe"
 #: incidents/forms.py:353 incidents/forms.py:685 incidents/forms.py:892
 #: incidents/forms.py:899 incidents/forms.py:906 incidents/forms.py:913
 msgid "Date format yyyy-mm-dd hh:mm"
-msgstr "Datumnotatie JJJJ-MM-DD UU:MM"
+msgstr "Datumnotatie jjjj-mm-dd uu:mm"
 
 #: incidents/forms.py:483 incidents/models.py:488
 msgid "Legal Entity Name"
-msgstr ""
+msgstr "Naam juridische entiteit"
 
 #: incidents/forms.py:552
 msgid "Incident reference"
@@ -985,23 +989,20 @@ msgid "Resolution date cannot be before detection date."
 msgstr "Datum van oplossing kan niet vóór datum van ontdekking liggen."
 
 #: incidents/forms.py:1047
-#| msgid "Significant impact"
 msgid "Set to significant impact"
-msgstr ""
+msgstr "Aanzienlijke gevolgen"
 
 #: incidents/forms.py:1049
-#| msgid "Significant impact"
 msgid "Set to no significant impact"
-msgstr ""
+msgstr "Geen aanzienlijke gevolgen"
 
 #: incidents/forms.py:1051
-#| msgid "Active"
 msgid "Set to Active"
-msgstr ""
+msgstr "Instellen op 'Actief'"
 
 #: incidents/forms.py:1053
 msgid "Set to Inactive"
-msgstr ""
+msgstr "Instellen op 'Inactief'"
 
 #: incidents/forms.py:1119 incidents/forms.py:1200 incidents/models.py:380
 #: incidents/models.py:445
@@ -1022,11 +1023,11 @@ msgstr "Aan"
 
 #: incidents/forms.py:1208 incidents/models.py:1018
 msgid "Selected answer"
-msgstr ""
+msgstr "Gekozen antwoord"
 
 #: incidents/forms.py:1212 incidents/models.py:1024
 msgid "Next question"
-msgstr ""
+msgstr "Volgende vraag"
 
 #: incidents/globals.py:40 reporting/helpers.py:581
 msgid "Closed"
@@ -1352,45 +1353,51 @@ msgstr "Verplicht"
 
 #: incidents/models.py:985 incidents/models.py:1108
 msgid "Conditional display"
-msgstr ""
+msgstr "Voorwaardelijke weergave"
 
 #: incidents/models.py:1029
 msgid "Deleted at"
-msgstr ""
+msgstr "Verwijderd op"
 
 #: incidents/models.py:1051
 msgid "The selected answer does not belong to this question."
-msgstr ""
+msgstr "Het gekozen antwoord hoort niet bij deze vraag."
 
 #: incidents/models.py:1054
 msgid ""
 "Conditional questions are only available for single and multiple choice "
 "questions."
 msgstr ""
+"Voorwaardelijke vragen zijn alleen beschikbaar voor meerkeuzevragen met één "
+"of meerdere antwoorden."
 
 #: incidents/models.py:1060
 msgid ""
 "The conditional question must be in the same category as the current "
 "question."
 msgstr ""
+"De voorwaardelijke vraag moet tot dezelfde categorie behoren als de huidige "
+"vraag."
 
 #: incidents/models.py:1063
 msgid "A question cannot redirect to itself."
-msgstr ""
+msgstr "Een vraag kan niet naar zichzelf doorverwijzen."
 
 #: incidents/models.py:1068
 msgid ""
 "The target question is already used as a trigger in another conditional "
 "jump. Conditional questions are limited to one level of depth."
 msgstr ""
+"De doelvraag wordt al gebruikt als trigger in een andere voorwaardelijke "
+"sprong. Voorwaardelijke vragen zijn beperkt tot één niveau van diepte."
 
 #: incidents/models.py:1094
 msgid "Conditional questions"
-msgstr ""
+msgstr "Voorwaardelijke vragen"
 
 #: incidents/models.py:1095
 msgid "Conditional question"
-msgstr ""
+msgstr "Voorwaardelijke vraag"
 
 #: incidents/models.py:1115 reporting/models.py:474
 msgid "Updated at"
@@ -1403,6 +1410,8 @@ msgstr "Datum van verwijdering"
 #: incidents/models.py:1137
 msgid "A question cannot be both mandatory and conditionally displayed."
 msgstr ""
+"Een vraag kan niet tegelijkertijd verplicht en voorwaardelijk weergegeven "
+"worden."
 
 #: incidents/views.py:323
 msgid "Missing data, incident report not created."
@@ -1737,15 +1746,15 @@ msgstr "JSON-bestand moet een object bevatten in de root."
 
 #: reporting/import_risk_analysis.py:37
 msgid "Missing 'monarc_version' key in the JSON file."
-msgstr ""
+msgstr "De sleutel ‘monarc_version’ ontbreekt in het JSON-bestand."
 
 #: reporting/import_risk_analysis.py:40
 msgid "Missing 'type' key in the JSON file."
-msgstr ""
+msgstr "De sleutel ‘type’ ontbreekt in het JSON-bestand."
 
 #: reporting/import_risk_analysis.py:43
 msgid "JSON file must contain either 'instance' or 'instances'."
-msgstr ""
+msgstr "Het JSON-bestand moet ofwel ‘instance’ ofwel ‘instances’ bevatten."
 
 #: reporting/models.py:33
 msgid "Comment"
@@ -1754,7 +1763,7 @@ msgstr "Opmerking"
 #: reporting/models.py:57 reporting/models.py:83 reporting/models.py:109
 #: reporting/models.py:162 reporting/models.py:248 reporting/models.py:584
 msgid "uuid"
-msgstr "UUID"
+msgstr "uuid"
 
 #: reporting/models.py:62
 msgid "Assets"
@@ -2183,40 +2192,40 @@ msgstr "Ongeldig jaartal. Geef een geldig jaartal op."
 
 #: securityobjectives/admin.py:312
 msgid "domain"
-msgstr ""
+msgstr "domein"
 
 #: securityobjectives/admin.py:313
 msgid "Security objective objective"
-msgstr ""
+msgstr "Beveiligingsdoelstelling"
 
 #: securityobjectives/admin.py:314
 msgid "Security objective description"
-msgstr ""
+msgstr "Beschrijving van de beveiligingsdoelstelling"
 
 #: securityobjectives/admin.py:315
 msgid "Security objective position"
-msgstr ""
+msgstr "Plaats van de beveiligingsdoelstelling"
 
 #: securityobjectives/admin.py:316
 msgid "Security objective priority"
-msgstr ""
+msgstr "Prioriteit van de beveiligingsdoelstelling"
 
 #: securityobjectives/admin.py:317
 msgid "maturity_level"
-msgstr ""
+msgstr "maturiteitsniveau"
 
 #: securityobjectives/admin.py:318
 msgid "Security measure description"
-msgstr ""
+msgstr "Beschrijving van de beveiligingsmaatregel"
 
 #: securityobjectives/admin.py:319
 msgid "Security measure evidence"
-msgstr ""
+msgstr "Bewijs van de beveiligingsmaatregel"
 
 #: securityobjectives/admin.py:355
 #, python-format
 msgid "Regulation '%(label)s' does not exist. Check your data."
-msgstr ""
+msgstr "De regelgeving ‘%(label)s’ bestaat niet. Controleer je gegevens."
 
 #: securityobjectives/admin.py:370
 #, python-format
@@ -2224,11 +2233,13 @@ msgid ""
 "The standard '%(label)s' is not find for regulation '%(regulation)s' and "
 "this regulator."
 msgstr ""
+"De standaard ‘%(label)s’ komt niet overeen met de regelgeving ‘%(regulation)s"
+"’ en deze regelgevende instantie."
 
 #: securityobjectives/admin.py:378
 #, python-format
 msgid "Several '%(label)s' have been found. Check your data."
-msgstr ""
+msgstr "Er zijn meerdere ‘%(label)s’ gevonden. Controleer je gegevens"
 
 #: securityobjectives/admin.py:1001
 msgid "Standard of security objective and maturity level must be the same"
@@ -2245,14 +2256,12 @@ msgid "Fail"
 msgstr "Niet geslaagd"
 
 #: securityobjectives/forms.py:76
-#| msgid "Passed"
 msgid "All passed"
-msgstr ""
+msgstr "Allemaal geslaagd"
 
 #: securityobjectives/forms.py:77
-#| msgid "Revision required"
 msgid "All revision required"
-msgstr ""
+msgstr "Alles moet worden herzien"
 
 #: securityobjectives/forms.py:134 securityobjectives/forms.py:170
 msgid "Evaluation Framework"
@@ -2456,13 +2465,12 @@ msgstr ""
 
 #: templates/admin/import_export_extensions/celery_export_results.html:7
 msgid "There are some errors during data exporting:"
-msgstr ""
+msgstr "Er zijn fouten opgetreden tijdens het exporteren van gegevens:"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:16
 msgid "You can download exported data with following link"
-msgstr ""
+msgstr "Je kunt de geëxporteerde gegevens via de volgende link downloaden"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:20
-#| msgid "No reporting data"
 msgid "Download export data"
-msgstr ""
+msgstr "Geëxporteerde gegevens downloaden"
