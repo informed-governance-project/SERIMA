@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-03 16:41+0200\n"
+"POT-Creation-Date: 2026-07-06 09:41+0200\n"
 "PO-Revision-Date: 2026-06-02 10:27+0000\n"
 "Last-Translator: Edgar Dugourd <Edd@ilr.lu>\n"
 "Language: fr\n"
@@ -990,17 +990,14 @@ msgstr ""
 "La date de résolution ne peut pas être postérieure à la date de détection."
 
 #: incidents/forms.py:1047
-#| msgid "Significant impact"
 msgid "Set to significant impact"
 msgstr ""
 
 #: incidents/forms.py:1049
-#| msgid "Significant impact"
 msgid "Set to no significant impact"
 msgstr ""
 
 #: incidents/forms.py:1051
-#| msgid "Active"
 msgid "Set to Active"
 msgstr ""
 
@@ -2251,12 +2248,10 @@ msgid "Fail"
 msgstr "Échec"
 
 #: securityobjectives/forms.py:76
-#| msgid "Passed"
 msgid "All passed"
 msgstr ""
 
 #: securityobjectives/forms.py:77
-#| msgid "Revision required"
 msgid "All revision required"
 msgstr ""
 
@@ -2471,6 +2466,5 @@ msgid "You can download exported data with following link"
 msgstr ""
 
 #: templates/admin/import_export_extensions/celery_export_results.html:20
-#| msgid "No reporting data"
 msgid "Download export data"
 msgstr ""

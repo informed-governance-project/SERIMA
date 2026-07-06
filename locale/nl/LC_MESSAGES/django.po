@@ -2233,8 +2233,8 @@ msgid ""
 "The standard '%(label)s' is not find for regulation '%(regulation)s' and "
 "this regulator."
 msgstr ""
-"De standaard ‘%(label)s’ komt niet overeen met de regelgeving ‘%(regulation)s"
-"’ en deze regelgevende instantie."
+"De standaard ‘%(label)s’ komt niet overeen met de regelgeving "
+"‘%(regulation)s’ en deze regelgevende instantie."
 
 #: securityobjectives/admin.py:378
 #, python-format
