@@ -579,6 +579,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bootstrap 5 frontend
 
 
+[0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
 [0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15
 [0.5.14]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.13...v0.5.14
 [0.5.13]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.12...v0.5.13
