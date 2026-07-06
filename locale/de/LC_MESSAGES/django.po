@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-06 09:41+0200\n"
-"PO-Revision-Date: 2026-06-08 08:09+0000\n"
+"PO-Revision-Date: 2026-07-06 14:00+0000\n"
 "Last-Translator: Pascal Bertrand <Pascal.bertrand+RegAdmin@ilr.lu>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -120,31 +120,35 @@ msgstr "Beobachter Nutzer"
 
 #: governanceplatform/admin.py:1523
 msgid "Test RT Connection"
-msgstr ""
+msgstr "RT-Verbindung testen"
 
 #: governanceplatform/admin.py:1524
 msgid "Before testing the connection, make sure to save the RT configuration."
 msgstr ""
+"Bevor Sie die Verbindung testen, stellen Sie bitte sicher, dass Sie die RT-"
+"Konfiguration gespeichert haben."
 
 #: governanceplatform/admin.py:1543
 msgid "Method not allowed."
-msgstr ""
+msgstr "Methode unzulässig."
 
 #: governanceplatform/admin.py:1548
 msgid "Observer not found."
-msgstr ""
+msgstr "Beobachter nicht gefunden."
 
 #: governanceplatform/admin.py:1553
 msgid "Permission denied."
-msgstr ""
+msgstr "Zugriff verweigert."
 
 #: governanceplatform/admin.py:1575
 msgid "RT connection successful."
-msgstr ""
+msgstr "RT-Verbindung erfolgreich hergestellt."
 
 #: governanceplatform/admin.py:1577
 msgid "RT connection failed. Check URL, queue and token."
 msgstr ""
+"Die RT-Verbindung ist fehlgeschlagen. Bitte überprüfen Sie die URL, die "
+"Warteschlange und das Token."
 
 #: governanceplatform/apps.py:7
 msgid "Governance"
@@ -822,6 +826,10 @@ msgid ""
 "to load available questions. Only reports containing conditional questions "
 "are displayed."
 msgstr ""
+"Um eine bedingte Frage zu erstellen, muss die Frage in einem Vorfallbericht "
+"vorhanden und als „Bedingte Anzeige“ gekennzeichnet sein. Bitte wählen Sie "
+"zunächst einen Bericht aus, um die verfügbaren Fragen zu laden. Es werden "
+"nur Berichte angezeigt, die bedingte Fragen enthalten."
 
 #: incidents/admin.py:647 incidents/admin.py:864 incidents/admin.py:977
 #: securityobjectives/admin.py:637
@@ -919,7 +927,7 @@ msgstr "Datumsformat JJJJ-MM-TT HH:MM"
 
 #: incidents/forms.py:483 incidents/models.py:488
 msgid "Legal Entity Name"
-msgstr ""
+msgstr "Name der juristischen Entität"
 
 #: incidents/forms.py:552
 msgid "Incident reference"
@@ -994,19 +1002,19 @@ msgstr "Das Auflösungsdatum darf nicht vor dem Entdeckungsdatum liegen."
 
 #: incidents/forms.py:1047
 msgid "Set to significant impact"
-msgstr ""
+msgstr "Auf „erhebliche Auswirkungen“ einstellen"
 
 #: incidents/forms.py:1049
 msgid "Set to no significant impact"
-msgstr ""
+msgstr "Auf „keine erhebliche Auswirkungen“ eingestellt"
 
 #: incidents/forms.py:1051
 msgid "Set to Active"
-msgstr ""
+msgstr "Auf „Aktiv“ setzen"
 
 #: incidents/forms.py:1053
 msgid "Set to Inactive"
-msgstr ""
+msgstr "Auf „Inaktiv“ setzen"
 
 #: incidents/forms.py:1119 incidents/forms.py:1200 incidents/models.py:380
 #: incidents/models.py:445
@@ -1027,11 +1035,11 @@ msgstr "Zu"
 
 #: incidents/forms.py:1208 incidents/models.py:1018
 msgid "Selected answer"
-msgstr ""
+msgstr "Ausgewählte Antwort"
 
 #: incidents/forms.py:1212 incidents/models.py:1024
 msgid "Next question"
-msgstr ""
+msgstr "Nächste Frage"
 
 #: incidents/globals.py:40 reporting/helpers.py:581
 msgid "Closed"
@@ -1357,45 +1365,49 @@ msgstr "Erforderlich"
 
 #: incidents/models.py:985 incidents/models.py:1108
 msgid "Conditional display"
-msgstr ""
+msgstr "Bedingte Anzeige"
 
 #: incidents/models.py:1029
 msgid "Deleted at"
-msgstr ""
+msgstr "Gelöscht am"
 
 #: incidents/models.py:1051
 msgid "The selected answer does not belong to this question."
-msgstr ""
+msgstr "Die ausgewählte Antwort bezieht sich nicht auf diese Frage."
 
 #: incidents/models.py:1054
 msgid ""
 "Conditional questions are only available for single and multiple choice "
 "questions."
 msgstr ""
+"Bedingte Fragen sind nur für Einzel- und Mehrfachauswahlfragen verfügbar."
 
 #: incidents/models.py:1060
 msgid ""
 "The conditional question must be in the same category as the current "
 "question."
 msgstr ""
+"Die bedingte Frage muss derselben Kategorie angehören wie die aktuelle Frage."
 
 #: incidents/models.py:1063
 msgid "A question cannot redirect to itself."
-msgstr ""
+msgstr "Eine Frage kann nicht auf sich selbst verweisen."
 
 #: incidents/models.py:1068
 msgid ""
 "The target question is already used as a trigger in another conditional "
 "jump. Conditional questions are limited to one level of depth."
 msgstr ""
+"Die Zielfrage wird bereits als Auslöser in einem anderen bedingten Sprung "
+"verwendet. Bedingte Fragen sind auf eine Ebene beschränkt."
 
 #: incidents/models.py:1094
 msgid "Conditional questions"
-msgstr ""
+msgstr "Bedingte Fragen"
 
 #: incidents/models.py:1095
 msgid "Conditional question"
-msgstr ""
+msgstr "Bedingte Frage"
 
 #: incidents/models.py:1115 reporting/models.py:474
 msgid "Updated at"
@@ -1408,6 +1420,8 @@ msgstr "Löschdatum"
 #: incidents/models.py:1137
 msgid "A question cannot be both mandatory and conditionally displayed."
 msgstr ""
+"Eine Frage kann nicht gleichzeitig als Pflichtfeld und als bedingt angezeigt "
+"werden."
 
 #: incidents/views.py:323
 msgid "Missing data, incident report not created."
@@ -1742,15 +1756,15 @@ msgstr "Die JSON-Datei muss ein Objekt an der Wurzel enthalten."
 
 #: reporting/import_risk_analysis.py:37
 msgid "Missing 'monarc_version' key in the JSON file."
-msgstr ""
+msgstr "Der Schlüssel „monarc_version“ fehlt in der JSON-Datei."
 
 #: reporting/import_risk_analysis.py:40
 msgid "Missing 'type' key in the JSON file."
-msgstr ""
+msgstr "In der JSON-Datei fehlt der Schlüssel „type“."
 
 #: reporting/import_risk_analysis.py:43
 msgid "JSON file must contain either 'instance' or 'instances'."
-msgstr ""
+msgstr "Die JSON-Datei muss entweder „instance“ oder „instances“ enthalten."
 
 #: reporting/models.py:33
 msgid "Comment"
@@ -2193,40 +2207,41 @@ msgstr "Ungültiges Jahr. Bitte geben Sie ein gültiges Jahr an."
 
 #: securityobjectives/admin.py:312
 msgid "domain"
-msgstr ""
+msgstr "Domain"
 
 #: securityobjectives/admin.py:313
 msgid "Security objective objective"
-msgstr ""
+msgstr "Sicherheitsziel - Ziel"
 
 #: securityobjectives/admin.py:314
 msgid "Security objective description"
-msgstr ""
+msgstr "Beschreibung des Sicherheitsziels"
 
 #: securityobjectives/admin.py:315
 msgid "Security objective position"
-msgstr ""
+msgstr "Sicherheitszielposition"
 
 #: securityobjectives/admin.py:316
 msgid "Security objective priority"
-msgstr ""
+msgstr "Priorität der Sicherheitsziele"
 
 #: securityobjectives/admin.py:317
 msgid "maturity_level"
-msgstr ""
+msgstr "Reifegrad"
 
 #: securityobjectives/admin.py:318
 msgid "Security measure description"
-msgstr ""
+msgstr "Beschreibung der Sicherheitsmaßnahme"
 
 #: securityobjectives/admin.py:319
 msgid "Security measure evidence"
-msgstr ""
+msgstr "Nachweis von der Sicherheitsmaßnahme"
 
 #: securityobjectives/admin.py:355
 #, python-format
 msgid "Regulation '%(label)s' does not exist. Check your data."
 msgstr ""
+"Die Vorschrift '%(label)s' existiert nicht. Bitte überprüfen Sie Ihre Daten."
 
 #: securityobjectives/admin.py:370
 #, python-format
@@ -2234,11 +2249,14 @@ msgid ""
 "The standard '%(label)s' is not find for regulation '%(regulation)s' and "
 "this regulator."
 msgstr ""
+"Der Standard '%(label)s' passt nicht zur Vorschrift '%(regulation)s' und zu "
+"dieser Regulierungsbehörde."
 
 #: securityobjectives/admin.py:378
 #, python-format
 msgid "Several '%(label)s' have been found. Check your data."
 msgstr ""
+"Es wurden mehrere '%(label)s' gefunden. Bitte überprüfen Sie Ihre Daten."
 
 #: securityobjectives/admin.py:1001
 msgid "Standard of security objective and maturity level must be the same"
@@ -2255,11 +2273,11 @@ msgstr "Nicht bestanden"
 
 #: securityobjectives/forms.py:76
 msgid "All passed"
-msgstr ""
+msgstr "Alle bestanden"
 
 #: securityobjectives/forms.py:77
 msgid "All revision required"
-msgstr ""
+msgstr "Alle Überarbeitungen erforderlich"
 
 #: securityobjectives/forms.py:134 securityobjectives/forms.py:170
 msgid "Evaluation Framework"
@@ -2462,12 +2480,12 @@ msgstr "Beim Importieren der Deklarationsdatei ist ein Fehler aufgetreten."
 
 #: templates/admin/import_export_extensions/celery_export_results.html:7
 msgid "There are some errors during data exporting:"
-msgstr ""
+msgstr "Beim Datenexport treten einige Fehler auf:"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:16
 msgid "You can download exported data with following link"
-msgstr ""
+msgstr "Über den folgenden Link können Sie die exportierten Daten herunterladen"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:20
 msgid "Download export data"
-msgstr ""
+msgstr "Exportdaten herunterladen"
