@@ -2484,7 +2484,8 @@ msgstr "Beim Datenexport treten einige Fehler auf:"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:16
 msgid "You can download exported data with following link"
-msgstr "Über den folgenden Link können Sie die exportierten Daten herunterladen"
+msgstr ""
+"Über den folgenden Link können Sie die exportierten Daten herunterladen"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:20
 msgid "Download export data"
