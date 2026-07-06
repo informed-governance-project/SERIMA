@@ -5,6 +5,29 @@ All notable changes to SERIMA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.16] - 2026-07-06
+
+### Added
+- Conditional question options in incident notification forms: questions can now trigger/hide other question options based on the selected answer, with full history tracking via `ConditionalQuestionOptionsHistory` (#802)
+- RT connection test button and view for ObserverAdmin, mirroring the existing operator/regulator RT check (#783)
+- Temporary storage for regulator's comments in `WorkflowWizardView` until form submission (#812)
+- Autosave functionality for regulator's comment date in `WorkflowWizardView` (#820)
+
+### Fixed
+- RT URL encoding in `check_rt_config` to correctly handle special characters (#783)
+- Permission check added to `test_rt_connection_view` to return 404 if the user lacks change permission
+- `ReportLog` text now set in the application's default language, independent of the acting user's language (#803)
+- User session population migration now handles non-existing user IDs gracefully
+- Email addresses now base64-encoded to fix delivery with some webmail providers (#818)
+- Labels and conditions updated for `IncidentStatusForm` fields, including `is_significative_impact` (#819)
+
+### Changed
+- `django-parler` dependency switched from a Git-based reference to the published `>=2.4,<3` release constraint
+- Redis Docker image upgraded from `7-alpine` to `8-alpine`
+- `UserAdmin` form handling refactored to support the `change` parameter and adjusted fieldsets for `OperatorAdmin` (#798)
+- GitHub Actions workflows, docs, and scripts updated to reference `main` instead of `master`
+- Routine dependency updates (`poetry.lock`, `package-lock.json`, `docs/requirements-app.txt`)
+
 ## [0.5.15] - 2026-06-08
 
 ### Fixed
@@ -556,6 +579,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bootstrap 5 frontend
 
 
+[0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
 [0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15
 [0.5.14]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.13...v0.5.14
 [0.5.13]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.12...v0.5.13
