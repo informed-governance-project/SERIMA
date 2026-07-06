@@ -1,6 +1,6 @@
 {
   "name": "serima",
-  "version": "0.5.15",
+  "version": "0.5.16",
   "license": "AGPL-3.0",
   "private": true,
   "dependencies": {
