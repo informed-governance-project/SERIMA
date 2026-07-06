@@ -138,7 +138,11 @@ API is feature-flagged: set `API_ENABLED = True` in config to expose endpoints.
 
 ## Conventions
 
-- **Commit style**: `type: description` (feat, fix, refactor, docs, test, chore) or `[APP]Message`
+- **Commit style**: `type: description` (feat, fix, refactor, docs, test, chore) or `[APP]Message`, optionally with a sub-level tag: `[APP][sub-area]Message` (e.g. `[NI][views]`, `[NI][forms]`)
+  - `[NI]` — incident notification changes (`incidents/` folder)
+  - `[GOV]` — governance changes (`governanceplatform/` folder)
+  - `[SO]` — security objectives changes (`securityobjectives/` folder) — `reporting` branch only
+  - `[RG]` — reporting changes (`reporting/` folder) — `reporting` branch only
 - **Branch naming**: `feat/`, `fix/`, `test/`, `review/`, descriptive kebab-case
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
