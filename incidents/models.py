@@ -1216,8 +1216,30 @@ class Answer(models.Model):
         verbose_name = _("Answers")
 
 
-class RTTicket(models.Model):
-    incident = models.ForeignKey(Incident, on_delete=models.CASCADE)
-    ticket_id = models.CharField(max_length=50)
-    observer = models.ForeignKey("governanceplatform.Observer", on_delete=models.CASCADE)
+class ConnectorDelivery(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "pending", _("Pending")
+        SENT = "sent", _("Sent")
+        FAILED = "failed", _("Failed")
+
+    incident = models.ForeignKey(Incident, on_delete=models.CASCADE, related_name="connector_deliveries")
+    connector = models.ForeignKey(
+        "governanceplatform.ObserverConnector",
+        on_delete=models.CASCADE,
+        related_name="deliveries",
+        verbose_name=_("Connector"),
+    )
+    email = models.ForeignKey(Email, null=True, blank=True, on_delete=models.SET_NULL, verbose_name=_("Email template"))
+    external_ref = models.CharField(max_length=255, blank=True, default="")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, verbose_name=_("Status"))
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_error = models.TextField(blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Connector delivery")
+        verbose_name_plural = _("Connector deliveries")
+        indexes = [
+            models.Index(fields=["incident", "connector", "status"]),
+        ]
