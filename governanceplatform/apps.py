@@ -10,6 +10,7 @@ class GovernancePlatformConfig(AppConfig):
         import logging
 
         from . import signals  # noqa: F401
+        from .connectors import email, rt, webhook  # noqa: F401
 
         # Increasing weasyprint.process log level before weasyprint init
         logging.getLogger("weasyprint.progress").setLevel(logging.ERROR)
