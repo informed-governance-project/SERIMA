@@ -36,7 +36,7 @@ class NoReusePasswordValidator:
         return _("Your password must not match any previously used passwords.")
 
 
-def validate_rt_url(base_url: str):
+def validate_external_https_url(base_url: str):
     parsed = urlparse(base_url)
 
     if parsed.scheme != "https":
@@ -54,3 +54,7 @@ def validate_rt_url(base_url: str):
         raise ValidationError(_("Internal addresses are not allowed"))
 
     return True
+
+
+# Kept as an alias: migration 0056 references this name by dotted path.
+validate_rt_url = validate_external_https_url

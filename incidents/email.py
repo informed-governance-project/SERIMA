@@ -1,21 +1,18 @@
 import logging
 from datetime import date
-from urllib.parse import quote, urlparse
+from email.message import MIMEPart
 
-import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.core.validators import validate_email
+from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 
 from governanceplatform.helpers import render_to_string_multi_languages
-from governanceplatform.models import Observer, RegulatorUser
-from governanceplatform.validators import validate_rt_url
+from governanceplatform.models import ObserverConnector, RegulatorUser
 from incidents.globals import INCIDENT_EMAIL_VARIABLES
-
-from .models import RTTicket
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +70,7 @@ def replace_email_variables(content, incident):
     return modify_content
 
 
-def send_html_email(subject, content, recipient_list):
+def send_html_email(subject, content, recipient_list, attachments=None):
     valid_recipient_list = [email for email in recipient_list if is_valid_email(email)]
     if not valid_recipient_list:
         logger.warning(
@@ -89,6 +86,8 @@ def send_html_email(subject, content, recipient_list):
         bcc=valid_recipient_list,
     )
     email.content_subtype = "html"
+    for attachment in attachments or []:
+        email.attach(*attachment)
 
     try:
         sent_count = email.send()
@@ -114,6 +113,62 @@ def send_html_email(subject, content, recipient_list):
                 "sender": settings.EMAIL_SENDER,
             },
         )
+        return False
+
+
+class PGPMimeEmailMessage(EmailMessage):
+    """multipart/encrypted container per RFC 3156; the body is the ASCII-armored ciphertext."""
+
+    def __init__(self, subject, armored_message, from_email, bcc):
+        super().__init__(subject, "", from_email, bcc=bcc)
+        self.armored_message = armored_message
+
+    def message(self):
+        msg = super().message()
+        msg.clear_content()
+
+        version_part = MIMEPart(policy=msg.policy)
+        version_part.set_content(b"Version: 1\n", maintype="application", subtype="pgp-encrypted", cte="7bit")
+
+        encrypted_part = MIMEPart(policy=msg.policy)
+        encrypted_part.set_content(
+            self.armored_message.encode(),
+            maintype="application",
+            subtype="octet-stream",
+            cte="7bit",
+            disposition="inline",
+            filename="encrypted.asc",
+        )
+
+        msg["Content-Type"] = 'multipart/encrypted; protocol="application/pgp-encrypted"'
+        msg.set_payload([version_part, encrypted_part])
+        return msg
+
+
+def send_pgp_mime_email(subject, armored_message, recipient_list):
+    valid_recipient_list = [email for email in recipient_list if is_valid_email(email)]
+    if not valid_recipient_list:
+        logger.warning(
+            "Email not sent: no valid recipients",
+            extra={"original_recipients": recipient_list},
+        )
+        return False
+
+    email = PGPMimeEmailMessage(
+        subject,
+        armored_message,
+        settings.EMAIL_SENDER,
+        bcc=valid_recipient_list,
+    )
+
+    try:
+        sent_count = email.send()
+        if sent_count == 0:
+            logger.error("Encrypted email send returned 0 (no email sent)", extra={"subject": subject})
+            return False
+        return True
+    except Exception:
+        logger.exception("Encrypted email sending failed", extra={"subject": subject})
         return False
 
 
@@ -158,7 +213,7 @@ def get_recipient_list(incident):
     return recipient_list
 
 
-def send_email(email, incident, send_to_observers=False):
+def render_notification(email, incident):
     subject = replace_email_variables(
         email.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
         incident,
@@ -180,102 +235,28 @@ def send_email(email, incident, send_to_observers=False):
         content=email,
         object=incident,
     )
+    return subject, html_content
+
+
+def dispatch_observer_notifications(email, incident):
+    from .models import ConnectorDelivery
+    from .scripts.connector_delivery import run as deliver_connector_notification
+
+    connectors = ObserverConnector.objects.filter(is_active=True).select_related("observer")
+    for connector in connectors:
+        if connector.observer.can_access_incident(incident):
+            delivery = ConnectorDelivery.objects.create(incident=incident, connector=connector, email=email)
+            transaction.on_commit(lambda pk=delivery.pk: deliver_connector_notification.delay(pk))
+
+
+def send_email(email, incident, send_to_observers=False):
+    subject, html_content = render_notification(email, incident)
     recipient_list = get_recipient_list(incident)
 
     if send_to_observers:
-        observer_emails = []
-        observers = Observer.objects.all()
-        for observer in observers:
-            if observer.can_access_incident(incident):
-                if check_rt_config(observer):
-                    create_or_update_rt_ticket(observer, subject, html_content, incident)
-                else:
-                    # Observer's mail
-                    observer_emails.append(observer.email_for_notification)
-                    # Observer users' email
-                    observer_user_qs = observer.observeruser_set.all().select_related("user")
-                    observer_emails.extend(get_emails_from_qs(observer_user_qs))
-
-        recipient_list.extend(observer_emails)
+        dispatch_observer_notifications(email, incident)
 
     # Remove duplicates
     recipient_list = list(dict.fromkeys(recipient_list))
 
     send_html_email(subject, html_content, recipient_list)
-
-
-def create_or_update_rt_ticket(recipient, subject, content, incident):
-    base_url = recipient.rt_url.rstrip("/")
-    try:
-        validate_rt_url(base_url)
-    except ValidationError:
-        logger.error("Blocked unsafe RT URL: %s", base_url)
-        return
-
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": f"token {recipient.rt_token}",
-    }
-
-    try:
-        ticket = RTTicket.objects.filter(incident=incident, observer=recipient).first()
-        is_new_ticket = ticket is None
-        if is_new_ticket:
-            url = f"{base_url}/REST/2.0/ticket"
-            payload = {
-                "Requestor": settings.EMAIL_SENDER,
-                "Queue": recipient.rt_queue,
-                "Subject": subject,
-                "Content": content,
-                "ContentType": "text/html",
-            }
-        else:
-            url = f"{base_url}/REST/2.0/ticket/{ticket.ticket_id}/correspond"
-            payload = {
-                "Content": content,
-                "ContentType": "text/html",
-            }
-
-        response = requests.post(url, json=payload, headers=headers, timeout=5)
-
-        if response.ok:
-            if is_new_ticket and response.status_code == 201:
-                ticket_data = response.json()
-                RTTicket.objects.create(
-                    incident=incident,
-                    observer=recipient,
-                    ticket_id=ticket_data.get("id"),
-                )
-        else:
-            logger.error("RT API Error %s: %s", response.status_code, response.text)
-    except requests.RequestException as e:
-        logger.error("Error connecting to RT API: %s", e)
-
-
-def check_rt_config(observer):
-    if not observer.rt_url or not observer.rt_queue or not observer.rt_token:
-        return False
-
-    parsed = urlparse(observer.rt_url)
-    base_url = f"{parsed.scheme}://{parsed.netloc}"
-    encoded_queue = quote(observer.rt_queue, safe="")
-    url = f"{base_url}/REST/2.0/queue/{encoded_queue}"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"token {observer.rt_token}",
-    }
-    try:
-        response = requests.get(url, headers=headers, timeout=5)
-        if response.status_code == 200:
-            return True
-        if response.status_code == 401:
-            logger.warning("RT token unauthorized (401) for %s", str(observer))
-        elif response.status_code == 404:
-            logger.warning("RT queue '%s' not found at %s", observer.rt_queue, url)
-        else:
-            logger.warning("Unexpected RT response (%s): %s", response.status_code, response.text)
-        return False
-    except requests.RequestException as e:
-        logger.error("Error connecting to RT API: %s", e)
-        return False
