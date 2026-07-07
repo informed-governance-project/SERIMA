@@ -248,8 +248,6 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 WSGI_APPLICATION = "governanceplatform.wsgi.application"
 
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -552,12 +550,12 @@ try:
 except AttributeError:
     CAPTCHA_FONT_SIZE = 30
 
-# key to store the token for connection to RT
-# python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key())'
+# key to encrypt observer connector secrets; the fallback chain keeps
+# ciphertext migrated from the legacy RT token decryptable
 try:
-    RT_SECRET_KEY = config.RT_SECRET_KEY
+    CONNECTOR_SECRET_KEY = config.CONNECTOR_SECRET_KEY
 except AttributeError:
-    RT_SECRET_KEY = HASH_KEY
+    CONNECTOR_SECRET_KEY = HASH_KEY
 
 try:
     DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT = config.DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT
@@ -581,6 +579,7 @@ except AttributeError:
         "CACHE_MIDDLEWARE_ALIAS",
         "CACHE_MIDDLEWARE_KEY_PREFIX",
         "CACHE_MIDDLEWARE_SECONDS",
+        "CONNECTOR_SECRET_KEY",
         "CSRF_COOKIE_DOMAIN",
         "CSRF_FAILURE_VIEW",
         "CSRF_TRUSTED_ORIGINS",
@@ -645,7 +644,6 @@ except AttributeError:
         "REFERRER_POLICY",
         "REST_FRAMEWORK",
         "ROOT_URLCONF",
-        "RT_SECRET_KEY",
         "SECRET_KEY",
         "SECRET_KEY_FALLBACKS",
         "SECURE_CROSS_ORIGIN_OPENER_POLICY",
