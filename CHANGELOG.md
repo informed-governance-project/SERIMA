@@ -5,6 +5,25 @@ All notable changes to SERIMA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Pluggable observer connector framework (`ObserverConnector`): each observer can have multiple active connectors that all fire on incident notification, with per-connector configuration and encrypted secrets
+- Generic webhook connector: HTTPS POST of the incident notification as JSON, HMAC-SHA256 signed (`X-Serima-Signature` / `X-Serima-Timestamp` headers)
+- Email connector with optional GPG encryption (PGP/MIME, fail-closed — never sends plaintext when a key is configured) and optional incident-data JSON attachment
+- Connector delivery tracking (`ConnectorDelivery`) with status, attempts and last error, visible per incident
+- Per-connector "Test connection" button in the admin, replacing the RT-only one
+
+### Changed
+
+- Observer notifications (RT tickets, observer emails) are now delivered asynchronously via Celery with automatic retries instead of blocking the incident submission request; a running Celery worker is now required for observer notifications
+- Observers with a working RT configuration no longer silently fall back to email when RT is unreachable — deliveries are retried and failures recorded
+
+### Removed
+
+- `rt_url` / `rt_token` / `rt_queue` fields on Observer and the `RTTicket` model; existing RT configurations and tickets are migrated automatically to the new connector structure
+
 ## [0.5.16] - 2026-07-06
 
 ### Added
@@ -666,6 +685,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[Unreleased]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...HEAD
 [0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
 [0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15
 [0.5.14]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.13...v0.5.14
