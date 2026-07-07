@@ -99,7 +99,10 @@ def test_roles_addition_rights(otp_client, populate_db):
     ]
     for url_path in list_admin_add_urls("governanceplatform"):
         url = "/" + url_path
-        if any(model in url_path for model in platform_admin_rights):
+        if "observerconnector" in url_path:
+            authorized_users = [user for user in users if user_in_group(user, "ObserverAdmin")]
+            test_get_with_otp(otp_client, users, authorized_users, [], url)
+        elif any(model in url_path for model in platform_admin_rights):
             authorized_users = [user for user in users if user_in_group(user, "PlatformAdmin")]
             test_get_with_otp(otp_client, users, authorized_users, [], url)
         elif url_path == "sector":
