@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Python
     python3.12 \
     python3-pip \
+    # GPG-encrypted observer email notifications (python-gnupg)
+    gnupg \
     # LibreOffice — for document conversion
     python3-uno \
     libreoffice-writer \
