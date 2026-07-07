@@ -1,5 +1,5 @@
-function testRTConnection(url) {
-    const result = document.getElementById("rt-test-result");
+function testConnectorConnection(url) {
+    const result = document.getElementById("connector-test-result");
     result.textContent = gettext("Testing…");
     result.style.color = "#666";
     fetch(url, {
@@ -21,9 +21,9 @@ function testRTConnection(url) {
 
 
 document.addEventListener("click", function (event) {
-    const button = event.target.closest(".rt-test-btn");
+    const button = event.target.closest(".connector-test-btn");
     if (!button) return;
 
     const url = button.dataset.url;
-    testRTConnection(url);
+    testConnectorConnection(url);
 });
