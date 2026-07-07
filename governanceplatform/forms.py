@@ -14,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.forms import TranslatableModelForm
 
 from .email import Base64EmailMultiAlternatives
+from .models import ObserverConnector
 
 User = get_user_model()
 logger = logging.getLogger("django.contrib.auth")
@@ -320,38 +321,46 @@ class ContactForm(forms.Form):
             self.fields["phone"].initial = user.phone_number
 
 
-class CustomObserverAdminForm(CustomTranslatableAdminForm):
+class ObserverConnectorAdminForm(forms.ModelForm):
+    class Meta:
+        model = ObserverConnector
+        fields = ["observer", "connector_type", "name", "is_active"]
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        instance = kwargs.get("instance")
-        if instance and instance.rt_token:
-            self.fields["rt_token"].widget = forms.TextInput(attrs={"type": "password", "class": "vTextField"})
+        instance = self.instance if self.instance and self.instance.pk else None
+        if not instance:
+            return
 
-            self.fields["rt_token"].help_text = _(
-                "A token is already set. To remove it, clear the field and save. To update it, enter a new token."
+        for field_name in self.fields:
+            if field_name.startswith("config__"):
+                config_key = field_name.removeprefix("config__")
+                self.initial[field_name] = instance.config.get(config_key, self.fields[field_name].initial)
+
+        if "secret" in self.fields and instance.secret:
+            self.fields["secret"].widget = forms.TextInput(attrs={"type": "password", "class": "vTextField"})
+            self.fields["secret"].help_text = _(
+                "A secret is already set. To remove it, clear the field and save. To update it, enter a new one."
             )
+            self.initial["secret"] = "*" * len(instance.secret)
 
-            try:
-                self.fields["rt_token"].initial = "*" * len(self.instance.rt_token)
-            except Exception:
-                self.fields["rt_token"].initial = ""
-
-    rt_token = forms.CharField(
-        widget=forms.PasswordInput(render_value=False, attrs={"class": "vTextField"}),
-        required=False,
-        label=_("Token"),
-    )
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.instance and self.instance.pk:
+            self.instance.config = {
+                name.removeprefix("config__"): value for name, value in cleaned_data.items() if name.startswith("config__")
+            }
+        return cleaned_data
 
     def save(self, commit=True):
         obj = super().save(commit=False)
-        val = self.cleaned_data.get("rt_token")
-        if val:
-            if set(val) == {"*"}:
-                obj.rt_token = obj.rt_token  # keep the existing token
+        if "secret" in self.fields:
+            val = self.cleaned_data.get("secret")
+            if val:
+                if set(val) != {"*"}:
+                    obj.secret = val  # use the encrypting setter
             else:
-                obj.rt_token = val  # use the setter
-        else:
-            obj.rt_token = None
+                obj.secret = None
         if commit:
             obj.save()
         return obj
