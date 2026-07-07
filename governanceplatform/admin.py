@@ -25,9 +25,9 @@ from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 from incidents.decorators import check_user_is_correct
-from incidents.email import check_rt_config, send_html_email
+from incidents.email import send_html_email
 
-from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
+from .forms import CustomTranslatableAdminForm, ObserverConnectorAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     generate_display_methods,
@@ -47,6 +47,7 @@ from .models import (  # OperatorType,; Service,
     EntityCategory,
     Functionality,
     Observer,
+    ObserverConnector,
     ObserverRegulation,
     ObserverUser,
     Regulation,
@@ -1345,9 +1346,20 @@ class ObserverUserInline(admin.TabularInline):
         return readonly_fields
 
 
+class ObserverConnectorInline(admin.TabularInline):
+    model = ObserverConnector
+    fields = ("name", "connector_type", "is_active")
+    readonly_fields = ("name", "connector_type", "is_active")
+    show_change_link = True
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Observer, site=admin_site)
 class ObserverAdmin(CustomTranslatableAdmin):
-    form = CustomObserverAdminForm
     list_display = [
         "name_display",
         "full_name_display",
@@ -1367,10 +1379,11 @@ class ObserverAdmin(CustomTranslatableAdmin):
     inlines = (
         ObserverUserInline,
         ObserverRegulationInline,
+        ObserverConnectorInline,
     )
 
     def get_fieldsets(self, request, obj=None):
-        base_fieldsets = [
+        return [
             (
                 None,
                 {
@@ -1387,19 +1400,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
                 },
             ),
         ]
-
-        if is_observer_user(request.user):
-            base_fieldsets.append(
-                (
-                    "RT Configuration",
-                    {
-                        "classes": ["collapse"],
-                        "fields": ["rt_url", "rt_token", "rt_queue", "rt_test_button"],
-                    },
-                )
-            )
-
-        return base_fieldsets
 
     def has_change_permission(self, request, obj=None):
         user = request.user
@@ -1425,39 +1425,99 @@ class ObserverAdmin(CustomTranslatableAdmin):
         if not user_in_group(user, "PlatformAdmin"):
             readonly_fields += ("is_receiving_all_incident", "functionalities")
 
-        if obj and obj.pk and is_observer_user(user):
-            readonly_fields += ("rt_test_button",)
-
         return readonly_fields
 
+
+@admin.register(ObserverConnector, site=admin_site)
+class ObserverConnectorAdmin(admin.ModelAdmin):
+    form = ObserverConnectorAdminForm
+    list_display = ["name", "observer", "connector_type", "is_active"]
+    list_filter = ["connector_type", "is_active"]
+
+    def get_fields(self, request, obj=None):
+        fields = ["observer", "connector_type", "name", "is_active"]
+        if obj is None:
+            return fields
+
+        impl = obj.get_impl()
+        fields += [f"config__{field_name}" for field_name in impl.config_form().fields]
+        if impl.requires_secret:
+            fields.append("secret")
+        fields.append("test_button")
+        return fields
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is not None:
+            impl = obj.get_impl()
+            # per-type fields must be declared on the form class for modelform_factory
+            attrs = {f"config__{field_name}": field for field_name, field in impl.config_form().fields.items()}
+            if impl.requires_secret:
+                attrs["secret"] = forms.CharField(
+                    widget=forms.PasswordInput(render_value=False, attrs={"class": "vTextField"}),
+                    required=False,
+                    label=impl.secret_label,
+                )
+            kwargs["form"] = type(self.form)("DynamicObserverConnectorAdminForm", (self.form,), attrs)
+        return super().get_form(request, obj, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ()
+        return ("connector_type", "test_button")
+
+    def has_change_permission(self, request, obj=None):
+        user = request.user
+        if user_in_group(user, "ObserverAdmin") and obj and obj.observer != user.observers.first():
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        user = request.user
+        if user_in_group(user, "ObserverAdmin") and obj and obj.observer != user.observers.first():
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        user = request.user
+        if user_in_group(user, "ObserverAdmin"):
+            return queryset.filter(observer__user=user)
+
+        return queryset
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "observer" and user_in_group(request.user, "ObserverAdmin"):
+            kwargs["queryset"] = Observer.objects.filter(user=request.user)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     @admin.display(description="")
-    def rt_test_button(self, obj):
+    def test_button(self, obj):
         if not obj or not obj.pk:
             return ""
-        url = reverse("admin:observer-test-rt-connection", args=[obj.pk])
+        url = reverse("admin:observerconnector-test-connection", args=[obj.pk])
         return format_html(
             """
-            <button type="button" class="button rt-test-btn" data-url="{}">{}</button>
-            <span id="rt-test-result"></span>
-            <p id="rt-test-help" class="help">{}</p>
+            <button type="button" class="button connector-test-btn" data-url="{}">{}</button>
+            <span id="connector-test-result"></span>
+            <p id="connector-test-help" class="help">{}</p>
             """,
             url,
-            _("Test RT Connection"),
-            _("Before testing the connection, make sure to save the RT configuration."),
+            _("Test connection"),
+            _("Before testing the connection, make sure to save the configuration."),
         )
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<int:observer_id>/test-rt-connection/",
-                self.admin_site.admin_view(self.test_rt_connection_view),
-                name="observer-test-rt-connection",
+                "<int:connector_id>/test-connection/",
+                self.admin_site.admin_view(self.test_connection_view),
+                name="observerconnector-test-connection",
             ),
         ]
         return custom_urls + urls
 
-    def test_rt_connection_view(self, request, observer_id):
+    def test_connection_view(self, request, connector_id):
         if not self.has_change_permission(request):
             raise Http404()
 
@@ -1465,24 +1525,21 @@ class ObserverAdmin(CustomTranslatableAdmin):
             return JsonResponse({"success": False, "message": _("Method not allowed.")}, status=405)
 
         try:
-            observer = Observer.objects.get(pk=observer_id)
-        except Observer.DoesNotExist:
-            return JsonResponse({"success": False, "message": _("Observer not found.")}, status=404)
+            connector = ObserverConnector.objects.get(pk=connector_id)
+        except ObserverConnector.DoesNotExist:
+            return JsonResponse({"success": False, "message": _("Connector not found.")}, status=404)
 
         user = request.user
 
-        if not (user_in_group(user, "ObserverAdmin") and observer == user.observers.first()):
+        if not (user_in_group(user, "ObserverAdmin") and connector.observer == user.observers.first()):
             return JsonResponse({"success": False, "message": _("Permission denied.")}, status=403)
 
-        ok = check_rt_config(observer)
-        if ok:
-            return JsonResponse({"success": True, "message": _("RT connection successful.")})
-
-        return JsonResponse({"success": False, "message": _("RT connection failed. Check URL, queue and token.")})
+        ok, message = connector.get_impl().test_connection()
+        return JsonResponse({"success": ok, "message": message})
 
     class Media:
-        js = ("admin/js/rt_test_button.js",)
-        css = {"all": ("admin/css/rt_test_button.css",)}
+        js = ("admin/js/connector_test_button.js",)
+        css = {"all": ("admin/css/connector_test_button.css",)}
 
 
 for name, method in generate_display_methods(["name", "full_name", "description"]).items():
