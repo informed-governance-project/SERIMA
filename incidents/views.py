@@ -21,7 +21,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
-from django.utils.translation import get_language
+from django.utils.dateparse import parse_datetime
+from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
 from django_countries import countries
@@ -59,7 +60,7 @@ from governanceplatform.settings import (
 from .decorators import check_user_is_correct, regulator_role_required
 from .email import send_email, send_html_email
 from .filters import IncidentFilter
-from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, get_forms_list
+from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
 from .globals import (
     ALLOWED_SORT_FIELDS,
     REGIONAL_AREA,
@@ -818,14 +819,14 @@ def export_incidents(request):
                     "Legal basis": str(incident.sector_regulation.regulation),
                     "Significative impact": ("yes" if incident.is_significative_impact else "no"),
                     "Incident Status": incident.get_incident_status_display(),
-                    "Incident notification manager": ", ".join(
+                    "Contact Information": ", ".join(
                         [
                             f"{incident.contact_firstname} {incident.contact_lastname}",
                             incident.contact_email,
                             incident.contact_telephone,
                         ]
                     ),
-                    "Incident technical contact": ", ".join(
+                    "Technical Contact Information": ", ".join(
                         [
                             f"{incident.technical_firstname} {incident.technical_lastname}",
                             incident.technical_email,
@@ -1415,6 +1416,7 @@ class WorkflowWizardView(SessionWizardView):
                         initial=initial,
                         widget=forms.TextInput(attrs=form.fields[field].widget.attrs),
                     )
+                    new_field.is_conditional = form.fields[field].is_conditional
                     form.fields[field] = new_field
 
         else:
@@ -1429,6 +1431,8 @@ class WorkflowWizardView(SessionWizardView):
     def get_context_data(self, form, **kwargs):
         user = self.request.user
         context = super().get_context_data(form=form, **kwargs)
+        raw_date = self.storage.extra_data.get("autosave_comment_date")
+        context["autosave_comment_date"] = parse_datetime(raw_date) if raw_date else None
 
         if self.workflow is not None:
             context["action"] = "Edit" if self.read_only or (is_user_regulator(user) and not self.is_regulator_incident) else "Create"
@@ -1468,6 +1472,12 @@ class WorkflowWizardView(SessionWizardView):
                     continue
                 form = self.get_form(step)
                 self.storage.set_step_data(step, self.process_step(form))
+
+        # Temporarily store the regulator's comment until the form is submitted
+        if not self.read_only and isinstance(form, RegulatorIncidentWorkflowCommentForm):
+            autosave_date = timezone.now()
+            self.storage.set_step_data(current_step, self.process_step(form))
+            self.storage.extra_data["autosave_comment_date"] = autosave_date.isoformat()
 
         return super().render_goto_step(goto_step, **kwargs)
 
@@ -1526,17 +1536,15 @@ class WorkflowWizardView(SessionWizardView):
                     )
             if review_status is not None:
                 incident_workflow.review_status = review_status
-                review_status_txt = next(
-                    (label for code, label in WORKFLOW_REVIEW_STATUS if code == review_status),
-                    None,
-                )
-                create_entry_log(
-                    user,
-                    self.incident,
-                    incident_workflow,
-                    "REVIEW STATUS: " + review_status_txt,
-                    self.request,
-                )
+                with override(PARLER_DEFAULT_LANGUAGE_CODE):
+                    status_label = dict(WORKFLOW_REVIEW_STATUS).get(review_status, "")
+                    create_entry_log(
+                        user,
+                        self.incident,
+                        incident_workflow,
+                        f"REVIEW STATUS: {status_label}",
+                        self.request,
+                    )
             incident_workflow.save()
             create_entry_log(
                 user,
@@ -1568,6 +1576,12 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
 
         incident.save()
 
+    question_options_map = (
+        QuestionOptions.objects.filter(report=workflow).select_related("question").prefetch_related("conditional_targets").in_bulk()
+    )
+
+    all_predefined_answer_ids = {int(val) for v in questions_data.values() if isinstance(v, list) for val in v if str(val).isdigit()}
+
     for key, value in questions_data.items():
         question_id = None
         try:
@@ -1575,24 +1589,27 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
         except (ValueError, TypeError):
             continue
         if question_id:
-            predefined_answers = []
-            question_option = QuestionOptions.objects.get(pk=key)
+            question_option = question_options_map.get(question_id)
             question = question_option.question
             question_type = question.question_type
+
+            # Check if predefined answer was selected for conditional questions
+            if question_option.is_conditional:
+                required_predefined_answers_list = {c.predefined_answer_id for c in question_option.conditional_targets.all()}
+                if not required_predefined_answers_list.intersection(all_predefined_answer_ids):
+                    continue
+
+            predefined_answers = []
 
             if question_type == "FREETEXT":
                 answer = value
             elif question_type == "DATE":
-                if value:
-                    answer = value.strftime("%Y-%m-%d %H:%M")
-                else:
-                    answer = None
+                answer = value.strftime("%Y-%m-%d %H:%M") if value else None
             elif question_type == "CL" or question_type == "RL":
                 answer = ",".join(map(str, value))
             else:  # MULTI
-                for val in value:
-                    predefined_answers.append(PredefinedAnswer.objects.get(pk=val))
-                answer = questions_data.get(key + "_freetext_answer", None)
+                predefined_answers = list(PredefinedAnswer.objects.filter(pk__in=value))
+                answer = questions_data.get(f"{key}_freetext_answer", None)
             answer_object = Answer.objects.create(
                 incident_workflow=incident_workflow,
                 question_options=question_option,

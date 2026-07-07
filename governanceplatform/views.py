@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
 from django.core.mail import EmailMessage
@@ -18,6 +17,7 @@ from incidents.decorators import check_user_is_correct
 from .context_processors import user_modules
 from .forms import (
     ContactForm,
+    CustomPasswordResetForm,
     CustomUserChangeForm,
     RegistrationForm,
     SelectCompany,
@@ -159,7 +159,7 @@ def registration_view(request, *args, **kwargs):
             user.groups.add(new_group)
 
             # Send password reset email
-            reset_form = PasswordResetForm({"email": user.email})
+            reset_form = CustomPasswordResetForm({"email": user.email})
             if reset_form.is_valid():
                 reset_form.save(
                     request=request,

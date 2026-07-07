@@ -103,8 +103,18 @@ docker/               Docker + docker-compose files
 docs/                 Sphinx documentation
 locale/               .po translation files (en, fr, nl, de)
 templates/            HTML templates (base, registration, incidents…)
-theme/                External theme repo (not committed here)
+theme/                Separate git clone, gitignored from this repo — see below
 ```
+
+## Frontend (theme repo)
+
+**All frontend code (templates, static assets, CSS/JS, theme-level translations) lives in a separate repo checked out at `theme/`.** It is a standalone git clone (not a submodule) and is gitignored from the main `serima` repo — changes made inside `theme/` must be committed and pushed from within that directory, not from `serima`.
+
+- Remotes: `origin` → `informed-governance-project/default-theme` (upstream default theme), `serimabe-theme` → `informed-governance-project/serimabe-theme` (NC3/SERIMA-specific fork)
+- Working branch there is typically `dev`
+- Contains its own `templates/`, `static/`, `locale/`, `docker/`, and `globals.py`
+
+When a task touches UI/frontend (templates, CSS, JS, static assets), check `theme/` first — it likely overrides or supplies the actual rendered templates rather than `serima/templates/`.
 
 ## Translations (django-parler)
 
@@ -138,10 +148,14 @@ API is feature-flagged: set `API_ENABLED = True` in config to expose endpoints.
 
 ## Conventions
 
-- **Commit style**: `type: description` (feat, fix, refactor, docs, test, chore) or `[APP]Message`
+- **Commit style**: `type: description` (feat, fix, refactor, docs, test, chore) or `[APP]Message`, optionally with a sub-level tag: `[APP][sub-area]Message` (e.g. `[NI][views]`, `[NI][forms]`)
+  - `[NI]` — incident notification changes (`incidents/` folder)
+  - `[GOV]` — governance changes (`governanceplatform/` folder)
+  - `[SO]` — security objectives changes (`securityobjectives/` folder) — `reporting` branch only
+  - `[RG]` — reporting changes (`reporting/` folder) — `reporting` branch only
 - **Branch naming**: `feat/`, `fix/`, `test/`, `review/`, descriptive kebab-case
-- **Main branch**: `master`
-- **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `master`. `master` is updated only via releases.
+- **Main branch**: `main`
+- **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
 - **Python style**: Black + isort (configured in pyproject.toml)
 - **Linting**: flake8
 

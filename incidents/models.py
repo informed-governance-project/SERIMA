@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 
 import pytz
 from django.contrib import admin
-from django.db import models
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.db.models import Deferrable
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -11,6 +12,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from governanceplatform.settings import TIME_ZONE
 
 from .globals import (
+    CONDITIONAL_QUESTION_TYPES,
     INCIDENT_EMAIL_TRIGGER_EVENT,
     INCIDENT_STATUS,
     QUESTION_TYPES,
@@ -483,7 +485,7 @@ class Incident(models.Model):
     incident_notification_date = models.DateTimeField(default=timezone.now)
     incident_detection_date = models.DateTimeField(blank=True, null=True)
     incident_last_update = models.DateTimeField(blank=True, null=True)
-    company_name = models.CharField(max_length=100, verbose_name=_("Name of the Operator"))
+    company_name = models.CharField(max_length=100, verbose_name=_("Legal Entity Name"))
     company = models.ForeignKey(
         "governanceplatform.Company",
         verbose_name=_("Operator"),
@@ -974,10 +976,13 @@ class QuestionCategoryOptions(models.Model):
 # save the history of the question inside a report
 # we save only the changes, the deletion is managed
 # in QuestionOptions
+
+
 class QuestionOptionsHistory(models.Model):
     timestamp = models.DateTimeField(verbose_name=_("Timestamp"), default=timezone.now)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     is_mandatory = models.BooleanField(default=False, verbose_name=_("Mandatory"))
+    is_conditional = models.BooleanField(default=False, verbose_name=_("Conditional display"))
     position = models.IntegerField(verbose_name=_("Position"))
     category_option = models.ForeignKey(
         QuestionCategoryOptions,
@@ -989,10 +994,118 @@ class QuestionOptionsHistory(models.Model):
         return str(self.question) or ""
 
 
+class ConditionalQuestionOptionsHistory(models.Model):
+    question_options_history = models.ForeignKey(
+        QuestionOptionsHistory,
+        on_delete=models.CASCADE,
+        related_name="conditional_maps",
+    )
+    timestamp = models.DateTimeField(verbose_name=_("Timestamp"), default=timezone.now)
+    question_options_id = models.IntegerField()
+    predefined_answer_id = models.IntegerField()
+    next_question_options_id = models.IntegerField()
+
+
+class ConditionalQuestionOption(models.Model):
+    question_options = models.ForeignKey(
+        "QuestionOptions",
+        verbose_name=_("Question"),
+        on_delete=models.CASCADE,
+        related_name="conditional_triggers",
+    )
+    predefined_answer = models.ForeignKey(
+        PredefinedAnswer,
+        verbose_name=_("Selected answer"),
+        on_delete=models.CASCADE,
+        related_name="conditional_questions",
+    )
+    next_question_options = models.ForeignKey(
+        "QuestionOptions",
+        verbose_name=_("Next question"),
+        on_delete=models.CASCADE,
+        related_name="conditional_targets",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    deleted_at = models.DateTimeField(verbose_name=_("Deleted at"), default=None, blank=True, null=True)
+
+    # name of the regulator who create the object
+    creator_name = models.CharField(
+        verbose_name=_("Creator name"),
+        max_length=255,
+        blank=True,
+        default=None,
+        null=True,
+    )
+    creator = models.ForeignKey(
+        "governanceplatform.regulator",
+        verbose_name=_("Creator"),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None,
+    )
+
+    def clean(self):
+        if self.question_options_id and self.predefined_answer_id:
+            if self.predefined_answer.question_id != self.question_options.question_id:
+                raise ValidationError(_("The selected answer does not belong to this question."))
+
+        if self.question_options_id and self.question_options.question.question_type not in CONDITIONAL_QUESTION_TYPES:
+            raise ValidationError(_("Conditional questions are only available for single and multiple choice questions."))
+
+        if self.question_options_id and self.next_question_options_id:
+            if self.question_options.category_option.question_category_id != (
+                self.next_question_options.category_option.question_category_id
+            ):
+                raise ValidationError(_("The conditional question must be in the same category as the current question."))
+
+            if self.question_options_id == self.next_question_options_id:
+                raise ValidationError(_("A question cannot redirect to itself."))
+
+            if ConditionalQuestionOption.objects.filter(question_options=self.next_question_options_id).exclude(pk=self.pk).exists():
+                raise ValidationError(
+                    _(
+                        "The target question is already used as a trigger in another "
+                        "conditional jump. Conditional questions are limited to one "
+                        "level of depth."
+                    )
+                )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def is_in_use(self, *args, **kwargs):
+        base_qs = Answer.objects.filter(timestamp__gt=self.created_at)
+        has_trigger_answer = base_qs.filter(
+            question_options=self.question_options,
+            predefined_answers=self.predefined_answer,
+        ).exists()
+        has_next_answer = base_qs.filter(
+            question_options=self.next_question_options,
+        ).exists()
+
+        return has_trigger_answer and has_next_answer
+
+    def __str__(self):
+        return f"{self.question_options} -> [{self.predefined_answer}] -> {self.next_question_options}"
+
+    class Meta:
+        verbose_name_plural = _("Conditional questions")
+        verbose_name = _("Conditional question")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["question_options", "predefined_answer"],
+                name="Unique_ConditionalQuestionOption_per_answer",
+            ),
+        ]
+
+
 class QuestionOptions(models.Model):
     report = models.ForeignKey(Workflow, on_delete=models.CASCADE, null=True, blank=True)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     is_mandatory = models.BooleanField(default=False, verbose_name=_("Mandatory"))
+    is_conditional = models.BooleanField(default=False, verbose_name=_("Conditional display"))
     position = models.IntegerField(verbose_name=_("Position"))
     category_option = models.ForeignKey(
         QuestionCategoryOptions,
@@ -1011,28 +1124,62 @@ class QuestionOptions(models.Model):
     def delete(self, *args, **kwargs):
         in_use = self.answer_set.exists()
         if in_use:
+            now = timezone.now()
+            self.conditional_triggers.update(deleted_at=now)
+            self.conditional_targets.update(deleted_at=now)
             self.deleted_date = timezone.now()
             self.save()
         else:
             super().delete(*args, **kwargs)
 
+    def clean(self):
+        if self.is_mandatory and self.is_conditional:
+            raise ValidationError(_("A question cannot be both mandatory and conditionally displayed."))
+
     def save(self, *args, **kwargs):
         if self.pk and self.answer_set.exists() and not self.is_deleted():
             old = QuestionOptions.objects.get(pk=self.pk)
 
-            if (
-                old.question != self.question
-                or old.is_mandatory != self.is_mandatory
-                or old.position != self.position
-                or old.category_option != self.category_option
-            ):
-                history = QuestionOptionsHistory.objects.create(
-                    question=old.question,
-                    is_mandatory=old.is_mandatory,
-                    position=old.position,
-                    category_option=old.category_option,
-                )
-                self.historic.add(history)
+            structural_change = (
+                old.question != self.question or old.is_conditional != self.is_conditional or old.category_option != self.category_option
+            )
+
+            secondary_change = old.is_mandatory != self.is_mandatory or old.position != self.position
+
+            if structural_change or secondary_change:
+                with transaction.atomic():
+                    history = QuestionOptionsHistory.objects.create(
+                        question=old.question,
+                        is_mandatory=old.is_mandatory,
+                        is_conditional=old.is_conditional,
+                        position=old.position,
+                        category_option=old.category_option,
+                    )
+
+                    self.historic.add(history)
+
+                    triggers = (
+                        old.conditional_triggers.all()
+                        if old.conditional_triggers.exists()
+                        else old.conditional_targets.all()
+                        if old.conditional_targets.exists()
+                        else None
+                    )
+
+                    if triggers and structural_change:
+                        ConditionalQuestionOptionsHistory.objects.bulk_create(
+                            [
+                                ConditionalQuestionOptionsHistory(
+                                    question_options_history=history,
+                                    question_options_id=c.question_options_id,
+                                    predefined_answer_id=c.predefined_answer_id,
+                                    next_question_options_id=c.next_question_options_id,
+                                )
+                                for c in triggers
+                            ]
+                        )
+
+                        triggers.delete()
 
         if not self.is_deleted():
             self.updated_at = timezone.now()

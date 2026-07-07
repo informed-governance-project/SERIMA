@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
@@ -9,10 +11,11 @@ from django.db import transaction
 from django.db.models import Count, Exists, Max, Model, OuterRef, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
-from django.urls import path
+from django.urls import path, reverse
 from django.utils import translation
+from django.utils.html import format_html
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from django_otp import devices_for_user, user_has_device
@@ -22,7 +25,7 @@ from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 from incidents.decorators import check_user_is_correct
-from incidents.email import send_html_email
+from incidents.email import check_rt_config, send_html_email
 
 from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
 from .formset import CompanyUserInlineFormset
@@ -878,7 +881,7 @@ class UserAdmin(admin.ModelAdmin):
     change_list_template = "admin/reset_accepted_terms.html"
 
     # manage the administrator field for operatorAdmin
-    def get_form(self, request, obj=None, **kwargs):
+    def get_form(self, request, obj=None, change=False, **kwargs):
 
         if not obj and user_in_group(request.user, "OperatorAdmin"):
 
@@ -891,7 +894,7 @@ class UserAdmin(admin.ModelAdmin):
 
             kwargs["form"] = DynamicForm
 
-        return super().get_form(request, obj, **kwargs)
+        return super().get_form(request, obj, change, **kwargs)
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -965,15 +968,14 @@ class UserAdmin(admin.ModelAdmin):
         return readonly_fields
 
     def get_fieldsets(self, request, obj=None):
-
-        if not obj and user_in_group(request.user, "OperatorAdmin"):
-            fields = list(self.standard_fieldsets[0][1]["fields"])
-            if "is_administrator" not in fields:
-                fields.append("is_administrator")
-            self.standard_fieldsets[0][1]["fields"] = fields
-            return self.standard_fieldsets
         if not obj:
-            return self.standard_fieldsets
+            fieldsets = deepcopy(self.standard_fieldsets)
+            if user_in_group(request.user, "OperatorAdmin"):
+                fields = list(fieldsets[0][1]["fields"])
+                if "is_administrator" not in fields:
+                    fields.append("is_administrator")
+                fieldsets[0][1]["fields"] = fields
+            return fieldsets
 
         user = request.user
         use_admin_fieldsets = False
@@ -1392,7 +1394,7 @@ class ObserverAdmin(CustomTranslatableAdmin):
                     "RT Configuration",
                     {
                         "classes": ["collapse"],
-                        "fields": ["rt_url", "rt_token", "rt_queue"],
+                        "fields": ["rt_url", "rt_token", "rt_queue", "rt_test_button"],
                     },
                 )
             )
@@ -1423,7 +1425,64 @@ class ObserverAdmin(CustomTranslatableAdmin):
         if not user_in_group(user, "PlatformAdmin"):
             readonly_fields += ("is_receiving_all_incident", "functionalities")
 
+        if obj and obj.pk and is_observer_user(user):
+            readonly_fields += ("rt_test_button",)
+
         return readonly_fields
+
+    @admin.display(description="")
+    def rt_test_button(self, obj):
+        if not obj or not obj.pk:
+            return ""
+        url = reverse("admin:observer-test-rt-connection", args=[obj.pk])
+        return format_html(
+            """
+            <button type="button" class="button rt-test-btn" data-url="{}">{}</button>
+            <span id="rt-test-result"></span>
+            <p id="rt-test-help" class="help">{}</p>
+            """,
+            url,
+            _("Test RT Connection"),
+            _("Before testing the connection, make sure to save the RT configuration."),
+        )
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<int:observer_id>/test-rt-connection/",
+                self.admin_site.admin_view(self.test_rt_connection_view),
+                name="observer-test-rt-connection",
+            ),
+        ]
+        return custom_urls + urls
+
+    def test_rt_connection_view(self, request, observer_id):
+        if not self.has_change_permission(request):
+            raise Http404()
+
+        if request.method != "POST":
+            return JsonResponse({"success": False, "message": _("Method not allowed.")}, status=405)
+
+        try:
+            observer = Observer.objects.get(pk=observer_id)
+        except Observer.DoesNotExist:
+            return JsonResponse({"success": False, "message": _("Observer not found.")}, status=404)
+
+        user = request.user
+
+        if not (user_in_group(user, "ObserverAdmin") and observer == user.observers.first()):
+            return JsonResponse({"success": False, "message": _("Permission denied.")}, status=403)
+
+        ok = check_rt_config(observer)
+        if ok:
+            return JsonResponse({"success": True, "message": _("RT connection successful.")})
+
+        return JsonResponse({"success": False, "message": _("RT connection failed. Check URL, queue and token.")})
+
+    class Media:
+        js = ("admin/js/rt_test_button.js",)
+        css = {"all": ("admin/css/rt_test_button.css",)}
 
 
 for name, method in generate_display_methods(["name", "full_name", "description"]).items():
