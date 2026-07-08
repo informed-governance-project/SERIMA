@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Generic webhook connector: HTTPS POST of the incident notification as JSON, HMAC-SHA256 signed (`X-Serima-Signature` / `X-Serima-Timestamp` headers)
 - Email connector with optional GPG encryption (PGP/MIME, fail-closed — never sends plaintext when a key is configured) and optional incident-data JSON attachment
 - Connector delivery tracking (`ConnectorDelivery`) with status, attempts and last error, visible per incident
-- Per-connector "Test connection" button in the admin, replacing the RT-only one
+- Per-connector "Test connection" button in the admin, replacing the RT-only one: it now sends a real test message (RT test ticket, test e-mail with GPG applied when configured, webhook ping) so delivery and decryption are verified end-to-end
 
 ### Changed
 
