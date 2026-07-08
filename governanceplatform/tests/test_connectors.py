@@ -8,6 +8,7 @@ import pytest
 import responses
 from django import forms
 from django.core import mail
+from django.test import override_settings
 
 from governanceplatform.connectors import (
     NotificationContext,
@@ -62,12 +63,14 @@ def test_connector_secret_is_encrypted_at_rest(populate_db):
     assert connector.secret == ""
 
 
+@override_settings(DEBUG=False)
 def test_rt_config_form_rejects_http_url():
     form = get_connector_class("rt").config_form(data={"url": "http://rt.example.com", "queue": "incidents"})
     assert not form.is_valid()
     assert "url" in form.errors
 
 
+@override_settings(DEBUG=False)
 def test_rt_config_form_rejects_internal_address():
     form = get_connector_class("rt").config_form(data={"url": "https://127.0.0.1", "queue": "incidents"})
     assert not form.is_valid()
@@ -157,6 +160,109 @@ def test_email_connector_gpg_fail_closed(populate_db):
         connector.get_impl().send(ctx)
 
     assert mail.outbox == []
+
+
+@pytest.mark.django_db
+def test_email_test_connection_sends_test_mail(populate_db):
+    observer = populate_db["observers"][0]
+    connector = ObserverConnector.objects.create(
+        observer=observer,
+        connector_type="email",
+        name="Email",
+        config={"send_to_observer_email": True, "send_to_observer_users": False, "additional_recipients": []},
+    )
+
+    ok, message = connector.get_impl().test_connection()
+
+    assert ok
+    assert observer.email_for_notification in message
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].bcc == [observer.email_for_notification]
+    assert "test message" in mail.outbox[0].body
+
+
+@pytest.mark.django_db
+def test_email_test_connection_encrypts_when_gpg_configured(populate_db, gpg_keypair):
+    _gpg, public_key = gpg_keypair
+    observer = populate_db["observers"][0]
+    connector = ObserverConnector.objects.create(
+        observer=observer,
+        connector_type="email",
+        name="Email",
+        config={"send_to_observer_email": True, "gpg_public_key": public_key},
+    )
+
+    ok, message = connector.get_impl().test_connection()
+
+    assert ok
+    assert len(mail.outbox) == 1
+    assert mail.outbox[0].message().get_content_type() == "multipart/encrypted"
+
+
+@pytest.mark.django_db
+def test_email_test_connection_fails_without_recipients(populate_db):
+    observer = populate_db["observers"][0]
+    connector = ObserverConnector.objects.create(
+        observer=observer,
+        connector_type="email",
+        name="Email",
+        config={"send_to_observer_email": False, "send_to_observer_users": False, "additional_recipients": []},
+    )
+
+    ok, _message = connector.get_impl().test_connection()
+
+    assert not ok
+    assert mail.outbox == []
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_rt_test_connection_creates_test_ticket(populate_db, monkeypatch):
+    monkeypatch.setattr("governanceplatform.validators.socket.gethostbyname", lambda hostname: "93.184.216.34")
+    observer = populate_db["observers"][0]
+    connector = ObserverConnector.objects.create(
+        observer=observer,
+        connector_type="rt",
+        name="RT",
+        config={"url": "https://rt.example.com", "queue": "incidents"},
+    )
+    connector.secret = "rt-token"
+    connector.save()
+    responses.add(responses.POST, "https://rt.example.com/REST/2.0/ticket", json={"id": 7}, status=201)
+
+    ok, message = connector.get_impl().test_connection()
+
+    assert ok
+    assert "7" in message
+    assert len(responses.calls) == 1
+    assert responses.calls[0].request.url == "https://rt.example.com/REST/2.0/ticket"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_rt_surfaces_api_message_on_403(populate_db, monkeypatch):
+    monkeypatch.setattr("governanceplatform.validators.socket.gethostbyname", lambda hostname: "93.184.216.34")
+    observer = populate_db["observers"][0]
+    connector = ObserverConnector.objects.create(
+        observer=observer,
+        connector_type="rt",
+        name="RT",
+        config={"url": "https://rt.example.com", "queue": "incident"},
+    )
+    connector.secret = "rt-token"
+    connector.save()
+    responses.add(
+        responses.POST,
+        "https://rt.example.com/REST/2.0/ticket",
+        json={"message": "No permission to create tickets in the queue 'incident'"},
+        status=403,
+    )
+
+    ok, message = connector.get_impl().test_connection()
+
+    assert not ok
+    assert "403" in message
+    assert "No permission to create tickets in the queue 'incident'" in message
 
 
 @pytest.mark.django_db
