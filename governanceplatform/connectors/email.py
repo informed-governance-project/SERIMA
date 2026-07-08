@@ -128,9 +128,21 @@ class EmailConnector(BaseConnector):
         recipients.extend(config.get("additional_recipients") or [])
         return list(dict.fromkeys(recipient for recipient in recipients if recipient and is_valid_email(recipient)))
 
-    def send(self, ctx: NotificationContext) -> DeliveryResult:
+    def _deliver(self, subject, content_html, recipients, attachments):
         from incidents.email import send_html_email, send_pgp_mime_email
 
+        armored_key = self.connector.config.get("gpg_public_key")
+        if armored_key:
+            # fail-closed: any encryption error aborts the delivery, plaintext is never sent
+            armored_message = encrypt_pgp_mime(armored_key, content_html, attachments)
+            sent = send_pgp_mime_email(subject, armored_message, recipients)
+        else:
+            sent = send_html_email(subject, content_html, recipients, attachments=attachments or None)
+
+        if not sent:
+            raise TransientDeliveryError("Email sending failed")
+
+    def send(self, ctx: NotificationContext) -> DeliveryResult:
         recipients = self._resolve_recipients()
         if not recipients:
             raise PermanentDeliveryError("No valid recipients configured")
@@ -140,16 +152,7 @@ class EmailConnector(BaseConnector):
             payload = build_incident_payload(ctx.incident, ctx.subject, ctx.content_html)
             attachments.append((f"incident_{ctx.incident.pk}.json", json.dumps(payload, indent=2), "application/json"))
 
-        armored_key = self.connector.config.get("gpg_public_key")
-        if armored_key:
-            # fail-closed: any encryption error aborts the delivery, plaintext is never sent
-            armored_message = encrypt_pgp_mime(armored_key, ctx.content_html, attachments)
-            sent = send_pgp_mime_email(ctx.subject, armored_message, recipients)
-        else:
-            sent = send_html_email(ctx.subject, ctx.content_html, recipients, attachments=attachments or None)
-
-        if not sent:
-            raise TransientDeliveryError("Email sending failed")
+        self._deliver(ctx.subject, ctx.content_html, recipients, attachments)
         return DeliveryResult(success=True)
 
     def test_connection(self) -> tuple[bool, str]:
@@ -157,13 +160,23 @@ class EmailConnector(BaseConnector):
         if not recipients:
             return False, str(_("No valid recipients configured"))
 
-        message = str(_("Recipients: %s")) % ", ".join(recipients)
+        fingerprint = expires = None
         armored_key = self.connector.config.get("gpg_public_key")
         if armored_key:
             try:
                 fingerprint, expires = get_public_key_info(armored_key)
             except forms.ValidationError as e:
                 return False, "; ".join(e.messages)
+
+        subject = str(_("[TEST] SERIMA notification connector"))
+        content_html = str(_("<p>This is a test message confirming your SERIMA notification connector is configured correctly.</p>"))
+        try:
+            self._deliver(subject, content_html, recipients, attachments=[])
+        except (TransientDeliveryError, PermanentDeliveryError) as e:
+            return False, str(e)
+
+        message = str(_("Test e-mail sent to: %s")) % ", ".join(recipients)
+        if fingerprint:
             message += f" — GPG key {fingerprint}"
             if expires:
                 message += time.strftime(" (expires %Y-%m-%d)", time.gmtime(expires))
