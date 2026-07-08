@@ -183,3 +183,21 @@ def test_email_delivery_with_incident_json_attachment(populate_incident_db, emai
     assert mimetype == "application/json"
     payload = json.loads(content)
     assert payload["incident"]["incident_id"] == incident.incident_id
+
+
+@pytest.mark.django_db
+def test_incident_payload_mirrors_pdf_sections(populate_incident_db, incident):
+    from governanceplatform.connectors.payload import build_incident_payload
+
+    payload = build_incident_payload(incident)
+
+    # must be JSON-serializable end to end
+    json.dumps(payload)
+
+    inc = payload["incident"]
+    assert inc["incident_id"] == incident.incident_id
+    for section in ("status", "complaint_reference", "regulator", "sectors", "timeline", "contacts", "reports"):
+        assert section in inc
+    assert set(inc["contacts"]) == {"incident", "technical"}
+    assert set(inc["contacts"]["incident"]) == {"first_name", "last_name", "title", "email", "telephone"}
+    assert set(inc["timeline"]) == {"timezone", "notification_date", "detection_date", "starting_date", "resolution_date"}
