@@ -1,3 +1,12 @@
+function getCsrfToken() {
+    const input = document.querySelector("input[name=csrfmiddlewaretoken]");
+    if (input) {
+        return input.value;
+    }
+    return document.cookie.match(/csrftoken=([^;]+)/)?.[1] ?? "";
+}
+
+
 function testConnectorConnection(url) {
     const result = document.getElementById("connector-test-result");
     result.textContent = gettext("Testing…");
@@ -5,7 +14,7 @@ function testConnectorConnection(url) {
     fetch(url, {
         method: "POST",
         headers: {
-            "X-CSRFToken": document.cookie.match(/csrftoken=([^;]+)/)?.[1] ?? "",
+            "X-CSRFToken": getCsrfToken(),
         },
     })
     .then(r => r.json())
