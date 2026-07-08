@@ -50,7 +50,7 @@ class WebhookConnector(BaseConnector):
         except ValidationError:
             raise PermanentDeliveryError(str(_("The webhook URL is not allowed")))
 
-        body = json.dumps(payload, separators=(",", ":")).encode()
+        body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode()
         timestamp = str(int(time.time()))
         signature = hmac.new(
             self.connector.secret.encode(),
@@ -70,7 +70,7 @@ class WebhookConnector(BaseConnector):
             raise TransientDeliveryError(str(_("Error connecting to the webhook endpoint")))
 
     def send(self, ctx: NotificationContext) -> DeliveryResult:
-        payload = build_incident_payload(ctx.incident, ctx.subject, ctx.content_html)
+        payload = build_incident_payload(ctx.incident)
         response = self._post_signed(payload)
 
         if response.ok:
