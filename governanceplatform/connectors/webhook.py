@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import logging
 import time
 
 import requests
@@ -20,6 +21,8 @@ from .base import (
 )
 from .payload import build_incident_payload
 from .registry import register
+
+logger = logging.getLogger(__name__)
 
 REQUEST_TIMEOUT = 10
 
@@ -45,7 +48,7 @@ class WebhookConnector(BaseConnector):
         try:
             validate_external_https_url(url)
         except ValidationError:
-            raise PermanentDeliveryError(f"Blocked unsafe webhook URL: {url}")
+            raise PermanentDeliveryError(str(_("The webhook URL is not allowed")))
 
         body = json.dumps(payload, separators=(",", ":")).encode()
         timestamp = str(int(time.time()))
@@ -63,7 +66,8 @@ class WebhookConnector(BaseConnector):
         try:
             return requests.post(url, data=body, headers=headers, timeout=REQUEST_TIMEOUT)
         except requests.RequestException as e:
-            raise TransientDeliveryError(f"Error connecting to webhook: {e}")
+            logger.error("Error connecting to webhook: %s", e)
+            raise TransientDeliveryError(str(_("Error connecting to the webhook endpoint")))
 
     def send(self, ctx: NotificationContext) -> DeliveryResult:
         payload = build_incident_payload(ctx.incident, ctx.subject, ctx.content_html)
@@ -72,10 +76,10 @@ class WebhookConnector(BaseConnector):
         if response.ok:
             return DeliveryResult(success=True)
 
-        error = f"Webhook error {response.status_code}: {response.text[:500]}"
+        logger.error("Webhook error %s: %s", response.status_code, response.text)
         if response.status_code >= 500:
-            raise TransientDeliveryError(error)
-        raise PermanentDeliveryError(error)
+            raise TransientDeliveryError(str(_("Webhook server error (%s)")) % response.status_code)
+        raise PermanentDeliveryError(str(_("The webhook endpoint returned an error (%s)")) % response.status_code)
 
     def test_connection(self) -> tuple[bool, str]:
         if not self.connector.config.get("url") or not self.connector.secret:
@@ -88,4 +92,5 @@ class WebhookConnector(BaseConnector):
 
         if response.ok:
             return True, str(_("Connection successful"))
-        return False, f"Webhook error {response.status_code}"
+        logger.error("Webhook error %s: %s", response.status_code, response.text)
+        return False, str(_("The webhook endpoint returned an error (%s)")) % response.status_code
