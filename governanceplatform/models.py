@@ -267,6 +267,8 @@ class Observer(TranslatableModel):
         verbose_name=_("Functionalities"),
         blank=True,
     )
+    # connector types this observer is allowed to use; set by PlatformAdmin, acts as a filter
+    allowed_connector_types = models.JSONField(default=list, blank=True, verbose_name=_("Available connectors"))
 
     def get_incidents(self):
         base_qs = Incident.objects.exclude(sector_regulation__isnull=True)
@@ -309,6 +311,10 @@ class Observer(TranslatableModel):
         if incident in self.get_incidents():
             return True
         return False
+
+    def deactivate_disallowed_connectors(self):
+        # connectors whose type is no longer in the allow-list are switched off
+        self.connectors.exclude(connector_type__in=self.allowed_connector_types or []).update(is_active=False)
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)

@@ -27,7 +27,7 @@ from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 from incidents.decorators import check_user_is_correct
 from incidents.email import send_html_email
 
-from .forms import CustomTranslatableAdminForm, ObserverConnectorAdminForm
+from .forms import CustomTranslatableAdminForm, ObserverAdminForm, ObserverConnectorAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     generate_display_methods,
@@ -1357,9 +1357,20 @@ class ObserverConnectorInline(admin.TabularInline):
     def has_add_permission(self, request, obj=None):
         return False
 
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        user = request.user
+        # observers only see connectors of the types PlatformAdmin allowed them
+        if user_in_group(user, "ObserverAdmin"):
+            observer = user.observers.first()
+            allowed = observer.allowed_connector_types or [] if observer else []
+            return queryset.filter(connector_type__in=allowed)
+        return queryset
+
 
 @admin.register(Observer, site=admin_site)
 class ObserverAdmin(CustomTranslatableAdmin):
+    form = ObserverAdminForm
     list_display = [
         "name_display",
         "full_name_display",
@@ -1383,23 +1394,20 @@ class ObserverAdmin(CustomTranslatableAdmin):
     )
 
     def get_fieldsets(self, request, obj=None):
-        return [
-            (
-                None,
-                {
-                    "fields": [
-                        "name",
-                        "full_name",
-                        "description",
-                        "country",
-                        "address",
-                        "email_for_notification",
-                        "is_receiving_all_incident",
-                        "functionalities",
-                    ],
-                },
-            ),
+        fields = [
+            "name",
+            "full_name",
+            "description",
+            "country",
+            "address",
+            "email_for_notification",
+            "is_receiving_all_incident",
+            "functionalities",
         ]
+        # the allowed-connectors filter is PlatformAdmin-only and hidden from observers
+        if user_in_group(request.user, "PlatformAdmin"):
+            fields.append("allowed_connector_types")
+        return [(None, {"fields": fields})]
 
     def has_change_permission(self, request, obj=None):
         user = request.user
@@ -1426,6 +1434,11 @@ class ObserverAdmin(CustomTranslatableAdmin):
             readonly_fields += ("is_receiving_all_incident", "functionalities")
 
         return readonly_fields
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # switch off connectors whose type is no longer allowed for this observer
+        obj.deactivate_disallowed_connectors()
 
 
 @admin.register(ObserverConnector, site=admin_site)
@@ -1458,7 +1471,14 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
                     label=impl.secret_label,
                 )
             kwargs["form"] = type(self.form)("DynamicObserverConnectorAdminForm", (self.form,), attrs)
-        return super().get_form(request, obj, **kwargs)
+        form = super().get_form(request, obj, **kwargs)
+        # observers may only pick connector types PlatformAdmin allowed for their observer
+        if user_in_group(request.user, "ObserverAdmin") and "connector_type" in form.base_fields:
+            observer = request.user.observers.first()
+            allowed = set(observer.allowed_connector_types or []) if observer else set()
+            field = form.base_fields["connector_type"]
+            field.choices = [choice for choice in field.choices if choice[0] == "" or choice[0] in allowed]
+        return form
 
     def get_readonly_fields(self, request, obj=None):
         if obj is None:
@@ -1481,7 +1501,10 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         user = request.user
         if user_in_group(user, "ObserverAdmin"):
-            return queryset.filter(observer__user=user)
+            observer = user.observers.first()
+            allowed = observer.allowed_connector_types or [] if observer else []
+            # hide connectors of types no longer allowed for this observer
+            return queryset.filter(observer__user=user, connector_type__in=allowed)
 
         return queryset
 

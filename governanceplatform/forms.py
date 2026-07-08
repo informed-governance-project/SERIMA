@@ -13,8 +13,9 @@ from django.utils.translation import get_language_info
 from django.utils.translation import gettext_lazy as _
 from parler.forms import TranslatableModelForm
 
+from .connectors.registry import connector_type_choices
 from .email import Base64EmailMultiAlternatives
-from .models import ObserverConnector
+from .models import Observer, ObserverConnector
 
 User = get_user_model()
 logger = logging.getLogger("django.contrib.auth")
@@ -319,6 +320,23 @@ class ContactForm(forms.Form):
             self.fields["email"].initial = user.email
             self.fields["email"].disabled = True
             self.fields["phone"].initial = user.phone_number
+
+
+class ObserverAdminForm(CustomTranslatableAdminForm):
+    allowed_connector_types = forms.MultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label=_("Available connectors"),
+        help_text=_("Connector types this observer is allowed to use."),
+    )
+
+    class Meta:
+        model = Observer
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["allowed_connector_types"].choices = connector_type_choices()
 
 
 class ObserverConnectorAdminForm(forms.ModelForm):
