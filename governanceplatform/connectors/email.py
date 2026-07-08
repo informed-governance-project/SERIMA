@@ -149,8 +149,8 @@ class EmailConnector(BaseConnector):
 
         attachments = []
         if self.connector.config.get("attach_incident_json"):
-            payload = build_incident_payload(ctx.incident, ctx.subject, ctx.content_html)
-            attachments.append((f"incident_{ctx.incident.pk}.json", json.dumps(payload, indent=2), "application/json"))
+            payload = build_incident_payload(ctx.incident)
+            attachments.append((f"incident_{ctx.incident.pk}.json", json.dumps(payload, indent=2, ensure_ascii=False), "application/json"))
 
         self._deliver(ctx.subject, ctx.content_html, recipients, attachments)
         return DeliveryResult(success=True)
