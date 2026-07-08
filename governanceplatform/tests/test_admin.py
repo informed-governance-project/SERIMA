@@ -53,6 +53,8 @@ def test_add_user_via_admin(otp_client, populate_db):
 @pytest.fixture
 def observer_connector(populate_db):
     observer = populate_db["observers"][0]
+    observer.allowed_connector_types = ["rt"]
+    observer.save()
     connector = ObserverConnector.objects.create(
         observer=observer,
         connector_type="rt",
@@ -109,3 +111,83 @@ def test_connector_test_endpoint_permissions(otp_client, populate_db, observer_c
     client = otp_client(obs_admin)
     response = client.get(url)
     assert response.status_code == 405
+
+
+@pytest.mark.django_db
+def test_allowed_connector_types_hidden_from_observer_admin(otp_client, populate_db):
+    users = populate_db["users"]
+    observer = populate_db["observers"][0]
+    obs_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
+
+    client = otp_client(obs_admin)
+    response = client.get(f"/admin/governanceplatform/observer/{observer.pk}/change/")
+
+    assert response.status_code == 200
+    assert b"allowed_connector_types" not in response.content
+
+
+@pytest.mark.django_db
+def test_allowed_connector_types_visible_to_platform_admin(otp_client, populate_db):
+    users = populate_db["users"]
+    observer = populate_db["observers"][0]
+    platform_admin = next(user for user in users if user_in_group(user, "PlatformAdmin"))
+
+    client = otp_client(platform_admin)
+    response = client.get(f"/admin/governanceplatform/observer/{observer.pk}/change/")
+
+    assert response.status_code == 200
+    assert b"allowed_connector_types" in response.content
+
+
+@pytest.mark.django_db
+def test_observer_admin_add_connector_limited_to_allowed_types(otp_client, populate_db):
+    users = populate_db["users"]
+    observer = populate_db["observers"][0]
+    observer.allowed_connector_types = ["email"]
+    observer.save()
+    obs_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
+
+    client = otp_client(obs_admin)
+    response = client.get("/admin/governanceplatform/observerconnector/add/")
+
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert 'value="email"' in content
+    assert 'value="rt"' not in content
+    assert 'value="webhook"' not in content
+
+
+@pytest.mark.django_db
+def test_removing_allowed_type_deactivates_its_connectors(populate_db):
+    observer = populate_db["observers"][0]
+    observer.allowed_connector_types = ["rt", "email"]
+    observer.save()
+    rt = ObserverConnector.objects.create(observer=observer, connector_type="rt", name="RT", config={})
+    email = ObserverConnector.objects.create(observer=observer, connector_type="email", name="Email", config={})
+
+    observer.allowed_connector_types = ["email"]
+    observer.save()
+    observer.deactivate_disallowed_connectors()
+
+    rt.refresh_from_db()
+    email.refresh_from_db()
+    assert rt.is_active is False
+    assert email.is_active is True
+
+
+@pytest.mark.django_db
+def test_disallowed_type_connector_hidden_from_observer_admin(otp_client, populate_db):
+    users = populate_db["users"]
+    observer = populate_db["observers"][0]
+    observer.allowed_connector_types = ["email"]
+    observer.save()
+    hidden = ObserverConnector.objects.create(observer=observer, connector_type="rt", name="RT hidden", config={})
+    obs_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
+
+    client = otp_client(obs_admin)
+    list_response = client.get("/admin/governanceplatform/observerconnector/")
+    change_response = client.get(f"/admin/governanceplatform/observerconnector/{hidden.pk}/change/")
+
+    assert list_response.status_code == 200
+    assert b"RT hidden" not in list_response.content
+    assert change_response.status_code in (302, 404)
