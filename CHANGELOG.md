@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Pluggable observer connector framework (`ObserverConnector`): each observer can have multiple active connectors that all fire on incident notification, with per-connector configuration and encrypted secrets
-- Generic webhook connector: HTTPS POST of the incident notification as JSON, HMAC-SHA256 signed (`X-Serima-Signature` / `X-Serima-Timestamp` headers)
-- Email connector with optional GPG encryption (PGP/MIME, fail-closed — never sends plaintext when a key is configured) and optional incident-data JSON attachment
+- Generic webhook connector: HTTPS POST of the incident notification as JSON, HMAC-SHA256 signed (`X-Serima-Signature` / `X-Serima-Timestamp` headers). The JSON payload mirrors the PDF incident report (details, contacts, timeline, sectors and per-report questionnaire/impacts)
+- Email connector with optional GPG encryption (PGP/MIME, fail-closed — never sends plaintext when a key is configured) and optional incident-data JSON attachment (same PDF-equivalent payload)
 - Connector delivery tracking (`ConnectorDelivery`) with status, attempts and last error, visible per incident
 - Per-connector "Test connection" button in the admin, replacing the RT-only one: it now sends a real test message (RT test ticket, test e-mail with GPG applied when configured, webhook ping) so delivery and decryption are verified end-to-end
 
