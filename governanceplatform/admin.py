@@ -1449,7 +1449,7 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
     list_filter = ["connector_type", "is_active"]
 
     def get_fields(self, request, obj=None):
-        fields = ["observer", "connector_type", "name", "is_active"]
+        fields = ["connector_type", "name", "is_active"]
         if obj is None:
             return fields
 
@@ -1459,6 +1459,11 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
             fields.append("secret")
         fields.append("test_button")
         return fields
+
+    def save_model(self, request, obj, form, change):
+        if not change and user_in_group(request.user, "ObserverAdmin"):
+            obj.observer = request.user.observers.first()
+        super().save_model(request, obj, form, change)
 
     def response_add(self, request, obj, post_url_continue=None):
         # two-step flow: the type-specific configuration fields only exist on the
