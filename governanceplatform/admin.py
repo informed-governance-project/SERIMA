@@ -1548,16 +1548,16 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def test_connection_view(self, request, connector_id):
-        if not self.has_change_permission(request):
-            raise Http404()
-
-        if request.method != "POST":
-            return JsonResponse({"success": False, "message": _("Method not allowed.")}, status=405)
-
         try:
             connector = ObserverConnector.objects.get(pk=connector_id)
         except ObserverConnector.DoesNotExist:
             return JsonResponse({"success": False, "message": _("Connector not found.")}, status=404)
+
+        if not self.has_change_permission(request, connector):
+            raise Http404()
+
+        if request.method != "POST":
+            return JsonResponse({"success": False, "message": _("Method not allowed.")}, status=405)
 
         user = request.user
 
