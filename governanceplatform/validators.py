@@ -2,6 +2,7 @@ import ipaddress
 import socket
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
@@ -37,6 +38,9 @@ class NoReusePasswordValidator:
 
 
 def validate_external_https_url(base_url: str):
+    if settings.DEBUG:
+        return True
+
     parsed = urlparse(base_url)
 
     if parsed.scheme != "https":
