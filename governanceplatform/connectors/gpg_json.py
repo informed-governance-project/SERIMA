@@ -81,7 +81,7 @@ class GPGJsonConnector(BaseConnector):
             raise PermanentDeliveryError(str(_("The observer has no valid notification e-mail address")))
         return recipient
 
-    def _send_encrypted(self, filename: str, payload: dict, recipient: str) -> None:
+    def _send_encrypted(self, filename: str, payload: dict, subject: str, content: str, recipient: str) -> None:
         from incidents.email import send_html_email
 
         data = json.dumps(payload, indent=2, ensure_ascii=False).encode()
@@ -89,16 +89,16 @@ class GPGJsonConnector(BaseConnector):
         armored = encrypt_bytes(self.connector.config.get("gpg_public_key", ""), data)
 
         # neutral envelope: no incident data outside the ciphertext
-        subject = str(_("SERIMA encrypted incident notification"))
-        body = str(_("<p>An encrypted incident notification is attached.</p>"))
-        sent = send_html_email(subject, body, [recipient], attachments=[(filename, armored, "application/pgp-encrypted")])
+        sent = send_html_email(subject, content, [recipient], attachments=[(filename, armored, "application/pgp-encrypted")])
         if not sent:
             raise TransientDeliveryError(str(_("Email sending failed")))
 
     def send(self, ctx: NotificationContext) -> DeliveryResult:
         recipient = self._recipient()
         payload = build_incident_payload(ctx.incident)
-        self._send_encrypted(f"incident_{ctx.incident.pk}.json.gpg", payload, recipient)
+        subject = ctx.subject
+        content = ctx.content_html
+        self._send_encrypted(f"incident_{ctx.incident.pk}.json.gpg", payload, subject, content, recipient)
         return DeliveryResult(success=True)
 
     def test_connection(self) -> tuple[bool, str]:
