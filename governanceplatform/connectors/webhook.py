@@ -44,7 +44,7 @@ class WebhookConnector(BaseConnector):
     secret_label = _("HMAC secret")
 
     def _post_signed(self, payload: dict):
-        url = self.connector.config["url"]
+        url = self.connector.config.get("url", "")
         try:
             validate_external_https_url(url)
         except ValidationError:

@@ -143,7 +143,7 @@ def test_allowed_connector_types_visible_to_platform_admin(otp_client, populate_
 def test_observer_admin_add_connector_limited_to_allowed_types(otp_client, populate_db):
     users = populate_db["users"]
     observer = populate_db["observers"][0]
-    observer.allowed_connector_types = ["email"]
+    observer.allowed_connector_types = ["gpg_json"]
     observer.save()
     obs_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
 
@@ -152,7 +152,7 @@ def test_observer_admin_add_connector_limited_to_allowed_types(otp_client, popul
 
     assert response.status_code == 200
     content = response.content.decode()
-    assert 'value="email"' in content
+    assert 'value="gpg_json"' in content
     assert 'value="rt"' not in content
     assert 'value="webhook"' not in content
 
@@ -160,26 +160,26 @@ def test_observer_admin_add_connector_limited_to_allowed_types(otp_client, popul
 @pytest.mark.django_db
 def test_removing_allowed_type_deactivates_its_connectors(populate_db):
     observer = populate_db["observers"][0]
-    observer.allowed_connector_types = ["rt", "email"]
+    observer.allowed_connector_types = ["rt", "gpg_json"]
     observer.save()
     rt = ObserverConnector.objects.create(observer=observer, connector_type="rt", name="RT", config={})
-    email = ObserverConnector.objects.create(observer=observer, connector_type="email", name="Email", config={})
+    gpg_json = ObserverConnector.objects.create(observer=observer, connector_type="gpg_json", name="GPG JSON", config={})
 
-    observer.allowed_connector_types = ["email"]
+    observer.allowed_connector_types = ["gpg_json"]
     observer.save()
     observer.deactivate_disallowed_connectors()
 
     rt.refresh_from_db()
-    email.refresh_from_db()
+    gpg_json.refresh_from_db()
     assert rt.is_active is False
-    assert email.is_active is True
+    assert gpg_json.is_active is True
 
 
 @pytest.mark.django_db
 def test_disallowed_type_connector_hidden_from_observer_admin(otp_client, populate_db):
     users = populate_db["users"]
     observer = populate_db["observers"][0]
-    observer.allowed_connector_types = ["email"]
+    observer.allowed_connector_types = ["gpg_json"]
     observer.save()
     hidden = ObserverConnector.objects.create(observer=observer, connector_type="rt", name="RT hidden", config={})
     obs_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
@@ -191,3 +191,39 @@ def test_disallowed_type_connector_hidden_from_observer_admin(otp_client, popula
     assert list_response.status_code == 200
     assert b"RT hidden" not in list_response.content
     assert change_response.status_code in (302, 404)
+
+
+@pytest.mark.django_db
+def test_notification_mode_editable_by_observer_admin(otp_client, populate_db):
+    users = populate_db["users"]
+    observer = populate_db["observers"][0]
+    obs_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
+
+    client = otp_client(obs_admin)
+    response = client.get(f"/admin/governanceplatform/observer/{observer.pk}/change/")
+
+    assert response.status_code == 200
+    assert b'name="notification_mode"' in response.content
+
+
+@pytest.mark.django_db
+def test_connector_two_step_add_flow(otp_client, populate_db):
+    users = populate_db["users"]
+    observer = populate_db["observers"][0]
+    observer.allowed_connector_types = ["gpg_json"]
+    observer.save()
+    obs_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
+
+    client = otp_client(obs_admin)
+    # step 1: the add form has no config fields and must save without them
+    response = client.post(
+        "/admin/governanceplatform/observerconnector/add/",
+        {"observer": observer.pk, "connector_type": "gpg_json", "name": "GPG JSON", "is_active": "on"},
+    )
+    connector = ObserverConnector.objects.get(observer=observer, name="GPG JSON")
+    # step 2: redirected straight to the change view where the config fields live
+    assert response.status_code == 302
+    assert response.url == f"/admin/governanceplatform/observerconnector/{connector.pk}/change/"
+    change_page = client.get(response.url)
+    assert change_page.status_code == 200
+    assert b'name="config__gpg_public_key"' in change_page.content

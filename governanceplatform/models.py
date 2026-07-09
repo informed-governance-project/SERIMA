@@ -270,6 +270,18 @@ class Observer(TranslatableModel):
     # connector types this observer is allowed to use; set by PlatformAdmin, acts as a filter
     allowed_connector_types = models.JSONField(default=list, blank=True, verbose_name=_("Available connectors"))
 
+    class NotificationMode(models.TextChoices):
+        DEFAULT = "default", _("Default (e-mail when no active connector)")
+        DEFAULT_AND_CONNECTORS = "default_and_connectors", _("E-mail and connectors")
+        CONNECTORS_ONLY = "connectors_only", _("Connectors only (never e-mail)")
+
+    notification_mode = models.CharField(
+        max_length=32,
+        choices=NotificationMode.choices,
+        default=NotificationMode.DEFAULT,
+        verbose_name=_("Notification mode"),
+    )
+
     def get_incidents(self):
         base_qs = Incident.objects.exclude(sector_regulation__isnull=True)
 
@@ -379,7 +391,10 @@ class ObserverConnector(models.Model):
             impl = self.get_impl()
         except KeyError:
             raise ValidationError({"connector_type": _("Unknown connector type")})
-        self.config = impl.validate_config(self.config or {})
+        # the admin add view exposes no config fields (two-step flow); the
+        # configuration is validated on the change view once the type is known
+        if self.pk or self.config:
+            self.config = impl.validate_config(self.config or {})
 
     def __str__(self):
         return f"{self.observer} — {self.name}"

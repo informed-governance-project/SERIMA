@@ -1,5 +1,6 @@
 import json
 
+import gnupg
 import pytest
 import requests
 import responses
@@ -17,6 +18,23 @@ RT_URL = "https://rt.example.com"
 @pytest.fixture
 def resolvable_hosts(monkeypatch):
     monkeypatch.setattr("governanceplatform.validators.socket.gethostbyname", lambda hostname: "93.184.216.34")
+
+
+@pytest.fixture(scope="session")
+def gpg_keypair(tmp_path_factory):
+    home = tmp_path_factory.mktemp("gnupg")
+    gpg = gnupg.GPG(gnupghome=str(home))
+    key_input = gpg.gen_key_input(
+        key_type="EDDSA",
+        key_curve="ed25519",
+        subkey_type="ECDH",
+        subkey_curve="cv25519",
+        name_email="cert1@cert1.lu",
+        no_protection=True,
+    )
+    key = gpg.gen_key(key_input)
+    assert key.fingerprint, "test GPG key generation failed"
+    return gpg, gpg.export_keys(key.fingerprint)
 
 
 @pytest.fixture
@@ -46,7 +64,7 @@ def incident(populate_incident_db):
 @pytest.mark.django_db
 def test_dispatch_creates_deliveries_for_entitled_active_connectors_only(rt_connector, email_template, incident):
     observer = rt_connector.observer
-    ObserverConnector.objects.create(observer=observer, connector_type="email", name="Email", config={}, is_active=False)
+    ObserverConnector.objects.create(observer=observer, connector_type="webhook", name="Hook", config={}, is_active=False)
 
     activate("en")
     # explicit pk: the fixture data inserts observers with fixed ids without advancing the sequence
@@ -58,9 +76,9 @@ def test_dispatch_creates_deliveries_for_entitled_active_connectors_only(rt_conn
         is_receiving_all_incident=False,
         name="CERT2",
     )
-    ObserverConnector.objects.create(observer=excluded_observer, connector_type="email", name="Email", config={})
+    ObserverConnector.objects.create(observer=excluded_observer, connector_type="webhook", name="Hook", config={})
 
-    dispatch_observer_notifications(email_template, incident)
+    default_recipients = dispatch_observer_notifications(email_template, incident)
 
     deliveries = ConnectorDelivery.objects.all()
     assert deliveries.count() == 1
@@ -68,6 +86,71 @@ def test_dispatch_creates_deliveries_for_entitled_active_connectors_only(rt_conn
     assert delivery.connector == rt_connector
     assert delivery.status == ConnectorDelivery.Status.PENDING
     assert delivery.email == email_template
+    # entitled observer has an active connector and mode "default" -> no plain e-mail;
+    # the excluded observer never contributes anything
+    assert default_recipients == []
+
+
+@pytest.mark.django_db
+def test_default_mode_falls_back_to_email_without_active_connectors(populate_incident_db, email_template, incident):
+    observer = populate_incident_db["observers"][0]
+    ObserverConnector.objects.create(observer=observer, connector_type="webhook", name="Hook", config={}, is_active=False)
+
+    default_recipients = dispatch_observer_notifications(email_template, incident)
+
+    assert ConnectorDelivery.objects.count() == 0
+    assert observer.email_for_notification in default_recipients
+    for observer_user in observer.observeruser_set.all():
+        assert observer_user.user.email in default_recipients
+
+
+@pytest.mark.django_db
+def test_default_and_connectors_mode_sends_email_and_connectors(rt_connector, email_template, incident):
+    observer = rt_connector.observer
+    observer.notification_mode = Observer.NotificationMode.DEFAULT_AND_CONNECTORS
+    observer.save()
+
+    default_recipients = dispatch_observer_notifications(email_template, incident)
+
+    assert ConnectorDelivery.objects.count() == 1
+    assert observer.email_for_notification in default_recipients
+
+
+@pytest.mark.django_db
+def test_connectors_only_mode_never_sends_email(rt_connector, email_template, incident):
+    observer = rt_connector.observer
+    observer.notification_mode = Observer.NotificationMode.CONNECTORS_ONLY
+    observer.save()
+
+    default_recipients = dispatch_observer_notifications(email_template, incident)
+
+    assert ConnectorDelivery.objects.count() == 1
+    assert default_recipients == []
+
+
+@pytest.mark.django_db
+def test_connectors_only_mode_has_no_fallback_without_active_connectors(populate_incident_db, email_template, incident):
+    observer = populate_incident_db["observers"][0]
+    observer.notification_mode = Observer.NotificationMode.CONNECTORS_ONLY
+    observer.save()
+
+    default_recipients = dispatch_observer_notifications(email_template, incident)
+
+    assert ConnectorDelivery.objects.count() == 0
+    assert default_recipients == []
+
+
+@pytest.mark.django_db
+def test_default_mode_without_email_address_contributes_nothing(populate_incident_db, email_template, incident):
+    observer = populate_incident_db["observers"][0]
+    observer.email_for_notification = None
+    observer.save()
+    observer.observeruser_set.all().delete()
+
+    default_recipients = dispatch_observer_notifications(email_template, incident)
+
+    assert default_recipients == []
+    assert ConnectorDelivery.objects.count() == 0
 
 
 @pytest.mark.django_db
@@ -155,19 +238,14 @@ def test_sent_delivery_is_not_resent(rt_connector, email_template, incident):
 
 
 @pytest.mark.django_db
-def test_email_delivery_with_incident_json_attachment(populate_incident_db, email_template, incident):
+def test_gpg_json_delivery_sends_encrypted_incident_payload(populate_incident_db, email_template, incident, gpg_keypair):
+    gpg, public_key = gpg_keypair
     observer = populate_incident_db["observers"][0]
     connector = ObserverConnector.objects.create(
         observer=observer,
-        connector_type="email",
-        name="Email",
-        config={
-            "send_to_observer_email": True,
-            "send_to_observer_users": False,
-            "additional_recipients": [],
-            "attach_incident_json": True,
-            "gpg_public_key": "",
-        },
+        connector_type="gpg_json",
+        name="GPG JSON",
+        config={"gpg_public_key": public_key},
     )
     delivery = ConnectorDelivery.objects.create(incident=incident, connector=connector, email=email_template)
 
@@ -178,10 +256,12 @@ def test_email_delivery_with_incident_json_attachment(populate_incident_db, emai
     assert len(mail.outbox) == 1
     message = mail.outbox[0]
     assert message.bcc == [observer.email_for_notification]
-    filename, content, mimetype = message.attachments[0]
-    assert filename == f"incident_{incident.pk}.json"
-    assert mimetype == "application/json"
-    payload = json.loads(content)
+    filename, armored, mimetype = message.attachments[0]
+    assert filename == f"incident_{incident.pk}.json.gpg"
+    assert mimetype == "application/pgp-encrypted"
+    decrypted = gpg.decrypt(armored)
+    assert decrypted.ok
+    payload = json.loads(decrypted.data)
     assert payload["incident"]["incident_id"] == incident.incident_id
 
 

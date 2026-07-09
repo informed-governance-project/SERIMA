@@ -1403,6 +1403,7 @@ class ObserverAdmin(CustomTranslatableAdmin):
             "email_for_notification",
             "is_receiving_all_incident",
             "functionalities",
+            "notification_mode",
         ]
         # the allowed-connectors filter is PlatformAdmin-only and hidden from observers
         if user_in_group(request.user, "PlatformAdmin"):
@@ -1458,6 +1459,12 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
             fields.append("secret")
         fields.append("test_button")
         return fields
+
+    def response_add(self, request, obj, post_url_continue=None):
+        # two-step flow: the type-specific configuration fields only exist on the
+        # change view, so land there right after the connector is created
+        messages.info(request, _("Now complete the connector configuration below."))
+        return redirect(reverse("admin:governanceplatform_observerconnector_change", args=[obj.pk]))
 
     def get_form(self, request, obj=None, **kwargs):
         if obj is not None:

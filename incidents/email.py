@@ -1,6 +1,5 @@
 import logging
 from datetime import date
-from email.message import MIMEPart
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -11,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from governanceplatform.helpers import render_to_string_multi_languages
-from governanceplatform.models import ObserverConnector, RegulatorUser
+from governanceplatform.models import Observer, RegulatorUser
 from incidents.globals import INCIDENT_EMAIL_VARIABLES
 
 logger = logging.getLogger(__name__)
@@ -116,62 +115,6 @@ def send_html_email(subject, content, recipient_list, attachments=None):
         return False
 
 
-class PGPMimeEmailMessage(EmailMessage):
-    """multipart/encrypted container per RFC 3156; the body is the ASCII-armored ciphertext."""
-
-    def __init__(self, subject, armored_message, from_email, bcc):
-        super().__init__(subject, "", from_email, bcc=bcc)
-        self.armored_message = armored_message
-
-    def message(self):
-        msg = super().message()
-        msg.clear_content()
-
-        version_part = MIMEPart(policy=msg.policy)
-        version_part.set_content(b"Version: 1\n", maintype="application", subtype="pgp-encrypted", cte="7bit")
-
-        encrypted_part = MIMEPart(policy=msg.policy)
-        encrypted_part.set_content(
-            self.armored_message.encode(),
-            maintype="application",
-            subtype="octet-stream",
-            cte="7bit",
-            disposition="inline",
-            filename="encrypted.asc",
-        )
-
-        msg["Content-Type"] = 'multipart/encrypted; protocol="application/pgp-encrypted"'
-        msg.set_payload([version_part, encrypted_part])
-        return msg
-
-
-def send_pgp_mime_email(subject, armored_message, recipient_list):
-    valid_recipient_list = [email for email in recipient_list if is_valid_email(email)]
-    if not valid_recipient_list:
-        logger.warning(
-            "Email not sent: no valid recipients",
-            extra={"original_recipients": recipient_list},
-        )
-        return False
-
-    email = PGPMimeEmailMessage(
-        subject,
-        armored_message,
-        settings.EMAIL_SENDER,
-        bcc=valid_recipient_list,
-    )
-
-    try:
-        sent_count = email.send()
-        if sent_count == 0:
-            logger.error("Encrypted email send returned 0 (no email sent)", extra={"subject": subject})
-            return False
-        return True
-    except Exception:
-        logger.exception("Encrypted email sending failed", extra={"subject": subject})
-        return False
-
-
 def get_emails_from_qs(queryset):
     return [obj.user.email for obj in queryset]
 
@@ -239,14 +182,34 @@ def render_notification(email, incident):
 
 
 def dispatch_observer_notifications(email, incident):
+    """Create deliveries for the observers' active connectors; return the plain-email
+    recipients owed by their notification modes (default e-mail behavior)."""
     from .models import ConnectorDelivery
     from .scripts.connector_delivery import run as deliver_connector_notification
 
-    connectors = ObserverConnector.objects.filter(is_active=True).select_related("observer")
-    for connector in connectors:
-        if connector.observer.can_access_incident(incident):
+    default_recipients = []
+    for observer in Observer.objects.prefetch_related("connectors"):
+        if not observer.can_access_incident(incident):
+            continue
+
+        active_connectors = [connector for connector in observer.connectors.all() if connector.is_active]
+        for connector in active_connectors:
             delivery = ConnectorDelivery.objects.create(incident=incident, connector=connector, email=email)
             transaction.on_commit(lambda pk=delivery.pk: deliver_connector_notification.delay(pk))
+
+        # default e-mail: fallback when no connector is active, always in
+        # "default_and_connectors" mode, never in "connectors_only" mode
+        owes_email = observer.notification_mode == Observer.NotificationMode.DEFAULT_AND_CONNECTORS or (
+            not active_connectors and observer.notification_mode == Observer.NotificationMode.DEFAULT
+        )
+        if owes_email:
+            if observer.email_for_notification:
+                default_recipients.append(observer.email_for_notification)
+            else:
+                logger.warning("Observer %s owes an e-mail notification but has no notification address", observer.pk)
+            default_recipients.extend(get_emails_from_qs(observer.observeruser_set.all().select_related("user")))
+
+    return default_recipients
 
 
 def send_email(email, incident, send_to_observers=False):
@@ -254,7 +217,7 @@ def send_email(email, incident, send_to_observers=False):
     recipient_list = get_recipient_list(incident)
 
     if send_to_observers:
-        dispatch_observer_notifications(email, incident)
+        recipient_list.extend(dispatch_observer_notifications(email, incident))
 
     # Remove duplicates
     recipient_list = list(dict.fromkeys(recipient_list))

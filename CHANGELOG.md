@@ -11,15 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pluggable observer connector framework (`ObserverConnector`): each observer can have multiple active connectors that all fire on incident notification, with per-connector configuration and encrypted secrets
 - Generic webhook connector: HTTPS POST of the incident notification as JSON, HMAC-SHA256 signed (`X-Serima-Signature` / `X-Serima-Timestamp` headers). The JSON payload mirrors the PDF incident report (details, contacts, timeline, sectors and per-report questionnaire/impacts)
-- Email connector with optional GPG encryption (PGP/MIME, fail-closed — never sends plaintext when a key is configured) and optional incident-data JSON attachment (same PDF-equivalent payload)
+- GPG-JSON connector: sends the PDF-equivalent incident JSON GPG-encrypted (fail-closed, neutral envelope) as an `incident_<id>.json.gpg` attachment, delivered exclusively to the observer's notification e-mail address
+- Per-observer notification mode: "Default" sends the plain e-mail notification only when the observer has no active connector; "E-mail and connectors" always sends the e-mail in addition to every active connector; "Connectors only" never sends the plain e-mail
 - Connector delivery tracking (`ConnectorDelivery`) with status, attempts and last error, visible per incident
 - Per-observer allowed-connector-types filter: PlatformAdmin selects which connector types each observer may use; the list is hidden from Observer admins and restricts the connector types they can create
-- Per-connector "Test connection" button in the admin, replacing the RT-only one: it now sends a real test message (RT test ticket, test e-mail with GPG applied when configured, webhook ping) so delivery and decryption are verified end-to-end
+- Per-connector "Test connection" button in the admin, replacing the RT-only one: it now sends a real test message (RT test ticket, encrypted test payload, webhook ping) so delivery and decryption are verified end-to-end
 
 ### Changed
 
-- Observer notifications (RT tickets, observer emails) are now delivered asynchronously via Celery with automatic retries instead of blocking the incident submission request; a running Celery worker is now required for observer notifications
-- Observers with a working RT configuration no longer silently fall back to email when RT is unreachable — deliveries are retried and failures recorded
+- Observer connector notifications are delivered asynchronously via Celery with automatic retries instead of blocking the incident submission request; a running Celery worker is now required for connector deliveries
+- Observers with a working RT configuration no longer silently fall back to email when RT is unreachable — deliveries are retried and failures recorded. Plain e-mail fallback now depends on the observer having no active connector (notification mode "Default")
+- `RT_SECRET_KEY` setting replaced by `CONNECTOR_SECRET_KEY` (defaults to `HASH_KEY`); environments that had set a custom `RT_SECRET_KEY` must set `CONNECTOR_SECRET_KEY` to the same value before migrating
 
 ### Removed
 

@@ -44,7 +44,7 @@ class RTConnector(BaseConnector):
     secret_label = _("Token")
 
     def _base_url(self):
-        return self.connector.config["url"].rstrip("/")
+        return self.connector.config.get("url", "").rstrip("/")
 
     def _headers(self):
         return {
@@ -70,7 +70,7 @@ class RTConnector(BaseConnector):
             url = f"{base_url}/REST/2.0/ticket"
             payload = {
                 "Requestor": settings.EMAIL_SENDER,
-                "Queue": self.connector.config["queue"],
+                "Queue": self.connector.config.get("queue", ""),
                 "Subject": ctx.subject,
                 "Content": ctx.content_html,
                 "ContentType": "text/html",

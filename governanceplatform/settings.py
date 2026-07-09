@@ -550,8 +550,9 @@ try:
 except AttributeError:
     CAPTCHA_FONT_SIZE = 30
 
-# key to encrypt observer connector secrets; the fallback chain keeps
-# ciphertext migrated from the legacy RT token decryptable
+# Fernet key encrypting observer connector secrets at rest (e.g. RT token, webhook HMAC).
+# python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key())'
+# Defaults to HASH_KEY, which legacy RT tokens were encrypted with.
 try:
     CONNECTOR_SECRET_KEY = config.CONNECTOR_SECRET_KEY
 except AttributeError:

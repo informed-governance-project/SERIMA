@@ -1,4 +1,3 @@
-import email as email_lib
 import hashlib
 import hmac
 import json
@@ -11,16 +10,11 @@ from django.core import mail
 from django.test import override_settings
 
 from governanceplatform.connectors import (
-    NotificationContext,
     PermanentDeliveryError,
     connector_type_choices,
     get_connector_class,
 )
-from governanceplatform.connectors.email import (
-    EmailListField,
-    encrypt_pgp_mime,
-    get_public_key_info,
-)
+from governanceplatform.connectors.gpg_json import get_public_key_info
 from governanceplatform.models import ObserverConnector
 
 
@@ -42,8 +36,8 @@ def gpg_keypair(tmp_path_factory):
 
 
 def test_registry_contains_builtin_connectors():
-    assert {type_id for type_id, _label in connector_type_choices()} == {"rt", "email", "webhook"}
-    for type_id in ("rt", "email", "webhook"):
+    assert {type_id for type_id, _label in connector_type_choices()} == {"rt", "webhook", "gpg_json"}
+    for type_id in ("rt", "webhook", "gpg_json"):
         assert get_connector_class(type_id).type_id == type_id
 
 
@@ -77,15 +71,6 @@ def test_rt_config_form_rejects_internal_address():
     assert "url" in form.errors
 
 
-def test_email_list_field_parses_and_validates():
-    field = EmailListField(required=False)
-    assert field.clean("a@example.com, b@example.com") == ["a@example.com", "b@example.com"]
-    assert field.clean(["a@example.com"]) == ["a@example.com"]
-    assert field.clean("") == []
-    with pytest.raises(forms.ValidationError):
-        field.clean("not-an-email")
-
-
 def test_gpg_public_key_validation(gpg_keypair):
     _gpg, public_key = gpg_keypair
     fingerprint, expires = get_public_key_info(public_key)
@@ -96,80 +81,25 @@ def test_gpg_public_key_validation(gpg_keypair):
         get_public_key_info("not an armored key")
 
 
-def test_pgp_mime_encryption_roundtrip(gpg_keypair):
-    gpg, public_key = gpg_keypair
-    attachments = [("incident_1.json", json.dumps({"incident": 1}), "application/json")]
-    armored = encrypt_pgp_mime(public_key, "<p>Confidential</p>", attachments)
-    assert armored.startswith("-----BEGIN PGP MESSAGE-----")
+def test_gpg_json_config_form_requires_valid_key(gpg_keypair):
+    _gpg, public_key = gpg_keypair
+    config_form = get_connector_class("gpg_json").config_form
 
-    decrypted = gpg.decrypt(armored)
-    assert decrypted.ok
-    inner = email_lib.message_from_bytes(decrypted.data)
-    parts = {part.get_content_type(): part for part in inner.walk()}
-    assert "<p>Confidential</p>" in parts["text/html"].get_payload(decode=True).decode()
-    assert json.loads(parts["application/json"].get_payload(decode=True)) == {"incident": 1}
+    assert not config_form(data={}).is_valid()
+    assert not config_form(data={"gpg_public_key": "garbage"}).is_valid()
+    assert config_form(data={"gpg_public_key": public_key}).is_valid()
 
 
 @pytest.mark.django_db
-def test_email_connector_sends_encrypted_never_plaintext(populate_db, gpg_keypair):
+def test_gpg_json_test_connection_sends_encrypted_payload_to_observer_only(populate_db, gpg_keypair):
     gpg, public_key = gpg_keypair
     observer = populate_db["observers"][0]
+    assert observer.observeruser_set.exists(), "fixture must provide observer users to prove they are excluded"
     connector = ObserverConnector.objects.create(
         observer=observer,
-        connector_type="email",
-        name="Email",
-        config={
-            "send_to_observer_email": True,
-            "send_to_observer_users": False,
-            "additional_recipients": [],
-            "attach_incident_json": False,
-            "gpg_public_key": public_key,
-        },
-    )
-
-    ctx = NotificationContext(incident=None, subject="Incident", content_html="<p>Secret content</p>")
-    result = connector.get_impl().send(ctx)
-
-    assert result.success
-    assert len(mail.outbox) == 1
-    message = mail.outbox[0].message()
-    assert message.get_content_type() == "multipart/encrypted"
-    assert message.get_param("protocol") == "application/pgp-encrypted"
-    assert "Secret content" not in message.as_string()
-
-    encrypted_part = next(part for part in message.walk() if part.get_content_type() == "application/octet-stream")
-    decrypted = gpg.decrypt(encrypted_part.get_payload(decode=True))
-    assert decrypted.ok
-    inner = email_lib.message_from_bytes(decrypted.data)
-    assert inner.get_content_type() == "text/html"
-    assert "Secret content" in inner.get_payload(decode=True).decode()
-
-
-@pytest.mark.django_db
-def test_email_connector_gpg_fail_closed(populate_db):
-    observer = populate_db["observers"][0]
-    connector = ObserverConnector.objects.create(
-        observer=observer,
-        connector_type="email",
-        name="Email",
-        config={"send_to_observer_email": True, "gpg_public_key": "garbage, not a key"},
-    )
-
-    ctx = NotificationContext(incident=None, subject="Incident", content_html="<p>Secret content</p>")
-    with pytest.raises(PermanentDeliveryError):
-        connector.get_impl().send(ctx)
-
-    assert mail.outbox == []
-
-
-@pytest.mark.django_db
-def test_email_test_connection_sends_test_mail(populate_db):
-    observer = populate_db["observers"][0]
-    connector = ObserverConnector.objects.create(
-        observer=observer,
-        connector_type="email",
-        name="Email",
-        config={"send_to_observer_email": True, "send_to_observer_users": False, "additional_recipients": []},
+        connector_type="gpg_json",
+        name="GPG JSON",
+        config={"gpg_public_key": public_key},
     )
 
     ok, message = connector.get_impl().test_connection()
@@ -177,41 +107,76 @@ def test_email_test_connection_sends_test_mail(populate_db):
     assert ok
     assert observer.email_for_notification in message
     assert len(mail.outbox) == 1
-    assert mail.outbox[0].bcc == [observer.email_for_notification]
-    assert "test message" in mail.outbox[0].body
+    sent = mail.outbox[0]
+    # recipient isolation: only the observer's notification address, never its users
+    assert sent.bcc == [observer.email_for_notification]
+    user_emails = [ou.user.email for ou in observer.observeruser_set.all()]
+    raw_message = sent.message().as_string()
+    for user_email in user_emails:
+        assert user_email not in raw_message
+
+    filename, armored, mimetype = sent.attachments[0]
+    assert filename == "test.json.gpg"
+    assert mimetype == "application/pgp-encrypted"
+    assert armored.startswith("-----BEGIN PGP MESSAGE-----")
+    decrypted = gpg.decrypt(armored)
+    assert decrypted.ok
+    assert json.loads(decrypted.data) == {"event": "ping"}
 
 
 @pytest.mark.django_db
-def test_email_test_connection_encrypts_when_gpg_configured(populate_db, gpg_keypair):
+def test_gpg_json_neutral_envelope(populate_db, gpg_keypair):
     _gpg, public_key = gpg_keypair
     observer = populate_db["observers"][0]
     connector = ObserverConnector.objects.create(
         observer=observer,
-        connector_type="email",
-        name="Email",
-        config={"send_to_observer_email": True, "gpg_public_key": public_key},
+        connector_type="gpg_json",
+        name="GPG JSON",
+        config={"gpg_public_key": public_key},
     )
 
-    ok, message = connector.get_impl().test_connection()
+    ok, _message = connector.get_impl().test_connection()
 
     assert ok
-    assert len(mail.outbox) == 1
-    assert mail.outbox[0].message().get_content_type() == "multipart/encrypted"
+    sent = mail.outbox[0]
+    assert "ping" not in sent.subject
+    assert "ping" not in sent.body
 
 
 @pytest.mark.django_db
-def test_email_test_connection_fails_without_recipients(populate_db):
+def test_gpg_json_fail_closed_on_invalid_key(populate_db):
     observer = populate_db["observers"][0]
     connector = ObserverConnector.objects.create(
         observer=observer,
-        connector_type="email",
-        name="Email",
-        config={"send_to_observer_email": False, "send_to_observer_users": False, "additional_recipients": []},
+        connector_type="gpg_json",
+        name="GPG JSON",
+        config={"gpg_public_key": "garbage, not a key"},
     )
 
     ok, _message = connector.get_impl().test_connection()
 
     assert not ok
+    assert mail.outbox == []
+
+
+@pytest.mark.django_db
+def test_gpg_json_fails_without_observer_email(populate_db, gpg_keypair):
+    _gpg, public_key = gpg_keypair
+    observer = populate_db["observers"][0]
+    observer.email_for_notification = None
+    observer.save()
+    connector = ObserverConnector.objects.create(
+        observer=observer,
+        connector_type="gpg_json",
+        name="GPG JSON",
+        config={"gpg_public_key": public_key},
+    )
+
+    ok, _message = connector.get_impl().test_connection()
+    assert not ok
+
+    with pytest.raises(PermanentDeliveryError):
+        connector.get_impl()._recipient()
     assert mail.outbox == []
 
 
