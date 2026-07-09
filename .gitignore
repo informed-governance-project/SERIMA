@@ -5,6 +5,11 @@ __pycache__/
 .idea
 .vscode/
 
+# Test artifacts
+.coverage
+.coverage.*
+.pytest_cache/
+
 docs/_build/
 
 *.egg-info/

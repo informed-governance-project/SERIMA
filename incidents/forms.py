@@ -1246,5 +1246,3 @@ class ConditionalQuestionOptionForm(forms.ModelForm):
             self.fields["predefined_answer"].queryset = PredefinedAnswer.objects.select_related("question").order_by(
                 "question_id", "position"
             )
-        else:
-            questions_qs = QuestionOptions.objects.none()

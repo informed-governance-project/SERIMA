@@ -1536,7 +1536,12 @@ class ObserverAdmin(CustomTranslatableAdmin):
         return custom_urls + urls
 
     def test_rt_connection_view(self, request, observer_id):
-        if not self.has_change_permission(request):
+        try:
+            observer = Observer.objects.get(pk=observer_id)
+        except Observer.DoesNotExist:
+            return JsonResponse({"success": False, "message": _("Observer not found.")}, status=404)
+
+        if not self.has_change_permission(request, observer):
             raise Http404()
 
         if request.method != "POST":
