@@ -1371,6 +1371,10 @@ class ObserverConnectorInline(admin.TabularInline):
 @admin.register(Observer, site=admin_site)
 class ObserverAdmin(CustomTranslatableAdmin):
     form = ObserverAdminForm
+
+    class Media:
+        css = {"all": ("admin/css/observer_admin.css",)}
+
     list_display = [
         "name_display",
         "full_name_display",
