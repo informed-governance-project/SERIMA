@@ -397,7 +397,7 @@ class ObserverConnector(models.Model):
             self.config = impl.validate_config(self.config or {})
 
     def __str__(self):
-        return f"{self.observer} — {self.name}"
+        return self.name
 
     class Meta:
         verbose_name = _("Observer connector")
