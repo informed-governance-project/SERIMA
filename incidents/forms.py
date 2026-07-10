@@ -199,6 +199,58 @@ def get_previous_answer_display(previous_answer, question_type: str) -> str:
     return str(previous_answer)
 
 
+def build_previous_answer_node(question_option, incident_workflow, include_question_label=False, include_conditionals=True):
+    """Build the previous answer of a question for the "View previous version"
+    modal. Conditional child questions the previous answer had triggered are
+    nested one level deep"""
+    question = question_option.question
+    question_type = question.question_type
+    previous_answer = (
+        Answer.objects.filter(
+            question_options__question=question,
+            incident_workflow__incident=incident_workflow.incident,
+            incident_workflow__timestamp__lt=incident_workflow.timestamp,
+        )
+        .order_by("-timestamp")
+        .first()
+    )
+
+    node = {}
+    if include_question_label:
+        node["question"] = str(question.label)
+        node["field_id"] = "__question__" + str(question_option.id)
+
+    if question_type in ["MULTI", "MT", "SO", "ST"]:
+        previous_ids = set(previous_answer.predefined_answers.values_list("id", flat=True)) if previous_answer else set()
+        conditional_next = {}
+        if include_conditionals:
+            conditional_next = {
+                trigger.predefined_answer_id: trigger.next_question_options_id
+                for trigger in ConditionalQuestionOption.objects.filter(question_options_id=question_option.id, deleted_at__isnull=True)
+            }
+        options = []
+        for choice in question.predefinedanswer_set.all().order_by("position"):
+            option = {"label": str(choice), "checked": choice.id in previous_ids}
+            next_question_options_id = conditional_next.get(choice.id)
+            if next_question_options_id and choice.id in previous_ids:
+                child = QuestionOptions.objects.filter(id=next_question_options_id).first()
+                if child is not None:
+                    option["conditional"] = build_previous_answer_node(
+                        child, incident_workflow, include_question_label=True, include_conditionals=False
+                    )
+            options.append(option)
+        node["kind"] = "choice"
+        node["type"] = "checkbox" if question_type in ["MULTI", "MT"] else "radio"
+        node["options"] = options
+        if question_type in ["ST", "MT"]:
+            node["details"] = {"label": str(_("Add details")), "value": str(previous_answer) if previous_answer else ""}
+    else:
+        node["kind"] = "text"
+        node["value"] = get_previous_answer_display(previous_answer, question_type)
+
+    return node
+
+
 # create a form for each category and add fields which represent questions
 class QuestionForm(forms.Form):
     suffix_freetext = "_freetext_answer"
@@ -309,7 +361,6 @@ class QuestionForm(forms.Form):
             # the choice selection and the details regardless of which changed.
             details_value = None
             details_modified = False
-            previous_details = ""
             if question_type in ["ST", "MT"] and answer_queryset.exists():
                 details_answer = answer_queryset.first()
                 if last_historic_changes.exists():
@@ -318,20 +369,12 @@ class QuestionForm(forms.Form):
                         details_answer = ""
                 details_modified = str(details_answer) != str(previous_answer) if previous_answer else False
                 details_value = str(details_answer) if str(details_answer) != "" else None
-                previous_details = str(previous_answer) if previous_answer else ""
 
             if answer_modified:
                 form_attrs["class"] = form_attrs.get("class", "") + " answer-modified"
 
             if (answer_modified or details_modified) and previous_answer is not None:
-                previous_predefined_ids = set(previous_answer.predefined_answers.values_list("id", flat=True))
-                choices_payload = {
-                    "type": "checkbox" if question_type in ["MULTI", "MT"] else "radio",
-                    "options": [{"label": str(choice), "checked": choice_id in previous_predefined_ids} for choice_id, choice in choices],
-                }
-                if question_type in ["ST", "MT"]:
-                    choices_payload["details"] = {"label": str(_("Add details")), "value": previous_details}
-                form_attrs["data-previous-choices"] = json.dumps(choices_payload)
+                form_attrs["data-previous-choices"] = json.dumps(build_previous_answer_node(question_option, incident_workflow))
 
             self.fields[field_name] = forms.MultipleChoiceField(
                 required=question_option.is_mandatory,
