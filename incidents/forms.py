@@ -204,7 +204,7 @@ class QuestionForm(forms.Form):
         if is_new_incident_workflow:
             last_historic_changes = QuestionOptionsHistory.objects.filter(questionoptions__id=question_option.id).order_by("-timestamp")
         answer_queryset = Answer.objects.filter(
-            question_options_id=question_option.id,
+            question_options__question=question,
             incident_workflow=(incident.get_latest_incident_workflow() if incident else incident_workflow),
         ).order_by("-timestamp")
         previous_answer = None
