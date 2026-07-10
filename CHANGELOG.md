@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- "View previous version" button on questions whose answer changed since the previous report; opens a modal showing the previous answer
+
 ### Fixed
 
 - Password reset email now actually sent after registration; the reset form no longer tries to re-validate the already-consumed registration captcha
