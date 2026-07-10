@@ -72,7 +72,7 @@ class SecurityObjectiveStatusForm(forms.Form):
         choices=[
             ("NOT_REVIEWED", _("Not reviewed")),
             ("PASS", _("Passed")),
-            ("FAIL", _("Fail")),
+            ("FAIL", _("Revision required")),
             ("ALL_PASS", _("All passed")),
             ("ALL_FAIL", _("All revision required")),
         ],

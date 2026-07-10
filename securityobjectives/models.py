@@ -491,7 +491,7 @@ class SecurityObjectiveStatus(models.Model):
         choices=[
             ("NOT_REVIEWED", _("Not reviewed")),
             ("PASS", _("Passed")),
-            ("FAIL", _("Fail")),
+            ("FAIL", _("Revision required")),
         ],
         blank=False,
         default="NOT_REVIEWED",
