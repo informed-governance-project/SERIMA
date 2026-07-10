@@ -154,7 +154,7 @@ def registration_view(request, *args, **kwargs):
             user.groups.add(new_group)
 
             # Send password reset email
-            reset_form = CustomPasswordResetForm({"email": user.email})
+            reset_form = CustomPasswordResetForm({"email": user.email}, require_captcha=False)
             if reset_form.is_valid():
                 reset_form.save(
                     request=request,

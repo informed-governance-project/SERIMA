@@ -1451,6 +1451,20 @@ class WorkflowWizardView(SessionWizardView):
             user = self.request.user
             if is_user_regulator(user) and not self.is_regulator_incident:
                 context["steps"].append(_("Comment/Explanation"))
+
+            # Flag every step whose form holds a changed answer so the wizard
+            # nav highlights them. Only relevant where the "answer-modified"
+            # markers are kept (regulator review / read-only); operators have
+            # them stripped in get_form, so skip the extra form builds for them.
+            context["modified_steps"] = []
+            if self.read_only or (is_user_regulator(user) and not self.is_regulator_incident):
+                saved_is_review = getattr(self, "is_review", False)
+                current_step = self.steps.current
+                for step in self.steps.all:
+                    step_form = form if step == current_step else self.get_form(step)
+                    if any("answer-modified" in field.widget.attrs.get("class", "") for field in step_form.fields.values()):
+                        context["modified_steps"].append(step)
+                self.is_review = saved_is_review
         return context
 
     def render_goto_step(self, goto_step, **kwargs):
