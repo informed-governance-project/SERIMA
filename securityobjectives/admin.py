@@ -267,6 +267,31 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         "security_measure_evidence",
     ]
 
+    # columns advertised on the import page (resource_fields_list.html)
+    IMPORT_FIELDS_DISPLAY = [
+        "standard",
+        "label",
+        "description",
+        "regulation",
+        "security_objective_unique_code",
+        "security_objective_objective",
+        "security_objective_description",
+        "domain",
+        "domain_position",
+        "security_objective_position",
+        "security_objective_priority",
+        "maturity_level",
+        "maturity_level_level",
+        "maturity_level_color",
+        "security_measure_position",
+        "security_measure_description",
+        "security_measure_evidence",
+    ]
+
+    def get_user_visible_fields(self):
+        """List every column accepted by the importer, not only declared fields."""
+        return [fields.Field(column_name=name) for name in self.IMPORT_FIELDS_DISPLAY]
+
     def get_export_order(self):
         """Inject extra columns."""
         base_order = super().get_export_order()
