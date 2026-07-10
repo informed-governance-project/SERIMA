@@ -1457,12 +1457,12 @@ class WorkflowWizardView(SessionWizardView):
         current_step = self.steps.current
         form = self.get_form(current_step, data=self.request.POST, files=self.request.FILES)
 
-        if form.is_valid():
-            self.storage.set_step_data(current_step, self.process_step(form))
-            self.storage.set_step_files(current_step, self.process_step_files(form))
-        elif int(current_step) < int(goto_step):
+        if int(current_step) < int(goto_step) and not form.is_valid():
             # If the form is not valid, we don't allow to go to the next step
             return self.render_revalidation_failure(current_step, form)
+
+        self.storage.set_step_data(current_step, self.process_step(form))
+        self.storage.set_step_files(current_step, self.process_step_files(form))
 
         # If the user is in review mode and is going to the last step,
         # we ensure that all previous steps are stored, this avoid render validation.
