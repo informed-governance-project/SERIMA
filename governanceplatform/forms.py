@@ -118,7 +118,15 @@ class CustomPasswordResetForm(PasswordResetForm):
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop("request", None)
+        require_captcha = kwargs.pop("require_captcha", True)
         super().__init__(*args, **kwargs)
+
+        # The captcha proves a human triggered the request. When the reset email
+        # is dispatched internally (e.g. right after registration) that has
+        # already been verified, so skip it — the captcha is single-use and
+        # cannot be re-validated here anyway.
+        if not require_captcha:
+            del self.fields["captcha"]
 
         if self.request:
             # get the name of the field
