@@ -1,3 +1,5 @@
+import mimetypes
+import os
 from collections import OrderedDict
 
 from django.conf import settings
@@ -8,6 +10,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
 from django.core.mail import EmailMessage
 from django.db.models.functions import Now
+from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
@@ -308,3 +311,19 @@ class CustomPasswordResetView(PasswordResetView):
         context["honeypot_field_name"] = self.request.session.get("honeypot_field_name")
 
         return context
+
+
+def download_admin_file(request, path):
+    base = os.path.realpath(settings.PATH_FOR_REPORTING_PDF)
+    full_path = os.path.join(settings.PATH_FOR_REPORTING_PDF, path)
+
+    if not full_path.startswith(base + os.sep):
+        raise Http404()
+
+    if not os.path.exists(full_path):
+        raise Http404()
+
+    content_type, _ = mimetypes.guess_type(full_path)
+    content_type = content_type or "application/octet-stream"
+
+    return FileResponse(open(full_path, "rb"), content_type=content_type)

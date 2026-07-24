@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import Count, Exists, Max, Model, OuterRef, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import path, reverse
 from django.utils import timezone, translation
@@ -21,6 +21,9 @@ from django.utils.translation import gettext_lazy as _
 from django_otp import devices_for_user, user_has_device
 from django_otp.decorators import otp_required
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from import_export_extensions.admin.model_admins.export_job_admin import ExportJobAdmin
+from import_export_extensions.admin.model_admins.import_job_admin import ImportJobAdmin
+from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
@@ -30,6 +33,7 @@ from incidents.email import check_rt_config, create_or_update_rt_ticket, send_ht
 from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
+    delete_file_and_parents,
     generate_display_methods,
     get_active_company_from_session,
     is_observer_user,
@@ -111,6 +115,80 @@ class CustomAdminSite(admin.AdminSite):
 
 
 admin_site = CustomAdminSite()
+
+
+@admin.register(ImportJob, site=admin_site)
+class CustomImportJobAdmin(ImportJobAdmin):
+    def import_job_progress_view(self, request, job_id, **kwargs):
+        try:
+            response = super().import_job_progress_view(request, job_id, **kwargs)
+        except (KeyError, TypeError):
+            # Construct the answer with the correct value
+            from import_export_extensions.models import ImportJob as ImportJobModel
+
+            try:
+                job = ImportJobModel.objects.get(id=job_id)
+                response = JsonResponse({"status": job.import_status.title()})
+            except ImportJobModel.DoesNotExist:
+                response = JsonResponse({"status": "Unknown"})
+
+        # no cache to be sure the progress bar is not blocking
+        response["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response["Pragma"] = "no-cache"
+        return response
+
+
+@admin.register(ExportJob, site=admin_site)
+class CustomExportJobAdmin(ExportJobAdmin):
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                "<int:job_id>/download-and-delete/",
+                self.admin_site.admin_view(self.download_and_delete_view),
+                name="exportjob_download_and_delete",
+            ),
+        ]
+        return custom_urls + urls
+
+    def download_and_delete_view(self, request, job_id):
+        try:
+            job = ExportJob.objects.get(pk=job_id)
+        except ExportJob.DoesNotExist:
+            raise Http404
+
+        if not job.data_file:
+            raise Http404
+
+        filename = job.data_file.name.split("/")[-1]
+
+        with job.data_file.open("rb") as f:
+            content = f.read()
+
+        delete_file_and_parents(job.data_file, f"export data_file (job {job.pk})")
+
+        response = HttpResponse(
+            content,
+            content_type="application/octet-stream",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    def export_job_progress_view(self, request, job_id, **kwargs):
+        try:
+            response = super().export_job_progress_view(request, job_id, **kwargs)
+        except (KeyError, TypeError):
+            from import_export_extensions.models import ExportJob as ExportJobModel
+
+            try:
+                job = ExportJobModel.objects.get(id=job_id)
+                response = JsonResponse({"status": job.export_status.title()})
+            except ExportJobModel.DoesNotExist:
+                response = JsonResponse({"status": "Unknown"})
+
+        response["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        response["Pragma"] = "no-cache"
+        return response
 
 
 class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmin):

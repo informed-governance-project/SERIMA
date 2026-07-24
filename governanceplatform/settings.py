@@ -142,6 +142,7 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_static",
     "two_factor",
     "import_export",
+    "import_export_extensions",
     "parler",
     "phonenumber_field",
     "django_filters",
@@ -247,8 +248,6 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 
 WSGI_APPLICATION = "governanceplatform.wsgi.application"
 
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -703,3 +702,22 @@ try:
     REFERRER_POLICY = config.REFERRER_POLICY
 except AttributeError:
     REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    # import export extensions storage for export and import in admin
+    "django_import_export_extensions": {
+        "BACKEND": "django.core.files.storage.filesystem.FileSystemStorage",
+        "OPTIONS": {
+            "location": PATH_FOR_REPORTING_PDF,
+            "base_url": "/settings-export-files/",
+        },
+    },
+}
+
+MEDIA_URL = PATH_FOR_REPORTING_PDF

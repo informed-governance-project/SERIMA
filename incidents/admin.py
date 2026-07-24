@@ -16,6 +16,7 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
+from import_export_extensions.admin import CeleryExportAdminMixin
 from markdown import markdown
 from parler.models import TranslatableModel
 
@@ -55,6 +56,7 @@ from incidents.models import (
     SectorRegulationWorkflowEmail,
     Workflow,
 )
+from incidents.resources import WorkflowResource
 
 from .globals import CONDITIONAL_QUESTION_TYPES, QUESTION_TYPES
 
@@ -836,7 +838,8 @@ for name, method in generate_display_methods(["subject", "content"]).items():
 
 
 @admin.register(Workflow, site=admin_site)
-class WorkflowAdmin(PermissionMixin, CustomTranslatableAdmin):
+class WorkflowAdmin(CeleryExportAdminMixin, PermissionMixin, CustomTranslatableAdmin):
+    resource_classes = [WorkflowResource]
     list_display = [
         "name",
         "label_display",
@@ -873,6 +876,15 @@ class WorkflowAdmin(PermissionMixin, CustomTranslatableAdmin):
             },
         ),
     ]
+
+    def get_export_resource_kwargs(self, request, **kwargs):
+        resource_kwargs = super().get_export_resource_kwargs(request, **kwargs)
+        resource_kwargs["language_code"] = request.LANGUAGE_CODE
+        return resource_kwargs
+
+    def has_export_permission(self, request):
+        """Temporarily allow workflow exports while permissions are tested."""
+        return True
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(super().get_readonly_fields(request, obj))

@@ -117,4 +117,9 @@ urlpatterns = [
     ),
     # URL patterns to serve the translations in JavaScript
     path("jsi18n/", JavaScriptCatalog.as_view(), name="javascript-catalog"),
+    path(
+        "settings-export-files/<path:path>",
+        views.download_admin_file,
+        name="download_admin_file",
+    ),
 ]
