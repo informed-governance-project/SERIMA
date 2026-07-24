@@ -118,7 +118,7 @@ class WorkflowResource(CeleryModelResource):
         )
 
     @classmethod
-    def get_model_queryset(cls):
+    def _prepare_export_queryset(cls, queryset):
         active_conditional_triggers = (
             ConditionalQuestionOption.objects.filter(deleted_at__isnull=True)
             .select_related("next_question_options__question")
@@ -146,22 +146,23 @@ class WorkflowResource(CeleryModelResource):
                 ),
             )
         )
-        return (
-            Workflow.objects.select_related("submission_email", "creator")
-            .prefetch_related(
-                "translations",
-                "creator__translations",
-                Prefetch(
-                    "questionoptions_set",
-                    queryset=question_options,
-                    to_attr="export_question_options",
-                ),
-            )
-            .order_by("name", "pk")
+        return queryset.select_related("submission_email", "creator").prefetch_related(
+            "translations",
+            "creator__translations",
+            Prefetch(
+                "questionoptions_set",
+                queryset=question_options,
+                to_attr="export_question_options",
+            ),
         )
+
+    @classmethod
+    def get_model_queryset(cls):
+        return Workflow.objects.order_by("name", "pk")
 
     def _export(self, queryset, **kwargs):
         """Flatten workflows without losing questions which have no choices."""
+        queryset = self._prepare_export_queryset(queryset)
         self.before_export(queryset, **kwargs)
         selected_fields = kwargs.get("export_fields")
         dataset = tablib.Dataset(headers=self.get_export_headers(selected_fields=selected_fields))
