@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - "View previous version" button on questions whose answer changed since the previous report; opens a modal showing the previous answer
+- "View previous version" button on security-measure rows whose implementation, justification or review comment changed from the previous declaration version; opens a modal showing the previous values
 
 ### Fixed
 
