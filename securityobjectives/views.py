@@ -382,6 +382,27 @@ def declaration(request):
                         status=404,
                     )
 
+    # Previous version of this declaration (prior StandardAnswer in the same
+    # group), used to flag SecurityMeasure rows whose answer has since changed.
+    previous_standard_answer = (
+        StandardAnswer.objects.filter(
+            group=standard_answer.group,
+            creation_date__lt=standard_answer.creation_date,
+        )
+        .order_by("-creation_date")
+        .first()
+    )
+    previous_answers_by_measure = (
+        {sma.security_measure_id: sma for sma in SecurityMeasureAnswer.objects.filter(standard_answer=previous_standard_answer)}
+        if previous_standard_answer is not None
+        else {}
+    )
+    previous_status_by_objective = (
+        {sos.security_objective_id: sos for sos in SecurityObjectiveStatus.objects.filter(standard_answer=previous_standard_answer)}
+        if previous_standard_answer is not None
+        else {}
+    )
+
     security_objectives = defaultdict(lambda: defaultdict(list))
 
     for so_in_standard in security_objectives_queryset:
@@ -407,6 +428,14 @@ def declaration(request):
 
         security_objective.status_form = SecurityObjectiveStatusForm(initial=initial, prefix=f"{security_objective.id}")
 
+        previous_status = previous_status_by_objective.get(security_objective.id)
+        current_actions = (initial.get("actions") or "") if isinstance(initial, dict) else ""
+        security_objective.actions_modified = previous_standard_answer is not None and current_actions != (
+            (previous_status.actions if previous_status else "") or ""
+        )
+        if security_objective.actions_modified:
+            security_objective.previous_actions = (previous_status.actions if previous_status else "") or ""
+
         for measure in security_measures:
             try:
                 sm_answer = SecurityMeasureAnswer.objects.get(
@@ -425,6 +454,19 @@ def declaration(request):
             initial["is_readonly"] = (is_user_operator(user) and standard_answer.status != "UNDE") or (
                 is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"]
             )
+
+            previous_sma = previous_answers_by_measure.get(measure.id)
+            measure.answer_modified = previous_standard_answer is not None and (
+                bool(initial.get("is_implemented")) != (previous_sma.is_implemented if previous_sma else False)
+                or (initial.get("justification") or "") != (previous_sma.justification if previous_sma else "")
+                or (initial.get("review_comment") or "") != (previous_sma.review_comment if previous_sma else "")
+            )
+            if measure.answer_modified:
+                measure.previous_answer = {
+                    "is_implemented": previous_sma.is_implemented if previous_sma else False,
+                    "justification": (previous_sma.justification if previous_sma else "") or "",
+                    "review_comment": (previous_sma.review_comment if previous_sma else "") or "",
+                }
 
             security_objective = measure.security_objective
             maturity_level = measure.maturity_level
