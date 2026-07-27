@@ -87,6 +87,25 @@ Incident Notification Module
    ui_regulator_admin/index
    ui_platform_admin/index
 
+.. toctree::
+   :caption: Reporting module
+   :maxdepth: 3
+   :hidden:
+
+   ui_introduction
+   ui_homepage
+   ui_reporting_dashboard
+   ui_managing_dashboard
+   ui_create_project
+   ui_open_project
+   ui_edit_project
+   ui_duplicate_project
+   ui_delete_project
+   ui_import
+   ui_generate_and download_report
+   ui_report_back_end
+   ui_bulk_report_and error_log
+
 
 Presentation
 ------------
