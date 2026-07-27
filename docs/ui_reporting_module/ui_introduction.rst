@@ -1,4 +1,5 @@
-## 1. Purpose
+Purpose
+~~~~~~~~~~~~~~~~~~~
 
 The Reporting Module is intended exclusively for regulators. Only users with the roles of Regulator Admin or Regulator User can access and view the Reporting Module.
 
