@@ -1,3 +1,5 @@
+<!-- markdownlint-configure-file { "MD024": { "siblings_only": true } } -->
+
 # Changelog
 
 All notable changes to SERIMA are documented in this file.
@@ -16,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Connector delivery tracking (`ConnectorDelivery`) with status, attempts and last error, visible per incident
 - Per-observer allowed-connector-types filter: PlatformAdmin selects which connector types each observer may use; the list is hidden from Observer admins and restricts the connector types they can create
 - Per-connector "Test connection" button in the admin, replacing the RT-only one: it now sends a real test message (RT test ticket, encrypted test payload, webhook ping) so delivery and decryption are verified end-to-end
+- "View previous version" button on questions whose answer changed since the previous report; opens a modal showing the previous answer
 
 ### Changed
 
@@ -26,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `rt_url` / `rt_token` / `rt_queue` fields on Observer and the `RTTicket` model; existing RT configurations and tickets are migrated automatically to the new connector structure
+
+### Fixed
+
+- Password reset email now actually sent after registration; the reset form no longer tries to re-validate the already-consumed registration captcha
 
 ## [0.5.16] - 2026-07-06
 
