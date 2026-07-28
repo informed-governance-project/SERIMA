@@ -19,6 +19,7 @@ from markdown import markdown
 
 from incidents.models import (
     Answer,
+    ConditionalQuestionOption,
     Incident,
     PredefinedAnswer,
     Question,
@@ -247,6 +248,10 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
     # [Workflow] in_use flag is set to False
     if isinstance(obj, Workflow):
         in_use = False
+
+    # [ConditionalQuestionOption] in_use flag is set to False
+    if isinstance(obj, ConditionalQuestionOption):
+        in_use = obj.is_in_use()
 
     # [Sector Regulation] Check if obj is already in use
     if isinstance(obj, SectorRegulation):

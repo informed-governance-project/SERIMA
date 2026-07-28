@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from types import SimpleNamespace
 
@@ -18,13 +19,16 @@ from governanceplatform.helpers import (
 from governanceplatform.models import Regulation, Regulator, Sector, Service
 from governanceplatform.settings import TIME_ZONE
 
-from .globals import REGIONAL_AREA
+from .globals import CONDITIONAL_QUESTION_TYPES, REGIONAL_AREA
 from .helpers import get_workflow_categories
 from .models import (
     Answer,
+    ConditionalQuestionOption,
+    ConditionalQuestionOptionsHistory,
     Impact,
     Incident,
     IncidentWorkflow,
+    PredefinedAnswer,
     QuestionOptions,
     QuestionOptionsHistory,
     ReportTimeline,
@@ -103,9 +107,32 @@ class DropdownCheckboxSelectMultiple(ChoiceWidget):
         super().__init__(*args, **kwargs)
 
 
-# Class for Multichoice and single choice
-# TO DO : improve layout
-class OtherCheckboxSelectMultiple(ChoiceWidget):
+class ConditionalChoiceWidgetMixin:
+    """Mixin for choice widgets (radio/checkbox) that exposes the
+    conditional jump map as a ``data-conditionals`` JSON attribute on the
+    widget's wrapping element.
+
+    Pass ``conditional_map`` as a dict
+    ``{predefined_answer_id: next_question_options_id}`` when
+    instantiating the widget.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.conditional_map = kwargs.pop("conditional_map", {})
+        super().__init__(*args, **kwargs)
+
+    def get_context(self, name, value, attrs):
+        context = super().get_context(name, value, attrs)
+        if self.conditional_map:
+            context["widget"]["attrs"]["data_conditionals"] = json.dumps({str(k): v for k, v in self.conditional_map.items()})
+        return context
+
+
+class ConditionalCheckboxSelectMultiple(ConditionalChoiceWidgetMixin, forms.CheckboxSelectMultiple):
+    """CheckboxSelectMultiple with conditional data attribute support."""
+
+
+class OtherCheckboxSelectMultiple(ConditionalChoiceWidgetMixin, ChoiceWidget):
     allow_multiple_selected = True
     input_type = "checkbox"
     template_name = "django/forms/widgets/other_checkbox_select.html"
@@ -157,6 +184,73 @@ class OtherCheckboxSelectMultiple(ChoiceWidget):
         return groups
 
 
+def get_previous_answer_display(previous_answer, question_type: str) -> str:
+    """Human-readable rendering of a previous free-text/coded Answer, shown in
+    the "View previous version" modal. Choice questions (MULTI/MT/SO/ST) carry
+    their previous selection as structured data instead (data-previous-choices)."""
+    if previous_answer is None:
+        return ""
+    if question_type == "RL":
+        regions = dict(REGIONAL_AREA)
+        return " - ".join(str(regions.get(code, code)) for code in filter(None, str(previous_answer).split(",")))
+    if question_type == "CL":
+        countries_dict = dict(countries)
+        return " - ".join(str(countries_dict.get(code, code)) for code in filter(None, str(previous_answer).split(",")))
+    return str(previous_answer)
+
+
+def build_previous_answer_node(question_option, incident_workflow, include_question_label=False, include_conditionals=True):
+    """Build the previous answer of a question for the "View previous version"
+    modal. Conditional child questions the previous answer had triggered are
+    nested one level deep"""
+    question = question_option.question
+    question_type = question.question_type
+    previous_answer = (
+        Answer.objects.filter(
+            question_options__question=question,
+            incident_workflow__incident=incident_workflow.incident,
+            incident_workflow__timestamp__lt=incident_workflow.timestamp,
+        )
+        .order_by("-timestamp")
+        .first()
+    )
+
+    node = {}
+    if include_question_label:
+        node["question"] = str(question.label)
+        node["field_id"] = "__question__" + str(question_option.id)
+
+    if question_type in ["MULTI", "MT", "SO", "ST"]:
+        previous_ids = set(previous_answer.predefined_answers.values_list("id", flat=True)) if previous_answer else set()
+        conditional_next = {}
+        if include_conditionals:
+            conditional_next = {
+                trigger.predefined_answer_id: trigger.next_question_options_id
+                for trigger in ConditionalQuestionOption.objects.filter(question_options_id=question_option.id, deleted_at__isnull=True)
+            }
+        options = []
+        for choice in question.predefinedanswer_set.all().order_by("position"):
+            option = {"label": str(choice), "checked": choice.id in previous_ids}
+            next_question_options_id = conditional_next.get(choice.id)
+            if next_question_options_id and choice.id in previous_ids:
+                child = QuestionOptions.objects.filter(id=next_question_options_id).first()
+                if child is not None:
+                    option["conditional"] = build_previous_answer_node(
+                        child, incident_workflow, include_question_label=True, include_conditionals=False
+                    )
+            options.append(option)
+        node["kind"] = "choice"
+        node["type"] = "checkbox" if question_type in ["MULTI", "MT"] else "radio"
+        node["options"] = options
+        if question_type in ["ST", "MT"]:
+            node["details"] = {"label": str(_("Add details")), "value": str(previous_answer) if previous_answer else ""}
+    else:
+        node["kind"] = "text"
+        node["value"] = get_previous_answer_display(previous_answer, question_type)
+
+    return node
+
+
 # create a form for each category and add fields which represent questions
 class QuestionForm(forms.Form):
     suffix_freetext = "_freetext_answer"
@@ -205,7 +299,7 @@ class QuestionForm(forms.Form):
                         initial_predefined_answers = []
 
                 answer_modified = (
-                    initial_predefined_answers != list(previous_answer.predefined_answers.all().values_list("id", flat=True))
+                    set(initial_predefined_answers) != set(previous_answer.predefined_answers.all().values_list("id", flat=True))
                     if previous_answer
                     else False
                 )
@@ -217,34 +311,84 @@ class QuestionForm(forms.Form):
                 "data-bs-toggle": "tooltip",
             }
 
+            # build a mapping {predefined_answer_id: next_question_options_id}
+            # for any conditional jumps configured on this question_option
+            conditional_map = {}
+
+            all_triggers = (
+                question_option.conditional_triggers.all()
+                if hasattr(question_option, "conditional_triggers")
+                else ConditionalQuestionOption.objects.filter(question_options_id=question_option.id)
+            )
+            historic_triggers = ConditionalQuestionOptionsHistory.objects.filter(question_options_id=question_option.id)
+            if not all_triggers.exists() and not historic_triggers.exists():
+                conditional_map = None
+            else:
+                current_triggers = all_triggers.filter(deleted_at__isnull=True).select_related("next_question_options")
+                deleted_triggers = all_triggers.filter(deleted_at__isnull=False).select_related("next_question_options")
+                if current_triggers.exists():
+                    conditional_map.update(
+                        {
+                            c.predefined_answer_id: c.next_question_options_id
+                            for c in current_triggers
+                            if c.next_question_options.is_conditional
+                        }
+                    )
+
+                if answer_queryset.first() and not is_new_incident_workflow:
+                    if deleted_triggers.exists():
+                        conditional_map.update(
+                            {
+                                c.predefined_answer_id: c.next_question_options_id
+                                for c in deleted_triggers
+                                if c.deleted_at > answer_queryset.first().timestamp
+                            }
+                        )
+                    if historic_triggers.exists():
+                        conditional_map.update(
+                            {
+                                c.predefined_answer_id: c.next_question_options_id
+                                for c in historic_triggers
+                                if c.timestamp > answer_queryset.first().timestamp
+                            }
+                        )
+
             if question_type not in ["MULTI", "MT"]:
                 form_attrs["class"] = "form-check-input"
 
+            # ST/MT questions add a free-text "Add details" field; compute its
+            # previous value and whether it changed, so the modal can show both
+            # the choice selection and the details regardless of which changed.
+            details_value = None
+            details_modified = False
+            if question_type in ["ST", "MT"] and answer_queryset.exists():
+                details_answer = answer_queryset.first()
+                if last_historic_changes.exists():
+                    last_historic = last_historic_changes.first()
+                    if last_historic.timestamp > details_answer.timestamp and last_historic.question != question_option.question:
+                        details_answer = ""
+                details_modified = str(details_answer) != str(previous_answer) if previous_answer else False
+                details_value = str(details_answer) if str(details_answer) != "" else None
+
             if answer_modified:
                 form_attrs["class"] = form_attrs.get("class", "") + " answer-modified"
+
+            if (answer_modified or details_modified) and previous_answer is not None:
+                form_attrs["data-previous-choices"] = json.dumps(build_previous_answer_node(question_option, incident_workflow))
 
             self.fields[field_name] = forms.MultipleChoiceField(
                 required=question_option.is_mandatory,
                 choices=choices,
                 widget=(
-                    forms.CheckboxSelectMultiple(attrs=form_attrs)
+                    ConditionalCheckboxSelectMultiple(attrs=form_attrs, conditional_map=conditional_map)
                     if question_type in ["MULTI", "MT"]
-                    else OtherCheckboxSelectMultiple(input_type="radio", attrs=form_attrs)
+                    else OtherCheckboxSelectMultiple(input_type="radio", attrs=form_attrs, conditional_map=conditional_map)
                 ),
                 label=question.label,
                 initial=initial_data,
             )
 
             if question_type in ["ST", "MT"]:
-                value = None
-                if answer_queryset.exists():
-                    answer = answer_queryset.first()
-                    if last_historic_changes.exists():
-                        last_historic = last_historic_changes.first()
-                        if last_historic.timestamp > answer.timestamp and last_historic.question != question_option.question:
-                            answer = ""
-                    answer_modified = str(answer) != str(previous_answer) if previous_answer else False
-                    value = str(answer) if str(answer) != "" else None
                 self.fields[field_name + self.suffix_freetext] = forms.CharField(
                     required=False,
                     widget=forms.Textarea(
@@ -252,10 +396,10 @@ class QuestionForm(forms.Form):
                             "rows": 3,
                             "title": question.tooltip,
                             "data-bs-toggle": "tooltip",
-                            "class": "st-mt-answer-modified " if answer_modified else "",
+                            "class": "st-mt-answer-modified " if details_modified else "",
                         }
                     ),
-                    initial=str(value or ""),
+                    initial=str(details_value or ""),
                     label=_("Add details"),
                 )
         elif question_type == "DATE":
@@ -276,6 +420,8 @@ class QuestionForm(forms.Form):
                         "data-bs-toggle": "tooltip",
                         "append": "fa fa-calendar",
                         "icon_toggle": True,
+                        "class": "answer-modified" if answer_modified else "",
+                        "data-previous-answer": str(previous_answer) if answer_modified else "",
                     },
                 ),
                 required=question_option.is_mandatory,
@@ -295,6 +441,7 @@ class QuestionForm(forms.Form):
 
             classes = "empty_field " if not initial_data else ""
             classes += "answer-modified " if answer_modified else ""
+
             self.fields[field_name] = forms.CharField(
                 required=question_option.is_mandatory,
                 widget=forms.Textarea(
@@ -303,6 +450,7 @@ class QuestionForm(forms.Form):
                         "title": question.tooltip,
                         "data-bs-toggle": "tooltip",
                         "class": classes,
+                        "data-previous-answer": str(previous_answer) if answer_modified else "",
                     }
                 ),
                 initial=str(initial_data or ""),
@@ -321,10 +469,20 @@ class QuestionForm(forms.Form):
             self.fields[field_name] = forms.MultipleChoiceField(
                 required=question_option.is_mandatory,
                 choices=countries if question_type == "CL" else REGIONAL_AREA,
-                widget=DropdownCheckboxSelectMultiple(attrs={"class": "answer-modified"} if answer_modified else None),
+                widget=DropdownCheckboxSelectMultiple(
+                    attrs={
+                        "class": "answer-modified",
+                        "data-previous-answer": get_previous_answer_display(previous_answer, question_type),
+                    }
+                    if answer_modified
+                    else None
+                ),
                 label=question.label,
                 initial=initial_data or [],
             )
+
+        # Conditional Questions
+        self.fields[field_name].is_conditional = question_option.is_conditional
 
     def clean(self):
         cleaned_data = super().clean()
@@ -391,7 +549,9 @@ class QuestionForm(forms.Form):
                         "id": question_option.id,
                         "question": historic.question,
                         "is_mandatory": historic.is_mandatory,
+                        "is_conditional": historic.is_conditional,
                         "position": historic.position,
+                        "conditional_map": {c.predefined_answer_id: c.next_question_options_id for c in historic.conditional_maps.all()},
                     }
                     category_question_options.append(SimpleNamespace(**old_question_option))
                     category_question_options = sorted(category_question_options, key=lambda c: c.position)
@@ -404,7 +564,7 @@ class QuestionForm(forms.Form):
 class ContactForm(forms.Form):
     company_name = forms.CharField(
         required=True,
-        label=_("Name of the Operator"),
+        label=_("Legal Entity Name"),
         max_length=100,
         widget=forms.TextInput(attrs={"class": "company_name"}),
     )
@@ -968,6 +1128,14 @@ class IncidentStatusForm(forms.ModelForm):
         self.fields["incident_status"].required = False
         self.fields["is_significative_impact"].required = False
 
+        self.fields["is_significative_impact"].label = _("Set to significant impact")
+        if self.initial.get("is_significative_impact"):
+            self.fields["is_significative_impact"].label = _("Set to no significant impact")
+
+        self.fields["incident_status"].label = _("Set to Active")
+        if self.initial.get("incident_status") == "GOING":
+            self.fields["incident_status"].label = _("Set to Inactive")
+
         self.fields["incident_id"].widget.attrs = {
             "class": "form-control-sm incident-input-field ",
             "data-incident-id": self.instance.pk,
@@ -976,10 +1144,11 @@ class IncidentStatusForm(forms.ModelForm):
         self.fields["is_significative_impact"].widget.attrs = {
             "class": "large-checkbox incident-input-field is_significative_impact_checkbox",
             "data-incident-id": self.instance.pk,
+            "id": f"is_significative_impact_{self.instance.pk}",
         }
 
         if self.instance.incident_status == "CLOSE":
-            self.fields["is_significative_impact"].widget.attrs["disabled"] = "true"
+            self.fields["is_significative_impact"].disabled = True
 
     class Meta:
         model = Incident
@@ -1004,6 +1173,9 @@ def set_initial_datetime(form, field_name, datetime_value, timezone, previous_re
         previous_value = getattr(previous_report.report_timeline, field_name)
         if previous_value != datetime_value:
             form.fields[field_name].widget.attrs["class"] = form.fields[field_name].widget.attrs.get("class", "") + " answer-modified"
+            form.fields[field_name].widget.attrs["data-previous-answer"] = (
+                format_datetime_astimezone(previous_value, timezone) if previous_value else ""
+            )
 
 
 class QuestionOptionsInlineForm(forms.ModelForm):
@@ -1072,3 +1244,92 @@ class ExportIncidentsForm(forms.Form):
         self.fields["regulation"].queryset = regulation_qs
         self.fields["sectorregulation"].queryset = sectorregulation_qs
         self.fields["workflow"].queryset = workflow_qs
+
+
+class QuestionOptionsModelChoiceIterator(forms.models.ModelChoiceIterator):
+    def __iter__(self):
+        if self.field.empty_label is not None:
+            yield ("", self.field.empty_label)
+
+        last_key = None
+        group = []
+        group_label = None
+
+        for obj in self.queryset:
+            category = obj.category_option.question_category
+            key = category.pk
+
+            if key != last_key:
+                if group:
+                    yield (group_label, group)
+                group = []
+                last_key = key
+                group_label = str(category)
+
+            group.append(self.choice(obj))
+
+        if group:
+            yield (group_label, group)
+
+
+class ReportModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return str(obj.name)
+
+
+class QuestionOptionsModelChoiceField(forms.ModelChoiceField):
+    iterator = QuestionOptionsModelChoiceIterator
+
+
+class ConditionalQuestionOptionForm(forms.ModelForm):
+    report = ReportModelChoiceField(
+        queryset=Workflow.objects.none(),
+        label=_("Report"),
+    )
+    question_options = QuestionOptionsModelChoiceField(
+        queryset=QuestionOptions.objects.none(),
+        label=_("Question"),
+    )
+    predefined_answer = forms.ModelChoiceField(
+        queryset=PredefinedAnswer.objects.none(),
+        label=_("Selected answer"),
+    )
+    next_question_options = forms.ModelChoiceField(
+        queryset=QuestionOptions.objects.none(),
+        label=_("Next question"),
+    )
+
+    class Meta:
+        model = ConditionalQuestionOption
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # pre-select report from the existing instance so the filter
+        # field reflects the saved state when editing
+        if self.instance and self.instance.pk and self.instance.question_options_id:
+            self.fields["report"].initial = self.instance.question_options.report_id
+
+        # narrow by report if one was submitted or pre-selected
+        selected_report_id = self.data.get("report") or (
+            self.instance.question_options.report_id if self.instance and self.instance.pk and self.instance.question_options_id else None
+        )
+
+        if selected_report_id:
+            questions_qs = (
+                QuestionOptions.objects.filter(
+                    deleted_date=None,
+                    report_id=selected_report_id,
+                )
+                .select_related("report", "category_option__question_category", "question")
+                .order_by("category_option__question_category_id", "category_option__position", "position")
+            )
+
+            self.fields["question_options"].queryset = questions_qs.filter(
+                question__question_type__in=CONDITIONAL_QUESTION_TYPES, is_conditional=False
+            )
+            self.fields["next_question_options"].queryset = questions_qs.filter(is_conditional=True)
+            self.fields["predefined_answer"].queryset = PredefinedAnswer.objects.select_related("question").order_by(
+                "question_id", "position"
+            )

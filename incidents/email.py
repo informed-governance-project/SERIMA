@@ -1,5 +1,6 @@
 import logging
 from datetime import date
+from urllib.parse import quote, urlparse
 
 import requests
 from django.conf import settings
@@ -256,8 +257,10 @@ def check_rt_config(observer):
     if not observer.rt_url or not observer.rt_queue or not observer.rt_token:
         return False
 
-    base_url = observer.rt_url.rstrip("/")
-    url = f"{base_url}/REST/2.0/queue/{observer.rt_queue}"
+    parsed = urlparse(observer.rt_url)
+    base_url = f"{parsed.scheme}://{parsed.netloc}"
+    encoded_queue = quote(observer.rt_queue, safe="")
+    url = f"{base_url}/REST/2.0/queue/{encoded_queue}"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"token {observer.rt_token}",

@@ -72,7 +72,7 @@ services:
 
   redis:
     container_name: ${SERIMA_ENVIRONMENT}-serima-redis
-    image: docker.io/redis:7-alpine
+    image: docker.io/redis:8-alpine
     volumes:
       - ../../files/redis/data:/data
     restart: unless-stopped

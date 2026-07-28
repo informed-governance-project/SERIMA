@@ -22,7 +22,7 @@ copyright = "2023-2026 Luxembourg House of Cybersecurity"
 author = "NC3 Team <info@nc3.lu>"
 
 # The full version, including alpha/beta/rc tags
-release = "0.5.14"
+release = "0.5.16"
 
 
 # -- General configuration ---------------------------------------------------
