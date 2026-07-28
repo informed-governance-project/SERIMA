@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-03 16:41+0200\n"
+"POT-Creation-Date: 2026-07-28 12:59+0200\n"
 "PO-Revision-Date: 2026-07-04 15:28+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
@@ -48,7 +48,7 @@ msgstr "Categorieën van entiteiten"
 #: governanceplatform/admin.py:498 governanceplatform/models.py:83
 #: governanceplatform/models.py:660 incidents/admin.py:595
 #: incidents/admin.py:663 incidents/admin.py:998 incidents/filters.py:19
-#: incidents/forms.py:693 incidents/models.py:48 incidents/models.py:316
+#: incidents/forms.py:777 incidents/models.py:48 incidents/models.py:316
 #: incidents/views.py:1048 reporting/admin.py:65 reporting/filters.py:31
 #: reporting/forms.py:47 reporting/forms.py:166 reporting/models.py:323
 #: reporting/models.py:497 securityobjectives/filters.py:21
@@ -127,23 +127,23 @@ msgstr "RT-verbinding testen"
 msgid "Before testing the connection, make sure to save the RT configuration."
 msgstr "Sla de RT-configuratie op voordat u de verbinding test."
 
-#: governanceplatform/admin.py:1543
-msgid "Method not allowed."
-msgstr "Methode niet toegstaan."
-
-#: governanceplatform/admin.py:1548
+#: governanceplatform/admin.py:1542 governanceplatform/admin.py:1553
 msgid "Observer not found."
 msgstr "Waarnemer niet gevonden."
 
-#: governanceplatform/admin.py:1553
+#: governanceplatform/admin.py:1548
+msgid "Method not allowed."
+msgstr "Methode niet toegstaan."
+
+#: governanceplatform/admin.py:1558
 msgid "Permission denied."
 msgstr "Toestemming geweigerd."
 
-#: governanceplatform/admin.py:1575
+#: governanceplatform/admin.py:1580
 msgid "RT connection successful."
 msgstr "RT-verbinding succesvol."
 
-#: governanceplatform/admin.py:1577
+#: governanceplatform/admin.py:1582
 msgid "RT connection failed. Check URL, queue and token."
 msgstr "RT-verbinding mislukt. Controleer URL, wachtrij en token."
 
@@ -209,7 +209,7 @@ msgstr ""
 "Cookie gebruikt om CSRF-aanvallen (Cross-Site Request Forgery) te bestrijden."
 
 #: governanceplatform/config.py:161 governanceplatform/config_dev.py:156
-#: governanceplatform/forms.py:342 governanceplatform/models.py:304
+#: governanceplatform/forms.py:350 governanceplatform/models.py:304
 msgid "Token"
 msgstr "Token"
 
@@ -244,11 +244,11 @@ msgstr "Incidentmelding"
 msgid "Modules"
 msgstr "Modules"
 
-#: governanceplatform/forms.py:26 governanceplatform/forms.py:184
+#: governanceplatform/forms.py:26 governanceplatform/forms.py:192
 msgid "First name"
 msgstr "Voornaam"
 
-#: governanceplatform/forms.py:31 governanceplatform/forms.py:185
+#: governanceplatform/forms.py:31 governanceplatform/forms.py:193
 msgid "Last name"
 msgstr "Achternaam"
 
@@ -272,21 +272,21 @@ msgstr "Rol"
 msgid "Email"
 msgstr "E-mail"
 
-#: governanceplatform/forms.py:180 governanceplatform/forms.py:297
+#: governanceplatform/forms.py:188 governanceplatform/forms.py:305
 msgid "I acknowledge and agree to the"
 msgstr "Ik erken en aanvaard de"
 
-#: governanceplatform/forms.py:181
+#: governanceplatform/forms.py:189
 msgid "Accepting the Terms of Use is required for registration."
 msgstr ""
 "Aanvaarding van de gebruiksvoorwaarden is vereist om een account aan te "
 "maken."
 
-#: governanceplatform/forms.py:242
+#: governanceplatform/forms.py:250
 msgid "There is an issue, please verify your e-mail"
 msgstr "Er is een probleem, gelieve uw e-mail te controleren"
 
-#: governanceplatform/forms.py:273
+#: governanceplatform/forms.py:281
 #, python-format
 msgid ""
 "Default language translation (%(fallback_language_name)s) is missing. Please "
@@ -295,18 +295,18 @@ msgstr ""
 "Standaardtaal is niet ingesteld (%(fallback_language_name)s). Voeg deze toe "
 "voordat u opslaat."
 
-#: governanceplatform/forms.py:289
+#: governanceplatform/forms.py:297
 #, python-format
 msgid "This %(model)s already exists."
 msgstr "Deze %(model)s bestaat al."
 
-#: governanceplatform/forms.py:307
+#: governanceplatform/forms.py:315
 msgid "I agree that my personal data may be used for communication purposes."
 msgstr ""
 "Ik aanvaard dat mijn persoonlijke gegevens worden gebruikt voor "
 "communicatiedoeleinden."
 
-#: governanceplatform/forms.py:331
+#: governanceplatform/forms.py:339
 msgid ""
 "A token is already set. To remove it, clear the field and save. To update "
 "it, enter a new token."
@@ -602,7 +602,7 @@ msgstr "Label"
 msgid "Regulations"
 msgstr "Regelgevingen"
 
-#: governanceplatform/models.py:624 incidents/forms.py:1108
+#: governanceplatform/models.py:624 incidents/forms.py:1195
 #: incidents/models.py:469 reporting/admin.py:108 reporting/forms.py:141
 #: securityobjectives/models.py:234
 msgid "Regulation"
@@ -778,7 +778,7 @@ msgstr "Uw bericht is verzonden."
 msgid "Invalid captcha"
 msgstr "Ongeldige captcha"
 
-#: incidents/admin.py:226 incidents/forms.py:1204 incidents/models.py:158
+#: incidents/admin.py:226 incidents/forms.py:1291 incidents/models.py:158
 #: incidents/models.py:166 incidents/models.py:1012
 msgid "Question"
 msgstr "Vraag"
@@ -803,7 +803,7 @@ msgstr "Geselecteerde items kopiëren"
 msgid "Question Type"
 msgstr "Soort van vraag"
 
-#: incidents/admin.py:460 incidents/forms.py:1113 incidents/models.py:358
+#: incidents/admin.py:460 incidents/forms.py:1200 incidents/models.py:358
 #: incidents/models.py:532
 msgid "Workflow"
 msgstr "Workflow"
@@ -821,7 +821,7 @@ msgstr ""
 "alleen rapporten weergegeven die voorwaardelijke vragen bevatten."
 
 #: incidents/admin.py:647 incidents/admin.py:864 incidents/admin.py:977
-#: securityobjectives/admin.py:637
+#: securityobjectives/admin.py:662
 msgid "General"
 msgstr "Algemeen"
 
@@ -838,20 +838,20 @@ msgid "Email type"
 msgstr "E-mailtype"
 
 #: incidents/admin.py:805 incidents/models.py:209
-#: securityobjectives/admin.py:1147 securityobjectives/models.py:191
+#: securityobjectives/admin.py:1172 securityobjectives/models.py:191
 msgid "Content"
 msgstr "Inhoud"
 
-#: incidents/admin.py:812 securityobjectives/admin.py:1157
+#: incidents/admin.py:812 securityobjectives/admin.py:1182
 msgid "HTML preview"
 msgstr "HTML voorvertoning"
 
-#: incidents/admin.py:815 securityobjectives/admin.py:1160
+#: incidents/admin.py:815 securityobjectives/admin.py:1185
 msgid "No preview yet"
 msgstr "Nog geen voorvertoning"
 
 #: incidents/admin.py:871 incidents/admin.py:1004
-#: securityobjectives/admin.py:644
+#: securityobjectives/admin.py:669
 msgid "Notification Email"
 msgstr "Meldingsmail"
 
@@ -905,24 +905,24 @@ msgstr ""
 msgid "Search"
 msgstr "Zoeken"
 
-#: incidents/forms.py:328
+#: incidents/forms.py:246 incidents/forms.py:403
 msgid "Add details"
 msgstr "Voeg details toe"
 
-#: incidents/forms.py:353 incidents/forms.py:685 incidents/forms.py:892
-#: incidents/forms.py:899 incidents/forms.py:906 incidents/forms.py:913
+#: incidents/forms.py:429 incidents/forms.py:769 incidents/forms.py:976
+#: incidents/forms.py:983 incidents/forms.py:990 incidents/forms.py:997
 msgid "Date format yyyy-mm-dd hh:mm"
 msgstr "Datumnotatie jjjj-mm-dd uu:mm"
 
-#: incidents/forms.py:483 incidents/models.py:488
+#: incidents/forms.py:567 incidents/models.py:488
 msgid "Legal Entity Name"
 msgstr "Naam juridische entiteit"
 
-#: incidents/forms.py:552
+#: incidents/forms.py:636
 msgid "Incident reference"
 msgstr "Incidentreferentie"
 
-#: incidents/forms.py:556
+#: incidents/forms.py:640
 msgid ""
 "Please include a reference (e.g., an identifier, internal reference, CERT "
 "reference, etc.) to facilitate incident tracking."
@@ -930,102 +930,103 @@ msgstr ""
 "Voeg een referentie toe om uw incident makkelijker te volgen (interne "
 "referentie, CERT-referentie, enz)."
 
-#: incidents/forms.py:567
+#: incidents/forms.py:651
 msgid "Complaint reference"
 msgstr "Klachtreferentie"
 
-#: incidents/forms.py:570
+#: incidents/forms.py:654
 msgid ""
 "Insert the file number of a criminal complaint that you have filed with the "
 "police."
 msgstr ""
 "Voeg het dossiernummer toe van de klacht die bij de politie is ingediend."
 
-#: incidents/forms.py:637
+#: incidents/forms.py:721
 msgid "Send notification to"
 msgstr "Melding verzenden naar"
 
-#: incidents/forms.py:674 incidents/forms.py:884
+#: incidents/forms.py:758 incidents/forms.py:968
 msgid "Select the incident time zone"
 msgstr "Selecteer de tijdzone van het incident"
 
-#: incidents/forms.py:684
+#: incidents/forms.py:768
 msgid "Select date and time"
 msgstr "Selecteer datum en uur"
 
-#: incidents/forms.py:798 incidents/globals.py:47 incidents/globals.py:55
+#: incidents/forms.py:882 incidents/globals.py:47 incidents/globals.py:55
 #: incidents/globals.py:76 securityobjectives/forms.py:74
 #: securityobjectives/globals.py:6 securityobjectives/models.py:493
 msgid "Passed"
 msgstr "Geslaagd"
 
-#: incidents/forms.py:799 incidents/globals.py:48 incidents/globals.py:56
-#: incidents/globals.py:81 securityobjectives/globals.py:8
+#: incidents/forms.py:883 incidents/globals.py:48 incidents/globals.py:56
+#: incidents/globals.py:81 securityobjectives/forms.py:75
+#: securityobjectives/globals.py:8 securityobjectives/models.py:494
 msgid "Revision required"
 msgstr "Revisie vereist"
 
-#: incidents/forms.py:891
+#: incidents/forms.py:975
 msgid "Incident notification date"
 msgstr "Datum van de incidentmelding"
 
-#: incidents/forms.py:898 incidents/models.py:802
+#: incidents/forms.py:982 incidents/models.py:802
 msgid "Incident detection date"
 msgstr "Datum waarop het incident is ontdekt"
 
-#: incidents/forms.py:905
+#: incidents/forms.py:989
 msgid "Incident start date"
 msgstr "Datum van aanvang van het incident"
 
-#: incidents/forms.py:912 incidents/models.py:804
+#: incidents/forms.py:996 incidents/models.py:804
 msgid "Incident resolution date"
 msgstr "Datum van oplossing van het incident"
 
-#: incidents/forms.py:1000
+#: incidents/forms.py:1084
 msgid "Starting date cannot be after detection date."
 msgstr "Datum van aanvang kan niet na datum van ontdekking liggen."
 
-#: incidents/forms.py:1006
+#: incidents/forms.py:1090
 msgid "Resolution date cannot be before detection date."
 msgstr "Datum van oplossing kan niet vóór datum van ontdekking liggen."
 
-#: incidents/forms.py:1047
+#: incidents/forms.py:1131
 msgid "Set to significant impact"
 msgstr "Aanzienlijke gevolgen"
 
-#: incidents/forms.py:1049
+#: incidents/forms.py:1133
 msgid "Set to no significant impact"
 msgstr "Geen aanzienlijke gevolgen"
 
-#: incidents/forms.py:1051
+#: incidents/forms.py:1135
 msgid "Set to Active"
 msgstr "Instellen op 'Actief'"
 
-#: incidents/forms.py:1053
+#: incidents/forms.py:1137
 msgid "Set to Inactive"
 msgstr "Instellen op 'Inactief'"
 
-#: incidents/forms.py:1119 incidents/forms.py:1200 incidents/models.py:380
+#: incidents/forms.py:1206 incidents/forms.py:1287 incidents/models.py:380
 #: incidents/models.py:445
 msgid "Report"
 msgstr "Rapport"
 
-#: incidents/forms.py:1126
+#: incidents/forms.py:1213
 msgid "File format"
 msgstr "Bestandsindeling"
 
-#: incidents/forms.py:1147
+#: incidents/forms.py:1234
 msgid "From"
 msgstr "Van"
 
-#: incidents/forms.py:1155
+#: incidents/forms.py:1242
 msgid "To"
 msgstr "Aan"
 
-#: incidents/forms.py:1208 incidents/models.py:1018
+#: incidents/forms.py:1295 incidents/models.py:1018
 msgid "Selected answer"
 msgstr "Gekozen antwoord"
 
-#: incidents/forms.py:1212 incidents/models.py:1024
+#: incidents/forms.py:1299 incidents/models.py:1024
 msgid "Next question"
 msgstr "Volgende vraag"
 
@@ -1436,8 +1437,8 @@ msgstr "Het incident is afgesloten"
 #: incidents/views.py:664 incidents/views.py:695 reporting/views.py:111
 #: reporting/views.py:505 reporting/views.py:913 reporting/views.py:938
 #: reporting/views.py:945 reporting/views.py:1252
-#: securityobjectives/views.py:824 securityobjectives/views.py:830
-#: securityobjectives/views.py:1045
+#: securityobjectives/views.py:866 securityobjectives/views.py:872
+#: securityobjectives/views.py:1087
 msgid "Forbidden"
 msgstr "Verboden"
 
@@ -1447,7 +1448,7 @@ msgid "No incident report could be found."
 msgstr "Geen incidentrapport gevonden."
 
 #: incidents/views.py:591 incidents/views.py:635
-#: securityobjectives/views.py:793
+#: securityobjectives/views.py:835
 msgid "An error occurred while generating the report."
 msgstr "Er is een fout opgetreden bij het genereren van het rapport."
 
@@ -1535,7 +1536,7 @@ msgid "Project name"
 msgstr "Projectnaam"
 
 #: reporting/forms.py:147 reporting/models.py:402 reporting/models.py:492
-#: securityobjectives/admin.py:901 securityobjectives/admin.py:1053
+#: securityobjectives/admin.py:926 securityobjectives/admin.py:1078
 #: securityobjectives/models.py:66 securityobjectives/models.py:291
 #: securityobjectives/models.py:388
 msgid "Standard"
@@ -1979,7 +1980,7 @@ msgid "This regulator already has this standard configured."
 msgstr "Deze regulator heeft deze norm al geconfigureerd."
 
 #: reporting/models.py:425 reporting/models.py:430
-#: securityobjectives/admin.py:775 securityobjectives/models.py:23
+#: securityobjectives/admin.py:800 securityobjectives/models.py:23
 msgid "Color"
 msgstr "Kleur"
 
@@ -2162,7 +2163,7 @@ msgstr "Geen rapportaanbeveling gevonden"
 msgid "The report recommendation has been deleted."
 msgstr "De rapportaanbeveling is verwijderd."
 
-#: reporting/views.py:953 securityobjectives/views.py:840
+#: reporting/views.py:953 securityobjectives/views.py:882
 msgid "Invalid request"
 msgstr "Ongeldig verzoek"
 
@@ -2190,44 +2191,44 @@ msgstr "Jaarwaarde is geen geldig getal"
 msgid "Invalid year. Please provide a valid year."
 msgstr "Ongeldig jaartal. Geef een geldig jaartal op."
 
-#: securityobjectives/admin.py:312
+#: securityobjectives/admin.py:337
 msgid "domain"
 msgstr "domein"
 
-#: securityobjectives/admin.py:313
+#: securityobjectives/admin.py:338
 msgid "Security objective objective"
 msgstr "Beveiligingsdoelstelling"
 
-#: securityobjectives/admin.py:314
+#: securityobjectives/admin.py:339
 msgid "Security objective description"
 msgstr "Beschrijving van de beveiligingsdoelstelling"
 
-#: securityobjectives/admin.py:315
+#: securityobjectives/admin.py:340
 msgid "Security objective position"
 msgstr "Plaats van de beveiligingsdoelstelling"
 
-#: securityobjectives/admin.py:316
+#: securityobjectives/admin.py:341
 msgid "Security objective priority"
 msgstr "Prioriteit van de beveiligingsdoelstelling"
 
-#: securityobjectives/admin.py:317
+#: securityobjectives/admin.py:342
 msgid "maturity_level"
 msgstr "maturiteitsniveau"
 
-#: securityobjectives/admin.py:318
+#: securityobjectives/admin.py:343
 msgid "Security measure description"
 msgstr "Beschrijving van de beveiligingsmaatregel"
 
-#: securityobjectives/admin.py:319
+#: securityobjectives/admin.py:344
 msgid "Security measure evidence"
 msgstr "Bewijs van de beveiligingsmaatregel"
 
-#: securityobjectives/admin.py:355
+#: securityobjectives/admin.py:380
 #, python-format
 msgid "Regulation '%(label)s' does not exist. Check your data."
 msgstr "De regelgeving ‘%(label)s’ bestaat niet. Controleer je gegevens."
 
-#: securityobjectives/admin.py:370
+#: securityobjectives/admin.py:395
 #, python-format
 msgid ""
 "The standard '%(label)s' is not find for regulation '%(regulation)s' and "
@@ -2236,12 +2237,12 @@ msgstr ""
 "De standaard ‘%(label)s’ komt niet overeen met de regelgeving "
 "‘%(regulation)s’ en deze regelgevende instantie."
 
-#: securityobjectives/admin.py:378
+#: securityobjectives/admin.py:403
 #, python-format
 msgid "Several '%(label)s' have been found. Check your data."
 msgstr "Er zijn meerdere ‘%(label)s’ gevonden. Controleer je gegevens"
 
-#: securityobjectives/admin.py:1001
+#: securityobjectives/admin.py:1026
 msgid "Standard of security objective and maturity level must be the same"
 msgstr ""
 "De norm voor de doelstelling en het maturiteitsniveau van de beveiliging "
@@ -2250,10 +2251,6 @@ msgstr ""
 #: securityobjectives/forms.py:73 securityobjectives/models.py:492
 msgid "Not reviewed"
 msgstr "Niet gecontroleerd"
-
-#: securityobjectives/forms.py:75 securityobjectives/models.py:494
-msgid "Fail"
-msgstr "Niet geslaagd"
 
 #: securityobjectives/forms.py:76
 msgid "All passed"
@@ -2415,7 +2412,7 @@ msgstr "Geplande maatregelen"
 msgid "It is completely filled out"
 msgstr "Het is volledig ingevuld"
 
-#: securityobjectives/views.py:178 securityobjectives/views.py:805
+#: securityobjectives/views.py:178 securityobjectives/views.py:847
 msgid "No data available"
 msgstr "Geen gegevens beschikbaar"
 
@@ -2424,41 +2421,41 @@ msgid "Standard does not exist"
 msgstr "Norm bestaat niet"
 
 #: securityobjectives/views.py:227 securityobjectives/views.py:231
-#: securityobjectives/views.py:463 securityobjectives/views.py:557
-#: securityobjectives/views.py:587 securityobjectives/views.py:602
-#: securityobjectives/views.py:699 securityobjectives/views.py:718
+#: securityobjectives/views.py:505 securityobjectives/views.py:599
+#: securityobjectives/views.py:629 securityobjectives/views.py:644
+#: securityobjectives/views.py:741 securityobjectives/views.py:760
 msgid "Declaration not found"
 msgstr "Verklaring niet gevonden"
 
-#: securityobjectives/views.py:458
+#: securityobjectives/views.py:500
 msgid "No sectors data available"
 msgstr "Geen sectorgegevens beschikbaar"
 
-#: securityobjectives/views.py:538
+#: securityobjectives/views.py:580
 msgid "The security objectives declaration has been duplicated."
 msgstr "De verklaring van de beveiligingsdoelstellingen is gedupliceerd."
 
-#: securityobjectives/views.py:568
+#: securityobjectives/views.py:610
 msgid "The security objectives declaration has been submitted."
 msgstr "De verklaring van de beveiligingsdoelstellingen is ingediend."
 
-#: securityobjectives/views.py:585
+#: securityobjectives/views.py:627
 msgid "The security objectives declaration has been deleted."
 msgstr "De verklaring van de beveiligingsdoelstellingen is verwijderd."
 
-#: securityobjectives/views.py:636
+#: securityobjectives/views.py:678
 msgid "The security objectives review has been sent."
 msgstr "De controle van de beveiligingsdoelstellingen is verzonden."
 
-#: securityobjectives/views.py:860
+#: securityobjectives/views.py:902
 msgid "Error opening the file: {}"
 msgstr "Fout bij het openen van het bestand: {}"
 
-#: securityobjectives/views.py:879
+#: securityobjectives/views.py:921
 msgid "No users for this company"
 msgstr "Geen gebruikers voor deze onderneming"
 
-#: securityobjectives/views.py:907
+#: securityobjectives/views.py:949
 msgid "An error occurred while importing the declaration file."
 msgstr ""
 "Er is een fout opgetreden tijdens het importeren van het verklaringsbestand."
