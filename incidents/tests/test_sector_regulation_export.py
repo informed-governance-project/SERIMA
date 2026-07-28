@@ -37,15 +37,17 @@ def test_export_sector_regulation_configuration(populate_incident_db, tmp_path):
         next_question_options=next_option,
         creator_name="REG1",
     )
-    SectorRegulationWorkflowEmail.objects.create(
+    reminder = SectorRegulationWorkflowEmail.objects.create(
         sector_regulation_workflow=SectorRegulationWorkflow.objects.get(
             sector_regulation_id=1,
             position=1,
         ),
         email_id=1,
         delay_in_hours=2,
-        headline="Reminder headline",
     )
+    reminder.set_current_language("en")
+    reminder.headline = "Reminder headline"
+    reminder.save()
     output_path = tmp_path / "sector-regulation.json"
 
     call_command("export_sector_regulation", 1, output=output_path)

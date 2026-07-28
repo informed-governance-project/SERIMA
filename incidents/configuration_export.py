@@ -28,7 +28,10 @@ def _translations(instance, field_names: tuple[str, ...]) -> list[dict[str, Any]
             "language_code": translation.language_code,
             **{field_name: getattr(translation, field_name) for field_name in field_names},
         }
-        for translation in instance.translations.all().order_by("language_code")
+        for translation in sorted(
+            instance.translations.all(),
+            key=lambda item: item.language_code,
+        )
     ]
 
 
@@ -40,27 +43,10 @@ def _regulation_reference(regulation) -> dict[str, Any]:
     return {"translations": _translations(regulation, ("label",))}
 
 
-def _regulator_reference(regulator) -> dict[str, Any]:
-    return {
-        "country": regulator.country,
-        "address": regulator.address,
-        "email_for_notification": regulator.email_for_notification,
-        "translations": _translations(regulator, ("name", "full_name", "description")),
-    }
-
-
-def _sector_reference(sector) -> dict[str, Any]:
-    return {
-        "acronym": sector.acronym,
-        "parent_acronym": sector.parent.acronym if sector.parent else None,
-        "translations": _translations(sector, ("name",)),
-    }
-
-
 class SectorRegulationConfigurationExporter:
     """Build a portable representation of one incident configuration."""
 
-    def __init__(self, sector_regulation: SectorRegulation):
+    def __init__(self, sector_regulation: SectorRegulation) -> None:
         self.sector_regulation = sector_regulation
 
     def export(self) -> dict[str, Any]:
@@ -136,11 +122,23 @@ class SectorRegulationConfigurationExporter:
                 "is_detection_date_needed": sector_regulation.is_detection_date_needed,
                 "translations": _translations(sector_regulation, ("name",)),
                 "regulation": _regulation_reference(sector_regulation.regulation),
-                "regulator": _regulator_reference(sector_regulation.regulator),
+                "regulator": {
+                    "country": sector_regulation.regulator.country,
+                    "address": sector_regulation.regulator.address,
+                    "email_for_notification": (sector_regulation.regulator.email_for_notification),
+                    "translations": _translations(
+                        sector_regulation.regulator,
+                        ("name", "full_name", "description"),
+                    ),
+                },
                 "sectors": [
-                    _sector_reference(sector)
+                    {
+                        "acronym": sector.acronym,
+                        "parent_acronym": (sector.parent.acronym if sector.parent else None),
+                        "translations": _translations(sector, ("name",)),
+                    }
                     for sector in sector_regulation.sectors.select_related("parent")
-                    .prefetch_related("translations", "parent__translations")
+                    .prefetch_related("translations")
                     .order_by("acronym", "pk")
                 ],
                 "opening_email": self._optional_key(email_keys, sector_regulation.opening_email_id),
@@ -338,6 +336,18 @@ class SectorRegulationConfigurationExporter:
         return {
             "creator_name": impact.creator_name,
             "translations": _translations(impact, ("label", "headline")),
-            "regulations": [_regulation_reference(regulation) for regulation in impact.regulations.all().order_by("pk")],
-            "sectors": [sector.acronym for sector in impact.sectors.all().order_by("acronym", "pk")],
+            "regulations": [
+                _regulation_reference(regulation)
+                for regulation in sorted(
+                    impact.regulations.all(),
+                    key=lambda item: item.pk,
+                )
+            ],
+            "sectors": [
+                sector.acronym
+                for sector in sorted(
+                    impact.sectors.all(),
+                    key=lambda item: (item.acronym, item.pk),
+                )
+            ],
         }

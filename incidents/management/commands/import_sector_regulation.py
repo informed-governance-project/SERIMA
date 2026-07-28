@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
+from typing import Any
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import IntegrityError, transaction
 
 from incidents.configuration_import import (
@@ -14,7 +15,7 @@ from incidents.models import SectorRegulation
 class Command(BaseCommand):
     help = "Import JSON configuration into an existing blank SectorRegulation."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "input",
             type=Path,
@@ -34,7 +35,7 @@ class Command(BaseCommand):
             ),
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         input_path = options["input"]
         try:
             data = json.loads(input_path.read_text(encoding="utf-8"))

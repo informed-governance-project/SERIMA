@@ -1,7 +1,8 @@
 import json
 from pathlib import Path
+from typing import Any
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 
 from incidents.configuration_export import SectorRegulationConfigurationExporter
 from incidents.models import SectorRegulation
@@ -10,7 +11,7 @@ from incidents.models import SectorRegulation
 class Command(BaseCommand):
     help = "Export one SectorRegulation configuration to a portable JSON file."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "sector_regulation",
             type=int,
@@ -28,7 +29,7 @@ class Command(BaseCommand):
             help="Overwrite the output file if it already exists.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         sector_regulation_id = options["sector_regulation"]
         try:
             sector_regulation = (

@@ -3,6 +3,11 @@ from typing import Any
 
 from governanceplatform.models import Sector
 from incidents.configuration_export import FORMAT_NAME, FORMAT_VERSION
+from incidents.globals import (
+    INCIDENT_EMAIL_TRIGGER_EVENT,
+    QUESTION_TYPES,
+    SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT,
+)
 from incidents.models import (
     ConditionalQuestionOption,
     Email,
@@ -18,6 +23,10 @@ from incidents.models import (
     Workflow,
 )
 
+INCIDENT_EMAIL_TRIGGER_VALUES = {value for value, _label in INCIDENT_EMAIL_TRIGGER_EVENT}
+QUESTION_TYPE_VALUES = {value for value, _label in QUESTION_TYPES}
+WORKFLOW_TRIGGER_VALUES = {value for value, _label in SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT}
+
 
 class ConfigurationImportError(ValueError):
     pass
@@ -32,13 +41,15 @@ class SectorRegulationConfigurationImporter:
         target: SectorRegulation,
         *,
         create_all: bool = False,
-    ):
+    ) -> None:
         self.data = data
         self.target = target
         self.create_all = create_all
         self.creator = target.regulator
         self.creator_name = target.regulator.safe_translation_getter("name", any_language=True) or str(target.regulator)
         self.reused_question_keys: set[str] = set()
+        self.skipped_answer_keys: set[str] = set()
+        self.sectors_by_acronym: dict[str, list[Sector]] | None = None
 
     def import_configuration(self) -> dict[str, int]:
         self._validate_document()
@@ -51,6 +62,93 @@ class SectorRegulationConfigurationImporter:
         category_option_data = self._catalog("category_options")
         question_data = self._catalog("questions")
         question_option_data = self._catalog("question_options")
+
+        sector_regulation_data = self.data["sector_regulation"]
+        for field in (
+            "opening_email",
+            "closing_email",
+            "report_status_changed_email",
+        ):
+            self._optional_reference(
+                email_data,
+                sector_regulation_data.get(field),
+                "email",
+            )
+
+        for item in report_data.values():
+            self._optional_reference(
+                email_data,
+                item.get("submission_email"),
+                "email",
+            )
+        for item in category_option_data.values():
+            self._reference(
+                category_data,
+                item.get("category"),
+                "category",
+            )
+        for item in question_option_data.values():
+            self._reference(report_data, item.get("report"), "report")
+            self._reference(question_data, item.get("question"), "question")
+            self._reference(
+                category_option_data,
+                item.get("category_option"),
+                "category option",
+            )
+
+        answer_data = {}
+        for question_key, item in question_data.items():
+            answer_items = item.get("predefined_answers", [])
+            if not isinstance(answer_items, list):
+                raise ConfigurationImportError(f"predefined_answers for question {question_key!r} must be a list.")
+            for answer_item in answer_items:
+                if not isinstance(answer_item, dict):
+                    raise ConfigurationImportError(f"Invalid predefined answer for question {question_key!r}.")
+                answer_key = self._string(answer_item, "key")
+                if answer_key in answer_data:
+                    raise ConfigurationImportError(f"Duplicate predefined answer key {answer_key!r}.")
+                answer_data[answer_key] = answer_item
+
+        conditional_items = self.data.get("conditional_questions", [])
+        if not isinstance(conditional_items, list):
+            raise ConfigurationImportError("conditional_questions must be a list.")
+        for item in conditional_items:
+            if not isinstance(item, dict):
+                raise ConfigurationImportError("Invalid conditional question.")
+            self._reference(
+                question_option_data,
+                item.get("question_option"),
+                "question option",
+            )
+            self._reference(
+                answer_data,
+                item.get("predefined_answer"),
+                "predefined answer",
+            )
+            self._reference(
+                question_option_data,
+                item.get("next_question_option"),
+                "next question option",
+            )
+
+        report_link_items = self.data.get("sector_regulation_reports", [])
+        if not isinstance(report_link_items, list):
+            raise ConfigurationImportError("sector_regulation_reports must be a list.")
+        for item in report_link_items:
+            if not isinstance(item, dict):
+                raise ConfigurationImportError("Invalid sector regulation report.")
+            self._reference(report_data, item.get("report"), "report")
+            reminder_items = item.get("reminder_emails", [])
+            if not isinstance(reminder_items, list):
+                raise ConfigurationImportError("reminder_emails must be a list.")
+            for reminder_item in reminder_items:
+                if not isinstance(reminder_item, dict):
+                    raise ConfigurationImportError("Invalid reminder email.")
+                self._reference(
+                    email_data,
+                    reminder_item.get("email"),
+                    "email",
+                )
 
         emails = self._import_emails(email_data)
         reports = self._import_reports(report_data, emails)
@@ -148,7 +246,11 @@ class SectorRegulationConfigurationImporter:
             )
             report = Workflow.objects.create(
                 name=name,
-                is_impact_needed=bool(item.get("is_impact_needed", False)),
+                is_impact_needed=self._boolean(
+                    item,
+                    "is_impact_needed",
+                    default=False,
+                ),
                 submission_email=self._optional_reference(
                     emails,
                     item.get("submission_email"),
@@ -206,12 +308,27 @@ class SectorRegulationConfigurationImporter:
     ) -> tuple[dict[str, Question], dict[str, PredefinedAnswer]]:
         questions: dict[str, Question] = {}
         answers: dict[str, PredefinedAnswer] = {}
+        known_answer_keys: set[str] = set()
         for key, item in catalog.items():
             reference = self._string(item, "reference")
+            answer_items = item.get("predefined_answers", [])
+            if not isinstance(answer_items, list):
+                raise ConfigurationImportError(f"predefined_answers for question {key!r} must be a list.")
+            validated_answers = []
+            for answer_item in answer_items:
+                if not isinstance(answer_item, dict):
+                    raise ConfigurationImportError(f"Invalid predefined answer for question {key!r}.")
+                answer_key = self._string(answer_item, "key")
+                if answer_key in known_answer_keys:
+                    raise ConfigurationImportError(f"Duplicate predefined answer key {answer_key!r}.")
+                known_answer_keys.add(answer_key)
+                validated_answers.append((answer_key, answer_item))
+
             existing = Question.objects.filter(reference=reference).first()
             if existing is not None and not self.create_all:
                 questions[key] = existing
                 self.reused_question_keys.add(key)
+                self.skipped_answer_keys.update(answer_key for answer_key, _answer_item in validated_answers)
                 continue
 
             if existing is not None:
@@ -223,7 +340,11 @@ class SectorRegulationConfigurationImporter:
                 )
             question = Question.objects.create(
                 reference=reference,
-                question_type=self._string(item, "question_type"),
+                question_type=self._choice(
+                    item,
+                    "question_type",
+                    QUESTION_TYPE_VALUES,
+                ),
                 creator=self.creator,
                 creator_name=self.creator_name,
             )
@@ -234,18 +355,10 @@ class SectorRegulationConfigurationImporter:
             )
             questions[key] = question
 
-            answer_items = item.get("predefined_answers", [])
-            if not isinstance(answer_items, list):
-                raise ConfigurationImportError(f"predefined_answers for question {key!r} must be a list.")
-            for answer_item in answer_items:
-                if not isinstance(answer_item, dict):
-                    raise ConfigurationImportError(f"Invalid predefined answer for question {key!r}.")
-                answer_key = self._string(answer_item, "key")
-                if answer_key in answers:
-                    raise ConfigurationImportError(f"Duplicate predefined answer key {answer_key!r}.")
+            for answer_key, answer_item in validated_answers:
                 answer = PredefinedAnswer.objects.create(
                     question=question,
-                    position=answer_item.get("position"),
+                    position=self._optional_integer(answer_item, "position"),
                     creator=self.creator,
                     creator_name=self.creator_name,
                 )
@@ -279,8 +392,16 @@ class SectorRegulationConfigurationImporter:
                     "category option",
                 ),
                 position=self._integer(item, "position"),
-                is_mandatory=bool(item.get("is_mandatory", False)),
-                is_conditional=bool(item.get("is_conditional", False)),
+                is_mandatory=self._boolean(
+                    item,
+                    "is_mandatory",
+                    default=False,
+                ),
+                is_conditional=self._boolean(
+                    item,
+                    "is_conditional",
+                    default=False,
+                ),
             )
         return imported
 
@@ -297,7 +418,7 @@ class SectorRegulationConfigurationImporter:
             if not isinstance(item, dict):
                 raise ConfigurationImportError("Invalid conditional question.")
             answer_key = item.get("predefined_answer")
-            if answer_key not in answers:
+            if answer_key in self.skipped_answer_keys:
                 continue
             ConditionalQuestionOption.objects.create(
                 question_options=self._reference(
@@ -305,7 +426,11 @@ class SectorRegulationConfigurationImporter:
                     item.get("question_option"),
                     "question option",
                 ),
-                predefined_answer=answers[answer_key],
+                predefined_answer=self._reference(
+                    answers,
+                    answer_key,
+                    "predefined answer",
+                ),
                 next_question_options=self._reference(
                     question_options,
                     item.get("next_question_option"),
@@ -336,14 +461,15 @@ class SectorRegulationConfigurationImporter:
                     item.get("report"),
                     "report",
                 ),
-                position=item.get("position"),
+                position=self._optional_integer(item, "position"),
                 delay_in_hours_before_deadline=self._integer(
                     item,
                     "delay_in_hours_before_deadline",
                 ),
-                trigger_event_before_deadline=self._string(
+                trigger_event_before_deadline=self._choice(
                     item,
                     "trigger_event_before_deadline",
+                    WORKFLOW_TRIGGER_VALUES,
                 ),
             )
             reminder_items = item.get("reminder_emails", [])
@@ -359,7 +485,11 @@ class SectorRegulationConfigurationImporter:
                         reminder_item.get("email"),
                         "email",
                     ),
-                    trigger_event=self._string(reminder_item, "trigger_event"),
+                    trigger_event=self._choice(
+                        reminder_item,
+                        "trigger_event",
+                        INCIDENT_EMAIL_TRIGGER_VALUES,
+                    ),
                     delay_in_hours=self._integer(
                         reminder_item,
                         "delay_in_hours",
@@ -398,8 +528,12 @@ class SectorRegulationConfigurationImporter:
 
     def _update_target(self, emails: dict[str, Email]) -> None:
         item = self.data["sector_regulation"]
-        self.target.active = bool(item.get("active", True))
-        self.target.is_detection_date_needed = bool(item.get("is_detection_date_needed", False))
+        self.target.active = self._boolean(item, "active", default=True)
+        self.target.is_detection_date_needed = self._boolean(
+            item,
+            "is_detection_date_needed",
+            default=False,
+        )
         self.target.opening_email = self._optional_reference(
             emails,
             item.get("opening_email"),
@@ -425,9 +559,12 @@ class SectorRegulationConfigurationImporter:
         sector_items = item.get("sectors", [])
         if not isinstance(sector_items, list):
             raise ConfigurationImportError("sector_regulation.sectors must be a list.")
-        self.target.sectors.set(
-            self._resolve_sectors([self._string(sector_item, "acronym") for sector_item in sector_items if isinstance(sector_item, dict)])
-        )
+        acronyms = []
+        for sector_item in sector_items:
+            if not isinstance(sector_item, dict):
+                raise ConfigurationImportError("Every sector_regulation sector must be an object.")
+            acronyms.append(self._string(sector_item, "acronym"))
+        self.target.sectors.set(self._resolve_sectors(acronyms))
 
     @staticmethod
     def _set_translations(
@@ -450,13 +587,17 @@ class SectorRegulationConfigurationImporter:
                 setattr(instance, field, translation[field])
             instance.save()
 
-    @staticmethod
-    def _resolve_sectors(acronyms: Iterable[Any]) -> list[Sector]:
+    def _resolve_sectors(self, acronyms: Iterable[Any]) -> list[Sector]:
+        if self.sectors_by_acronym is None:
+            self.sectors_by_acronym = {}
+            for sector in Sector.objects.all().order_by("pk"):
+                self.sectors_by_acronym.setdefault(sector.acronym, []).append(sector)
+
         sectors = []
         for acronym in acronyms:
             if not isinstance(acronym, str):
                 raise ConfigurationImportError("Sector acronyms must be strings.")
-            matches = list(Sector.objects.filter(acronym=acronym)[:2])
+            matches = self.sectors_by_acronym.get(acronym, [])
             if not matches:
                 raise ConfigurationImportError(f"Sector with acronym {acronym!r} does not exist.")
             if len(matches) > 1:
@@ -491,6 +632,39 @@ class SectorRegulationConfigurationImporter:
         value = item.get(field)
         if not isinstance(value, int) or isinstance(value, bool):
             raise ConfigurationImportError(f"{field} must be an integer.")
+        return value
+
+    @staticmethod
+    def _optional_integer(item: dict[str, Any], field: str) -> int | None:
+        value = item.get(field)
+        if value is None:
+            return None
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ConfigurationImportError(f"{field} must be an integer or null.")
+        return value
+
+    @staticmethod
+    def _boolean(
+        item: dict[str, Any],
+        field: str,
+        *,
+        default: bool,
+    ) -> bool:
+        value = item.get(field, default)
+        if not isinstance(value, bool):
+            raise ConfigurationImportError(f"{field} must be a boolean.")
+        return value
+
+    @classmethod
+    def _choice(
+        cls,
+        item: dict[str, Any],
+        field: str,
+        choices: set[str],
+    ) -> str:
+        value = cls._string(item, field)
+        if value not in choices:
+            raise ConfigurationImportError(f"{field} contains unsupported value {value!r}.")
         return value
 
     @staticmethod

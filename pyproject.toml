@@ -111,6 +111,14 @@ exclude = [
 strict_settings = false
 django_settings_module = "governanceplatform.settings"
 
+[tool.black]
+line-length = 140
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 140
+
 [tool.ruff]
 exclude = ["migrations"]
 target-version = "py312"

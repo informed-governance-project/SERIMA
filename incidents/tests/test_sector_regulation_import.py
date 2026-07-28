@@ -1,122 +1,60 @@
-from __future__ import annotations
-
 import json
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import Any
 
 import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
-from django.core.management.color import no_style
-from django.db import connection
 
+from incidents.configuration_export import FORMAT_NAME, FORMAT_VERSION
 from incidents.models import (
     ConditionalQuestionOption,
     Email,
-    Impact,
     PredefinedAnswer,
     Question,
     QuestionCategory,
-    QuestionCategoryOptions,
-    QuestionOptions,
     SectorRegulation,
     SectorRegulationWorkflow,
     SectorRegulationWorkflowEmail,
     Workflow,
 )
 
-if TYPE_CHECKING:
-    from django.db.models import Model
-
 
 @pytest.mark.django_db
-def test_import_sector_regulation_reuses_questions(
-    populate_incident_db,
-    tmp_path,
-):
-    input_path = _export_configuration(tmp_path, 1)
-    source = SectorRegulation.objects.get(pk=1)
-    target = SectorRegulation.objects.create(
-        pk=100,
-        name="Blank configuration",
-        regulation=source.regulation,
-        regulator_id=2,
-    )
-    _reset_imported_model_sequences()
+def test_import_sector_regulation_reuses_questions(populate_db, tmp_path):
+    target = _create_target(populate_db)
+    existing_questions = _create_existing_questions(target)
+    _create_existing_report(target)
+    input_path = _write_configuration(tmp_path)
     question_count = Question.objects.count()
     answer_count = PredefinedAnswer.objects.count()
 
     call_command("import_sector_regulation", input_path, target.pk)
 
     target.refresh_from_db()
-    links = list(
-        SectorRegulationWorkflow.objects.filter(
-            sector_regulation=target,
-        )
-        .select_related("workflow")
-        .order_by("position")
-    )
-    assert len(links) == 2
-    assert [link.workflow.name for link in links] == [
-        "Reg 1 preli (import 2)",
-        "Reg 1 final (import 2)",
-    ]
+    link = SectorRegulationWorkflow.objects.select_related("workflow").get(sector_regulation=target)
+    imported_questions = {option.question for option in link.workflow.questionoptions_set.select_related("question")}
+    assert link.workflow.name == "Imported report (import 2)"
+    assert imported_questions == set(existing_questions)
     assert Question.objects.count() == question_count
     assert PredefinedAnswer.objects.count() == answer_count
-    assert target.safe_translation_getter("name", any_language=True) == ("asectorial workflow")
-    assert all(link.workflow.creator_id == target.regulator_id for link in links)
-    assert all(
-        option.question.reference in {"1", "2", "3", "4", "5"} for link in links for option in link.workflow.questionoptions_set.all()
-    )
+    assert not ConditionalQuestionOption.objects.exists()
+    assert SectorRegulationWorkflowEmail.objects.count() == 1
+    assert target.safe_translation_getter("name", any_language=True) == ("Imported configuration")
+    assert link.workflow.creator == target.regulator
 
 
 @pytest.mark.django_db
 def test_import_sector_regulation_create_forces_new_questions(
-    populate_incident_db,
+    populate_db,
     tmp_path,
 ):
-    source_option = QuestionOptions.objects.get(
-        report_id=1,
-        question__reference="1",
-    )
-    next_option = QuestionOptions.objects.get(
-        report_id=1,
-        question__reference="2",
-    )
-    answer = (
-        PredefinedAnswer.objects.filter(
-            question=source_option.question,
-        )
-        .order_by("position", "pk")
-        .first()
-    )
-    assert answer is not None
-    ConditionalQuestionOption.objects.create(
-        question_options=source_option,
-        predefined_answer=answer,
-        next_question_options=next_option,
-    )
-    SectorRegulationWorkflowEmail.objects.create(
-        sector_regulation_workflow=SectorRegulationWorkflow.objects.get(
-            sector_regulation_id=1,
-            position=1,
-        ),
-        email_id=1,
-        delay_in_hours=2,
-        headline="Reminder headline",
-    )
-    input_path = _export_configuration(tmp_path, 1)
-    source = SectorRegulation.objects.get(pk=1)
-    target = SectorRegulation.objects.create(
-        pk=101,
-        name="Blank configuration",
-        regulation=source.regulation,
-        regulator=source.regulator,
-    )
-    _reset_imported_model_sequences()
+    target = _create_target(populate_db)
+    _create_existing_questions(target)
+    _create_existing_report(target)
+    input_path = _write_configuration(tmp_path)
     question_count = Question.objects.count()
     answer_count = PredefinedAnswer.objects.count()
-    conditional_count = ConditionalQuestionOption.objects.count()
-    reminder_count = SectorRegulationWorkflowEmail.objects.count()
 
     call_command(
         "import_sector_regulation",
@@ -125,33 +63,27 @@ def test_import_sector_regulation_create_forces_new_questions(
         create=True,
     )
 
-    assert Question.objects.count() == question_count + 5
-    assert PredefinedAnswer.objects.count() == answer_count + 4
-    assert ConditionalQuestionOption.objects.count() == conditional_count + 1
-    assert SectorRegulationWorkflowEmail.objects.count() == reminder_count + 1
     imported_references = {
         option.question.reference
-        for link in SectorRegulationWorkflow.objects.filter(
-            sector_regulation=target,
-        )
-        for option in link.workflow.questionoptions_set.all()
+        for link in SectorRegulationWorkflow.objects.filter(sector_regulation=target)
+        for option in link.workflow.questionoptions_set.select_related("question")
     }
     assert imported_references == {
-        "1_import_2",
-        "2_import_2",
-        "3_import_2",
-        "4_import_2",
-        "5_import_2",
+        "existing-reference_import_2",
+        "target-reference_import_2",
     }
+    assert Question.objects.count() == question_count + 2
+    assert PredefinedAnswer.objects.count() == answer_count + 1
+    assert ConditionalQuestionOption.objects.count() == 1
 
 
 @pytest.mark.django_db
 def test_import_sector_regulation_rolls_back_on_late_failure(
-    populate_incident_db,
+    populate_db,
     tmp_path,
 ):
-    input_path = _export_configuration(tmp_path, 1)
-    data = json.loads(input_path.read_text(encoding="utf-8"))
+    target = _create_target(populate_db)
+    data = _configuration_data()
     data["sector_regulation"]["sectors"] = [
         {
             "acronym": "MISSING",
@@ -159,15 +91,7 @@ def test_import_sector_regulation_rolls_back_on_late_failure(
             "translations": [{"language_code": "en", "name": "Missing"}],
         }
     ]
-    input_path.write_text(json.dumps(data), encoding="utf-8")
-    source = SectorRegulation.objects.get(pk=1)
-    target = SectorRegulation.objects.create(
-        pk=102,
-        name="Blank configuration",
-        regulation=source.regulation,
-        regulator=source.regulator,
-    )
-    _reset_imported_model_sequences()
+    input_path = _write_configuration(tmp_path, data)
     counts_before = (
         Workflow.objects.count(),
         Email.objects.count(),
@@ -189,40 +113,320 @@ def test_import_sector_regulation_rolls_back_on_late_failure(
 
 @pytest.mark.django_db
 def test_import_sector_regulation_rejects_non_blank_target(
-    populate_incident_db,
+    populate_db,
     tmp_path,
 ):
-    input_path = _export_configuration(tmp_path, 1)
+    target = _create_target(populate_db)
+    report = _create_existing_report(target)
+    SectorRegulationWorkflow.objects.create(
+        sector_regulation=target,
+        workflow=report,
+        position=1,
+    )
 
     with pytest.raises(CommandError, match="is not blank"):
+        call_command(
+            "import_sector_regulation",
+            _write_configuration(tmp_path),
+            target.pk,
+        )
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_rejects_invalid_boolean(
+    populate_db,
+    tmp_path,
+):
+    target = _create_target(populate_db)
+    data = _configuration_data()
+    data["reports"][0]["is_impact_needed"] = "false"
+
+    with pytest.raises(CommandError, match="must be a boolean"):
+        call_command(
+            "import_sector_regulation",
+            _write_configuration(tmp_path, data),
+            target.pk,
+        )
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_rejects_invalid_choice(
+    populate_db,
+    tmp_path,
+):
+    target = _create_target(populate_db)
+    data = _configuration_data()
+    data["questions"][0]["question_type"] = "INVALID"
+
+    with pytest.raises(CommandError, match="unsupported value"):
+        call_command(
+            "import_sector_regulation",
+            _write_configuration(tmp_path, data),
+            target.pk,
+        )
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_rejects_unknown_reference(
+    populate_db,
+    tmp_path,
+):
+    target = _create_target(populate_db)
+    data = _configuration_data()
+    data["question_options"][0]["report"] = "missing_report"
+
+    with pytest.raises(CommandError, match="Unknown report reference"):
+        call_command(
+            "import_sector_regulation",
+            _write_configuration(tmp_path, data),
+            target.pk,
+        )
+
+    assert not Email.objects.exists()
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_rejects_malformed_sector(
+    populate_db,
+    tmp_path,
+):
+    target = _create_target(populate_db)
+    data = _configuration_data()
+    data["sector_regulation"]["sectors"] = [None]
+
+    with pytest.raises(CommandError, match="sector.*must be an object"):
+        call_command(
+            "import_sector_regulation",
+            _write_configuration(tmp_path, data),
+            target.pk,
+        )
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_reports_unknown_target(populate_db, tmp_path):
+    with pytest.raises(CommandError, match="does not exist"):
+        call_command(
+            "import_sector_regulation",
+            _write_configuration(tmp_path),
+            999_999,
+        )
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_rejects_unknown_format_version(
+    populate_db,
+    tmp_path,
+):
+    target = _create_target(populate_db)
+    data = _configuration_data()
+    data["format_version"] = FORMAT_VERSION + 1
+
+    with pytest.raises(CommandError, match="Unsupported format version"):
+        call_command(
+            "import_sector_regulation",
+            _write_configuration(tmp_path, data),
+            target.pk,
+        )
+
+
+def test_import_sector_regulation_reports_missing_input(tmp_path):
+    with pytest.raises(CommandError, match="does not exist"):
+        call_command(
+            "import_sector_regulation",
+            tmp_path / "missing.json",
+            1,
+        )
+
+
+def test_import_sector_regulation_reports_invalid_json(tmp_path):
+    input_path = tmp_path / "invalid.json"
+    input_path.write_text("{", encoding="utf-8")
+
+    with pytest.raises(CommandError, match="Cannot read"):
         call_command("import_sector_regulation", input_path, 1)
 
 
-def _export_configuration(tmp_path, sector_regulation_id):
-    input_path = tmp_path / f"sector-regulation-{sector_regulation_id}.json"
-    call_command(
-        "export_sector_regulation",
-        sector_regulation_id,
-        output=input_path,
+def _create_target(populate_db) -> SectorRegulation:
+    target = SectorRegulation.objects.create(
+        regulation=populate_db["regulations"][0],
+        regulator=populate_db["regulators"][1],
+    )
+    _set_english_translation(target, name="Blank configuration")
+    return target
+
+
+def _create_existing_questions(
+    target: SectorRegulation,
+) -> list[Question]:
+    questions = []
+    for reference, question_type, label in (
+        ("existing-reference", "SO", "Existing question"),
+        ("target-reference", "FREETEXT", "Target question"),
+    ):
+        question = Question.objects.create(
+            reference=reference,
+            question_type=question_type,
+            creator=target.regulator,
+        )
+        _set_english_translation(question, label=label, tooltip="")
+        questions.append(question)
+    return questions
+
+
+def _create_existing_report(target: SectorRegulation) -> Workflow:
+    report = Workflow.objects.create(
+        name="Imported report",
+        creator=target.regulator,
+    )
+    _set_english_translation(
+        report,
+        label="Existing report",
+        description="",
+    )
+    return report
+
+
+def _set_english_translation(instance, **values: Any) -> None:
+    instance.set_current_language("en")
+    for field, value in values.items():
+        setattr(instance, field, value)
+    instance.save()
+
+
+def _write_configuration(
+    tmp_path: Path,
+    data: dict[str, Any] | None = None,
+) -> Path:
+    input_path = tmp_path / "sector-regulation.json"
+    input_path.write_text(
+        json.dumps(data or _configuration_data()),
+        encoding="utf-8",
     )
     return input_path
 
 
-def _reset_imported_model_sequences():
-    model_classes: list[type[Model]] = [
-        Email,
-        Workflow,
-        QuestionCategory,
-        QuestionCategoryOptions,
-        Question,
-        PredefinedAnswer,
-        QuestionOptions,
-        ConditionalQuestionOption,
-        SectorRegulationWorkflow,
-        SectorRegulationWorkflowEmail,
-        Impact,
-    ]
-    statements = connection.ops.sequence_reset_sql(no_style(), model_classes)
-    with connection.cursor() as cursor:
-        for statement in statements:
-            cursor.execute(statement)
+def _configuration_data() -> dict[str, Any]:
+    return {
+        "format": FORMAT_NAME,
+        "format_version": FORMAT_VERSION,
+        "sector_regulation": {
+            "active": True,
+            "is_detection_date_needed": False,
+            "translations": _translations(name="Imported configuration"),
+            "sectors": [],
+            "opening_email": "email_1",
+            "closing_email": None,
+            "report_status_changed_email": None,
+        },
+        "emails": [
+            {
+                "key": "email_1",
+                "name": "Imported email",
+                "translations": _translations(
+                    subject="Imported subject",
+                    content="Imported content",
+                ),
+            }
+        ],
+        "reports": [
+            {
+                "key": "report_1",
+                "name": "Imported report",
+                "is_impact_needed": False,
+                "submission_email": "email_1",
+                "translations": _translations(
+                    label="Imported report",
+                    description="",
+                ),
+            }
+        ],
+        "categories": [
+            {
+                "key": "category_1",
+                "translations": _translations(label="Imported category"),
+            }
+        ],
+        "category_options": [
+            {
+                "key": "category_option_1",
+                "category": "category_1",
+                "position": 1,
+            }
+        ],
+        "questions": [
+            {
+                "key": "question_1",
+                "reference": "existing-reference",
+                "question_type": "SO",
+                "translations": _translations(
+                    label="Existing question",
+                    tooltip="",
+                ),
+                "predefined_answers": [
+                    {
+                        "key": "answer_1",
+                        "position": 1,
+                        "translations": _translations(predefined_answer="Yes"),
+                    }
+                ],
+            },
+            {
+                "key": "question_2",
+                "reference": "target-reference",
+                "question_type": "FREETEXT",
+                "translations": _translations(
+                    label="Target question",
+                    tooltip="",
+                ),
+                "predefined_answers": [],
+            },
+        ],
+        "question_options": [
+            {
+                "key": "question_option_1",
+                "report": "report_1",
+                "question": "question_1",
+                "category_option": "category_option_1",
+                "position": 1,
+                "is_mandatory": False,
+                "is_conditional": False,
+            },
+            {
+                "key": "question_option_2",
+                "report": "report_1",
+                "question": "question_2",
+                "category_option": "category_option_1",
+                "position": 2,
+                "is_mandatory": False,
+                "is_conditional": True,
+            },
+        ],
+        "conditional_questions": [
+            {
+                "question_option": "question_option_1",
+                "predefined_answer": "answer_1",
+                "next_question_option": "question_option_2",
+            }
+        ],
+        "sector_regulation_reports": [
+            {
+                "report": "report_1",
+                "position": 1,
+                "delay_in_hours_before_deadline": 0,
+                "trigger_event_before_deadline": "NONE",
+                "reminder_emails": [
+                    {
+                        "email": "email_1",
+                        "trigger_event": "NOTIF_DATE",
+                        "delay_in_hours": 2,
+                        "translations": _translations(headline="Reminder headline"),
+                    }
+                ],
+            }
+        ],
+        "impacts": [],
+    }
+
+
+def _translations(**fields: Any) -> list[dict[str, Any]]:
+    return [{"language_code": "en", **fields}]
