@@ -92,19 +92,19 @@ Incident Notification Module
    :maxdepth: 3
    :hidden:
 
-   ui_introduction
-   ui_homepage
-   ui_reporting_dashboard
-   ui_managing_dashboard
-   ui_create_project
-   ui_open_project
-   ui_edit_project
-   ui_duplicate_project
-   ui_delete_project
-   ui_import
-   ui_generate_and download_report
-   ui_report_back_end
-   ui_bulk_report_and error_log
+   ui_reporting_module/ui_introduction
+   ui_reporting_module/ui_homepage
+   ui_reporting_module/ui_reporting_dashboard
+   ui_reporting_module/ui_managing_dashboard
+   ui_reporting_module/ui_create_project
+   ui_reporting_module/ui_open_project
+   ui_reporting_module/ui_edit_project
+   ui_reporting_module/ui_duplicate_project
+   ui_reporting_module/ui_delete_project
+   ui_reporting_module/ui_import
+   ui_reporting_module/ui_generate_and download_report
+   ui_reporting_module/ui_report_back_end
+   ui_reporting_module/ui_bulk_report_and error_log
 
 
 Presentation
