@@ -13,5 +13,5 @@ The **Duplicate project** popup appears. In this case, only the Project name fie
    :alt: Duplicate a project
    :target: ../_static/reporting_module_images/Rep_23.png
 
-Once changed, click the Duplicate button in the lower right-hand corner of the popup. 
+Once changed, click the **Duplicate** button in the lower right-hand corner of the popup. 
 The duplicated report appears on the dashboard with a name (and copy ) afterwards.
