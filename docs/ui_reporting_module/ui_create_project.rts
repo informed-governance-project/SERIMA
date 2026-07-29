@@ -1,0 +1,27 @@
+What is a Project?
+---------------------
+
+To create reports, you first need to create a **project**. A project defines the scope of a report by specifying a set of criteria used to preselect one or more operators. 
+Based on these criteria, the system identifies the operators that match the conditions and includes them in the report.
+
+In other words, a project acts as a filter that determines which operators' data will be collected and analyzed. 
+The resulting report can then be generated, downloaded, and reviewed.
+
+The criteria defined in the New Project pop-up determine which operators are included in the project. Only companies (operators) that meet the selected conditions will be part of the resulting report.
+The project configuration is not permanent. After a project has been created, you can modify the selection criteria at any time using the Edit Project function.
+
+Create a new project
+~~~~~~~~~~~~~~~~~~~~~
+
+Click the New project button in the top-right corner. The New project pop-up window appears. Enter a name for the project, then select the applicable Regulation and Standard. The selected standard is linked to the chosen security objective.
+6.1.	Project name, Regulation, Standard 
+
+
+
+
+
+
+
+
+
+
