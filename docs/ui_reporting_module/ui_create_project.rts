@@ -25,6 +25,23 @@ Project name, Regulation, Standard
    :alt: New project
    :target: ../_static/reporting_module_images/Rep_15.png
 
+Base year, Comparison years
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Next, select the **Base year**, which serves as the reference year for the report. 
+Data from this year will be compared with data from the selected **Comparison years** to provide a historical view of performance and progress over time.
+
+You can select comparison years individually by using the checkboxes next to each year, or select all available years at once 
+(by using the **Select all** checkbox).
+
+Sectors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use this drop-down menu to select the sectors you want to analyze in the report. 
+You can select one or more sectors, either at the category level or individually.
+To display the sectors within a category, click the downward-pointing arrow next to the category name. 
+The category will expand, allowing you to select specific sectors. 
+If you select more than one sector, they will be shown in the **Sectors** dropdown separated by a comma (highlighted in green in the screenshot below).
 
 
 
