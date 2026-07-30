@@ -7,6 +7,7 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from governanceplatform.models import Sector
 from incidents.configuration_export import FORMAT_NAME, FORMAT_VERSION
 from incidents.models import (
     ConditionalQuestionOption,
@@ -93,8 +94,76 @@ def test_import_sector_regulation_create_forces_new_questions(
         "2 questions created, 0 questions reused, "
         "1 predefined answers created, 0 predefined answers skipped, "
         "2 question options created, 1 conditional questions created, "
-        "1 reminder emails created, 0 impacts created, 0 sectors linked.\n"
+        "1 reminder emails created, 0 impacts created, "
+        "0 sectors created, 0 sectors reused, 0 sectors linked.\n"
     )
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_creates_missing_sectors_and_reuses_existing(
+    populate_db,
+    tmp_path,
+):
+    target = _create_target(populate_db)
+    existing_sector = Sector.objects.get(acronym="ENE")
+    existing_sector.creator = populate_db["regulators"][0]
+    existing_sector.creator_name = "Original creator"
+    existing_sector.save()
+    original_name = existing_sector.safe_translation_getter("name", any_language=True)
+    data = _configuration_data()
+    data["sectors"] = [
+        {
+            "acronym": "NEW",
+            "parent_acronym": "TOP",
+            "translations": _translations(name="New child"),
+        },
+        {
+            "acronym": "TOP",
+            "parent_acronym": None,
+            "translations": _translations(name="New parent"),
+        },
+        {
+            "acronym": "ENE",
+            "parent_acronym": None,
+            "translations": _translations(name="Changed name"),
+        },
+    ]
+    data["sector_regulation"]["sectors"] = [
+        {"acronym": "NEW"},
+        {"acronym": "ENE"},
+    ]
+    data["impacts"] = [
+        {
+            "translations": _translations(
+                label="Imported impact",
+                headline="Imported impact headline",
+            ),
+            "sectors": ["NEW"],
+        }
+    ]
+    stdout = StringIO()
+
+    call_command(
+        "import_sector_regulation",
+        _write_configuration(tmp_path, data),
+        target.pk,
+        stdout=stdout,
+    )
+
+    existing_sector.refresh_from_db()
+    parent = Sector.objects.get(acronym="TOP")
+    child = Sector.objects.get(acronym="NEW")
+    target.refresh_from_db()
+    assert parent.creator == target.regulator
+    assert child.creator == target.regulator
+    assert child.parent == parent
+    assert existing_sector.creator == populate_db["regulators"][0]
+    assert existing_sector.creator_name == "Original creator"
+    assert existing_sector.safe_translation_getter("name", any_language=True) == original_name
+    assert set(target.sectors.values_list("acronym", flat=True)) == {"ENE", "NEW"}
+    assert "2 sectors created" in stdout.getvalue()
+    assert "1 sectors reused" in stdout.getvalue()
+    assert "2 sectors linked" in stdout.getvalue()
 
 
 @pytest.mark.django_db
@@ -107,7 +176,7 @@ def test_import_sector_regulation_rolls_back_on_late_failure(
     data["sector_regulation"]["sectors"] = [
         {
             "acronym": "MISSING",
-            "parent_acronym": None,
+            "parent_acronym": "UNKNOWN",
             "translations": [{"language_code": "en", "name": "Missing"}],
         }
     ]
@@ -116,6 +185,7 @@ def test_import_sector_regulation_rolls_back_on_late_failure(
         Workflow.objects.count(),
         Email.objects.count(),
         QuestionCategory.objects.count(),
+        Sector.objects.count(),
     )
 
     with pytest.raises(CommandError, match="no changes were saved"):
@@ -126,6 +196,7 @@ def test_import_sector_regulation_rolls_back_on_late_failure(
         Workflow.objects.count(),
         Email.objects.count(),
         QuestionCategory.objects.count(),
+        Sector.objects.count(),
     ) == counts_before
     target.refresh_from_db()
     assert target.safe_translation_getter("name", any_language=True) == ("Blank configuration")

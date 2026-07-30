@@ -83,6 +83,8 @@ class Command(BaseCommand):
                 f"{result['conditional_questions']} conditional questions created, "
                 f"{result['reminder_emails']} reminder emails created, "
                 f"{result['impacts']} impacts created, "
+                f"{result['sectors_created']} sectors created, "
+                f"{result['sectors_reused']} sectors reused, "
                 f"{result['sectors_linked']} sectors linked."
             )
         )

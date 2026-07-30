@@ -3,6 +3,7 @@ from typing import Any, cast
 
 from django.utils import timezone
 
+from governanceplatform.models import Sector
 from incidents.models import (
     ConditionalQuestionOption,
     Email,
@@ -51,6 +52,7 @@ class SectorRegulationConfigurationExporter:
 
     def export(self) -> dict[str, Any]:
         sector_regulation = self.sector_regulation
+        linked_sectors = list(sector_regulation.sectors.select_related("parent").prefetch_related("translations").order_by("acronym", "pk"))
         workflow_links = list(
             SectorRegulationWorkflow.objects.filter(sector_regulation=sector_regulation)
             .select_related("workflow", "workflow__submission_email")
@@ -104,6 +106,7 @@ class SectorRegulationConfigurationExporter:
         )
         emails = self._collect_emails(workflows, reminder_emails)
         impacts = self._collect_impacts()
+        sectors = self._collect_sectors(linked_sectors, impacts)
 
         email_keys = _key_map(emails, "email")
         workflow_keys = _key_map(workflows, "report")
@@ -131,16 +134,7 @@ class SectorRegulationConfigurationExporter:
                         ("name", "full_name", "description"),
                     ),
                 },
-                "sectors": [
-                    {
-                        "acronym": sector.acronym,
-                        "parent_acronym": (sector.parent.acronym if sector.parent else None),
-                        "translations": _translations(sector, ("name",)),
-                    }
-                    for sector in sector_regulation.sectors.select_related("parent")
-                    .prefetch_related("translations")
-                    .order_by("acronym", "pk")
-                ],
+                "sectors": [self._sector_data(sector) for sector in linked_sectors],
                 "opening_email": self._optional_key(email_keys, sector_regulation.opening_email_id),
                 "closing_email": self._optional_key(email_keys, sector_regulation.closing_email_id),
                 "report_status_changed_email": self._optional_key(
@@ -148,6 +142,7 @@ class SectorRegulationConfigurationExporter:
                     sector_regulation.report_status_changed_email_id,
                 ),
             },
+            "sectors": [self._sector_data(sector) for sector in sectors],
             "emails": [self._email_data(email, email_keys) for email in emails],
             "reports": [self._workflow_data(workflow, workflow_keys, email_keys) for workflow in workflows],
             "categories": [self._category_data(category, category_keys) for category in categories],
@@ -235,8 +230,31 @@ class SectorRegulationConfigurationExporter:
         )
 
     @staticmethod
+    def _collect_sectors(
+        linked_sectors: list[Sector],
+        impacts: list[Impact],
+    ) -> list[Sector]:
+        sector_ids = {sector.pk for sector in linked_sectors}
+        sector_ids.update(sector.pk for impact in impacts for sector in impact.sectors.all())
+        sectors: dict[int, Sector] = {}
+        pending_ids = sector_ids
+        while pending_ids:
+            batch = list(Sector.objects.filter(pk__in=pending_ids).select_related("parent").prefetch_related("translations"))
+            pending_ids = {sector.parent_id for sector in batch if sector.parent_id is not None and sector.parent_id not in sectors}
+            sectors.update({sector.pk: sector for sector in batch})
+        return sorted(sectors.values(), key=lambda sector: (sector.acronym, sector.pk))
+
+    @staticmethod
     def _optional_key(keys: dict[int, str], object_id: int | None) -> str | None:
         return keys.get(object_id) if object_id is not None else None
+
+    @staticmethod
+    def _sector_data(sector: Sector) -> dict[str, Any]:
+        return {
+            "acronym": sector.acronym,
+            "parent_acronym": (sector.parent.acronym if sector.parent else None),
+            "translations": _translations(sector, ("name",)),
+        }
 
     @staticmethod
     def _email_data(email: Email, keys: dict[int, str]) -> dict[str, Any]:

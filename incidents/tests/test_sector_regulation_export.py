@@ -105,6 +105,10 @@ def test_export_sector_regulation_includes_regulation_impacts(
     tmp_path,
 ):
     sector_regulation = next(item for item in populate_incident_db["incidents_workflows"] if item.pk == 2)
+    parent_sector = next(sector for sector in populate_incident_db["sectors"] if sector.acronym == "ENE")
+    for sector in populate_incident_db["incidents_impacts"][0].sectors.all():
+        sector.parent = parent_sector
+        sector.save()
     for impact in populate_incident_db["incidents_impacts"]:
         impact.regulations.add(sector_regulation.regulation)
     output_path = tmp_path / "sector-regulation.json"
@@ -115,6 +119,10 @@ def test_export_sector_regulation_includes_regulation_impacts(
     assert len(data["impacts"]) == 3
     expected_sectors = sorted(sector.acronym for sector in populate_incident_db["incidents_impacts"][0].sectors.all())
     assert data["impacts"][0]["sectors"] == expected_sectors
+    exported_sectors = {sector["acronym"]: sector for sector in data["sectors"]}
+    assert set(expected_sectors) <= exported_sectors.keys()
+    assert {exported_sectors[acronym]["parent_acronym"] for acronym in expected_sectors} == {"ENE"}
+    assert "ENE" in exported_sectors
 
 
 @pytest.mark.django_db

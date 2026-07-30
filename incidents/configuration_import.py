@@ -62,6 +62,7 @@ class SectorRegulationConfigurationImporter:
         category_option_data = self._catalog("category_options")
         question_data = self._catalog("questions")
         question_option_data = self._catalog("question_options")
+        sector_data = self._sector_catalog()
 
         sector_regulation_data = self.data["sector_regulation"]
         for field in (
@@ -172,6 +173,7 @@ class SectorRegulationConfigurationImporter:
             reports,
             emails,
         )
+        sectors_created, sectors_reused = self._import_sectors(sector_data)
         impact_count = self._import_impacts()
         sector_count = self._update_target(emails)
 
@@ -189,6 +191,8 @@ class SectorRegulationConfigurationImporter:
             "report_links": report_link_count,
             "reminder_emails": reminder_count,
             "impacts": impact_count,
+            "sectors_created": sectors_created,
+            "sectors_reused": sectors_reused,
             "sectors_linked": sector_count,
         }
 
@@ -212,6 +216,29 @@ class SectorRegulationConfigurationImporter:
             if key in catalog:
                 raise ConfigurationImportError(f"Duplicate {name} key {key!r}.")
             catalog[key] = item
+        return catalog
+
+    def _sector_catalog(self) -> dict[str, dict[str, Any]]:
+        items = self.data.get(
+            "sectors",
+            self.data["sector_regulation"].get("sectors", []),
+        )
+        if not isinstance(items, list):
+            raise ConfigurationImportError("sectors must be a list.")
+        catalog: dict[str, dict[str, Any]] = {}
+        max_length = Sector._meta.get_field("acronym").max_length
+        for item in items:
+            if not isinstance(item, dict):
+                raise ConfigurationImportError("Every sector must be an object.")
+            acronym = self._string(item, "acronym")
+            if not acronym or len(acronym) > max_length:
+                raise ConfigurationImportError(f"Sector acronym {acronym!r} must contain between 1 and {max_length} characters.")
+            if acronym in catalog:
+                raise ConfigurationImportError(f"Duplicate sector acronym {acronym!r}.")
+            parent_acronym = item.get("parent_acronym")
+            if parent_acronym is not None and not isinstance(parent_acronym, str):
+                raise ConfigurationImportError("parent_acronym must be a string or null.")
+            catalog[acronym] = item
         return catalog
 
     def _import_emails(
@@ -505,6 +532,60 @@ class SectorRegulationConfigurationImporter:
                 reminder_count += 1
         return len(items), reminder_count
 
+    def _import_sectors(
+        self,
+        catalog: dict[str, dict[str, Any]],
+    ) -> tuple[int, int]:
+        self._load_sectors()
+        assert self.sectors_by_acronym is not None
+        pending = {}
+        reused_count = 0
+        for acronym, item in catalog.items():
+            matches = self.sectors_by_acronym.get(acronym, [])
+            if len(matches) > 1:
+                raise ConfigurationImportError(f"Sector acronym {acronym!r} is ambiguous.")
+            if matches:
+                reused_count += 1
+            else:
+                pending[acronym] = item
+
+        created_count = 0
+        while pending:
+            imported_in_pass = False
+            for acronym, item in list(pending.items()):
+                parent_acronym = item.get("parent_acronym")
+                parent = None
+                if parent_acronym is not None:
+                    parent_matches = self.sectors_by_acronym.get(parent_acronym, [])
+                    if len(parent_matches) > 1:
+                        raise ConfigurationImportError(f"Sector acronym {parent_acronym!r} is ambiguous.")
+                    if not parent_matches:
+                        if parent_acronym in pending:
+                            continue
+                        raise ConfigurationImportError(f"Parent sector with acronym {parent_acronym!r} does not exist.")
+                    parent = parent_matches[0]
+
+                sector = Sector.objects.create(
+                    acronym=acronym,
+                    parent=parent,
+                    creator=self.creator,
+                    creator_name=self.creator_name,
+                )
+                self._set_translations(
+                    sector,
+                    item.get("translations"),
+                    ("name",),
+                )
+                self.sectors_by_acronym[acronym] = [sector]
+                del pending[acronym]
+                created_count += 1
+                imported_in_pass = True
+
+            if not imported_in_pass:
+                raise ConfigurationImportError("Sector parent relationships contain a cycle.")
+
+        return created_count, reused_count
+
     def _import_impacts(self) -> int:
         items = self.data.get("impacts", [])
         if not isinstance(items, list):
@@ -591,10 +672,8 @@ class SectorRegulationConfigurationImporter:
             instance.save()
 
     def _resolve_sectors(self, acronyms: Iterable[Any]) -> list[Sector]:
-        if self.sectors_by_acronym is None:
-            self.sectors_by_acronym = {}
-            for sector in Sector.objects.all().order_by("pk"):
-                self.sectors_by_acronym.setdefault(sector.acronym, []).append(sector)
+        self._load_sectors()
+        assert self.sectors_by_acronym is not None
 
         sectors = []
         for acronym in acronyms:
@@ -607,6 +686,12 @@ class SectorRegulationConfigurationImporter:
                 raise ConfigurationImportError(f"Sector acronym {acronym!r} is ambiguous.")
             sectors.append(matches[0])
         return sectors
+
+    def _load_sectors(self) -> None:
+        if self.sectors_by_acronym is None:
+            self.sectors_by_acronym = {}
+            for sector in Sector.objects.all().order_by("pk"):
+                self.sectors_by_acronym.setdefault(sector.acronym, []).append(sector)
 
     @staticmethod
     def _reference(mapping: dict[str, Any], key: Any, label: str):
