@@ -173,7 +173,7 @@ class SectorRegulationConfigurationImporter:
             emails,
         )
         impact_count = self._import_impacts()
-        self._update_target(emails)
+        sector_count = self._update_target(emails)
 
         return {
             "emails": len(emails),
@@ -183,11 +183,13 @@ class SectorRegulationConfigurationImporter:
             "questions_created": len(questions) - len(self.reused_question_keys),
             "questions_reused": len(self.reused_question_keys),
             "predefined_answers": len(answers),
+            "predefined_answers_skipped": len(self.skipped_answer_keys),
             "question_options": len(question_options),
             "conditional_questions": conditional_count,
             "report_links": report_link_count,
             "reminder_emails": reminder_count,
             "impacts": impact_count,
+            "sectors_linked": sector_count,
         }
 
     def _validate_document(self) -> None:
@@ -526,7 +528,7 @@ class SectorRegulationConfigurationImporter:
             impact.sectors.set(self._resolve_sectors(sector_acronyms))
         return len(items)
 
-    def _update_target(self, emails: dict[str, Email]) -> None:
+    def _update_target(self, emails: dict[str, Email]) -> int:
         item = self.data["sector_regulation"]
         self.target.active = self._boolean(item, "active", default=True)
         self.target.is_detection_date_needed = self._boolean(
@@ -565,6 +567,7 @@ class SectorRegulationConfigurationImporter:
                 raise ConfigurationImportError("Every sector_regulation sector must be an object.")
             acronyms.append(self._string(sector_item, "acronym"))
         self.target.sectors.set(self._resolve_sectors(acronyms))
+        return len(acronyms)
 
     @staticmethod
     def _set_translations(

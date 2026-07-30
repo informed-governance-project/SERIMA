@@ -1,4 +1,5 @@
 import json
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -28,8 +29,14 @@ def test_import_sector_regulation_reuses_questions(populate_db, tmp_path):
     input_path = _write_configuration(tmp_path)
     question_count = Question.objects.count()
     answer_count = PredefinedAnswer.objects.count()
+    stdout = StringIO()
 
-    call_command("import_sector_regulation", input_path, target.pk)
+    call_command(
+        "import_sector_regulation",
+        input_path,
+        target.pk,
+        stdout=stdout,
+    )
 
     target.refresh_from_db()
     link = SectorRegulationWorkflow.objects.select_related("workflow").get(sector_regulation=target)
@@ -42,6 +49,8 @@ def test_import_sector_regulation_reuses_questions(populate_db, tmp_path):
     assert SectorRegulationWorkflowEmail.objects.count() == 1
     assert target.safe_translation_getter("name", any_language=True) == ("Imported configuration")
     assert link.workflow.creator == target.regulator
+    assert "2 questions reused" in stdout.getvalue()
+    assert "1 predefined answers skipped" in stdout.getvalue()
 
 
 @pytest.mark.django_db
@@ -55,12 +64,14 @@ def test_import_sector_regulation_create_forces_new_questions(
     input_path = _write_configuration(tmp_path)
     question_count = Question.objects.count()
     answer_count = PredefinedAnswer.objects.count()
+    stdout = StringIO()
 
     call_command(
         "import_sector_regulation",
         input_path,
         target.pk,
         create=True,
+        stdout=stdout,
     )
 
     imported_references = {
@@ -75,6 +86,15 @@ def test_import_sector_regulation_create_forces_new_questions(
     assert Question.objects.count() == question_count + 2
     assert PredefinedAnswer.objects.count() == answer_count + 1
     assert ConditionalQuestionOption.objects.count() == 1
+    assert (
+        stdout.getvalue() == "Imported configuration into SectorRegulation "
+        f"{target.pk}: 1 reports, 1 report links, 1 emails created, "
+        "1 categories created, 1 category options created, "
+        "2 questions created, 0 questions reused, "
+        "1 predefined answers created, 0 predefined answers skipped, "
+        "2 question options created, 1 conditional questions created, "
+        "1 reminder emails created, 0 impacts created, 0 sectors linked.\n"
+    )
 
 
 @pytest.mark.django_db
