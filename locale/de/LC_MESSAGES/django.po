@@ -4,8 +4,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-28 12:59+0200\n"
-"PO-Revision-Date: 2026-07-06 14:00+0000\n"
-"Last-Translator: Pascal Bertrand <Pascal.bertrand+RegAdmin@ilr.lu>\n"
+"PO-Revision-Date: 2026-08-03 10:11+0000\n"
+"Last-Translator: Chris Frings <Chris.frings+RegAdmin@ilr.lu>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -366,8 +366,8 @@ msgid ""
 "({creator_name})"
 msgstr ""
 "<strong>Ändern oder Löschen ist nicht erlaubt.</strong><br> Dieses "
-"{object_name} wird entweder verwendet oder Sie sind nicht sein Ersteller "
-"({creator_name})"
+"{object_name} wird entweder verwendet oder Sie sind nicht sein Ersteller ("
+"{creator_name})"
 
 #: governanceplatform/managers.py:15
 msgid "User must have an email address"
@@ -1485,8 +1485,8 @@ msgid ""
 "[{sectorregulation} - ({workflow})] within date range ({from_date} - "
 "{to_date}.)"
 msgstr ""
-"Insgesamt wurden {count} Vorfälle aus der Vorschrift {regulation} "
-"[{sectorregulation} - ({workflow})] innerhalb des Zeitraums ({from_date} - "
+"Insgesamt wurden {count} Vorfälle aus der Vorschrift {regulation} ["
+"{sectorregulation} - ({workflow})] innerhalb des Zeitraums ({from_date} - "
 "{to_date})exportiert.)"
 
 #: incidents/views.py:959
@@ -2481,8 +2481,7 @@ msgstr "Beim Datenexport treten einige Fehler auf:"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:16
 msgid "You can download exported data with following link"
-msgstr ""
-"Über den folgenden Link können Sie die exportierten Daten herunterladen"
+msgstr "Über den folgenden Link können Sie die exportierten Daten herunterladen"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:20
 msgid "Download export data"
