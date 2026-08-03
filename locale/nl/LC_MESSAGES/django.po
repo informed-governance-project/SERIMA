@@ -191,7 +191,8 @@ msgstr "6 maanden"
 
 #: governanceplatform/config.py:151 governanceplatform/config_dev.py:149
 msgid "Cookie essential for maintaining user session options."
-msgstr "Essentiële cookie voor het behoud van de opties voor gebruikerssessies."
+msgstr ""
+"Essentiële cookie voor het behoud van de opties voor gebruikerssessies."
 
 #: governanceplatform/config.py:153 governanceplatform/config_dev.py:150
 msgid "Session ID"
@@ -359,9 +360,9 @@ msgid ""
 "This {object_name} is either in use.<br>- You are not its creator "
 "({creator_name})"
 msgstr ""
-"<strong>Wijzigings- en verwijderingsacties zijn niet toegestaan.</strong>"
-"<br>- {object_name} is ofwel in gebruik<br> - of u bent niet de maker ("
-"{creator_name})"
+"<strong>Wijzigings- en verwijderingsacties zijn niet toegestaan.</"
+"strong><br>- {object_name} is ofwel in gebruik<br> - of u bent niet de maker "
+"({creator_name})"
 
 #: governanceplatform/managers.py:15
 msgid "User must have an email address"
@@ -860,8 +861,8 @@ msgid ""
 "<strong>Deletion forbidden</strong><br>- This {object_name} is either in use."
 "<br>"
 msgstr ""
-"<strong>Verwijdering verboden</strong><br>- Dit {object_name} is in "
-"gebruik.<br>"
+"<strong>Verwijdering verboden</strong><br>- Dit {object_name} is in gebruik."
+"<br>"
 
 #: incidents/admin.py:936 incidents/models.py:289 incidents/models.py:359
 #: incidents/models.py:820
@@ -1475,8 +1476,8 @@ msgid ""
 "{to_date}.)"
 msgstr ""
 "Er werden in totaal {count} incidenten geëxporteerd uit regelgeving "
-"{regulation} [{sectorregulation} - ({workflow})] binnen datumbereik ("
-"{from_date} - {to_date}.)"
+"{regulation} [{sectorregulation} - ({workflow})] binnen datumbereik "
+"({from_date} - {to_date}.)"
 
 #: incidents/views.py:959
 #, python-brace-format
@@ -1488,8 +1489,8 @@ msgid ""
 "The daily limit of incident reports has been reached. Please try again "
 "tomorrow."
 msgstr ""
-"De daglimiet voor incidentrapporten is bereikt. Probeer morgen nog eens, "
-"a.u.b."
+"De daglimiet voor incidentrapporten is bereikt. Probeer morgen nog eens, a.u."
+"b."
 
 #: incidents/views.py:1046
 msgid "Legal bases"
@@ -2233,8 +2234,8 @@ msgid ""
 "The standard '%(label)s' is not find for regulation '%(regulation)s' and "
 "this regulator."
 msgstr ""
-"De standaard ‘%(label)s’ komt niet overeen met de regelgeving ‘%(regulation)s"
-"’ en deze regelgevende instantie."
+"De standaard ‘%(label)s’ komt niet overeen met de regelgeving "
+"‘%(regulation)s’ en deze regelgevende instantie."
 
 #: securityobjectives/admin.py:403
 #, python-format

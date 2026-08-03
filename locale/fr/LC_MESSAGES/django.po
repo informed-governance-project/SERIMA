@@ -364,9 +364,9 @@ msgid ""
 "This {object_name} is either in use.<br>- You are not its creator "
 "({creator_name})"
 msgstr ""
-"<strong>Les actions de modification et de suppression ne sont pas "
-"autorisées.</strong><br>- Soit {object_name} est en cours d'utilisation, "
-"soit vous n'en êtes pas le créateur ({creator_name})"
+"<strong>Les actions de modification et de suppression ne sont pas autorisées."
+"</strong><br>- Soit {object_name} est en cours d'utilisation, soit vous n'en "
+"êtes pas le créateur ({creator_name})"
 
 #: governanceplatform/managers.py:15
 msgid "User must have an email address"
@@ -897,8 +897,8 @@ msgid ""
 "in use.<br>- You are not its creator ({creator_name})"
 msgstr ""
 "<strong>La suppression n'est pas autorisée.</strong><br> Soit {object_name} "
-"est en cours d'utilisation, soit vous n'êtes pas son créateur ("
-"{creator_name})"
+"est en cours d'utilisation, soit vous n'êtes pas son créateur "
+"({creator_name})"
 
 #: incidents/decorators.py:39
 msgid ""
@@ -946,7 +946,8 @@ msgstr "Référence de la plainte"
 msgid ""
 "Insert the file number of a criminal complaint that you have filed with the "
 "police."
-msgstr "Insérer le numéro de dossier de la plainte déposée auprès de la police."
+msgstr ""
+"Insérer le numéro de dossier de la plainte déposée auprès de la police."
 
 #: incidents/forms.py:721
 msgid "Send notification to"
