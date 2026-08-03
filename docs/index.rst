@@ -104,7 +104,7 @@ Incident Notification Module
    ui_reporting_module/ui_import
    ui_reporting_module/ui_generate_and download_report
    ui_reporting_module/ui_report_back_end
-   ui_reporting_module/ui_bulk_report_and error_log
+   ui_reporting_module/ui_bulk_report_and_error_log
 
 
 Presentation
