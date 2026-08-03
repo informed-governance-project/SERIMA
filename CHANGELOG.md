@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Per-observer allowed-connector-types filter: PlatformAdmin selects which connector types each observer may use; the list is hidden from Observer admins and restricts the connector types they can create
 - Per-connector "Test connection" button in the admin, replacing the RT-only one: it now sends a real test message (RT test ticket, encrypted test payload, webhook ping) so delivery and decryption are verified end-to-end
 - "View previous version" button on questions whose answer changed since the previous report; opens a modal showing the previous answer
+- Sysadmin commands to export and atomically import incident workflow configuration, including missing sectors, for a sector regulation (#826)
 
 ### Changed
 
