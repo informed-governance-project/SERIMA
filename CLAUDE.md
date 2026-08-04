@@ -21,7 +21,8 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | PDF generation | WeasyPrint | >=68.0,<69 |
 | Frontend | Bootstrap 5 + bootstrap-icons | ^5.3.3 / ^1.11.3 |
 | JS build | Node.js + npm | 24.x / 11.x |
-| Type checking | mypy | ^2.0.0 |
+| Lint & format | ruff | ^0.16.1 |
+| Type checking | mypy | <1.19 |
 | Testing | pytest-django | ^4.11.1 |
 
 ## Build & Run
@@ -156,13 +157,18 @@ API is feature-flagged: set `API_ENABLED = True` in config to expose endpoints.
 - **Branch naming**: `feat/`, `fix/`, `test/`, `review/`, descriptive kebab-case
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
-- **Python style**: Black + isort (configured in pyproject.toml)
-- **Linting**: flake8
+- **Python style**: ruff format (`[tool.ruff]` in pyproject.toml — line length 140, target `py312`, `migrations/` excluded)
+- **Linting**: ruff (`[tool.ruff.lint]` — includes import sorting via `I`, so no separate isort step)
 
 ```bash
-poetry run black .
-poetry run isort .
-poetry run flake8
+poetry run ruff check --fix .   # lint + autofix, includes import sorting
+poetry run ruff format .        # format
+```
+
+Both run automatically via pre-commit (`.pre-commit-config.yaml`) and are enforced in CI by `codeql.yml`, which runs `ruff check .` and `ruff format --check .`.
+
+```bash
+poetry run pre-commit run --all-files
 ```
 
 ### Code style principles
@@ -249,7 +255,7 @@ Rules:
 GitHub Actions workflows:
 - `pytest.yml` — runs tests on push/PR against PostgreSQL service container
 - `docker-ghcr.yml` — builds and pushes Docker image to ghcr.io
-- `codeql.yml` — static security analysis (Python + JavaScript)
+- `codeql.yml` — static security analysis (Python + JavaScript), plus Django deploy checks, pip-audit, `ruff check`, `ruff format --check` and mypy
 - `pythonapp.yml` — additional Python checks
 
 **Never bypass CI.** If a check fails, fix the root cause — don't skip hooks (`--no-verify`) or force-push over a failing status. A green CI pipeline is the minimum bar for merging.
