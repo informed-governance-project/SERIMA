@@ -569,8 +569,9 @@ class Incident(models.Model):
     )
 
     # update the incident_last_update of incident
-    def save(self, *args, **kwargs):
-        self.incident_last_update = timezone.now()
+    def save(self, *args, skip_last_update: bool = False, **kwargs):
+        if not skip_last_update:
+            self.incident_last_update = timezone.now()
         super().save(*args, **kwargs)
 
     def get_incident_root_sector(self):
