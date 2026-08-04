@@ -3,7 +3,7 @@ Back-end Reporting Configuration
 
 Each regulation requires a single configuration that is linked to the corresponding regulator. 
 
-  **As a Regulator Admin you can set up the configuration of the reports in the administration interface (back-end) of the SERIMA platform.**
+  **As a Regulator Admin, you can set up the configuration of the reports in the administration interface (back-end) of the SERIMA platform.**
 
 Log in as a Regulator Admin, go to the administration interface, and select Configurations in the Reporting section.
 
@@ -11,16 +11,19 @@ Log in as a Regulator Admin, go to the administration interface, and select Conf
    :alt: Back-end Reporting Configuration
    :target: ../_static/reporting_module_images/Rep_48.png
 
-In SERIMA, a Security Objectives statement must be created for each operator.
+In SERIMA, a Security Objective statement must be created for each operator.
 
  **Reporting is linked to Security Objectives and the Risk Analysis from MONARC. To generate a report document, you must first create the report   elements.**
 
 Add configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can create a new configuration either by clicking the Add link next to Configurations, or from the **Select Configuration to change** screen, selecting the **Add Configuration** button. Configure reporting settings for each Security Standard. First, choose the standard you want to use. 
+You can create a new configuration either by clicking the **Add** link next to Configurations, or from the **Select Configuration to change** screen, selecting the **Add Configuration** button. 
 
-Next, upload a DOCX template to the platform, and finally add colors to the reporting configuration. When generating the report, you can also define the order of the colors used.
+ **Configure reporting settings for each Security Standard. First, choose the standard you want to use.**
+ **Next, upload a DOCX template to the platform, and finally add colors to the reporting configuration.** 
+
+When generating the report, you can also define the order of the colors used.
 
 .. figure:: ../_static/reporting_module_images/Rep_49.png
    :alt: Add Configuration
@@ -39,12 +42,14 @@ From the **Standard** dropdown menu, select a standard. Once you have selected a
 •	**Add another standard** – Click the green plus (+) icon to add an additional standard.
 •	**View the selected standard** 	– Click the eye icon to open the selected standard. 
 
-You will be redirected to the View Standard page for that standard.
+You will be redirected to the **View Standard** page for that standard.
 
 **Templates docx**
 ^^^^^^^^^^^^^^^^^^^^^
 
-Templates are DOCX files. The application supports four languages, allowing you to create templates in **English (EN), French (FR), Dutch (NL)**, and **German (DE)**. A DOCX Template must be provided for each supported language.
+Templates are DOCX files. The application supports four languages, allowing you to create templates in **English (EN), French (FR), Dutch (NL)**, and **German (DE)**. 
+
+ **A DOCX Template must be provided for each supported language.**
 
 In the **Templates (DOCX)** section, you can manage your DOCX templates. Select the language for your template, click **Choose File**, and upload your DOCX template.
 
