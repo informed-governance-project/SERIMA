@@ -31,7 +31,7 @@ Until the process is complete, you can click the **Stop Generating** button to s
    :alt: Stop Generating a report
    :target: ../_static/reporting_module_images/Rep_40.png
 
-Once the report has been generated, the **Generating Report** button is replaced with **Download**, and the button color turns red. If the process finishes without any issues, the green message at the top of the table **The report has been generated successfully** is shown. 
+Once the report has been generated, the **Generating Report** button is replaced with **Download** button (1), and the button color turns red. If the process finishes without any issues, the green message at the top of the table **The report has been generated successfully** is shown (2). 
 
 Download a report
 ------------------------
