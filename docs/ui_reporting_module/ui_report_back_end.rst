@@ -20,8 +20,7 @@ Add configuration
 
 You can create a new configuration either by clicking the **Add** link next to Configurations, or from the **Select Configuration to change** screen, selecting the **Add Configuration** button. 
 
- **Configure reporting settings for each Security Standard. First, choose the standard you want to use.**
- **Next, upload a DOCX template to the platform, and finally add colors to the reporting configuration.** 
+ **Configure reporting settings for each Security Standard. First, choose the standard you want to use. Next, upload a DOCX template to the platform, and finally add colors to the reporting configuration.** 
 
 When generating the report, you can also define the order of the colors used.
 
