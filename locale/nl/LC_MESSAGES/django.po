@@ -3,9 +3,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-06 16:01+0200\n"
-"PO-Revision-Date: 2026-07-04 15:28+0000\n"
-"Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
+"POT-Creation-Date: 2026-08-04 09:03+0200\n"
+"PO-Revision-Date: 2026-08-03 10:12+0000\n"
+"Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
 "Language-Team: \n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
@@ -48,7 +48,7 @@ msgstr "Categorieën van entiteiten"
 #: governanceplatform/admin.py:420 governanceplatform/models.py:82
 #: governanceplatform/models.py:643 incidents/admin.py:595
 #: incidents/admin.py:663 incidents/admin.py:994 incidents/filters.py:19
-#: incidents/forms.py:693 incidents/models.py:48 incidents/models.py:316
+#: incidents/forms.py:777 incidents/models.py:48 incidents/models.py:316
 #: incidents/views.py:1048
 msgid "Sectors"
 msgstr "Sectoren"
@@ -123,23 +123,23 @@ msgstr "RT-verbinding testen"
 msgid "Before testing the connection, make sure to save the RT configuration."
 msgstr "Sla de RT-configuratie op voordat u de verbinding test."
 
-#: governanceplatform/admin.py:1465
-msgid "Method not allowed."
-msgstr "Methode niet toegstaan."
-
-#: governanceplatform/admin.py:1470
+#: governanceplatform/admin.py:1464 governanceplatform/admin.py:1475
 msgid "Observer not found."
 msgstr "Waarnemer niet gevonden."
 
-#: governanceplatform/admin.py:1475
+#: governanceplatform/admin.py:1470
+msgid "Method not allowed."
+msgstr "Methode niet toegstaan."
+
+#: governanceplatform/admin.py:1480
 msgid "Permission denied."
 msgstr "Toestemming geweigerd."
 
-#: governanceplatform/admin.py:1479
+#: governanceplatform/admin.py:1502
 msgid "RT connection successful."
 msgstr "RT-verbinding succesvol."
 
-#: governanceplatform/admin.py:1481
+#: governanceplatform/admin.py:1504
 msgid "RT connection failed. Check URL, queue and token."
 msgstr "RT-verbinding mislukt. Controleer URL, wachtrij en token."
 
@@ -205,7 +205,7 @@ msgstr ""
 "Cookie gebruikt om CSRF-aanvallen (Cross-Site Request Forgery) te bestrijden."
 
 #: governanceplatform/config.py:161 governanceplatform/config_dev.py:155
-#: governanceplatform/forms.py:342 governanceplatform/models.py:287
+#: governanceplatform/forms.py:350 governanceplatform/models.py:287
 msgid "Token"
 msgstr "Token"
 
@@ -240,11 +240,11 @@ msgstr "Incidentmelding"
 msgid "Modules"
 msgstr "Modules"
 
-#: governanceplatform/forms.py:26 governanceplatform/forms.py:184
+#: governanceplatform/forms.py:26 governanceplatform/forms.py:192
 msgid "First name"
 msgstr "Voornaam"
 
-#: governanceplatform/forms.py:31 governanceplatform/forms.py:185
+#: governanceplatform/forms.py:31 governanceplatform/forms.py:193
 msgid "Last name"
 msgstr "Achternaam"
 
@@ -258,7 +258,7 @@ msgstr "Telefoonnummer"
 msgid "Email address"
 msgstr "E-mailadres"
 
-#: governanceplatform/forms.py:48 incidents/models.py:935
+#: governanceplatform/forms.py:48 incidents/models.py:936
 msgid "Role"
 msgstr "Rol"
 
@@ -267,21 +267,21 @@ msgstr "Rol"
 msgid "Email"
 msgstr "E-mail"
 
-#: governanceplatform/forms.py:180 governanceplatform/forms.py:297
+#: governanceplatform/forms.py:188 governanceplatform/forms.py:305
 msgid "I acknowledge and agree to the"
 msgstr "Ik erken en aanvaard de"
 
-#: governanceplatform/forms.py:181
+#: governanceplatform/forms.py:189
 msgid "Accepting the Terms of Use is required for registration."
 msgstr ""
 "Aanvaarding van de gebruiksvoorwaarden is vereist om een account aan te "
 "maken."
 
-#: governanceplatform/forms.py:242
+#: governanceplatform/forms.py:250
 msgid "There is an issue, please verify your e-mail"
 msgstr "Er is een probleem, gelieve uw e-mail te controleren"
 
-#: governanceplatform/forms.py:273
+#: governanceplatform/forms.py:281
 #, python-format
 msgid ""
 "Default language translation (%(fallback_language_name)s) is missing. Please "
@@ -290,18 +290,18 @@ msgstr ""
 "Standaardtaal is niet ingesteld (%(fallback_language_name)s). Voeg deze toe "
 "voordat u opslaat."
 
-#: governanceplatform/forms.py:289
+#: governanceplatform/forms.py:297
 #, python-format
 msgid "This %(model)s already exists."
 msgstr "Deze %(model)s bestaat al."
 
-#: governanceplatform/forms.py:307
+#: governanceplatform/forms.py:315
 msgid "I agree that my personal data may be used for communication purposes."
 msgstr ""
 "Ik aanvaard dat mijn persoonlijke gegevens worden gebruikt voor "
 "communicatiedoeleinden."
 
-#: governanceplatform/forms.py:331
+#: governanceplatform/forms.py:339
 msgid ""
 "A token is already set. To remove it, clear the field and save. To update "
 "it, enter a new token."
@@ -397,13 +397,13 @@ msgstr "Acroniem"
 
 #: governanceplatform/models.py:52 incidents/models.py:52
 #: incidents/models.py:81 incidents/models.py:125 incidents/models.py:174
-#: incidents/models.py:222 incidents/models.py:268 incidents/models.py:1033
+#: incidents/models.py:222 incidents/models.py:268 incidents/models.py:1034
 msgid "Creator name"
 msgstr "Naam van de maker"
 
 #: governanceplatform/models.py:60 incidents/models.py:60
 #: incidents/models.py:89 incidents/models.py:133 incidents/models.py:182
-#: incidents/models.py:230 incidents/models.py:276 incidents/models.py:1041
+#: incidents/models.py:230 incidents/models.py:276 incidents/models.py:1042
 msgid "Creator"
 msgstr "Maker"
 
@@ -521,7 +521,7 @@ msgstr "Gebruikers"
 
 #: governanceplatform/models.py:475 governanceplatform/models.py:498
 #: governanceplatform/models.py:534 governanceplatform/models.py:561
-#: incidents/models.py:929 incidents/templatetags/custom_filters.py:84
+#: incidents/models.py:930 incidents/templatetags/custom_filters.py:84
 msgid "User"
 msgstr "Gebruiker"
 
@@ -573,7 +573,7 @@ msgstr "Label"
 msgid "Regulations"
 msgstr "Regelgevingen"
 
-#: governanceplatform/models.py:607 incidents/forms.py:1108
+#: governanceplatform/models.py:607 incidents/forms.py:1195
 #: incidents/models.py:469
 msgid "Regulation"
 msgstr "Regelgeving"
@@ -595,9 +595,9 @@ msgstr "Wettelijke basis"
 msgid "Incident rules"
 msgstr "Regels voor incidenten"
 
-#: governanceplatform/models.py:674 incidents/models.py:823
-#: incidents/models.py:932 incidents/models.py:982 incidents/models.py:1003
-#: incidents/models.py:1209
+#: governanceplatform/models.py:674 incidents/models.py:824
+#: incidents/models.py:933 incidents/models.py:983 incidents/models.py:1004
+#: incidents/models.py:1210
 msgid "Timestamp"
 msgstr "Tijdstempel"
 
@@ -757,12 +757,12 @@ msgstr "Uw bericht is verzonden."
 msgid "Invalid captcha"
 msgstr "Ongeldige captcha"
 
-#: incidents/admin.py:226 incidents/forms.py:1204 incidents/models.py:158
-#: incidents/models.py:166 incidents/models.py:1012
+#: incidents/admin.py:226 incidents/forms.py:1291 incidents/models.py:158
+#: incidents/models.py:166 incidents/models.py:1013
 msgid "Question"
 msgstr "Vraag"
 
-#: incidents/admin.py:227 incidents/models.py:1203
+#: incidents/admin.py:227 incidents/models.py:1204
 msgid "Questionnaire"
 msgstr "Vragenlijst"
 
@@ -782,7 +782,7 @@ msgstr "Geselecteerde items kopiëren"
 msgid "Question Type"
 msgstr "Soort van vraag"
 
-#: incidents/admin.py:460 incidents/forms.py:1113 incidents/models.py:358
+#: incidents/admin.py:460 incidents/forms.py:1200 incidents/models.py:358
 #: incidents/models.py:532
 msgid "Workflow"
 msgstr "Workflow"
@@ -841,7 +841,7 @@ msgstr ""
 "<br>"
 
 #: incidents/admin.py:932 incidents/models.py:289 incidents/models.py:359
-#: incidents/models.py:820
+#: incidents/models.py:821
 msgid "Incident report"
 msgstr "Incidentrapport"
 
@@ -880,24 +880,24 @@ msgstr ""
 msgid "Search"
 msgstr "Zoeken"
 
-#: incidents/forms.py:328
+#: incidents/forms.py:246 incidents/forms.py:403
 msgid "Add details"
 msgstr "Voeg details toe"
 
-#: incidents/forms.py:353 incidents/forms.py:685 incidents/forms.py:892
-#: incidents/forms.py:899 incidents/forms.py:906 incidents/forms.py:913
+#: incidents/forms.py:429 incidents/forms.py:769 incidents/forms.py:976
+#: incidents/forms.py:983 incidents/forms.py:990 incidents/forms.py:997
 msgid "Date format yyyy-mm-dd hh:mm"
 msgstr "Datumnotatie jjjj-mm-dd uu:mm"
 
-#: incidents/forms.py:483 incidents/models.py:488
+#: incidents/forms.py:567 incidents/models.py:488
 msgid "Legal Entity Name"
 msgstr "Naam juridische entiteit"
 
-#: incidents/forms.py:552
+#: incidents/forms.py:636
 msgid "Incident reference"
 msgstr "Incidentreferentie"
 
-#: incidents/forms.py:556
+#: incidents/forms.py:640
 msgid ""
 "Please include a reference (e.g., an identifier, internal reference, CERT "
 "reference, etc.) to facilitate incident tracking."
@@ -905,101 +905,101 @@ msgstr ""
 "Voeg een referentie toe om uw incident makkelijker te volgen (interne "
 "referentie, CERT-referentie, enz)."
 
-#: incidents/forms.py:567
+#: incidents/forms.py:651
 msgid "Complaint reference"
 msgstr "Klachtreferentie"
 
-#: incidents/forms.py:570
+#: incidents/forms.py:654
 msgid ""
 "Insert the file number of a criminal complaint that you have filed with the "
 "police."
 msgstr ""
 "Voeg het dossiernummer toe van de klacht die bij de politie is ingediend."
 
-#: incidents/forms.py:637
+#: incidents/forms.py:721
 msgid "Send notification to"
 msgstr "Melding verzenden naar"
 
-#: incidents/forms.py:674 incidents/forms.py:884
+#: incidents/forms.py:758 incidents/forms.py:968
 msgid "Select the incident time zone"
 msgstr "Selecteer de tijdzone van het incident"
 
-#: incidents/forms.py:684
+#: incidents/forms.py:768
 msgid "Select date and time"
 msgstr "Selecteer datum en uur"
 
-#: incidents/forms.py:798 incidents/globals.py:47 incidents/globals.py:55
+#: incidents/forms.py:882 incidents/globals.py:47 incidents/globals.py:55
 #: incidents/globals.py:76
 msgid "Passed"
 msgstr "Geslaagd"
 
-#: incidents/forms.py:799 incidents/globals.py:48 incidents/globals.py:56
+#: incidents/forms.py:883 incidents/globals.py:48 incidents/globals.py:56
 #: incidents/globals.py:81
 msgid "Revision required"
 msgstr "Revisie vereist"
 
-#: incidents/forms.py:891
+#: incidents/forms.py:975
 msgid "Incident notification date"
 msgstr "Datum van de incidentmelding"
 
-#: incidents/forms.py:898 incidents/models.py:802
+#: incidents/forms.py:982 incidents/models.py:803
 msgid "Incident detection date"
 msgstr "Datum waarop het incident is ontdekt"
 
-#: incidents/forms.py:905
+#: incidents/forms.py:989
 msgid "Incident start date"
 msgstr "Datum van aanvang van het incident"
 
-#: incidents/forms.py:912 incidents/models.py:804
+#: incidents/forms.py:996 incidents/models.py:805
 msgid "Incident resolution date"
 msgstr "Datum van oplossing van het incident"
 
-#: incidents/forms.py:1000
+#: incidents/forms.py:1084
 msgid "Starting date cannot be after detection date."
 msgstr "Datum van aanvang kan niet na datum van ontdekking liggen."
 
-#: incidents/forms.py:1006
+#: incidents/forms.py:1090
 msgid "Resolution date cannot be before detection date."
 msgstr "Datum van oplossing kan niet vóór datum van ontdekking liggen."
 
-#: incidents/forms.py:1047
+#: incidents/forms.py:1131
 msgid "Set to significant impact"
 msgstr "Aanzienlijke gevolgen"
 
-#: incidents/forms.py:1049
+#: incidents/forms.py:1133
 msgid "Set to no significant impact"
 msgstr "Geen aanzienlijke gevolgen"
 
-#: incidents/forms.py:1051
+#: incidents/forms.py:1135
 msgid "Set to Active"
 msgstr "Instellen op 'Actief'"
 
-#: incidents/forms.py:1053
+#: incidents/forms.py:1137
 msgid "Set to Inactive"
 msgstr "Instellen op 'Inactief'"
 
-#: incidents/forms.py:1119 incidents/forms.py:1200 incidents/models.py:380
+#: incidents/forms.py:1206 incidents/forms.py:1287 incidents/models.py:380
 #: incidents/models.py:445
 msgid "Report"
 msgstr "Rapport"
 
-#: incidents/forms.py:1126
+#: incidents/forms.py:1213
 msgid "File format"
 msgstr "Bestandsindeling"
 
-#: incidents/forms.py:1147
+#: incidents/forms.py:1234
 msgid "From"
 msgstr "Van"
 
-#: incidents/forms.py:1155
+#: incidents/forms.py:1242
 msgid "To"
 msgstr "Aan"
 
-#: incidents/forms.py:1208 incidents/models.py:1018
+#: incidents/forms.py:1295 incidents/models.py:1019
 msgid "Selected answer"
 msgstr "Gekozen antwoord"
 
-#: incidents/forms.py:1212 incidents/models.py:1024
+#: incidents/forms.py:1299 incidents/models.py:1025
 msgid "Next question"
 msgstr "Volgende vraag"
 
@@ -1055,7 +1055,7 @@ msgstr "Titel"
 msgid "Impact"
 msgstr "Impact"
 
-#: incidents/models.py:73 incidents/models.py:543 incidents/models.py:833
+#: incidents/models.py:73 incidents/models.py:543 incidents/models.py:834
 #: incidents/views.py:1449
 msgid "Impacts"
 msgstr "Gevolgen"
@@ -1076,7 +1076,7 @@ msgstr "Referentie"
 msgid "Tooltip"
 msgstr "Tooltip"
 
-#: incidents/models.py:140 incidents/models.py:1216
+#: incidents/models.py:140 incidents/models.py:1217
 msgid "Answers"
 msgstr "Antwoorden"
 
@@ -1084,7 +1084,7 @@ msgstr "Antwoorden"
 msgid "Questions"
 msgstr "Vragen"
 
-#: incidents/models.py:163 incidents/models.py:1200 incidents/models.py:1215
+#: incidents/models.py:163 incidents/models.py:1201 incidents/models.py:1216
 msgid "Answer"
 msgstr "Antwoord"
 
@@ -1154,8 +1154,8 @@ msgstr "Workflows voor incidentmeldingen"
 msgid "Incident notification workflow"
 msgstr "Workflow voor incidentmeldingen"
 
-#: incidents/models.py:360 incidents/models.py:966 incidents/models.py:986
-#: incidents/models.py:1109
+#: incidents/models.py:360 incidents/models.py:967 incidents/models.py:987
+#: incidents/models.py:1110
 msgid "Position"
 msgstr "Positie"
 
@@ -1259,7 +1259,7 @@ msgstr "Getroffen sectoren"
 msgid "Significant impact"
 msgstr "Aanzienlijke impact"
 
-#: incidents/models.py:561 incidents/models.py:825
+#: incidents/models.py:561 incidents/models.py:826
 msgid "Report status"
 msgstr "Status rapport"
 
@@ -1267,71 +1267,71 @@ msgstr "Status rapport"
 msgid "Incident status"
 msgstr "Status incident"
 
-#: incidents/models.py:797 incidents/models.py:815 incidents/models.py:846
+#: incidents/models.py:798 incidents/models.py:816 incidents/models.py:847
 msgid "Incident"
 msgstr "Incident"
 
-#: incidents/models.py:798 incidents/models.py:847
+#: incidents/models.py:799 incidents/models.py:848
 msgid "Incidents"
 msgstr "Incidenten"
 
-#: incidents/models.py:803
+#: incidents/models.py:804
 msgid "Incident starting date"
 msgstr "Datum van aanvang van het incident"
 
-#: incidents/models.py:809
+#: incidents/models.py:810
 msgid "Report timeline timezone"
 msgstr "Rapport tijdlijn tijdzone"
 
-#: incidents/models.py:836 incidents/views.py:1453
+#: incidents/models.py:837 incidents/views.py:1453
 msgid "Comment/Explanation"
 msgstr "Opmerking/toelichting"
 
-#: incidents/models.py:841
+#: incidents/models.py:842
 msgid "Timeline"
 msgstr "Tijdlijn"
 
-#: incidents/models.py:934
+#: incidents/models.py:935
 msgid "Full username"
 msgstr "Volledige gebruikersnaam"
 
-#: incidents/models.py:936
+#: incidents/models.py:937
 msgid "Entity name"
 msgstr "Naam van de entiteit"
 
-#: incidents/models.py:939 incidents/models.py:946 incidents/models.py:1197
+#: incidents/models.py:940 incidents/models.py:947 incidents/models.py:1198
 msgid "Incident report processed"
 msgstr "Incidentrapport verwerkt"
 
-#: incidents/models.py:952
+#: incidents/models.py:953
 msgid "Action performed"
 msgstr "Actie uitgevoerd"
 
-#: incidents/models.py:972
+#: incidents/models.py:973
 msgid "Question category options"
 msgstr "Opties voor vraagcategorie"
 
-#: incidents/models.py:973
+#: incidents/models.py:974
 msgid "Question category option"
 msgstr "Opties voor vraagcategorie"
 
-#: incidents/models.py:984 incidents/models.py:1107
+#: incidents/models.py:985 incidents/models.py:1108
 msgid "Mandatory"
 msgstr "Verplicht"
 
-#: incidents/models.py:985 incidents/models.py:1108
+#: incidents/models.py:986 incidents/models.py:1109
 msgid "Conditional display"
 msgstr "Voorwaardelijke weergave"
 
-#: incidents/models.py:1029
+#: incidents/models.py:1030
 msgid "Deleted at"
 msgstr "Verwijderd op"
 
-#: incidents/models.py:1051
+#: incidents/models.py:1052
 msgid "The selected answer does not belong to this question."
 msgstr "Het gekozen antwoord hoort niet bij deze vraag."
 
-#: incidents/models.py:1054
+#: incidents/models.py:1055
 msgid ""
 "Conditional questions are only available for single and multiple choice "
 "questions."
@@ -1339,7 +1339,7 @@ msgstr ""
 "Voorwaardelijke vragen zijn alleen beschikbaar voor meerkeuzevragen met één "
 "of meerdere antwoorden."
 
-#: incidents/models.py:1060
+#: incidents/models.py:1061
 msgid ""
 "The conditional question must be in the same category as the current "
 "question."
@@ -1347,11 +1347,11 @@ msgstr ""
 "De voorwaardelijke vraag moet tot dezelfde categorie behoren als de huidige "
 "vraag."
 
-#: incidents/models.py:1063
+#: incidents/models.py:1064
 msgid "A question cannot redirect to itself."
 msgstr "Een vraag kan niet naar zichzelf doorverwijzen."
 
-#: incidents/models.py:1068
+#: incidents/models.py:1069
 msgid ""
 "The target question is already used as a trigger in another conditional "
 "jump. Conditional questions are limited to one level of depth."
@@ -1359,23 +1359,23 @@ msgstr ""
 "De doelvraag wordt al gebruikt als trigger in een andere voorwaardelijke "
 "sprong. Voorwaardelijke vragen zijn beperkt tot één niveau van diepte."
 
-#: incidents/models.py:1094
+#: incidents/models.py:1095
 msgid "Conditional questions"
 msgstr "Voorwaardelijke vragen"
 
-#: incidents/models.py:1095
+#: incidents/models.py:1096
 msgid "Conditional question"
 msgstr "Voorwaardelijke vraag"
 
-#: incidents/models.py:1115
+#: incidents/models.py:1116
 msgid "Updated at"
 msgstr "Bijgewerkt op"
 
-#: incidents/models.py:1117
+#: incidents/models.py:1118
 msgid "Deleted date"
 msgstr "Datum van verwijdering"
 
-#: incidents/models.py:1137
+#: incidents/models.py:1138
 msgid "A question cannot be both mandatory and conditionally displayed."
 msgstr ""
 "Een vraag kan niet tegelijkertijd verplicht en voorwaardelijk weergegeven "
