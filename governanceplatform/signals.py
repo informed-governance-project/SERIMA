@@ -115,7 +115,7 @@ def update_user_incidents(sender, instance, **kwargs):
                 incident.incident_id = f"{company.identifier}_{sector_for_ref}_{subsector_for_ref}_{number_of_incident}_{current_year}"
                 incident.company = company
                 incident.company_name = company.identifier
-                incident.save()
+                incident.save(skip_last_update=True)
 
 
 @receiver(pre_save, sender=RegulatorUser)

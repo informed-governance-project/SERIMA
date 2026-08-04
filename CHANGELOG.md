@@ -1,9 +1,29 @@
+<!-- markdownlint-configure-file { "MD024": { "siblings_only": true } } -->
+
 # Changelog
 
 All notable changes to SERIMA are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [0.5.17] - 2026-08-04
+
+### Added
+
+- Changes since the previous incident report are highlighted for the reviewer: modified steps are marked in the wizard navigation, and a "View previous version" button opens a modal with the previous answer, including for conditional questions (#585)
+- Export and import of a full incident workflow configuration — regulations, reports and questions, plus any missing sectors — as sysadmin commands (#826)
+
+### Fixed
+
+- Text field content is now autosaved for the operator during a declaration (#829)
+- Review status colour no longer disappears after an autosave (#828)
+- Conditional question content from the previous report is now inherited in the following report (#831)
+- Password reset email now actually sent after incident user creation; the reset form no longer tries to re-validate the already-consumed registration captcha (#832)
+
+### Changed
+
+- Attaching a user to an incident no longer bumps the incident's last-update timestamp (#837)
 
 ## [0.5.16] - 2026-07-06
 
@@ -666,6 +686,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17
 [0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
 [0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15
 [0.5.14]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.13...v0.5.14

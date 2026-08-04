@@ -31,4 +31,4 @@ to update the documentation is strongly recommended.
 
 
 [Django](https://www.djangoproject.com) is used for the backend.
-Please use [black](https://github.com/psf/black) for the syntax of your Python code.
+Please use [ruff](https://github.com/astral-sh/ruff) to lint and format your Python code.
