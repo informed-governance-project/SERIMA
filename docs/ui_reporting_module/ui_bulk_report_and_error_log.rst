@@ -2,7 +2,7 @@ Bulk Report Generation
 ------------------------
   
 You can select multiple operators at once when generating a report. 
-In this case, the application creates a separate report for each operator. Separate PDF reports are generated—one for each selected operator.
+In this case, the application creates a separate report for each operator. Separate PDF reports are generated: one for each selected operator.
 
 Error log
 -----------------
