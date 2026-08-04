@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-28 12:59+0200\n"
+"POT-Creation-Date: 2026-08-04 09:42+0200\n"
 "PO-Revision-Date: 2026-08-03 10:11+0000\n"
 "Last-Translator: Pascal Bertrand <Pascal.bertrand+RegAdmin@ilr.lu>\n"
 "Language: fr\n"
@@ -267,7 +267,7 @@ msgstr "Numéro de téléphone"
 msgid "Email address"
 msgstr "Adresse de courrier électronique"
 
-#: governanceplatform/forms.py:48 incidents/models.py:935
+#: governanceplatform/forms.py:48 incidents/models.py:936
 #: reporting/models.py:377 securityobjectives/models.py:531
 msgid "Role"
 msgstr "Rôle"
@@ -417,7 +417,7 @@ msgstr "Acronyme"
 
 #: governanceplatform/models.py:53 incidents/models.py:52
 #: incidents/models.py:81 incidents/models.py:125 incidents/models.py:174
-#: incidents/models.py:222 incidents/models.py:268 incidents/models.py:1033
+#: incidents/models.py:222 incidents/models.py:268 incidents/models.py:1034
 #: securityobjectives/models.py:28 securityobjectives/models.py:71
 #: securityobjectives/models.py:134 securityobjectives/models.py:198
 #: securityobjectives/models.py:340 securityobjectives/models.py:420
@@ -426,7 +426,7 @@ msgstr "Nom du créateur"
 
 #: governanceplatform/models.py:61 incidents/models.py:60
 #: incidents/models.py:89 incidents/models.py:133 incidents/models.py:182
-#: incidents/models.py:230 incidents/models.py:276 incidents/models.py:1041
+#: incidents/models.py:230 incidents/models.py:276 incidents/models.py:1042
 #: securityobjectives/models.py:36 securityobjectives/models.py:79
 #: securityobjectives/models.py:142 securityobjectives/models.py:206
 #: securityobjectives/models.py:348
@@ -553,7 +553,7 @@ msgstr "Utilisateurs"
 
 #: governanceplatform/models.py:492 governanceplatform/models.py:515
 #: governanceplatform/models.py:551 governanceplatform/models.py:578
-#: incidents/models.py:929 incidents/templatetags/custom_filters.py:84
+#: incidents/models.py:930 incidents/templatetags/custom_filters.py:84
 #: reporting/models.py:371 securityobjectives/models.py:525
 #: securityobjectives/templatetags/SO_custom_filters.py:132
 msgid "User"
@@ -632,9 +632,9 @@ msgstr "Base légale"
 msgid "Incident rules"
 msgstr "Règles relatives aux incidents"
 
-#: governanceplatform/models.py:691 incidents/models.py:823
-#: incidents/models.py:932 incidents/models.py:982 incidents/models.py:1003
-#: incidents/models.py:1209 reporting/models.py:374 reporting/models.py:587
+#: governanceplatform/models.py:691 incidents/models.py:824
+#: incidents/models.py:933 incidents/models.py:983 incidents/models.py:1004
+#: incidents/models.py:1210 reporting/models.py:374 reporting/models.py:587
 #: securityobjectives/models.py:528
 msgid "Timestamp"
 msgstr "Horodatage"
@@ -785,11 +785,11 @@ msgid "Invalid captcha"
 msgstr "Captcha invalide"
 
 #: incidents/admin.py:226 incidents/forms.py:1291 incidents/models.py:158
-#: incidents/models.py:166 incidents/models.py:1012
+#: incidents/models.py:166 incidents/models.py:1013
 msgid "Question"
 msgstr "Question"
 
-#: incidents/admin.py:227 incidents/models.py:1203
+#: incidents/admin.py:227 incidents/models.py:1204
 msgid "Questionnaire"
 msgstr "Questionnaire"
 
@@ -872,7 +872,7 @@ msgstr ""
 "cours d'utilisation.<br>"
 
 #: incidents/admin.py:936 incidents/models.py:289 incidents/models.py:359
-#: incidents/models.py:820
+#: incidents/models.py:821
 msgid "Incident report"
 msgstr "Rapport d'incident"
 
@@ -977,7 +977,7 @@ msgstr "Améliorations requises"
 msgid "Incident notification date"
 msgstr "Date de la notification d'incident"
 
-#: incidents/forms.py:982 incidents/models.py:802
+#: incidents/forms.py:982 incidents/models.py:803
 msgid "Incident detection date"
 msgstr "Date de détection de l’incident"
 
@@ -985,7 +985,7 @@ msgstr "Date de détection de l’incident"
 msgid "Incident start date"
 msgstr "Date de début de l’incident"
 
-#: incidents/forms.py:996 incidents/models.py:804
+#: incidents/forms.py:996 incidents/models.py:805
 msgid "Incident resolution date"
 msgstr "Date de résolution de l'incident"
 
@@ -1031,11 +1031,11 @@ msgstr "De"
 msgid "To"
 msgstr "à"
 
-#: incidents/forms.py:1295 incidents/models.py:1018
+#: incidents/forms.py:1295 incidents/models.py:1019
 msgid "Selected answer"
 msgstr "Réponse sélectionnée"
 
-#: incidents/forms.py:1299 incidents/models.py:1024
+#: incidents/forms.py:1299 incidents/models.py:1025
 msgid "Next question"
 msgstr "Question suivante"
 
@@ -1093,7 +1093,7 @@ msgstr "Titre"
 msgid "Impact"
 msgstr "Impact"
 
-#: incidents/models.py:73 incidents/models.py:543 incidents/models.py:833
+#: incidents/models.py:73 incidents/models.py:543 incidents/models.py:834
 #: incidents/views.py:1449
 msgid "Impacts"
 msgstr "Impacts"
@@ -1114,7 +1114,7 @@ msgstr "Référence"
 msgid "Tooltip"
 msgstr "Bulle d'aide"
 
-#: incidents/models.py:140 incidents/models.py:1216
+#: incidents/models.py:140 incidents/models.py:1217
 msgid "Answers"
 msgstr "Réponses"
 
@@ -1122,7 +1122,7 @@ msgstr "Réponses"
 msgid "Questions"
 msgstr "Questions"
 
-#: incidents/models.py:163 incidents/models.py:1200 incidents/models.py:1215
+#: incidents/models.py:163 incidents/models.py:1201 incidents/models.py:1216
 msgid "Answer"
 msgstr "Réponse"
 
@@ -1192,8 +1192,8 @@ msgstr "Workflows de notification d’incidents"
 msgid "Incident notification workflow"
 msgstr "Workflow de notification d’incidents"
 
-#: incidents/models.py:360 incidents/models.py:966 incidents/models.py:986
-#: incidents/models.py:1109 reporting/models.py:426
+#: incidents/models.py:360 incidents/models.py:967 incidents/models.py:987
+#: incidents/models.py:1110 reporting/models.py:426
 #: securityobjectives/models.py:63 securityobjectives/models.py:306
 #: securityobjectives/models.py:334
 msgid "Position"
@@ -1299,7 +1299,7 @@ msgstr "Secteurs impactés"
 msgid "Significant impact"
 msgstr "Impact significatif"
 
-#: incidents/models.py:561 incidents/models.py:825
+#: incidents/models.py:561 incidents/models.py:826
 msgid "Report status"
 msgstr "Statut du rapport"
 
@@ -1307,73 +1307,73 @@ msgstr "Statut du rapport"
 msgid "Incident status"
 msgstr "Statut de l'incident"
 
-#: incidents/models.py:797 incidents/models.py:815 incidents/models.py:846
+#: incidents/models.py:798 incidents/models.py:816 incidents/models.py:847
 msgid "Incident"
 msgstr "Incident"
 
-#: incidents/models.py:798 incidents/models.py:847
+#: incidents/models.py:799 incidents/models.py:848
 msgid "Incidents"
 msgstr "Incidents"
 
-#: incidents/models.py:803
+#: incidents/models.py:804
 msgid "Incident starting date"
 msgstr "Date de début de l'incident"
 
-#: incidents/models.py:809
+#: incidents/models.py:810
 msgid "Report timeline timezone"
 msgstr "Chronologie et fuseau horaire"
 
-#: incidents/models.py:836 incidents/views.py:1453
+#: incidents/models.py:837 incidents/views.py:1453
 msgid "Comment/Explanation"
 msgstr "Commentaire / Explication"
 
-#: incidents/models.py:841
+#: incidents/models.py:842
 msgid "Timeline"
 msgstr "Chronologie"
 
-#: incidents/models.py:934
+#: incidents/models.py:935
 msgid "Full username"
 msgstr "Nom d'utilisateur complet"
 
-#: incidents/models.py:936 reporting/models.py:378
+#: incidents/models.py:937 reporting/models.py:378
 #: securityobjectives/models.py:532
 msgid "Entity name"
 msgstr "Nom de l’entité"
 
-#: incidents/models.py:939 incidents/models.py:946 incidents/models.py:1197
+#: incidents/models.py:940 incidents/models.py:947 incidents/models.py:1198
 msgid "Incident report processed"
 msgstr "Rapport d’incident traité"
 
-#: incidents/models.py:952 reporting/models.py:386
+#: incidents/models.py:953 reporting/models.py:386
 #: securityobjectives/models.py:539
 msgid "Action performed"
 msgstr "Action effectuée"
 
-#: incidents/models.py:972
+#: incidents/models.py:973
 msgid "Question category options"
 msgstr "Options de catégorie de question"
 
-#: incidents/models.py:973
+#: incidents/models.py:974
 msgid "Question category option"
 msgstr "Option de catégorie de question"
 
-#: incidents/models.py:984 incidents/models.py:1107
+#: incidents/models.py:985 incidents/models.py:1108
 msgid "Mandatory"
 msgstr "Obligatoire"
 
-#: incidents/models.py:985 incidents/models.py:1108
+#: incidents/models.py:986 incidents/models.py:1109
 msgid "Conditional display"
 msgstr "Affichage conditionnel"
 
-#: incidents/models.py:1029
+#: incidents/models.py:1030
 msgid "Deleted at"
 msgstr "Supprimé le"
 
-#: incidents/models.py:1051
+#: incidents/models.py:1052
 msgid "The selected answer does not belong to this question."
 msgstr "La réponse sélectionnée ne correspond pas à cette question."
 
-#: incidents/models.py:1054
+#: incidents/models.py:1055
 msgid ""
 "Conditional questions are only available for single and multiple choice "
 "questions."
@@ -1381,7 +1381,7 @@ msgstr ""
 "Les questions conditionnelles ne sont disponibles que pour les questions à "
 "choix unique et à choix multiples."
 
-#: incidents/models.py:1060
+#: incidents/models.py:1061
 msgid ""
 "The conditional question must be in the same category as the current "
 "question."
@@ -1389,11 +1389,11 @@ msgstr ""
 "La question conditionnelle doit appartenir à la même catégorie que la "
 "question actuelle."
 
-#: incidents/models.py:1063
+#: incidents/models.py:1064
 msgid "A question cannot redirect to itself."
 msgstr "Une question ne peut pas renvoyer vers elle-même."
 
-#: incidents/models.py:1068
+#: incidents/models.py:1069
 msgid ""
 "The target question is already used as a trigger in another conditional "
 "jump. Conditional questions are limited to one level of depth."
@@ -1402,23 +1402,23 @@ msgstr ""
 "conditionnel. Les questions conditionnelles sont limitées à un seul niveau "
 "de profondeur."
 
-#: incidents/models.py:1094
+#: incidents/models.py:1095
 msgid "Conditional questions"
 msgstr "Questions conditionnelles"
 
-#: incidents/models.py:1095
+#: incidents/models.py:1096
 msgid "Conditional question"
 msgstr "Question conditionnelle"
 
-#: incidents/models.py:1115 reporting/models.py:474
+#: incidents/models.py:1116 reporting/models.py:474
 msgid "Updated at"
 msgstr "Mis à jour le"
 
-#: incidents/models.py:1117
+#: incidents/models.py:1118
 msgid "Deleted date"
 msgstr "Date de suppression"
 
-#: incidents/models.py:1137
+#: incidents/models.py:1138
 msgid "A question cannot be both mandatory and conditionally displayed."
 msgstr "Une question ne peut pas être à la fois obligatoire et conditionnelle."
 
