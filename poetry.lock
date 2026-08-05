@@ -2660,20 +2660,6 @@ files = [
 ]
 
 [[package]]
-name = "parler"
-version = "1.0.1"
-description = "Parler Social Media Python API SDK"
-optional = false
-python-versions = ">=3.6"
-groups = ["main"]
-files = [
-    {file = "parler-1.0.1.tar.gz", hash = "sha256:2f23d2ee27d5e5c3ec649dc207feb55bcb31601e69ccd7594aa91cec70874382"},
-]
-
-[package.dependencies]
-requests = "*"
-
-[[package]]
 name = "pathspec"
 version = "1.1.1"
 description = "Utility library for gitignore style pattern matching of file paths."
@@ -4510,4 +4496,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14,<4"
-content-hash = "1dfa06fb78c9700565d932013fcd0c957b43c352d06f508e1425a4e35e903807"
+content-hash = "9d65c022f9c956ff1b0a91d4ebdc67d70abbce83ce823ff656f9f50c78181b10"

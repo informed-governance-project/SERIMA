@@ -9,7 +9,7 @@ Generally speaking, requirements are the following:
 - A GNU/Linux distribution. Tested on Ubuntu 26.04 LTS, which is also the base
   image of the official Docker image;
 - Python version >= 3.14. Tested with Python 3.14;
-- A PostgreSQL server for persistent storage. Tested with PostgreSQL 15.3 and 15.5;
+- A PostgreSQL server for persistent storage. Tested with PostgreSQL 18.4;
 - An email server — outgoing email;
 - A cron daemon — scheduled tasks.
 
