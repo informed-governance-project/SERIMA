@@ -14,15 +14,15 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | Framework | Django | >=6.0,<7 |
 | Database | PostgreSQL | 18 (CI) |
 | Package manager | Poetry | — |
-| Translations | django-parler | custom fork (github.com/informed-governance-project/django-parler) |
-| Auth | django-otp + two-factor-auth | >=1.1.6 / >=1.15.5 |
-| API | Django REST Framework + drf-spectacular | >=0.29.0,<0.30 |
-| Async tasks | Celery + Redis | >=5.5.1 / >=7.4.0 |
-| PDF generation | WeasyPrint | >=68.0,<69 |
-| Frontend | Bootstrap 5 + bootstrap-icons | ^5.3.3 / ^1.11.3 |
+| Translations | django-parler | >=2.4,<3 |
+| Auth | django-otp + two-factor-auth | >=1.1.6,<2 / >=1.15.5,<2 |
+| API | Django REST Framework + drf-spectacular | 3.17 (transitive) / >=0.30.0,<0.31 |
+| Async tasks | Celery + Redis | >=5.5.1,<6 / >=8.0.0,<9 |
+| PDF generation | WeasyPrint | >=69.0,<70 |
+| Frontend | Bootstrap 5 + bootstrap-icons | ^5.3.8 / ^1.13.1 |
 | JS build | Node.js + npm | 24.x / 11.x |
 | Lint & format | ruff | ^0.16.1 |
-| Type checking | mypy | <1.19 |
+| Type checking | mypy | <2.4 |
 | Testing | pytest-django | ^4.11.1 |
 
 ## Build & Run
