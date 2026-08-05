@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from django.utils import timezone
 
 from governanceplatform.models import ScriptLogEntry, User
-from governanceplatform.scripts import clean_incident_user
+from governanceplatform.scripts import clean_incident_user, unactive_account_cleaning
 from incidents.models import Incident
 
 
@@ -100,3 +100,31 @@ class TestCleanIncidentUser:
 
         log_entry = ScriptLogEntry.objects.get()
         assert log_entry.object_repr == "System:IncidentUser script deletion 0 user(s) deleted"
+
+
+# Tests the cleanup rules for inactive and unverified incident-reporting users.
+@pytest.mark.django_db
+class TestUnactiveAccountCleaning:
+    # Deletes a never-logged-in, unverified incident user after the activation timeout.
+    def test_run_deletes_user_who_meets_cleanup_conditions(self, create_incident_user):
+        timeout = unactive_account_cleaning.PASSWORD_RESET_TIMEOUT
+        user = create_incident_user(
+            email="expired-unverified@example.com",
+            date_joined=timezone.now() - timedelta(seconds=timeout + 1),
+        )
+
+        unactive_account_cleaning.run()
+
+        assert not User.objects.filter(pk=user.pk).exists()
+
+    # Keeps an unverified incident user while the activation timeout has not expired.
+    def test_run_keeps_user_who_does_not_meet_cleanup_conditions(self, create_incident_user):
+        timeout = unactive_account_cleaning.PASSWORD_RESET_TIMEOUT
+        user = create_incident_user(
+            email="recent-unverified@example.com",
+            date_joined=timezone.now() - timedelta(seconds=timeout - 1),
+        )
+
+        unactive_account_cleaning.run()
+
+        assert User.objects.filter(pk=user.pk).exists()
