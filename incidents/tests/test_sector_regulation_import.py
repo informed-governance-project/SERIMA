@@ -1,6 +1,6 @@
 import json
 from io import StringIO
-from pathlib import Path
+from pathlib import Path  # noqa: TC003
 from typing import Any
 
 import pytest

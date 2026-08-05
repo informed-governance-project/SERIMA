@@ -10,7 +10,7 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 
 | Layer | Technology | Version |
 |-------|-----------|---------|
-| Language | Python | >=3.12,<4 |
+| Language | Python | >=3.14,<4 |
 | Framework | Django | >=6.0,<7 |
 | Database | PostgreSQL | 15 (CI) |
 | Package manager | Poetry | — |
@@ -157,7 +157,7 @@ API is feature-flagged: set `API_ENABLED = True` in config to expose endpoints.
 - **Branch naming**: `feat/`, `fix/`, `test/`, `review/`, descriptive kebab-case
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
-- **Python style**: ruff format (`[tool.ruff]` in pyproject.toml — line length 140, target `py312`, `migrations/` excluded)
+- **Python style**: ruff format (`[tool.ruff]` in pyproject.toml — line length 140, target `py314`, `migrations/` excluded)
 - **Linting**: ruff (`[tool.ruff.lint]` — includes import sorting via `I`, so no separate isort step)
 
 ```bash
@@ -178,7 +178,7 @@ poetry run pre-commit run --all-files
 - **Comments explain WHY, never WHAT.** Well-named identifiers already document what the code does. Add a comment only when there is a hidden constraint, a subtle invariant, or a known bug workaround. Remove any comment that restates the code.
 - **Prefer editing existing files** to creating new ones. Don't duplicate logic; extend what already exists.
 - **Errors must surface.** Never swallow exceptions silently (`except: pass`). Let Django's error handling and Celery's retry mechanisms propagate failures where they can be logged and acted upon.
-- **Type hints on new public functions.** Python 3.12 supports full PEP 604 union types (`X | Y`). Use them.
+- **Type hints on new public functions.** Python 3.14 supports full PEP 604 union types (`X | Y`). Use them.
 
 ## Database & ORM
 

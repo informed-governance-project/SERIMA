@@ -7,7 +7,7 @@ Software
 Generally speaking, requirements are the following:
 
 - A GNU/Linux distribution. Tested on Debian Bookworm and Ubuntu 22.04.3 LTS;
-- Python version >= 3.10. Tested with Python 3.11 and 3.12;
+- Python version >= 3.14. Tested with Python 3.14;
 - A PostgreSQL server for persistent storage. Tested with PostgreSQL 15.3 and 15.5;
 - An email server — outgoing email;
 - A cron daemon — scheduled tasks.

@@ -1600,7 +1600,7 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
         question_id = None
         try:
             question_id = int(key)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             continue
         if question_id:
             question_option = question_options_map.get(question_id)

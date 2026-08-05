@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable  # noqa: TC003
 from typing import Any, cast
 
 from django.utils import timezone
