@@ -26,7 +26,6 @@ dependencies = [
     "django-two-factor-auth>=1.15.5,<2",
     "phonenumbers>=9.0.27,<10",
     "django-import-export>=4.4.0,<5",
-    "parler>=1.0.1,<2",
     "django-parler>=2.4,<3",
     "django-countries>=9.0.0,<10",
     "weasyprint>=69.0,<70",
@@ -48,6 +47,7 @@ dependencies = [
     "markdown>=3.10.1,<4",
     "bleach>=6.3.0,<7",
     "gunicorn>=26.0.0,<27",
+    "requests>=2.34.2,<3",
 ]
 
 [project.urls]
