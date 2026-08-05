@@ -28,6 +28,25 @@ from governanceplatform.tests.data import (
 )
 
 
+# Creates the group assigned to temporary incident-reporting users.
+@pytest.fixture
+def incident_user_group(db):
+    return Group.objects.create(name="IncidentUser")
+
+
+# Returns a factory that creates a user with controlled account activity dates.
+@pytest.fixture
+def create_incident_user(incident_user_group):
+    def _create_incident_user(*, email, date_joined, last_login=None, group=None):
+        user = User.objects.create_user(email=email, password="password")
+        User.objects.filter(pk=user.pk).update(date_joined=date_joined, last_login=last_login)
+        user.refresh_from_db()
+        user.groups.add(group or incident_user_group)
+        return user
+
+    return _create_incident_user
+
+
 @pytest.fixture
 def populate_db(db):
     """
