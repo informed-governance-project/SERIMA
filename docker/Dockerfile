@@ -6,7 +6,7 @@ COPY package.json package-lock.json /app/
 
 RUN npm ci
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION \
@@ -19,7 +19,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     # Python
-    python3.12 \
+    python3.14 \
     python3-pip \
     # LibreOffice — for document conversion
     python3-uno \
@@ -53,9 +53,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gettext \
   && rm -rf /var/lib/apt/lists/*
 
-# Both python and python3 link to python3.12
-RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 \
- && ln -sf /usr/bin/python3.12 /usr/bin/python
+# Both python and python3 link to python3.14
+RUN ln -sf /usr/bin/python3.14 /usr/bin/python3 \
+ && ln -sf /usr/bin/python3.14 /usr/bin/python
 
 # running as www-data
 RUN mkdir -p /app /var/www && chown www-data: /app /var/www

@@ -10,7 +10,7 @@ from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
-from django.http import HttpRequest
+from django.http import HttpRequest  # noqa: TC002
 from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.html import format_html
@@ -40,7 +40,7 @@ from securityobjectives.models import (
     StandardAnswer,
 )
 
-from .models import Company, User
+from .models import Company, User  # noqa: TC001
 
 
 def table_exists(table_name: str) -> bool:

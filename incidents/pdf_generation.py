@@ -3,7 +3,7 @@ import os
 from collections import OrderedDict
 
 from django.conf import settings
-from django.http import HttpRequest
+from django.http import HttpRequest  # noqa: TC002
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from django_countries import countries

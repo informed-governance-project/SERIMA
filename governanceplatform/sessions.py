@@ -11,7 +11,7 @@ class SessionStore(DBStore):
     def _extract_user_id(self, data):
         try:
             return int(data.get(_SESSION_KEY))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             return None
 
     def create_model_instance(self, data):
