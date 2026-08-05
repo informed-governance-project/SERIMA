@@ -122,7 +122,7 @@ class CustomImportJobAdmin(ImportJobAdmin):
     def import_job_progress_view(self, request, job_id, **kwargs):
         try:
             response = super().import_job_progress_view(request, job_id, **kwargs)
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             # Construct the answer with the correct value
             from import_export_extensions.models import ImportJob as ImportJobModel
 
@@ -177,7 +177,7 @@ class CustomExportJobAdmin(ExportJobAdmin):
     def export_job_progress_view(self, request, job_id, **kwargs):
         try:
             response = super().export_job_progress_view(request, job_id, **kwargs)
-        except (KeyError, TypeError):
+        except KeyError, TypeError:
             from import_export_extensions.models import ExportJob as ExportJobModel
 
             try:

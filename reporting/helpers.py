@@ -1259,7 +1259,7 @@ def is_soffice_running(pipe_name="update_toc"):
                 cmdline = proc.info["cmdline"] or []
                 if any(pipe_name in arg for arg in cmdline):
                     return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+        except psutil.NoSuchProcess, psutil.AccessDenied:
             continue
     return False
 

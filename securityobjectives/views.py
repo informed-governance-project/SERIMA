@@ -878,7 +878,7 @@ def import_so_declaration(request):
         if "standard_id" in request.GET:
             initial["standard"] = int(request.GET.get("standard_id"))
 
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         messages.error(request, _("Invalid request"))
 
     choices = {
@@ -943,7 +943,7 @@ def import_so_declaration(request):
                 new_standard_answer.save()
                 new_standard_answer.sectors.set(valid_sectors)
 
-            except (Standard.DoesNotExist, Company.DoesNotExist):
+            except Standard.DoesNotExist, Company.DoesNotExist:
                 messages.error(
                     request,
                     _("An error occurred while importing the declaration file."),
@@ -1350,7 +1350,7 @@ def create_standard_answer_group(company, sectors, standard):
             # group_id format: {company}_{framework}_{sector}_{subsector}_{NNNN}_{year}
             number_part = group.group_id.split("_")[-2]
             max_number = max(max_number, int(number_part))
-        except (IndexError, ValueError):
+        except IndexError, ValueError:
             pass
 
     number_of_group = f"{max_number + 1:04}"

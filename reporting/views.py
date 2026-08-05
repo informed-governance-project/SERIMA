@@ -631,7 +631,7 @@ def generate_report_project(request, report_project_id: int):
         else:
             task.delay()
             success_message = _("Report is being generated.")
-    except (ConnectionError, RuntimeError, CeleryError):
+    except ConnectionError, RuntimeError, CeleryError:
         Project.objects.filter(id=project_id).update(task_status=CELERY_TASK_STATUS[0][0])
         messages.error(request, _("Failed to start report generation. Please try again."))
         return redirect("dashboard_report_project", report_project_id=project.id)
@@ -949,7 +949,7 @@ def import_risk_analysis(request):
         if "year" in request.GET:
             initial["year"] = int(request.GET.get("year"))
 
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         messages.error(request, _("Invalid request"))
         return HttpResponseRedirect(request.headers.get("referer"))
 
