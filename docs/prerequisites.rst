@@ -6,11 +6,17 @@ Software
 
 Generally speaking, requirements are the following:
 
-- A GNU/Linux distribution. Tested on Debian Bookworm and Ubuntu 22.04.3 LTS;
+- A GNU/Linux distribution. Tested on Ubuntu 26.04 LTS, which is also the base
+  image of the official Docker image;
 - Python version >= 3.14. Tested with Python 3.14;
 - A PostgreSQL server for persistent storage. Tested with PostgreSQL 15.3 and 15.5;
 - An email server — outgoing email;
 - A cron daemon — scheduled tasks.
+
+Ubuntu 26.04 LTS provides Python 3.14 as its default interpreter. On
+distributions that ship an older one — Debian Bookworm (3.11) or Ubuntu 22.04
+LTS (3.10), for instance — install Python 3.14 separately, either from the
+deadsnakes PPA or with ``pyenv install 3.14``.
 
 Postfix, or an equivalent software, is required for the email notifications.
 
