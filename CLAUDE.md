@@ -12,7 +12,7 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 |-------|-----------|---------|
 | Language | Python | >=3.14,<4 |
 | Framework | Django | >=6.0,<7 |
-| Database | PostgreSQL | 15 (CI) |
+| Database | PostgreSQL | 18 (CI) |
 | Package manager | Poetry | — |
 | Translations | django-parler | custom fork (github.com/informed-governance-project/django-parler) |
 | Auth | django-otp + two-factor-auth | >=1.1.6 / >=1.15.5 |

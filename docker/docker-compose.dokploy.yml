@@ -20,7 +20,7 @@ services:
     user: "33:33"
 
   db:
-    image: postgres:15
+    image: postgres:18
     container_name: ${SERIMA_ENVIRONMENT}-serima-db
     env_file: .env
     volumes:
