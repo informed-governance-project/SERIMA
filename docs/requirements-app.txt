@@ -35,7 +35,7 @@ django-ranged-response==0.2.0 ; python_version >= "3.14" and python_version < "4
 django-simple-captcha==0.7.0 ; python_version >= "3.14" and python_version < "4"
 django-two-factor-auth==1.18.1 ; python_version >= "3.14" and python_version < "4"
 django==6.0.8 ; python_version >= "3.14" and python_version < "4"
-djangorestframework==3.17.1 ; python_version >= "3.14" and python_version < "4"
+djangorestframework==3.17.2 ; python_version >= "3.14" and python_version < "4"
 dnspython==2.8.0 ; python_version >= "3.14" and python_version < "4"
 drf-spectacular-sidecar==2026.8.1 ; python_version >= "3.14" and python_version < "4"
 drf-spectacular==0.30.0 ; python_version >= "3.14" and python_version < "4"
