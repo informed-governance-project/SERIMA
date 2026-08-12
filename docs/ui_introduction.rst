@@ -4,7 +4,7 @@ About
 The `ILR SERIMA (SEcurity RIsk MAnagement) Platform <https://www.ilr.lu/en/sectors/niss/serima/>`__, also called the 
 `NIS Incident Notification Platform (or NISINP) <https://nisinp.readthedocs.io/en/latest/>`__, 
 is developed and maintained by the `NC3-LU <https://www.nc3.lu>`__ team in the framework of 
-the `Informed Governance Project. <https://github.com/informed-governance-project>`__.
+the `Informed Governance Project. <https://github.com/informed-governance-project>`__
 
 **SERIMA** is a cybersecurity platform built on open-source technology and freely accessible to users. 
 The platform is intended for organizations with security obligations, enabling them to report their 
@@ -12,7 +12,8 @@ security measures and incidents to the `(ILR) <https://www.ilr.lu/en>`__.
 SERIMA currently offers several modules, including:
 
 - **Incident Notification Module**
-- **Risk Analysis Module**, based on MONARC
+- **Risk Analysis Module** (based on MONARC)
+- **Reporting Module**
 
 The **Incident Notification Module** is designed for organizations that are legally required to report incidents, 
 but it can also be used by those wishing to report incidents voluntarily. 
