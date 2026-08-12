@@ -884,6 +884,38 @@ msgstr ""
 "Le compte d'utilisateur n'a actuellement aucune entité associée. Veuillez "
 "contacter l'administrateur."
 
+#: incidents/forms.py:1211
+msgid "Any report status"
+msgstr "Tous les statuts de rapport"
+
+#: incidents/forms.py:1214
+msgid ""
+"Restrict the export to reports in this state. A periodic regulatory "
+"filing usually wants passed reports only."
+msgstr ""
+"Restreint l’export aux rapports dans cet état. Un dépôt réglementaire "
+"périodique ne retient en général que les rapports validés."
+
+#: incidents/forms.py:1220
+msgid "Apply the dates to"
+msgstr "Appliquer les dates à"
+
+#: incidents/forms.py:1223
+msgid ""
+"The incident notification date is when the incident was first "
+"reported; the report date is when the exported report was submitted. "
+"They fall in different periods when a report is filed after the period "
+"it belongs to."
+msgstr ""
+"La date de notification est celle du premier signalement de l’incident "
+"; la date du rapport est celle de la soumission du rapport exporté. "
+"Elles tombent dans des périodes différentes lorsqu’un rapport est "
+"déposé après la période à laquelle il se rattache."
+
+#: incidents/globals.py:57
+msgid "Report date"
+msgstr "Date du rapport"
+
 #: incidents/filters.py:22
 msgid "Search"
 msgstr "Rechercher"

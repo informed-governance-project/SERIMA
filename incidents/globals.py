@@ -49,6 +49,14 @@ REVIEW_STATUS = [
     ("OUT", _("Submission overdue")),
 ]
 
+# Which date the export window applies to. The incident notification date and
+# the date of the exported report are independent: a report filed after the
+# period it belongs to falls in neither window when only the first is used.
+EXPORT_DATE_BASIS = [
+    ("notification", _("Incident notification date")),
+    ("report", _("Report date")),
+]
+
 WORKFLOW_REVIEW_STATUS = [
     ("UNDE", _("Unsubmitted")),
     ("DELIV", _("Under review")),

@@ -19,7 +19,7 @@ from governanceplatform.helpers import (
 from governanceplatform.models import Regulation, Regulator, Sector, Service
 from governanceplatform.settings import TIME_ZONE
 
-from .globals import CONDITIONAL_QUESTION_TYPES, REGIONAL_AREA
+from .globals import CONDITIONAL_QUESTION_TYPES, EXPORT_DATE_BASIS, REGIONAL_AREA, WORKFLOW_REVIEW_STATUS
 from .helpers import get_workflow_categories
 from .models import (
     Answer,
@@ -1202,6 +1202,24 @@ class ExportIncidentsForm(forms.Form):
         queryset=Workflow.objects.none(),
         label=_("Report"),
         required=True,
+    )
+
+    review_status = forms.ChoiceField(
+        choices=[("", _("Any report status"))] + list(WORKFLOW_REVIEW_STATUS),
+        required=False,
+        label=_("Report status"),
+        help_text=_("Restrict the export to reports in this state. A periodic regulatory filing usually wants passed reports only."),
+    )
+
+    date_basis = forms.ChoiceField(
+        choices=EXPORT_DATE_BASIS,
+        required=False,
+        label=_("Apply the dates to"),
+        initial=EXPORT_DATE_BASIS[0][0],
+        help_text=_(
+            "The incident notification date is when the incident was first reported; the report date is when the exported "
+            "report was submitted. They fall in different periods when a report is filed after the period it belongs to."
+        ),
     )
 
     file_format = forms.ChoiceField(
