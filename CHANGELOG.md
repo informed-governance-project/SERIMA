@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Unit tests for incident cleanup, log cleanup, workflow deadline notifications, and incident reminder scripts, helpers of governanceplatform
+- The incident export can restrict to reports in a given review status, and can apply its date window to the exported report rather than to the incident notification. A periodic regulatory filing needs both: it reports finished work, and a report filed after the period it belongs to otherwise falls outside every window. Both fields are optional and an export that leaves them alone is unchanged (#848)
 
 ### Changed
 
