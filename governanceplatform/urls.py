@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.urls import include, path
-from django.views.generic.base import TemplateView
+from django.views.generic.base import RedirectView, TemplateView
 from django.views.i18n import JavaScriptCatalog, set_language
 from health_check.views import HealthCheckView
 from two_factor.urls import urlpatterns as tf_urls
@@ -47,6 +47,10 @@ urlpatterns = [
             form_class=CustomPasswordResetForm,
         ),
         name="password_reset",
+    ),
+    path(
+        "account/login/",
+        RedirectView.as_view(pattern_name="login", query_string=True),
     ),
     path("account/", include("django.contrib.auth.urls")),
     path("", include(tf_urls)),
