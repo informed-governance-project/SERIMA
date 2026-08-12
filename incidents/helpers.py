@@ -2,9 +2,81 @@ import math
 from collections import OrderedDict
 from itertools import chain
 
+from django.db.models import BooleanField, Exists, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 
-from .models import Incident, IncidentWorkflow, QuestionCategory, QuestionCategoryOptions, SectorRegulationWorkflow, Workflow
+from governanceplatform.models import ApplicationConfig
+
+from .models import (
+    Answer,
+    Incident,
+    IncidentWorkflow,
+    PredefinedAnswer,
+    QuestionCategory,
+    QuestionCategoryOptions,
+    SectorRegulationWorkflow,
+    Workflow,
+)
+
+# Application config keys designating the question that carries the cross-border
+# dimension. The questionnaire is configuration, so the platform cannot know
+# which question that is: a deployment names it here.
+CROSS_BORDER_QUESTION_REFERENCE_KEY = "cross_border_question_reference"
+CROSS_BORDER_POSITIVE_ANSWER_KEY = "cross_border_positive_answer"
+DEFAULT_CROSS_BORDER_POSITIVE_ANSWER = "Yes"
+
+
+def get_application_config(key, default=None):
+    try:
+        return ApplicationConfig.objects.get(key=key).value
+    except ApplicationConfig.DoesNotExist:
+        return default
+
+
+def annotate_cross_border_impact(queryset):
+    """Annotate incidents with ``is_cross_border_impact``.
+
+    The flag reports the answer given in the most recent report answering the
+    designated question, so an incident that becomes cross-border in a later
+    report is picked up, and one that is corrected to "no" stops being flagged.
+
+    When no question is designated the annotation is ``False`` everywhere and
+    the queryset behaves exactly as before.
+    """
+    question_reference = get_application_config(CROSS_BORDER_QUESTION_REFERENCE_KEY)
+    if not question_reference:
+        return queryset.annotate(is_cross_border_impact=Value(False, output_field=BooleanField()))
+
+    positive_answer = get_application_config(
+        CROSS_BORDER_POSITIVE_ANSWER_KEY,
+        DEFAULT_CROSS_BORDER_POSITIVE_ANSWER,
+    )
+
+    latest_answer_is_positive = (
+        Answer.objects.filter(
+            incident_workflow__incident=OuterRef("pk"),
+            question_options__question__reference=question_reference,
+        )
+        .order_by("-incident_workflow__timestamp", "-timestamp")
+        .annotate(
+            is_positive=Exists(
+                PredefinedAnswer.objects.filter(
+                    answer__pk=OuterRef("pk"),
+                    translations__predefined_answer__iexact=positive_answer,
+                )
+            )
+        )
+        .values("is_positive")[:1]
+    )
+
+    return queryset.annotate(
+        is_cross_border_impact=Coalesce(
+            Subquery(latest_answer_is_positive, output_field=BooleanField()),
+            Value(False),
+            output_field=BooleanField(),
+        )
+    )
 
 
 def is_deadline_exceeded(report: Workflow, incident: Incident) -> str:

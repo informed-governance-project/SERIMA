@@ -51,3 +51,20 @@ class IncidentFilter(django_filters.FilterSet):
             | Q(sector_regulation__regulation__translations__label__icontains=value)
             | Q(affected_sectors__translations__name__icontains=value)
         ).distinct()
+
+
+class ObserverIncidentFilter(IncidentFilter):
+    """Incident filter for the observer role.
+
+    Observers act as the single point of contact of a Member State, so they
+    need to isolate the incidents reported as cross-border. The flag comes from
+    the ``is_cross_border_impact`` annotation, which the view adds.
+    """
+
+    cross_border_impact = django_filters.BooleanFilter(
+        field_name="is_cross_border_impact",
+        label=_("Cross-border impact"),
+    )
+
+    class Meta(IncidentFilter.Meta):
+        pass
