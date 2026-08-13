@@ -48,6 +48,7 @@ urlpatterns = [
         ),
         name="password_reset",
     ),
+    # This redirect view must stay above include(tf_urls) and account/login/ view
     path(
         "account/login/",
         RedirectView.as_view(pattern_name="login", query_string=True),
