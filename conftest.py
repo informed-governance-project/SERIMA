@@ -56,7 +56,8 @@ def pytest_itemcollected(item):
     # fetch the docstring
     doc = item.function.__doc__
     if doc:
-        item._obj.description = doc.strip()
+        test_function = getattr(item._obj, "__func__", item._obj)
+        test_function.description = doc.strip()
 
 
 @pytest.hookimpl(hookwrapper=True)
