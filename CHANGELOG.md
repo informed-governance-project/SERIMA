@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Unit tests for incident cleanup, log cleanup, workflow deadline notifications, and incident reminder scripts, helpers of governanceplatform
+
 ### Changed
 
 - PostgreSQL upgraded from 15 to 18 in CI and in the shipped Docker compose files. Existing deployments are unaffected and keep running on their current PostgreSQL version. Operators who bump the `postgres` image tag in their own compose file must dump and restore the database first: a major version bump invalidates the PostgreSQL data directory, so an existing volume will not start under the new image
