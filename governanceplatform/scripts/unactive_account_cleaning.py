@@ -25,12 +25,13 @@ def run(logger=logger):
             date_joined__lte=Now() - timedelta(seconds=PASSWORD_RESET_TIMEOUT),
             groups__in=[IncidentUserGrouId],
         )
+        # Querysets are lazy, so count() is what actually reaches the database here.
+        deleted_number = user_to_delete_qs.count()
     except DatabaseError as e:
         logger.error("Failed to fetch users to delete: %s", e, exc_info=True)
         raise
 
     try:
-        deleted_number = user_to_delete_qs.count()
         ScriptLogEntry.objects.create(
             object_id=None,
             object_repr=f"System:Inactive user script deletion {deleted_number} user(s) deleted",
