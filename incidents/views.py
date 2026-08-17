@@ -507,21 +507,21 @@ def edit_incident(request, incident_id: int):
         incident = incident_form.save(commit=False)
         response = {"id": incident.pk}
         incident_status = incident_form.cleaned_data.get("incident_status")
+        old, new = incident_form.get_field_change("is_significative_impact")
+
+        with transaction.atomic():
+            incident.save()
+            if old != new:
+                message = "IMP. True" if new is True else "IMP. False"
+                create_entry_log(request.user, incident, None, message, request)
+
+        # Notify only once the closure is committed: a failed save must not leave
+        # regulators told about a closure that never happened.
         if incident_status == "CLOSE" and incident.sector_regulation and incident.sector_regulation.closing_email:
             send_email(incident.sector_regulation.closing_email, incident)
 
         for field_name in incident_form.cleaned_data:
             response[field_name] = incident_form.cleaned_data[field_name]
-
-        old, new = incident_form.get_field_change("is_significative_impact")
-        if old != new:
-            if new is True:
-                message = "IMP. True"
-            else:
-                message = "IMP. False"
-            create_entry_log(request.user, incident, None, message, request)
-
-        incident.save()
 
         return JsonResponse(response)
 
@@ -667,11 +667,16 @@ def delete_incident(request, incident_id: int):
         return redirect("incidents")
 
     try:
-        if incident.workflows.count() == 0:
-            incident.delete()
-            messages.success(request, _("The incident has been deleted."))
-        else:
-            messages.error(request, _("The incident could not be deleted."))
+        with transaction.atomic():
+            # Lock the row for the whole check-then-delete. On PostgreSQL a concurrent
+            # IncidentWorkflow insert must take FOR KEY SHARE on this parent row, which
+            # conflicts with FOR UPDATE, so a report cannot slip in and be cascaded away.
+            locked_incident = Incident.objects.select_for_update().get(pk=incident.pk)
+            if locked_incident.workflows.exists():
+                messages.error(request, _("The incident could not be deleted."))
+            else:
+                locked_incident.delete()
+                messages.success(request, _("The incident has been deleted."))
     except Exception:
         logger.error(
             "Error deleting incident",
