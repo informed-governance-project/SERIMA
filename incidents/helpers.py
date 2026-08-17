@@ -4,10 +4,10 @@ from itertools import chain
 
 from django.utils import timezone
 
-from .models import IncidentWorkflow, QuestionCategoryOptions, SectorRegulationWorkflow
+from .models import Incident, IncidentWorkflow, QuestionCategory, QuestionCategoryOptions, SectorRegulationWorkflow, Workflow
 
 
-def is_deadline_exceeded(report, incident):
+def is_deadline_exceeded(report: Workflow, incident: Incident) -> str:
     latest_incident_workflow = incident.get_latest_incident_workflow_by_workflow(report)
     if latest_incident_workflow is not None:
         return latest_incident_workflow.review_status
@@ -55,10 +55,10 @@ def is_deadline_exceeded(report, incident):
 
 
 def get_workflow_categories(
-    workflow,
-    incident_workflow=None,
-    is_new_incident_workflow=False,
-):
+    workflow: Workflow,
+    incident_workflow: IncidentWorkflow | None = None,
+    is_new_incident_workflow: bool = False,
+) -> list[QuestionCategory]:
     if is_new_incident_workflow:
         category_options = (
             QuestionCategoryOptions.objects.filter(
