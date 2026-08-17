@@ -192,11 +192,17 @@ def can_edit_incident_report(user: User, incident: Incident, company_id: int | N
     ):
         return True
 
+    # Deleting a SectorRegulation leaves incidents behind (SET_NULL); they have no
+    # regulator to match, so the remaining regulator branches cannot grant access.
+    sector_regulation = incident.sector_regulation
+    if sector_regulation is None:
+        return False
+
     # if he is the regulator admin of the incident need to be link to his regulator
-    if user_in_group(user, "RegulatorAdmin") and incident.sector_regulation.regulator == user.regulators.first():
+    if user_in_group(user, "RegulatorAdmin") and sector_regulation.regulator == user.regulators.first():
         return True
     # if he is the regulator user of the incident, he need to have the sectors
-    if user_in_group(user, "RegulatorUser") and incident.sector_regulation.regulator == user.regulators.first():
+    if user_in_group(user, "RegulatorUser") and sector_regulation.regulator == user.regulators.first():
         return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
 
     return False

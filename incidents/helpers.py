@@ -20,14 +20,17 @@ def is_deadline_exceeded(report: Workflow, incident: Incident) -> str:
             )
             .first()
         )
+        if sr_workflow is None:
+            return "UNDE"
+
         actual_time = timezone.now()
         if sr_workflow.trigger_event_before_deadline == "DETECT_DATE":
             detection_date = None
-            if incident.sector_regulation.is_detection_date_needed:
+            if incident.sector_regulation is not None and incident.sector_regulation.is_detection_date_needed:
                 detection_date = incident.incident_detection_date
             else:
                 last_report = incident.get_latest_incident_workflow()
-                if last_report is not None:
+                if last_report is not None and last_report.report_timeline is not None:
                     detection_date = last_report.report_timeline.incident_detection_date
             if detection_date is not None:
                 dt = actual_time - detection_date

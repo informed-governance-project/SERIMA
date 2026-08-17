@@ -507,7 +507,7 @@ def edit_incident(request, incident_id: int):
         incident = incident_form.save(commit=False)
         response = {"id": incident.pk}
         incident_status = incident_form.cleaned_data.get("incident_status")
-        if incident_status == "CLOSE" and incident.sector_regulation.closing_email:
+        if incident_status == "CLOSE" and incident.sector_regulation and incident.sector_regulation.closing_email:
             send_email(incident.sector_regulation.closing_email, incident)
 
         for field_name in incident_form.cleaned_data:
@@ -1275,10 +1275,14 @@ class WorkflowWizardView(SessionWizardView):
             self.incident = self.incident_workflow.incident
             self.workflow = self.incident_workflow.workflow
             self.is_regulator_incident = True if self.incident.regulator == user.regulators.first() and is_regulator_incidents else False
-            regulation_sector_has_impacts = Impact.objects.filter(
-                regulations=self.incident.sector_regulation.regulation,
-                sectors__in=self.incident.affected_sectors.all(),
-            ).exists()
+            sector_regulation = self.incident.sector_regulation
+            regulation_sector_has_impacts = (
+                sector_regulation is not None
+                and Impact.objects.filter(
+                    regulations=sector_regulation.regulation,
+                    sectors__in=self.incident.affected_sectors.all(),
+                ).exists()
+            )
 
             self.workflow.is_impact_needed = bool(self.workflow.is_impact_needed and regulation_sector_has_impacts)
 
@@ -1333,10 +1337,14 @@ class WorkflowWizardView(SessionWizardView):
             else:
                 self.workflow = self.request.workflow
 
-            regulation_sector_has_impacts = Impact.objects.filter(
-                regulations=self.incident.sector_regulation.regulation,
-                sectors__in=self.incident.affected_sectors.all(),
-            ).exists()
+            sector_regulation = self.incident.sector_regulation
+            regulation_sector_has_impacts = (
+                sector_regulation is not None
+                and Impact.objects.filter(
+                    regulations=sector_regulation.regulation,
+                    sectors__in=self.incident.affected_sectors.all(),
+                ).exists()
+            )
 
             self.workflow.is_impact_needed = bool(self.workflow.is_impact_needed and regulation_sector_has_impacts)
 
@@ -1443,10 +1451,14 @@ class WorkflowWizardView(SessionWizardView):
             context["steps"].append(_("Incident Timeline"))
             context["steps"].extend(self.categories_workflow)
             if self.workflow.is_impact_needed:
-                regulation_sector_has_impacts = Impact.objects.filter(
-                    regulations=self.incident.sector_regulation.regulation,
-                    sectors__in=self.incident.affected_sectors.all(),
-                ).exists()
+                sector_regulation = self.incident.sector_regulation
+                regulation_sector_has_impacts = (
+                    sector_regulation is not None
+                    and Impact.objects.filter(
+                        regulations=sector_regulation.regulation,
+                        sectors__in=self.incident.affected_sectors.all(),
+                    ).exists()
+                )
                 if regulation_sector_has_impacts:
                     context["steps"].append(_("Impacts"))
 
@@ -1514,7 +1526,9 @@ class WorkflowWizardView(SessionWizardView):
             if incident_starting_date:
                 incident_starting_date = convert_to_utc(incident_starting_date, local_tz)
 
-            if incident_detection_date and not self.incident.sector_regulation.is_detection_date_needed:
+            if incident_detection_date and not (
+                self.incident.sector_regulation and self.incident.sector_regulation.is_detection_date_needed
+            ):
                 self.incident.incident_detection_date = convert_to_utc(incident_detection_date, local_tz)
 
             if incident_resolution_date:
