@@ -41,7 +41,7 @@ def run(logger=logger):
         deleted_number = not_logged_user_to_delete_qs.count() + logged_user_to_delete_qs.count()
         ScriptLogEntry.objects.create(
             object_id=None,
-            object_repr="System:IncidentUser script deletion " + str(deleted_number) + " user(s) deleted",
+            object_repr=f"System:IncidentUser script deletion {deleted_number} user(s) deleted",
             action_flag=3,
         )
     except Exception as e:
