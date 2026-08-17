@@ -490,13 +490,15 @@ def edit_workflow(request):
 def edit_incident(request, incident_id: int):
     """Returns the list of incident as regulator."""
 
+    company_id = request.session.get("company_in_use")
+
     try:
         incident = Incident.objects.get(pk=incident_id)
     except Incident.DoesNotExist:
         messages.error(request, _("Incident not found"))
         return redirect("incidents")
 
-    if not can_edit_incident_report(request.user, incident):
+    if not can_edit_incident_report(request.user, incident, company_id):
         return redirect("incidents")
 
     incident_form = IncidentStatusForm(request.POST, instance=incident)
