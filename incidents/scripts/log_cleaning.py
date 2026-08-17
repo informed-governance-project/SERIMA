@@ -25,7 +25,7 @@ def run(logger=logger):
     try:
         ScriptLogEntry.objects.create(
             object_id=None,
-            object_repr="System:Log script deletion " + str(log_to_delete.count()) + " log(s) deleted",
+            object_repr=f"System:Log script deletion {log_to_delete.count()} log(s) deleted",
             action_flag=3,
         )
     except Exception as e:
