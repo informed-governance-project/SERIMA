@@ -7,9 +7,16 @@ DNS is stubbed throughout: these must not depend on whichever resolver CI happen
 import socket
 
 import pytest
+from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 
-from governanceplatform.validators import resolve_rt_url, validate_rt_url
+from governanceplatform.models import PasswordUserHistory, User
+from governanceplatform.validators import (
+    PASSWORD_HISTORY_DEPTH,
+    NoReusePasswordValidator,
+    resolve_rt_url,
+    validate_rt_url,
+)
 
 
 def _stub_dns(monkeypatch, *addresses):
@@ -104,3 +111,74 @@ def test_returns_every_resolved_address(monkeypatch):
     _stub_dns(monkeypatch, "93.184.216.34", "2606:2800:220:1::1")
 
     assert resolve_rt_url("https://rt.example.org") == ["93.184.216.34", "2606:2800:220:1::1"]
+
+
+@pytest.fixture
+def user_with_history(db):
+    """A user whose stored history entry uses a weaker hasher than the current default."""
+    user = User.objects.create(email="reuse@example.org")
+    user.set_password("current-password")
+    user.save()
+    # An outdated hash is what makes Django's check_password want to rehash and save.
+    PasswordUserHistory.objects.create(
+        user=user,
+        hashed_password=make_password("old-password-1", hasher="pbkdf2_sha1"),
+    )
+    return user
+
+
+@pytest.mark.django_db()
+def test_rejects_reused_password(user_with_history):
+    with pytest.raises(ValidationError):
+        NoReusePasswordValidator().validate("old-password-1", user_with_history)
+
+
+@pytest.mark.django_db()
+def test_rejects_current_password(user_with_history):
+    with pytest.raises(ValidationError):
+        NoReusePasswordValidator().validate("current-password", user_with_history)
+
+
+@pytest.mark.django_db()
+def test_accepts_unused_password(user_with_history):
+    assert NoReusePasswordValidator().validate("a-brand-new-password", user_with_history) is None
+
+
+@pytest.mark.django_db()
+def test_rejecting_a_reused_password_does_not_store_it(user_with_history):
+    """
+    user.check_password() rehashes and saves on a match that needs upgrading, which would
+    persist the rejected password. Validation must leave the stored credential untouched.
+    """
+    stored_before = User.objects.get(pk=user_with_history.pk).password
+
+    with pytest.raises(ValidationError):
+        NoReusePasswordValidator().validate("old-password-1", user_with_history)
+
+    reloaded = User.objects.get(pk=user_with_history.pk)
+    assert reloaded.password == stored_before
+    assert reloaded.check_password("current-password")
+    assert not reloaded.check_password("old-password-1")
+
+
+@pytest.mark.django_db()
+def test_validation_leaves_the_in_memory_user_unchanged(user_with_history):
+    """The validator must not leave a historical hash on the instance it was handed."""
+    password_before = user_with_history.password
+
+    NoReusePasswordValidator().validate("a-brand-new-password", user_with_history)
+
+    assert user_with_history.password == password_before
+
+
+@pytest.mark.django_db()
+def test_only_the_most_recent_history_entries_are_compared(user_with_history):
+    """Older entries beyond the cap are not hashed against, bounding the work per attempt."""
+    for index in range(PASSWORD_HISTORY_DEPTH + 1):
+        PasswordUserHistory.objects.create(
+            user=user_with_history,
+            hashed_password=make_password(f"filler-{index}", hasher="pbkdf2_sha1"),
+        )
+
+    # "old-password-1" is now the oldest entry, pushed past the cap by the fillers.
+    assert NoReusePasswordValidator().validate("old-password-1", user_with_history) is None

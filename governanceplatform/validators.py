@@ -2,8 +2,13 @@ import ipaddress
 import socket
 from urllib.parse import urlparse
 
+from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+
+# Nothing trims PasswordUserHistory, so the table grows for the lifetime of an account.
+# Comparing every entry would let one password-change attempt force unbounded hashing.
+PASSWORD_HISTORY_DEPTH = 24
 
 
 class NoReusePasswordValidator:
@@ -15,18 +20,22 @@ class NoReusePasswordValidator:
         if not user or user.pk is None:
             return
 
-        if user.check_password(password):
+        # hashers.check_password is used rather than user.check_password: the model method
+        # installs a setter that rehashes and calls save() whenever a match needs a hash
+        # upgrade, which would persist the very password this validator is about to reject.
+        if check_password(password, user.password):
             raise ValidationError(
                 _("Your new password must differ from your current password."),
                 code="password_same_as_current",
             )
 
-        old_passwords = user.passworduserhistory_set.all().values_list("hashed_password", flat=True)
+        # Each comparison costs a full password hash, so bound the work one attempt can force.
+        previous_hashes = user.passworduserhistory_set.order_by("-timestamp").values_list("hashed_password", flat=True)[
+            :PASSWORD_HISTORY_DEPTH
+        ]
 
-        for old_password in old_passwords:
-            # Temporarily set the old hashed password
-            user.password = old_password
-            if user.check_password(password):
+        for previous_hash in previous_hashes:
+            if check_password(password, previous_hash):
                 raise ValidationError(
                     _("Reusing a previously used password is not permitted."),
                     code="password_reuse",
