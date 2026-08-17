@@ -30,7 +30,7 @@ def is_deadline_exceeded(report, incident):
                 if last_report is not None:
                     detection_date = last_report.report_timeline.incident_detection_date
             if detection_date is not None:
-                dt = actual_time - incident.incident_detection_date
+                dt = actual_time - detection_date
                 if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
                     return "OUT"
         elif sr_workflow.trigger_event_before_deadline == "NOTIF_DATE":
