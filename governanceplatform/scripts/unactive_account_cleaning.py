@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # remove users who are inactive, never logged, and recently joined
 @shared_task(name="unactive_account_cleaning")
 def run(logger=logger):
-    logger.info("running incident_cleaning.py")
+    logger.info("running unactive_account_cleaning.py")
     try:
         IncidentUserGrouId = Group.objects.get(name="IncidentUser").id
         user_to_delete_qs = User.objects.filter(
@@ -30,13 +30,14 @@ def run(logger=logger):
         raise
 
     try:
+        deleted_number = user_to_delete_qs.count()
         ScriptLogEntry.objects.create(
             object_id=None,
-            object_repr="System:Inactive user script deletion " + str(user_to_delete_qs.count()) + " user(s) deleted",
+            object_repr=f"System:Inactive user script deletion {deleted_number} user(s) deleted",
             action_flag=3,
         )
     except Exception as e:
         logger.error("Failed to write application log: %s", e, exc_info=True)
         raise
-    logger.info("Deleting %s user(s)", user_to_delete_qs.count())
+    logger.info("Deleting %s user(s)", deleted_number)
     user_to_delete_qs.delete()
