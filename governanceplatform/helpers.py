@@ -78,7 +78,7 @@ def get_active_company_from_session(request) -> Company | None:
     return request.user.companies.filter(id=company_in_use).first() if company_in_use else None
 
 
-def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
+def can_access_incident(user: User, incident: Incident, company_id: int | None = None) -> bool:
     # if it's regulator incident
     if (
         is_user_regulator(user)
@@ -103,8 +103,11 @@ def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
     ):
         return True
     # OperatorAdmin/User can access only incidents related to selected company.
+    # company_id is None for non-operator roles; without the guard the lookups
+    # would become IS NULL and match company-less incidents.
     if (
-        is_user_operator(user)
+        company_id
+        and is_user_operator(user)
         and user.companyuser_set.filter(company__id=company_id, approved=True).exists()
         and Incident.objects.filter(pk=incident.id, company__id=company_id).exists()
     ):
@@ -124,7 +127,7 @@ def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
 
 
 # check if the user is allowed to create an incident_workflow
-def can_create_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
+def can_create_incident_report(user: User, incident: Incident, company_id: int | None = None) -> bool:
     # if it's incident user
     if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
         return True
@@ -157,7 +160,7 @@ def can_create_incident_report(user: User, incident: Incident, company_id=-1) ->
 
 # check if the user is allowed to edit an incident_workflow
 # for regulators to add message
-def can_edit_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
+def can_edit_incident_report(user: User, incident: Incident, company_id: int | None = None) -> bool:
     # if it's incident user
     if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
         return True
