@@ -332,17 +332,15 @@ class CustomObserverAdminForm(CustomTranslatableAdminForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         instance = kwargs.get("instance")
-        if instance and instance.rt_token:
+        existing_token = instance.rt_token if instance else ""
+        if existing_token:
             self.fields["rt_token"].widget = forms.TextInput(attrs={"type": "password", "class": "vTextField"})
 
             self.fields["rt_token"].help_text = _(
                 "A token is already set. To remove it, clear the field and save. To update it, enter a new token."
             )
 
-            try:
-                self.fields["rt_token"].initial = "*" * len(self.instance.rt_token)
-            except Exception:
-                self.fields["rt_token"].initial = ""
+            self.fields["rt_token"].initial = "*" * len(existing_token)
 
     rt_token = forms.CharField(
         widget=forms.PasswordInput(render_value=False, attrs={"class": "vTextField"}),
