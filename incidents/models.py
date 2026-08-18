@@ -64,6 +64,10 @@ class Impact(TranslatableModel):
         default=None,
     )
 
+    def is_in_use(self) -> bool:
+        """Impacts stay editable; incidents reference them without consuming them."""
+        return False
+
     def __str__(self):
         headline_translation = self.safe_translation_getter("headline", any_language=True)
         return headline_translation or ""
