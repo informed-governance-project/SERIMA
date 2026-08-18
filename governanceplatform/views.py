@@ -12,9 +12,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
-from incidents.decorators import check_user_is_correct
-
 from .context_processors import user_modules
+from .decorators import check_user_is_correct
 from .forms import (
     ContactForm,
     CustomPasswordResetForm,
