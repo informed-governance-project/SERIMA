@@ -6,6 +6,21 @@ from django.utils.translation import activate
 from parler.models import TranslatableModel
 
 
+@pytest.fixture(autouse=True)
+def disable_https_enforcement(settings):
+    """
+    Serve the suite over plain HTTP.
+
+    Deployments derive these from DEBUG (see config_dev.py), so CI — which runs with
+    DEBUG=False — would otherwise enforce HTTPS. The test client only speaks HTTP, so
+    SecurityMiddleware would answer every request with a 301 to https://testserver
+    before the view runs, and before AuthenticationMiddleware attaches request.user.
+    """
+    settings.SECURE_SSL_REDIRECT = False
+    settings.SESSION_COOKIE_SECURE = False
+    settings.CSRF_COOKIE_SECURE = False
+
+
 @pytest.fixture
 def client():
     return Client()
