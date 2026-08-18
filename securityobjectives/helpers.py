@@ -1,7 +1,19 @@
 import logging
 import os
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from governanceplatform.models import Company, Sector
 
 logger = logging.getLogger(__name__)
+
+
+def security_objective_exists(company: Company, year: int | None = None, sector: Sector | None = None) -> bool:
+    """Whether the company has a submitted standard answer for that year and sector."""
+    if not (year and sector):
+        return False
+
+    return company.standardanswer_set.filter(year_of_submission=year, sectors__in=[sector.id], status="PASSM").exists()
 
 
 def delete_file_and_parents(file_field, label: str) -> None:

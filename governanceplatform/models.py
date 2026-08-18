@@ -17,7 +17,6 @@ from parler.models import TranslatableModel, TranslatedFields
 from phonenumber_field.modelfields import PhoneNumberField
 
 from incidents.models import Incident
-from reporting.models import ObservationRecommendationThrough
 
 from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
 from .managers import CustomUserManager
@@ -192,34 +191,6 @@ class Company(models.Model):
 
     def __str__(self):
         return self.name
-
-    def security_objective_exists(self, year=None, sector=None):
-        if not (year and sector):
-            return False
-
-        return self.standardanswer_set.filter(year_of_submission=year, sectors__in=[sector.id], status="PASSM").exists()
-
-    def risk_analysis_exists(self, year=None, sector=None):
-        if not (year and sector):
-            return False
-
-        return self.companyreporting_set.filter(year=year, sector=sector, servicestat__isnull=False).exists()
-
-    def get_report_recommandations(self, year=None, sector=None):
-        if not (year and sector):
-            return self.companyreporting_set.none()
-
-        companyreporting = self.companyreporting_set.filter(year=year, sector=sector, observation__isnull=False).first()
-
-        if not companyreporting:
-            return self.companyreporting_set.none()
-
-        observation = companyreporting.observation_set.first()
-
-        if not observation:
-            return ObservationRecommendationThrough.objects.none()
-
-        return ObservationRecommendationThrough.objects.filter(observation=observation).order_by("order")
 
     class Meta:
         verbose_name = _("Operator")

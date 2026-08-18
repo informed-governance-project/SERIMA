@@ -62,6 +62,7 @@ from .forms import (
     SelectSOStandardForm,
 )
 from .globals import ALLOWED_SORT_FIELDS, STANDARD_ANSWER_REVIEW_STATUS
+from .helpers import security_objective_exists
 from .models import (
     LogStandardAnswer,
     MaturityLevel,
@@ -695,7 +696,7 @@ def review_comment_declaration(request, standard_answer_id: int):
             sectors = standard_answer.sectors.all()
             year = standard_answer.year_of_submission
             for sector in sectors:
-                has_security_objectives = company.security_objective_exists(year, sector)
+                has_security_objectives = security_objective_exists(company, year, sector)
                 CompanyProject.objects.filter(company=company, year=year, sector=sector).update(
                     has_security_objectives=has_security_objectives
                 )

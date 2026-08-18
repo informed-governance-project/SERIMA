@@ -52,7 +52,7 @@ from .globals import (
     ALLOWED_PROJECT_DASHBOARD_SORT_FIELDS,
     CELERY_TASK_STATUS,
 )
-from .helpers import create_entry_log
+from .helpers import create_entry_log, get_report_recommandations, risk_analysis_exists
 from .import_risk_analysis import validate_json_file
 from .models import (
     CompanyProject,
@@ -526,7 +526,7 @@ def generate_report_project(request, report_project_id: int):
             status="PASSM",
         ).order_by("submit_date")
 
-        risk_analysis_stats = company.risk_analysis_exists(year, sector)
+        risk_analysis_stats = risk_analysis_exists(company, year, sector)
 
         if not security_objectives_declaration:
             if is_multiple_selected_companies:
@@ -555,7 +555,7 @@ def generate_report_project(request, report_project_id: int):
         if errors > 0:
             return redirect("reporting")
 
-        report_recommendations = company.get_report_recommandations(year, sector)
+        report_recommendations = get_report_recommandations(company, year, sector)
         years_to_compare = [y for y in years if y <= year]
         years_list = sorted(set(years_to_compare + [year]))
 
@@ -759,7 +759,7 @@ def report_recommendations(request, company_id, sector_id, year):
     if isinstance(validate_result, HttpResponseRedirect):
         return validate_result
     company, sector, year = validate_result
-    report_recommendations = company.get_report_recommandations(year, sector)
+    report_recommendations = get_report_recommandations(company, year, sector)
     forms = []
     for recommendation in report_recommendations:
         forms.append(ObservationRecommendationOrderForm(instance=recommendation))
@@ -797,7 +797,7 @@ def add_report_recommendations(request, company_id, sector_id, year):
     filter_params = current_params
     request.session["report_recommendations_filter_params"] = current_params
 
-    report_recommendations = company.get_report_recommandations(year, sector)
+    report_recommendations = get_report_recommandations(company, year, sector)
     recommendations_ids = [rec.observation_recommendation.id for rec in report_recommendations]
 
     recommendations_queryset = ObservationRecommendation.objects.exclude(id__in=recommendations_ids)
@@ -843,7 +843,7 @@ def copy_report_recommendations(request, company_id, sector_id, year):
         return validate_result
     company, sector, year = validate_result
     last_year = year - 1
-    report_recommendations = company.get_report_recommandations(last_year, sector)
+    report_recommendations = get_report_recommandations(company, last_year, sector)
 
     if not report_recommendations:
         messages.error(

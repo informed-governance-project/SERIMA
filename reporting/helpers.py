@@ -10,6 +10,7 @@ from collections import Counter, OrderedDict, defaultdict
 from itertools import groupby, zip_longest
 from pathlib import Path
 from statistics import mean
+from typing import TYPE_CHECKING
 
 import plotly.colors as pc
 import plotly.graph_objects as go
@@ -39,12 +40,47 @@ from .globals import TRANSLATIONS_CONTEXT
 from .models import (
     AssetData,
     LogReporting,
+    ObservationRecommendationThrough,
     RecommendationData,
     RiskData,
     ServiceStat,
     ThreatData,
     VulnerabilityData,
 )
+
+if TYPE_CHECKING:
+    from governanceplatform.models import Company, Sector
+
+
+def risk_analysis_exists(company: Company, year: int | None = None, sector: Sector | None = None) -> bool:
+    """Whether the company has a reporting row carrying service statistics for that year."""
+    if not (year and sector):
+        return False
+
+    return company.companyreporting_set.filter(year=year, sector=sector, servicestat__isnull=False).exists()
+
+
+def get_report_recommandations(company: Company, year: int | None = None, sector: Sector | None = None):
+    """The ordered recommendations attached to that year's observation, if any.
+
+    Always returns an ObservationRecommendationThrough queryset. The empty cases used to
+    hand back an empty CompanyReporting queryset instead, so a caller that filtered the
+    result would have been filtering the wrong model.
+    """
+    if not (year and sector):
+        return ObservationRecommendationThrough.objects.none()
+
+    companyreporting = company.companyreporting_set.filter(year=year, sector=sector, observation__isnull=False).first()
+
+    if not companyreporting:
+        return ObservationRecommendationThrough.objects.none()
+
+    observation = companyreporting.observation_set.first()
+
+    if not observation:
+        return ObservationRecommendationThrough.objects.none()
+
+    return ObservationRecommendationThrough.objects.filter(observation=observation).order_by("order")
 
 
 def get_so_data(cleaned_data):

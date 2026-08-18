@@ -17,7 +17,9 @@ from django.db.models.signals import (
 from django.dispatch import Signal, receiver
 
 from governanceplatform.models import Company
+from securityobjectives.helpers import security_objective_exists
 
+from .helpers import risk_analysis_exists
 from .models import CompanyProject, Project, RiskData
 
 logger = get_task_logger(__name__)
@@ -66,8 +68,8 @@ def create_company_projects_on_sectors_change(sender, instance, action, pk_set, 
             project=instance,
             sector=sector,
             year=year,
-            has_security_objectives=company.security_objective_exists(year, sector),
-            has_risk_assessment=company.risk_analysis_exists(year, sector),
+            has_security_objectives=security_objective_exists(company, year, sector),
+            has_risk_assessment=risk_analysis_exists(company, year, sector),
         )
         for company in companies
         for sector in sectors & company.sectors.all()
@@ -136,8 +138,8 @@ def update_company_project(sender, instance, **kwargs):
                 project=instance,
                 sector=sector,
                 year=year,
-                has_security_objectives=company.security_objective_exists(year, sector),
-                has_risk_assessment=company.risk_analysis_exists(year, sector),
+                has_security_objectives=security_objective_exists(company, year, sector),
+                has_risk_assessment=risk_analysis_exists(company, year, sector),
             )
             for company in companies
             for sector in sectors & company.sectors.all()
