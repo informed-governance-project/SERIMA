@@ -1,5 +1,7 @@
 """Who may read, create and edit a given incident report."""
 
+from django.db.models import Q, QuerySet  # noqa: TC002
+
 from governanceplatform.helpers import (
     is_observer_user,
     is_observer_user_viewing_all_incident,
@@ -7,9 +9,52 @@ from governanceplatform.helpers import (
     is_user_regulator,
     user_in_group,
 )
-from governanceplatform.models import User  # noqa: TC001
+from governanceplatform.models import Observer, User  # noqa: TC001
 
 from .models import Incident
+
+
+def get_observer_incidents(observer: Observer) -> QuerySet[Incident]:
+    """The incidents an observer is entitled to see, per its regulation rules."""
+    base_qs = Incident.objects.exclude(sector_regulation__isnull=True)
+
+    if observer.is_receiving_all_incident:
+        return base_qs
+
+    observer_regulations = observer.observerregulation_set.all()
+    if not observer_regulations:
+        return Incident.objects.none()
+
+    final_q = Q()
+
+    for observer_regulation in observer_regulations:
+        regulation = observer_regulation.regulation
+        sectors = observer_regulation.sectors.all()
+        filter_conditions = observer_regulation.incident_rule
+        conditions = filter_conditions.get("conditions", [])
+
+        regulation_q = Q(sector_regulation__regulation=regulation)
+        sectors_q = Q(affected_sectors__in=sectors)
+
+        if conditions:
+            for condition in conditions:
+                condition_q = Q()
+
+                for code in condition.get("include", []):
+                    condition_q &= Q(company__entity_categories__code=code)
+
+                for code in condition.get("exclude", []):
+                    condition_q &= ~Q(company__entity_categories__code=code)
+
+                final_q |= regulation_q & sectors_q & condition_q
+        else:
+            final_q |= regulation_q & sectors_q
+
+    return base_qs.filter(final_q).distinct()
+
+
+def observer_can_access_incident(observer: Observer, incident: Incident) -> bool:
+    return get_observer_incidents(observer).filter(pk=incident.pk).exists()
 
 
 def can_access_incident(user: User, incident: Incident, company_id: int | None = None) -> bool:
@@ -52,10 +97,8 @@ def can_access_incident(user: User, incident: Incident, company_id: int | None =
     # ObserverUser access all incident if he is in a observer who can access all incident.
     if is_observer_user_viewing_all_incident(user):
         return True
-    if is_observer_user(user):
-        incident_lists = user.observers.first().get_incidents()
-        if incident in incident_lists:
-            return True
+    if is_observer_user(user) and observer_can_access_incident(user.observers.first(), incident):
+        return True
 
     return False
 
