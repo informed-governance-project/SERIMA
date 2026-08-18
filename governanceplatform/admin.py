@@ -24,9 +24,9 @@ from django_otp.plugins.otp_totp.models import TOTPDevice
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
-from incidents.decorators import check_user_is_correct
-from incidents.email import check_rt_config, create_or_update_rt_ticket, send_html_email
 
+from .decorators import check_user_is_correct
+from .email import send_html_email
 from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
@@ -57,6 +57,7 @@ from .models import (  # OperatorType,; Service,
     User,
 )
 from .permissions import set_platform_admin_permissions
+from .rt import check_rt_config, create_rt_ticket
 from .settings import SITE_NAME
 
 
@@ -1497,8 +1498,8 @@ class ObserverAdmin(CustomTranslatableAdmin):
                 timezone.now().strftime("%Y-%m-%d %H:%M %Z"),
                 user.get_full_name(),
             )
-            incident = None
-            create_or_update_rt_ticket(observer, subject, content, incident)
+            # Not recorded as an RTTicket: that row requires an incident, and this one has none.
+            create_rt_ticket(observer, subject, content)
             return JsonResponse({"success": True, "message": _("RT connection successful.")})
 
         return JsonResponse({"success": False, "message": _("RT connection failed. Check URL, queue and token.")})

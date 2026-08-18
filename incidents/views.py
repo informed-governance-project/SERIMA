@@ -30,6 +30,7 @@ from django_otp.decorators import otp_required
 from formtools.wizard.views import SessionWizardView
 from openpyxl import Workbook
 
+from governanceplatform.decorators import check_user_is_correct, regulator_role_required
 from governanceplatform.helpers import (
     annotate_translated_field_from_related_models,
     get_active_company_from_session,
@@ -54,8 +55,12 @@ from governanceplatform.settings import (
     TIME_ZONE,
 )
 
-from .access_control import can_access_incident, can_create_incident_report, can_edit_incident_report
-from .decorators import check_user_is_correct, regulator_role_required
+from .access_control import (
+    can_access_incident,
+    can_create_incident_report,
+    can_edit_incident_report,
+    get_observer_incidents,
+)
 from .email import send_email, send_html_email
 from .filters import IncidentFilter
 from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
@@ -140,7 +145,7 @@ def get_incidents(request):
             incidents = incidents.filter(sector_regulation__regulator__in=user.regulators.all())
     elif is_observer_user(user):
         html_view = "observer/incidents.html"
-        incidents = user.observers.first().get_incidents()
+        incidents = get_observer_incidents(user.observers.first())
     elif is_user_operator(user):
         # OperatorAdmin/User can see all the reports of the selected company.
         incidents = incidents.filter(
@@ -775,7 +780,7 @@ def export_incidents(request):
                 are_incidents = incidents.exists()
 
             if is_observer_user(user):
-                all_incidents = user.observers.first().get_incidents().order_by("-incident_notification_date")
+                all_incidents = get_observer_incidents(user.observers.first()).order_by("-incident_notification_date")
 
                 incidents = [
                     i
