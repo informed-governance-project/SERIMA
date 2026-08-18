@@ -1,34 +1,22 @@
 import logging
 from datetime import date
-from urllib.parse import quote, urlparse
 
-import requests
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.core.mail import EmailMessage
-from django.core.validators import validate_email
 from django.urls import reverse
 from django.utils import timezone
 
+from governanceplatform.email import send_html_email
 from governanceplatform.helpers import render_to_string_multi_languages
 from governanceplatform.models import Observer, RegulatorUser
-from governanceplatform.validators import validate_rt_url
+from governanceplatform.rt import add_rt_correspondence, check_rt_config, create_rt_ticket
 from incidents.globals import INCIDENT_EMAIL_VARIABLES
 
+from .access_control import observer_can_access_incident
 from .models import RTTicket
 
 logger = logging.getLogger(__name__)
 
 
-def is_valid_email(email):
-    try:
-        validate_email(email)
-        return True
-    except ValidationError:
-        return False
-
-
-# replace the variables in globals.py by the right value
 def replace_email_variables(content, incident):
     # find the incidents which don't have final notification.
     modify_content = content
@@ -71,50 +59,6 @@ def replace_email_variables(content, incident):
                 var_txt = getattr(incident, key).strftime("%Y-%m-%d")
         modify_content = modify_content.replace(variable, var_txt)
     return modify_content
-
-
-def send_html_email(subject, content, recipient_list):
-    valid_recipient_list = [email for email in recipient_list if is_valid_email(email)]
-    if not valid_recipient_list:
-        logger.warning(
-            "Email not sent: no valid recipients",
-            extra={"original_recipients": recipient_list},
-        )
-        return False
-
-    email = EmailMessage(
-        subject,
-        content,
-        settings.EMAIL_SENDER,
-        bcc=valid_recipient_list,
-    )
-    email.content_subtype = "html"
-
-    try:
-        sent_count = email.send()
-
-        if sent_count == 0:
-            logger.error(
-                "Email send returned 0 (no email sent)",
-                extra={
-                    "subject": subject,
-                    "recipients": valid_recipient_list,
-                },
-            )
-            return False
-
-        return True
-
-    except Exception:
-        logger.exception(
-            "Email sending failed",
-            extra={
-                "subject": subject,
-                "recipients": valid_recipient_list,
-                "sender": settings.EMAIL_SENDER,
-            },
-        )
-        return False
 
 
 def get_emails_from_qs(queryset):
@@ -186,7 +130,7 @@ def send_email(email, incident, send_to_observers=False):
         observer_emails = []
         observers = Observer.objects.all()
         for observer in observers:
-            if observer.can_access_incident(incident):
+            if observer_can_access_incident(observer, incident):
                 if check_rt_config(observer):
                     create_or_update_rt_ticket(observer, subject, html_content, incident)
                 else:
@@ -204,94 +148,14 @@ def send_email(email, incident, send_to_observers=False):
     send_html_email(subject, html_content, recipient_list)
 
 
-def _rt_request(method: str, url: str, **kwargs):
-    """
-    Issue a request to the RT API, revalidating the target first.
-
-    Redirects are refused: a host that passes validation must not be able to bounce the
-    request on to an address the validator never saw.
-    """
-    validate_rt_url(url)
-    return requests.request(method, url, allow_redirects=False, timeout=5, **kwargs)
-
-
 def create_or_update_rt_ticket(recipient, subject, content, incident):
-    base_url = recipient.rt_url.rstrip("/")
-    try:
-        validate_rt_url(base_url)
-    except ValidationError:
-        logger.error("Blocked unsafe RT URL: %s", base_url)
+    """Open an RT ticket for this incident, or reply on the one already opened for it."""
+    ticket = RTTicket.objects.filter(incident=incident, observer=recipient).first()
+
+    if ticket is not None:
+        add_rt_correspondence(recipient, ticket.ticket_id, content)
         return
 
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": f"token {recipient.rt_token}",
-    }
-
-    try:
-        ticket = RTTicket.objects.filter(incident=incident, observer=recipient).first()
-        is_new_ticket = ticket is None
-        if is_new_ticket:
-            url = f"{base_url}/REST/2.0/ticket"
-            payload = {
-                "Requestor": settings.EMAIL_SENDER,
-                "Queue": recipient.rt_queue,
-                "Subject": subject,
-                "Content": content,
-                "ContentType": "text/html",
-            }
-        else:
-            url = f"{base_url}/REST/2.0/ticket/{ticket.ticket_id}/correspond"
-            payload = {
-                "Content": content,
-                "ContentType": "text/html",
-            }
-
-        response = _rt_request("POST", url, json=payload, headers=headers)
-
-        if response.ok:
-            if is_new_ticket and response.status_code == 201:
-                ticket_data = response.json()
-                RTTicket.objects.create(
-                    incident=incident,
-                    observer=recipient,
-                    ticket_id=ticket_data.get("id"),
-                )
-        else:
-            logger.error("RT API Error %s: %s", response.status_code, response.text)
-    except ValidationError:
-        logger.error("Blocked unsafe RT URL: %s", base_url)
-    except requests.RequestException as e:
-        logger.error("Error connecting to RT API: %s", e)
-
-
-def check_rt_config(observer):
-    if not observer.rt_url or not observer.rt_queue or not observer.rt_token:
-        return False
-
-    parsed = urlparse(observer.rt_url)
-    base_url = f"{parsed.scheme}://{parsed.netloc}"
-    encoded_queue = quote(observer.rt_queue, safe="")
-    url = f"{base_url}/REST/2.0/queue/{encoded_queue}"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"token {observer.rt_token}",
-    }
-    try:
-        response = _rt_request("GET", url, headers=headers)
-        if response.status_code == 200:
-            return True
-        if response.status_code == 401:
-            logger.warning("RT token unauthorized (401) for %s", str(observer))
-        elif response.status_code == 404:
-            logger.warning("RT queue '%s' not found at %s", observer.rt_queue, url)
-        else:
-            logger.warning("Unexpected RT response (%s): %s", response.status_code, response.text)
-        return False
-    except ValidationError:
-        logger.error("Blocked unsafe RT URL: %s", base_url)
-        return False
-    except requests.RequestException as e:
-        logger.error("Error connecting to RT API: %s", e)
-        return False
+    ticket_id = create_rt_ticket(recipient, subject, content)
+    if ticket_id is not None:
+        RTTicket.objects.create(incident=incident, observer=recipient, ticket_id=ticket_id)
