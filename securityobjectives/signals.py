@@ -1,7 +1,7 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .helpers import delete_file_and_parents
+from governanceplatform.helpers import delete_file_and_parents
 
 
 @receiver(post_save, sender="import_export_extensions.ImportJob")

@@ -6,7 +6,7 @@ import django
 from celery import shared_task
 from import_export_extensions.models import ExportJob, ImportJob
 
-from .helpers import delete_file_and_parents
+from governanceplatform.helpers import delete_file_and_parents
 
 # django init
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "governanceplatform.settings")

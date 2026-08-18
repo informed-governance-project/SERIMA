@@ -27,13 +27,13 @@ from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
-from securityobjectives.helpers import delete_file_and_parents
 
 from .decorators import check_user_is_correct
 from .email import send_html_email
 from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
+    delete_file_and_parents,
     generate_display_methods,
     get_active_company_from_session,
     is_observer_user,
