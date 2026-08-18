@@ -47,30 +47,26 @@ def generate_token() -> str:
     return secrets.token_urlsafe(32)[:32]
 
 
+# The role checks live on User. These wrappers exist only because callers pass
+# request.user, which may be an AnonymousUser and so has no such methods.
 def user_in_group(user: User | AnonymousUser, group_name: str) -> bool:
     """Check user group"""
-    if not user.is_authenticated:
-        return False
-    return any(user_group.name == group_name for user_group in user.groups.all())
+    return user.is_authenticated and user.in_group(group_name)
 
 
-def instance_user_in_group(user_instance: User, group_name: str) -> bool:
-    return any(user_group.name == group_name for user_group in user_instance.groups.all())
+def is_user_regulator(user: User | AnonymousUser) -> bool:
+    return user.is_authenticated and user.is_regulator()
 
 
-def is_user_regulator(user: User) -> bool:
-    return user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser")
+def is_user_operator(user: User | AnonymousUser) -> bool:
+    return user.is_authenticated and user.is_operator()
 
 
-def is_user_operator(user: User) -> bool:
-    return user_in_group(user, "OperatorAdmin") or user_in_group(user, "OperatorUser")
+def is_observer_user(user: User | AnonymousUser) -> bool:
+    return user.is_authenticated and user.is_observer()
 
 
-def is_observer_user(user: User) -> bool:
-    return user_in_group(user, "ObserverAdmin") or user_in_group(user, "ObserverUser")
-
-
-def is_observer_user_viewing_all_incident(user: User) -> bool:
+def is_observer_user_viewing_all_incident(user: User | AnonymousUser) -> bool:
     if not is_observer_user(user):
         return False
     observer = user.observers.first()

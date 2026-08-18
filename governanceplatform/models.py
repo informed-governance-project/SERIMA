@@ -16,7 +16,6 @@ from django_countries.fields import CountryField
 from parler.models import TranslatableModel, TranslatedFields
 from phonenumber_field.modelfields import PhoneNumberField
 
-import governanceplatform
 from incidents.models import Incident
 
 from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
@@ -453,22 +452,36 @@ class User(AbstractUser, PermissionsMixin):
         self.email = self.email.lower()
         super().save(*args, **kwargs)
 
+    def in_group(self, group_name: str) -> bool:
+        """Scan the prefetched group set rather than filtering, so callers that already
+        prefetched groups do not pay one query per role check."""
+        return any(group.name == group_name for group in self.groups.all())
+
+    def is_regulator(self) -> bool:
+        return self.in_group("RegulatorAdmin") or self.in_group("RegulatorUser")
+
+    def is_operator(self) -> bool:
+        return self.in_group("OperatorAdmin") or self.in_group("OperatorUser")
+
+    def is_observer(self) -> bool:
+        return self.in_group("ObserverAdmin") or self.in_group("ObserverUser")
+
     def get_sectors(self):
         sectors = Sector.objects.none()
-        if governanceplatform.helpers.user_in_group(self, "RegulatorUser"):
+        if self.in_group("RegulatorUser"):
             ru = RegulatorUser.objects.filter(user=self).first()
             sectors = ru.sectors
-        elif governanceplatform.helpers.user_in_group(self, "RegulatorAdmin"):
+        elif self.in_group("RegulatorAdmin"):
             sectors = Sector.objects.all()
         return sectors
 
     def get_module_permissions(self):
         user_entity = None
-        if governanceplatform.helpers.is_user_regulator(self):
+        if self.is_regulator():
             regulator_user = self.regulatoruser_set.first()
             if regulator_user:
                 user_entity = regulator_user.regulator
-        elif governanceplatform.helpers.is_observer_user(self):
+        elif self.is_observer():
             observer_user = self.observeruser_set.first()
             if observer_user:
                 user_entity = observer_user.observer

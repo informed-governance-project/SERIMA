@@ -3,9 +3,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from django.contrib.auth.models import AnonymousUser, Group
 from django.test import override_settings
 
 from governanceplatform import helpers
+from governanceplatform.models import User
 
 
 def test_table_exists(monkeypatch):
@@ -23,38 +25,46 @@ def test_generate_token(monkeypatch):
     assert helpers.generate_token() == "a" * 32
 
 
-@pytest.mark.parametrize(("authenticated", "groups", "expected"), [(False, ["RegulatorUser"], False), (True, ["RegulatorAdmin"], False)])
-def test_user_in_group(authenticated, groups, expected):
-    """Check group membership only for authenticated users."""
-    user = SimpleNamespace(
-        is_authenticated=authenticated,
-        groups=SimpleNamespace(all=lambda: [SimpleNamespace(name=name) for name in groups]),
-    )
-
-    assert helpers.user_in_group(user, "RegulatorUser") is expected
+def _user_in_groups(email: str, *group_names: str):
+    user = User.objects.create(email=email)
+    for name in group_names:
+        user.groups.add(Group.objects.get_or_create(name=name)[0])
+    return user
 
 
-def test_instance_user_in_group():
-    """Detect whether a user instance belongs to the requested group."""
-    user = SimpleNamespace(groups=SimpleNamespace(all=lambda: [SimpleNamespace(name="OperatorUser")]))
+@pytest.mark.django_db()
+def test_user_in_group_matches_only_the_groups_the_user_has():
+    """Check group membership against the user's own groups."""
+    user = _user_in_groups("regulator-admin@example.org", "RegulatorAdmin")
 
-    assert helpers.instance_user_in_group(user, "OperatorUser") is True
-    assert helpers.instance_user_in_group(user, "RegulatorUser") is False
+    assert helpers.user_in_group(user, "RegulatorAdmin") is True
+    assert helpers.user_in_group(user, "RegulatorUser") is False
 
 
 @pytest.mark.parametrize(
-    ("helper", "matching_group"),
+    "helper",
+    [helpers.user_in_group, helpers.is_user_regulator, helpers.is_user_operator, helpers.is_observer_user],
+)
+def test_role_helpers_reject_anonymous_users(helper):
+    """These wrappers exist to absorb the AnonymousUser that request.user may hold."""
+    extra_args = ("RegulatorAdmin",) if helper is helpers.user_in_group else ()
+
+    assert helper(AnonymousUser(), *extra_args) is False
+
+
+@pytest.mark.django_db()
+@pytest.mark.parametrize(
+    ("helper", "matching_group", "foreign_group"),
     [
-        (helpers.is_user_regulator, "RegulatorUser"),
-        (helpers.is_user_operator, "OperatorAdmin"),
-        (helpers.is_observer_user, "ObserverUser"),
+        (helpers.is_user_regulator, "RegulatorUser", "OperatorUser"),
+        (helpers.is_user_operator, "OperatorAdmin", "ObserverAdmin"),
+        (helpers.is_observer_user, "ObserverUser", "RegulatorAdmin"),
     ],
 )
-def test_role_helpers_accept_one_of_their_groups(monkeypatch, helper, matching_group):
+def test_role_helpers_accept_one_of_their_groups(helper, matching_group, foreign_group):
     """Recognize users belonging to one of the groups for each supported role."""
-    monkeypatch.setattr(helpers, "user_in_group", lambda user, group: group == matching_group)
-
-    assert helper(object()) is True
+    assert helper(_user_in_groups(f"{matching_group}@example.org", matching_group)) is True
+    assert helper(_user_in_groups(f"{foreign_group}@example.org", foreign_group)) is False
 
 
 @pytest.mark.parametrize(
