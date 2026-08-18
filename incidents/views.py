@@ -32,9 +32,6 @@ from openpyxl import Workbook
 
 from governanceplatform.helpers import (
     annotate_translated_field_from_related_models,
-    can_access_incident,
-    can_create_incident_report,
-    can_edit_incident_report,
     get_active_company_from_session,
     is_observer_user,
     is_user_operator,
@@ -57,6 +54,7 @@ from governanceplatform.settings import (
     TIME_ZONE,
 )
 
+from .access_control import can_access_incident, can_create_incident_report, can_edit_incident_report
 from .decorators import check_user_is_correct, regulator_role_required
 from .email import send_email, send_html_email
 from .filters import IncidentFilter

@@ -7,13 +7,13 @@ from conftest import (
     list_url_freetext_filter,
     test_get_with_otp,
 )
-from governanceplatform.helpers import (
+from governanceplatform.helpers import user_in_group
+from governanceplatform.models import CompanyUser, RegulatorUser
+from incidents.access_control import (
     can_access_incident,
     can_create_incident_report,
     can_edit_incident_report,
-    user_in_group,
 )
-from governanceplatform.models import CompanyUser, RegulatorUser
 
 
 @pytest.mark.django_db

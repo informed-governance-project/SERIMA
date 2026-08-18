@@ -146,6 +146,11 @@ class Question(TranslatableModel):
             return f"[{self.reference}] {str(self)}"
         return str(self)
 
+    def is_in_use(self) -> bool:
+        return (
+            Answer.objects.filter(question_options__question=self).exists() or QuestionOptionsHistory.objects.filter(question=self).exists()
+        )
+
     def __str__(self):
         return (
             self.safe_translation_getter("label", any_language=True)
@@ -185,6 +190,9 @@ class PredefinedAnswer(TranslatableModel):
         blank=True,
         default=None,
     )
+
+    def is_in_use(self) -> bool:
+        return Answer.objects.filter(predefined_answers=self).exists()
 
     def __str__(self):
         return (
@@ -280,6 +288,10 @@ class Workflow(TranslatableModel):
         default=None,
     )
 
+    def is_in_use(self) -> bool:
+        """Workflows stay editable after use; the admin revises them in place."""
+        return False
+
     def __str__(self):
         label_translation = self.safe_translation_getter("label", any_language=True)
         return label_translation or ""
@@ -347,6 +359,9 @@ class SectorRegulation(TranslatableModel):
     class Meta:
         verbose_name_plural = _("Incident notification workflows")
         verbose_name = _("Incident notification workflow")
+
+    def is_in_use(self) -> bool:
+        return Incident.objects.filter(sector_regulation=self).exists()
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)
@@ -968,6 +983,12 @@ class LogReportRead(models.Model):
 class QuestionCategoryOptions(models.Model):
     question_category = models.ForeignKey(QuestionCategory, on_delete=models.CASCADE)
     position = models.IntegerField(verbose_name=_("Position"))
+
+    def is_in_use(self) -> bool:
+        return (
+            Answer.objects.filter(question_options__category_option=self).exists()
+            or QuestionOptionsHistory.objects.filter(category_option=self).exists()
+        )
 
     def __str__(self):
         return self.question_category.label or ""
