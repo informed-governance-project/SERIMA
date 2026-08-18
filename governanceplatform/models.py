@@ -1,7 +1,8 @@
 import importlib
+import logging
 import uuid
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
@@ -23,6 +24,8 @@ from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
 from .managers import CustomUserManager
 from .settings import RT_SECRET_KEY
 from .validators import validate_rt_url
+
+logger = logging.getLogger(__name__)
 
 
 class ApplicationConfig(models.Model):
@@ -312,7 +315,10 @@ class Observer(TranslatableModel):
             cipher_suite = Fernet(RT_SECRET_KEY)
             val = cipher_suite.decrypt(str.encode(self._rt_token))
             return val.decode()
-        except Exception:
+        except InvalidToken, ValueError, TypeError:
+            # A rotated or malformed RT_SECRET_KEY makes every stored token unreadable.
+            # Degrade to "no token" so the admin still renders, but say so in the logs.
+            logger.exception("Unable to decrypt the RT token of observer %s", self.pk)
             return ""
 
     @rt_token.setter

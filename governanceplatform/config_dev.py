@@ -178,11 +178,16 @@ SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# SSL enforcement
-SECURE_SSL_REDIRECT = False  # redirect HTTP to HTTPS
-SESSION_COOKIE_SECURE = False  # Cookies are sent via HTTPS
-CSRF_COOKIE_SECURE = False  # Secure CSRF via HTTPS
-LANGUAGE_COOKIE_SECURE = False  # Secure language cookie via HTTPS
+# SSL enforcement.
+# Derived from DEBUG rather than hardcoded to False: this file is the template for
+# config.py, so a literal False here follows the copy into production and silently
+# disables HTTPS enforcement. With DEBUG off these all turn themselves on.
+SECURE_SSL_REDIRECT = not DEBUG  # redirect HTTP to HTTPS
+SESSION_COOKIE_SECURE = not DEBUG  # Cookies are sent via HTTPS
+CSRF_COOKIE_SECURE = not DEBUG  # Secure CSRF via HTTPS
+LANGUAGE_COOKIE_SECURE = not DEBUG  # Secure language cookie via HTTPS
+# Left unset on purpose: trusting a forwarded-proto header that no proxy overwrites lets a
+# client claim HTTPS. Set it only once a proxy is known to strip and rewrite that header.
 SECURE_PROXY_SSL_HEADER = None  # SSL proxy used e.g: ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Cookies configuration for HTTPONLY
@@ -191,7 +196,7 @@ CSRF_COOKIE_HTTPONLY = True
 LANGUAGE_COOKIE_HTTPONLY = True
 
 # samesite configuration for cookies
-SESSION_COOKIE_SAMESITE = "Strict"
+SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Strict"
 LANGUAGE_COOKIE_SAMESITE = "Strict"
 

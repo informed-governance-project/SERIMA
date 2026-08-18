@@ -1,4 +1,6 @@
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from conftest import (
     list_admin_add_urls,
@@ -11,7 +13,7 @@ from governanceplatform.helpers import (
     can_edit_incident_report,
     user_in_group,
 )
-from governanceplatform.models import RegulatorUser
+from governanceplatform.models import CompanyUser, RegulatorUser
 
 
 @pytest.mark.django_db
@@ -111,7 +113,7 @@ def test_can_access_incident_function(populate_incident_db):
     incident_regulator = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
 
     for u in users:
-        company = -1
+        company = None
         if u.companies.first() is not None:
             company = u.companies.first().id
         if u in authorized_users:
@@ -132,7 +134,7 @@ def test_can_access_incident_function(populate_incident_db):
             authorized_users.append(regulator_user)
             ru.sectors.add(sector)
             for u in users:
-                company = -1
+                company = None
                 if u.companies.first() is not None:
                     company = u.companies.first().id
                 if u in authorized_users:
@@ -150,9 +152,9 @@ def test_can_access_incident_function(populate_incident_db):
     ]
     for u in users:
         if u in authorized_users:
-            assert can_access_incident(u, incident_regulator, -1) is True
+            assert can_access_incident(u, incident_regulator, None) is True
         else:
-            assert can_access_incident(u, incident_regulator, -1) is False
+            assert can_access_incident(u, incident_regulator, None) is False
 
 
 @pytest.mark.django_db()
@@ -168,7 +170,7 @@ def test_can_create_incident_report_function(populate_incident_db):
     authorized_users = [u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu"]
     # operator incident
     for u in users:
-        company = -1
+        company = None
         if u.companies.first() is not None:
             company = u.companies.first().id
         if u in authorized_users:
@@ -180,9 +182,9 @@ def test_can_create_incident_report_function(populate_incident_db):
     authorized_users = [u for u in users if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"]
     for u in users:
         if u in authorized_users:
-            assert can_create_incident_report(u, incident_regulator, -1) is True
+            assert can_create_incident_report(u, incident_regulator, None) is True
         else:
-            assert can_create_incident_report(u, incident_regulator, -1) is False
+            assert can_create_incident_report(u, incident_regulator, None) is False
 
 
 @pytest.mark.django_db()
@@ -199,7 +201,7 @@ def test_can_edit_incident_report_function(populate_incident_db):
             u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu" or u.email == "regadmin@reg1.lu"
         ]
         for u in users:
-            company_id = -1
+            company_id = None
             if u.companies.first() is not None:
                 company_id = u.companies.first().id
             if u in authorized_users:
@@ -210,9 +212,53 @@ def test_can_edit_incident_report_function(populate_incident_db):
         authorized_users = [u for u in users if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"]
         for u in users:
             if u in authorized_users:
-                assert can_edit_incident_report(u, incident_regulator, -1) is True
+                assert can_edit_incident_report(u, incident_regulator, None) is True
             else:
-                assert can_edit_incident_report(u, incident_regulator, -1) is False
+                assert can_edit_incident_report(u, incident_regulator, None) is False
+
+
+def test_company_user_company_stays_non_nullable():
+    """
+    can_access_incident only stays safe for a null company_id because CompanyUser.company
+    can never be NULL: `filter(company__id=None)` therefore matches no row. Making the
+    field nullable would turn that lookup into a way to match unrelated memberships.
+    """
+    assert CompanyUser._meta.get_field("company").null is False
+
+
+@pytest.mark.django_db()
+def test_operator_cannot_access_incident_whose_company_was_deleted(populate_incident_db):
+    """
+    Incident.company is SET_NULL, so deleting a Company leaves company-less incidents.
+    An operator with no company selected in session must not reach one of them.
+    """
+    users = populate_incident_db["users"]
+    incidents = populate_incident_db["incidents"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    incident = next(i for i in incidents if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+
+    incident.company = None
+    incident.save()
+
+    assert can_access_incident(operator, incident, None) is False
+
+
+@pytest.mark.django_db()
+def test_access_check_skips_company_lookups_when_no_company_selected(populate_incident_db):
+    """
+    With no company in session the operator branch cannot apply, so it must short-circuit
+    before querying. Without that guard the company lookups run as `IS NULL` comparisons.
+    """
+    users = populate_incident_db["users"]
+    incidents = populate_incident_db["incidents"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    incident = next(i for i in incidents if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+
+    with CaptureQueriesContext(connection) as context:
+        can_access_incident(operator, incident, None)
+
+    company_queries = [query for query in context.captured_queries if "governanceplatform_companyuser" in query["sql"]]
+    assert company_queries == []
 
 
 @pytest.mark.django_db

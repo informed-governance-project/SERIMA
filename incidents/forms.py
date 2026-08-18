@@ -703,14 +703,11 @@ class RegulationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        try:
-            self.fields["regulations"].choices = [
-                (regulation.id, str(regulation))
-                for regulation in Regulation.objects.filter(regulators__isnull=False).distinct("id")
-                if regulation.sectorregulation_set.filter(sectorregulationworkflow__isnull=False, active=True).exists()
-            ]
-        except Exception:
-            self.fields["regulations"].choices = []
+        self.fields["regulations"].choices = [
+            (regulation.id, str(regulation))
+            for regulation in Regulation.objects.filter(regulators__isnull=False).distinct("id")
+            if regulation.sectorregulation_set.filter(sectorregulationworkflow__isnull=False, active=True).exists()
+        ]
 
 
 class RegulatorForm(forms.Form):

@@ -4,10 +4,10 @@ from itertools import chain
 
 from django.utils import timezone
 
-from .models import IncidentWorkflow, QuestionCategoryOptions, SectorRegulationWorkflow
+from .models import Incident, IncidentWorkflow, QuestionCategory, QuestionCategoryOptions, SectorRegulationWorkflow, Workflow
 
 
-def is_deadline_exceeded(report, incident):
+def is_deadline_exceeded(report: Workflow, incident: Incident) -> str:
     latest_incident_workflow = incident.get_latest_incident_workflow_by_workflow(report)
     if latest_incident_workflow is not None:
         return latest_incident_workflow.review_status
@@ -20,41 +20,48 @@ def is_deadline_exceeded(report, incident):
             )
             .first()
         )
+        if sr_workflow is None:
+            return "UNDE"
+
         actual_time = timezone.now()
         if sr_workflow.trigger_event_before_deadline == "DETECT_DATE":
             detection_date = None
-            if incident.sector_regulation.is_detection_date_needed:
+            if incident.sector_regulation is not None and incident.sector_regulation.is_detection_date_needed:
                 detection_date = incident.incident_detection_date
             else:
                 last_report = incident.get_latest_incident_workflow()
-                if last_report is not None:
+                if last_report is not None and last_report.report_timeline is not None:
                     detection_date = last_report.report_timeline.incident_detection_date
             if detection_date is not None:
-                dt = actual_time - incident.incident_detection_date
+                dt = actual_time - detection_date
                 if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
                     return "OUT"
         elif sr_workflow.trigger_event_before_deadline == "NOTIF_DATE":
             dt = actual_time - incident.incident_notification_date
             if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
                 return "OUT"
-        elif sr_workflow.trigger_event_before_deadline == "PREV_WORK" and incident.get_previous_workflow(report) is not False:
+        elif sr_workflow.trigger_event_before_deadline == "PREV_WORK":
             previous_workflow = incident.get_previous_workflow(report)
-            previous_incident_workflow = (
-                IncidentWorkflow.objects.all().filter(incident=incident, workflow=previous_workflow.workflow).order_by("-timestamp").first()
-            )
-            if previous_incident_workflow is not None:
-                dt = actual_time - previous_incident_workflow.timestamp
-                if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
-                    return "OUT"
+            if previous_workflow is not False:
+                previous_incident_workflow = (
+                    IncidentWorkflow.objects.all()
+                    .filter(incident=incident, workflow=previous_workflow.workflow)
+                    .order_by("-timestamp")
+                    .first()
+                )
+                if previous_incident_workflow is not None:
+                    dt = actual_time - previous_incident_workflow.timestamp
+                    if math.floor(dt.total_seconds() / 60 / 60) >= sr_workflow.delay_in_hours_before_deadline:
+                        return "OUT"
 
     return "UNDE"
 
 
 def get_workflow_categories(
-    workflow,
-    incident_workflow=None,
-    is_new_incident_workflow=False,
-):
+    workflow: Workflow,
+    incident_workflow: IncidentWorkflow | None = None,
+    is_new_incident_workflow: bool = False,
+) -> list[QuestionCategory]:
     if is_new_incident_workflow:
         category_options = (
             QuestionCategoryOptions.objects.filter(

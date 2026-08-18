@@ -672,6 +672,9 @@ class Incident(models.Model):
             .first()
         )
 
+        if not current:
+            return False
+
         previous = (
             SectorRegulationWorkflow.objects.all()
             .filter(

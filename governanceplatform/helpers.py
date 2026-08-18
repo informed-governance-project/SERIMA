@@ -1,18 +1,22 @@
 import secrets
 from collections import defaultdict
+from collections.abc import Callable  # noqa: TC003
 from typing import Any
 
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.models import AnonymousUser  # noqa: TC002
 from django.db import connection
-from django.db.models import F, Max, Q, Value
+from django.db.models import F, Max, Q, QuerySet, Value  # noqa: TC002
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
 from django.http import HttpRequest  # noqa: TC002
 from django.template.loader import render_to_string
+from django.template.response import TemplateResponse  # noqa: TC002
 from django.utils import translation
+from django.utils.functional import Promise  # noqa: TC002
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
@@ -40,7 +44,7 @@ from securityobjectives.models import (
     StandardAnswer,
 )
 
-from .models import Company, User  # noqa: TC001
+from .models import Company, Sector, User  # noqa: TC001
 
 
 def table_exists(table_name: str) -> bool:
@@ -49,19 +53,19 @@ def table_exists(table_name: str) -> bool:
     return table_name in all_tables
 
 
-def generate_token():
+def generate_token() -> str:
     """Generates a random token-safe text string."""
     return secrets.token_urlsafe(32)[:32]
 
 
-def user_in_group(user, group_name) -> bool:
+def user_in_group(user: User | AnonymousUser, group_name: str) -> bool:
     """Check user group"""
     if not user.is_authenticated:
         return False
     return any(user_group.name == group_name for user_group in user.groups.all())
 
 
-def instance_user_in_group(user_instance, group_name) -> bool:
+def instance_user_in_group(user_instance: User, group_name: str) -> bool:
     return any(user_group.name == group_name for user_group in user_instance.groups.all())
 
 
@@ -84,12 +88,12 @@ def is_observer_user_viewing_all_incident(user: User) -> bool:
     return observer is not None and observer.is_receiving_all_incident
 
 
-def get_active_company_from_session(request) -> Company | None:
+def get_active_company_from_session(request: HttpRequest) -> Company | None:
     company_in_use = request.session.get("company_in_use")
     return request.user.companies.filter(id=company_in_use).first() if company_in_use else None
 
 
-def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
+def can_access_incident(user: User, incident: Incident, company_id: int | None = None) -> bool:
     # if it's regulator incident
     if (
         is_user_regulator(user)
@@ -114,8 +118,11 @@ def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
     ):
         return True
     # OperatorAdmin/User can access only incidents related to selected company.
+    # company_id is None for non-operator roles; without the guard the lookups
+    # would become IS NULL and match company-less incidents.
     if (
-        is_user_operator(user)
+        company_id
+        and is_user_operator(user)
         and user.companyuser_set.filter(company__id=company_id, approved=True).exists()
         and Incident.objects.filter(pk=incident.id, company__id=company_id).exists()
     ):
@@ -135,7 +142,7 @@ def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
 
 
 # check if the user is allowed to create an incident_workflow
-def can_create_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
+def can_create_incident_report(user: User, incident: Incident, company_id: int | None = None) -> bool:
     # if it's incident user
     if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
         return True
@@ -168,7 +175,7 @@ def can_create_incident_report(user: User, incident: Incident, company_id=-1) ->
 
 # check if the user is allowed to edit an incident_workflow
 # for regulators to add message
-def can_edit_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
+def can_edit_incident_report(user: User, incident: Incident, company_id: int | None = None) -> bool:
     # if it's incident user
     if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
         return True
@@ -196,11 +203,17 @@ def can_edit_incident_report(user: User, incident: Incident, company_id=-1) -> b
     ):
         return True
 
+    # Deleting a SectorRegulation leaves incidents behind (SET_NULL); they have no
+    # regulator to match, so the remaining regulator branches cannot grant access.
+    sector_regulation = incident.sector_regulation
+    if sector_regulation is None:
+        return False
+
     # if he is the regulator admin of the incident need to be link to his regulator
-    if user_in_group(user, "RegulatorAdmin") and incident.sector_regulation.regulator == user.regulators.first():
+    if user_in_group(user, "RegulatorAdmin") and sector_regulation.regulator == user.regulators.first():
         return True
     # if he is the regulator user of the incident, he need to have the sectors
-    if user_in_group(user, "RegulatorUser") and incident.sector_regulation.regulator == user.regulators.first():
+    if user_in_group(user, "RegulatorUser") and sector_regulation.regulator == user.regulators.first():
         return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
 
     return False
@@ -220,7 +233,7 @@ def set_creator(request: HttpRequest, obj: Any, change: bool) -> Any:
     return obj
 
 
-def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool:
+def can_change_or_delete_obj(request: HttpRequest, obj: Any, message: str | Promise = "") -> bool:
     # Cache per (type, pk) so multiple objects in one request are each evaluated once.
     cache = getattr(request, "_can_change_or_delete_obj", {})
     cache_key = (type(obj).__name__, getattr(obj, "pk", None))
@@ -324,7 +337,7 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
 
 
 # Remove languages are not translated
-def filter_languages_not_translated(form):
+def filter_languages_not_translated(form: TemplateResponse) -> TemplateResponse:
     tabs = form.context_data.get("language_tabs")
     if not tabs:
         return form
@@ -334,7 +347,7 @@ def filter_languages_not_translated(form):
     return form
 
 
-def get_sectors_grouped(sectors):
+def get_sectors_grouped(sectors: QuerySet[Sector]) -> list[tuple[str, list[list[Any]]]]:
     sectors = sectors.prefetch_related("children")
     categs = defaultdict(list)
     for sector in sectors:
@@ -363,7 +376,13 @@ def get_sectors_grouped(sectors):
 # These *_sort fields are case-insensitive (they ignore uppercase/lowercase when sorting).
 # If it is important to sort with case sensitivity, set orderable = False
 # and order directly by the translated field, e.g. .order_by("_label").
-def translated_queryset(qs, language, default_language, translated_fields=None, orderable=False):
+def translated_queryset(
+    qs: QuerySet,
+    language: str,
+    default_language: str,
+    translated_fields: list[str] | None = None,
+    orderable: bool = False,
+) -> QuerySet:
     default_lang = default_language
     lang = language
 
@@ -401,11 +420,11 @@ def translated_queryset(qs, language, default_language, translated_fields=None, 
 
 
 def annotate_translated_field_from_related_models(
-    qs,
+    qs: QuerySet,
     *,
-    full_path,
-    annotated_name,
-):
+    full_path: str,
+    annotated_name: str,
+) -> QuerySet:
     default_lang = settings.PARLER_DEFAULT_LANGUAGE_CODE
     lang = translation.get_language()
     relation_path, translated_field = full_path.rsplit("__translations__", 1)
@@ -435,7 +454,10 @@ def annotate_translated_field_from_related_models(
     )
 
 
-def generate_display_methods(translated_fields, related_fields=None):
+def generate_display_methods(
+    translated_fields: list[str],
+    related_fields: list[tuple[str, str]] | None = None,
+) -> dict[str, Callable[..., Any]]:
     """
     Dynamically generates display methods for translated fields.
     Example: for “label” → creates label_display() with
@@ -482,12 +504,12 @@ def generate_display_methods(translated_fields, related_fields=None):
 
 
 def render_to_string_multi_languages(
-    template_name,
-    context,
-    replace_email_variables=None,
-    content=None,
-    object=None,
-):
+    template_name: str,
+    context: dict[str, Any],
+    replace_email_variables: Callable[[str, Any], str] | None = None,
+    content: Any = None,
+    object: Any = None,
+) -> str:
     """
     Render a template in multiple languages.
     - 'content' and 'object' are ONLY used to replace variables
@@ -530,7 +552,12 @@ def render_to_string_multi_languages(
     return "<hr>".join(parts)
 
 
-def sanitize_html(html, tags=None, attributes=None, styles=None):
+def sanitize_html(
+    html: str,
+    tags: list[str] | None = None,
+    attributes: dict[str, list[str]] | None = None,
+    styles: list[str] | None = None,
+) -> str:
     """
     Docstring for sanitize_html with bleach
     :param html: The HTML to sanitize
@@ -587,12 +614,12 @@ def sanitize_html(html, tags=None, attributes=None, styles=None):
 
 
 def sort_queryset_by_field(
-    qs,
-    sort_field,
-    sort_direction,
-    default_sort_field,
-    allowed_sort_fields,
-):
+    qs: QuerySet,
+    sort_field: str,
+    sort_direction: str,
+    default_sort_field: str,
+    allowed_sort_fields: dict[str, dict[str, str]],
+) -> QuerySet:
 
     config_field = allowed_sort_fields.get(sort_field)
     if not config_field:

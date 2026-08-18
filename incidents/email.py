@@ -204,6 +204,17 @@ def send_email(email, incident, send_to_observers=False):
     send_html_email(subject, html_content, recipient_list)
 
 
+def _rt_request(method: str, url: str, **kwargs):
+    """
+    Issue a request to the RT API, revalidating the target first.
+
+    Redirects are refused: a host that passes validation must not be able to bounce the
+    request on to an address the validator never saw.
+    """
+    validate_rt_url(url)
+    return requests.request(method, url, allow_redirects=False, timeout=5, **kwargs)
+
+
 def create_or_update_rt_ticket(recipient, subject, content, incident):
     base_url = recipient.rt_url.rstrip("/")
     try:
@@ -237,7 +248,7 @@ def create_or_update_rt_ticket(recipient, subject, content, incident):
                 "ContentType": "text/html",
             }
 
-        response = requests.post(url, json=payload, headers=headers, timeout=(3, 15))
+        response = _rt_request("POST", url, json=payload, headers=headers)
 
         if response.ok:
             if incident and is_new_ticket and response.status_code == 201:
@@ -249,6 +260,8 @@ def create_or_update_rt_ticket(recipient, subject, content, incident):
                 )
         else:
             logger.error("RT API Error %s: %s", response.status_code, response.text)
+    except ValidationError:
+        logger.error("Blocked unsafe RT URL: %s", base_url)
     except requests.RequestException as e:
         logger.error("Error connecting to RT API: %s", e)
 
@@ -266,7 +279,7 @@ def check_rt_config(observer):
         "Authorization": f"token {observer.rt_token}",
     }
     try:
-        response = requests.get(url, headers=headers, timeout=(3, 5))
+        response = _rt_request("GET", url, headers=headers)
         if response.status_code == 200:
             return True
         if response.status_code == 401:
@@ -275,6 +288,9 @@ def check_rt_config(observer):
             logger.warning("RT queue '%s' not found at %s", observer.rt_queue, url)
         else:
             logger.warning("Unexpected RT response (%s): %s", response.status_code, response.text)
+        return False
+    except ValidationError:
+        logger.error("Blocked unsafe RT URL: %s", base_url)
         return False
     except requests.RequestException as e:
         logger.error("Error connecting to RT API: %s", e)

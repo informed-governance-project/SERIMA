@@ -490,13 +490,15 @@ def edit_workflow(request):
 def edit_incident(request, incident_id: int):
     """Returns the list of incident as regulator."""
 
+    company_id = request.session.get("company_in_use")
+
     try:
         incident = Incident.objects.get(pk=incident_id)
     except Incident.DoesNotExist:
         messages.error(request, _("Incident not found"))
         return redirect("incidents")
 
-    if not can_edit_incident_report(request.user, incident):
+    if not can_edit_incident_report(request.user, incident, company_id):
         return redirect("incidents")
 
     incident_form = IncidentStatusForm(request.POST, instance=incident)
@@ -505,21 +507,21 @@ def edit_incident(request, incident_id: int):
         incident = incident_form.save(commit=False)
         response = {"id": incident.pk}
         incident_status = incident_form.cleaned_data.get("incident_status")
-        if incident_status == "CLOSE" and incident.sector_regulation.closing_email:
+        old, new = incident_form.get_field_change("is_significative_impact")
+
+        with transaction.atomic():
+            incident.save()
+            if old != new:
+                message = "IMP. True" if new is True else "IMP. False"
+                create_entry_log(request.user, incident, None, message, request)
+
+        # Notify only once the closure is committed: a failed save must not leave
+        # regulators told about a closure that never happened.
+        if incident_status == "CLOSE" and incident.sector_regulation and incident.sector_regulation.closing_email:
             send_email(incident.sector_regulation.closing_email, incident)
 
         for field_name in incident_form.cleaned_data:
             response[field_name] = incident_form.cleaned_data[field_name]
-
-        old, new = incident_form.get_field_change("is_significative_impact")
-        if old != new:
-            if new is True:
-                message = "IMP. True"
-            else:
-                message = "IMP. False"
-            create_entry_log(request.user, incident, None, message, request)
-
-        incident.save()
 
         return JsonResponse(response)
 
@@ -665,11 +667,16 @@ def delete_incident(request, incident_id: int):
         return redirect("incidents")
 
     try:
-        if incident.workflows.count() == 0:
-            incident.delete()
-            messages.success(request, _("The incident has been deleted."))
-        else:
-            messages.error(request, _("The incident could not be deleted."))
+        with transaction.atomic():
+            # Lock the row for the whole check-then-delete. On PostgreSQL a concurrent
+            # IncidentWorkflow insert must take FOR KEY SHARE on this parent row, which
+            # conflicts with FOR UPDATE, so a report cannot slip in and be cascaded away.
+            locked_incident = Incident.objects.select_for_update().get(pk=incident.pk)
+            if locked_incident.workflows.exists():
+                messages.error(request, _("The incident could not be deleted."))
+            else:
+                locked_incident.delete()
+                messages.success(request, _("The incident has been deleted."))
     except Exception:
         logger.error(
             "Error deleting incident",
@@ -1273,10 +1280,14 @@ class WorkflowWizardView(SessionWizardView):
             self.incident = self.incident_workflow.incident
             self.workflow = self.incident_workflow.workflow
             self.is_regulator_incident = True if self.incident.regulator == user.regulators.first() and is_regulator_incidents else False
-            regulation_sector_has_impacts = Impact.objects.filter(
-                regulations=self.incident.sector_regulation.regulation,
-                sectors__in=self.incident.affected_sectors.all(),
-            ).exists()
+            sector_regulation = self.incident.sector_regulation
+            regulation_sector_has_impacts = (
+                sector_regulation is not None
+                and Impact.objects.filter(
+                    regulations=sector_regulation.regulation,
+                    sectors__in=self.incident.affected_sectors.all(),
+                ).exists()
+            )
 
             self.workflow.is_impact_needed = bool(self.workflow.is_impact_needed and regulation_sector_has_impacts)
 
@@ -1331,10 +1342,14 @@ class WorkflowWizardView(SessionWizardView):
             else:
                 self.workflow = self.request.workflow
 
-            regulation_sector_has_impacts = Impact.objects.filter(
-                regulations=self.incident.sector_regulation.regulation,
-                sectors__in=self.incident.affected_sectors.all(),
-            ).exists()
+            sector_regulation = self.incident.sector_regulation
+            regulation_sector_has_impacts = (
+                sector_regulation is not None
+                and Impact.objects.filter(
+                    regulations=sector_regulation.regulation,
+                    sectors__in=self.incident.affected_sectors.all(),
+                ).exists()
+            )
 
             self.workflow.is_impact_needed = bool(self.workflow.is_impact_needed and regulation_sector_has_impacts)
 
@@ -1441,10 +1456,14 @@ class WorkflowWizardView(SessionWizardView):
             context["steps"].append(_("Incident Timeline"))
             context["steps"].extend(self.categories_workflow)
             if self.workflow.is_impact_needed:
-                regulation_sector_has_impacts = Impact.objects.filter(
-                    regulations=self.incident.sector_regulation.regulation,
-                    sectors__in=self.incident.affected_sectors.all(),
-                ).exists()
+                sector_regulation = self.incident.sector_regulation
+                regulation_sector_has_impacts = (
+                    sector_regulation is not None
+                    and Impact.objects.filter(
+                        regulations=sector_regulation.regulation,
+                        sectors__in=self.incident.affected_sectors.all(),
+                    ).exists()
+                )
                 if regulation_sector_has_impacts:
                     context["steps"].append(_("Impacts"))
 
@@ -1512,7 +1531,9 @@ class WorkflowWizardView(SessionWizardView):
             if incident_starting_date:
                 incident_starting_date = convert_to_utc(incident_starting_date, local_tz)
 
-            if incident_detection_date and not self.incident.sector_regulation.is_detection_date_needed:
+            if incident_detection_date and not (
+                self.incident.sector_regulation and self.incident.sector_regulation.is_detection_date_needed
+            ):
                 self.incident.incident_detection_date = convert_to_utc(incident_detection_date, local_tz)
 
             if incident_resolution_date:

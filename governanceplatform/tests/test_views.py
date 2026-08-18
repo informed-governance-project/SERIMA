@@ -48,6 +48,32 @@ def test_accessible_urls_without_credential(client):
 
 
 @pytest.mark.django_db
+def test_plain_login_url_redirects_to_two_factor(client):
+    """
+    Verify that the password-only login view shipped by django.contrib.auth.urls
+    is not served, keeping the next parameter.
+    """
+    response = client.get("/account/login/?next=/incidents/")
+
+    assert response.status_code == 302
+    assert response["Location"] == f"{reverse('login')}?next=/incidents/"
+
+
+@pytest.mark.django_db
+def test_plain_login_url_does_not_authenticate(client, populate_db):
+    """
+    Verify that credentials posted to the password-only login view do not open a
+    session, which would bypass the second factor.
+    """
+    user = populate_db["users"][0]
+
+    response = client.post("/account/login/", {"username": user.email, "password": "secret"})
+
+    assert response.status_code == 302
+    assert "_auth_user_id" not in client.session
+
+
+@pytest.mark.django_db
 def test_user_access_admin_without_2FA(client, populate_db):
     """
     Verify the admin access is unaccessible without 2FA
