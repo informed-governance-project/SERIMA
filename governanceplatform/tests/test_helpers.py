@@ -3,9 +3,11 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
+from django.contrib.auth.models import AnonymousUser, Group
 from django.test import override_settings
 
 from governanceplatform import helpers
+from governanceplatform.models import User
 
 
 def test_table_exists(monkeypatch):
@@ -23,38 +25,46 @@ def test_generate_token(monkeypatch):
     assert helpers.generate_token() == "a" * 32
 
 
-@pytest.mark.parametrize(("authenticated", "groups", "expected"), [(False, ["RegulatorUser"], False), (True, ["RegulatorAdmin"], False)])
-def test_user_in_group(authenticated, groups, expected):
-    """Check group membership only for authenticated users."""
-    user = SimpleNamespace(
-        is_authenticated=authenticated,
-        groups=SimpleNamespace(all=lambda: [SimpleNamespace(name=name) for name in groups]),
-    )
-
-    assert helpers.user_in_group(user, "RegulatorUser") is expected
+def _user_in_groups(email: str, *group_names: str):
+    user = User.objects.create(email=email)
+    for name in group_names:
+        user.groups.add(Group.objects.get_or_create(name=name)[0])
+    return user
 
 
-def test_instance_user_in_group():
-    """Detect whether a user instance belongs to the requested group."""
-    user = SimpleNamespace(groups=SimpleNamespace(all=lambda: [SimpleNamespace(name="OperatorUser")]))
+@pytest.mark.django_db()
+def test_user_in_group_matches_only_the_groups_the_user_has():
+    """Check group membership against the user's own groups."""
+    user = _user_in_groups("regulator-admin@example.org", "RegulatorAdmin")
 
-    assert helpers.instance_user_in_group(user, "OperatorUser") is True
-    assert helpers.instance_user_in_group(user, "RegulatorUser") is False
+    assert helpers.user_in_group(user, "RegulatorAdmin") is True
+    assert helpers.user_in_group(user, "RegulatorUser") is False
 
 
 @pytest.mark.parametrize(
-    ("helper", "matching_group"),
+    "helper",
+    [helpers.user_in_group, helpers.is_user_regulator, helpers.is_user_operator, helpers.is_observer_user],
+)
+def test_role_helpers_reject_anonymous_users(helper):
+    """These wrappers exist to absorb the AnonymousUser that request.user may hold."""
+    extra_args = ("RegulatorAdmin",) if helper is helpers.user_in_group else ()
+
+    assert helper(AnonymousUser(), *extra_args) is False
+
+
+@pytest.mark.django_db()
+@pytest.mark.parametrize(
+    ("helper", "matching_group", "foreign_group"),
     [
-        (helpers.is_user_regulator, "RegulatorUser"),
-        (helpers.is_user_operator, "OperatorAdmin"),
-        (helpers.is_observer_user, "ObserverUser"),
+        (helpers.is_user_regulator, "RegulatorUser", "OperatorUser"),
+        (helpers.is_user_operator, "OperatorAdmin", "ObserverAdmin"),
+        (helpers.is_observer_user, "ObserverUser", "RegulatorAdmin"),
     ],
 )
-def test_role_helpers_accept_one_of_their_groups(monkeypatch, helper, matching_group):
+def test_role_helpers_accept_one_of_their_groups(helper, matching_group, foreign_group):
     """Recognize users belonging to one of the groups for each supported role."""
-    monkeypatch.setattr(helpers, "user_in_group", lambda user, group: group == matching_group)
-
-    assert helper(object()) is True
+    assert helper(_user_in_groups(f"{matching_group}@example.org", matching_group)) is True
+    assert helper(_user_in_groups(f"{foreign_group}@example.org", foreign_group)) is False
 
 
 @pytest.mark.parametrize(
@@ -90,73 +100,6 @@ def test_get_active_company_from_session_without_selected_company():
     companies.filter.assert_not_called()
 
 
-def test_can_access_incident_for_incident_owner(monkeypatch):
-    """Allow an incident user to access an incident they own."""
-    user = object()
-    incident = SimpleNamespace(id=7)
-    monkeypatch.setattr(helpers, "is_user_regulator", lambda user: False)
-    monkeypatch.setattr(helpers, "is_user_operator", lambda user: False)
-    monkeypatch.setattr(helpers, "is_observer_user", lambda user: False)
-    monkeypatch.setattr(helpers, "is_observer_user_viewing_all_incident", lambda user: False)
-    monkeypatch.setattr(helpers, "user_in_group", lambda user, group: group == "IncidentUser")
-    incident_filter = MagicMock()
-    incident_filter.exists.return_value = True
-    monkeypatch.setattr(helpers.Incident.objects, "filter", lambda **kwargs: incident_filter)
-
-    assert helpers.can_access_incident(user, incident) is True
-
-
-def test_can_access_incident_rejects_non_owner(monkeypatch):
-    """Reject an incident user who does not own the incident."""
-    user = object()
-    incident = SimpleNamespace(id=7)
-
-    monkeypatch.setattr(helpers, "is_user_regulator", lambda user: False)
-    monkeypatch.setattr(helpers, "is_user_operator", lambda user: False)
-    monkeypatch.setattr(helpers, "is_observer_user", lambda user: False)
-    monkeypatch.setattr(
-        helpers,
-        "is_observer_user_viewing_all_incident",
-        lambda user: False,
-    )
-    monkeypatch.setattr(
-        helpers,
-        "user_in_group",
-        lambda user, group: group == "IncidentUser",
-    )
-
-    incident_filter = MagicMock()
-    incident_filter.exists.return_value = False
-    monkeypatch.setattr(
-        helpers.Incident.objects,
-        "filter",
-        lambda **kwargs: incident_filter,
-    )
-
-    assert helpers.can_access_incident(user, incident) is False
-
-
-def test_can_create_incident_report_rejects_unrelated_user(monkeypatch):
-    """Reject report creation when the user has no relationship to the incident."""
-    monkeypatch.setattr(helpers, "user_in_group", lambda user, group: False)
-    monkeypatch.setattr(helpers, "is_user_regulator", lambda user: False)
-    monkeypatch.setattr(helpers, "is_user_operator", lambda user: False)
-
-    assert helpers.can_create_incident_report(object(), SimpleNamespace(contact_user=None)) is False
-
-
-def test_can_edit_incident_report_for_matching_regulator_admin(monkeypatch):
-    """Allow a regulator administrator to edit an incident for their regulator."""
-    regulator = object()
-    user = SimpleNamespace(regulators=SimpleNamespace(first=lambda: regulator))
-    incident = SimpleNamespace(contact_user=None, sector_regulation=SimpleNamespace(regulator=regulator))
-    monkeypatch.setattr(helpers, "user_in_group", lambda user, group: group == "RegulatorAdmin")
-    monkeypatch.setattr(helpers, "is_user_regulator", lambda user: False)
-    monkeypatch.setattr(helpers, "is_user_operator", lambda user: False)
-
-    assert helpers.can_edit_incident_report(user, incident) is True
-
-
 def test_set_creator_sets_current_regulator_on_new_object():
     """Assign the current regulator as the creator of a new object."""
     regulator = SimpleNamespace(id=9)
@@ -176,22 +119,39 @@ def test_can_change_or_delete_unsaved_object():
     assert helpers.can_change_or_delete_obj(request, obj) is True
 
 
-def test_can_change_or_delete_workflow_owned_by_regulator(monkeypatch):
-    """Allow only the regulator owning an unused workflow to modify it."""
+def test_can_change_or_delete_unused_object_owned_by_regulator(monkeypatch):
+    """Allow only the regulator owning an unused object to modify it."""
     regulator = object()
     other_regulator = object()
     owner_request = SimpleNamespace(user=SimpleNamespace(regulators=SimpleNamespace(first=lambda: regulator)))
     other_request = SimpleNamespace(user=SimpleNamespace(regulators=SimpleNamespace(first=lambda: other_regulator)))
-    workflow = MagicMock(spec=helpers.Workflow)
-    workflow.pk = 4
-    workflow.creator = regulator
-    workflow._meta = SimpleNamespace(verbose_name="workflow")
+    obj = SimpleNamespace(pk=4, creator=regulator, is_in_use=lambda: False, _meta=SimpleNamespace(verbose_name="workflow"))
     warning = MagicMock()
     monkeypatch.setattr(helpers.messages, "warning", warning)
 
-    assert helpers.can_change_or_delete_obj(owner_request, workflow) is True
-    assert helpers.can_change_or_delete_obj(other_request, workflow) is False
+    assert helpers.can_change_or_delete_obj(owner_request, obj) is True
+    assert helpers.can_change_or_delete_obj(other_request, obj) is False
     warning.assert_called_once()
+
+
+def test_can_change_or_delete_refuses_an_object_still_in_use(monkeypatch):
+    """An object its owner still uses elsewhere is locked even for that owner."""
+    regulator = object()
+    request = SimpleNamespace(user=SimpleNamespace(regulators=SimpleNamespace(first=lambda: regulator)))
+    obj = SimpleNamespace(pk=4, creator=regulator, is_in_use=lambda: True, _meta=SimpleNamespace(verbose_name="question"))
+    monkeypatch.setattr(helpers.messages, "warning", MagicMock())
+
+    assert helpers.can_change_or_delete_obj(request, obj) is False
+
+
+def test_can_change_or_delete_treats_an_object_that_cannot_report_use_as_in_use(monkeypatch):
+    """Without an is_in_use() the conservative answer is to refuse."""
+    regulator = object()
+    request = SimpleNamespace(user=SimpleNamespace(regulators=SimpleNamespace(first=lambda: regulator)))
+    obj = SimpleNamespace(pk=4, creator=regulator, _meta=SimpleNamespace(verbose_name="sector"))
+    monkeypatch.setattr(helpers.messages, "warning", MagicMock())
+
+    assert helpers.can_change_or_delete_obj(request, obj) is False
 
 
 def test_translated_queryset_adds_fallback_and_sort_annotations():

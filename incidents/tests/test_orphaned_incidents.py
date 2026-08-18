@@ -9,7 +9,7 @@ so every helper they reach has to degrade instead of raising AttributeError.
 
 import pytest
 
-from governanceplatform.helpers import can_edit_incident_report
+from incidents.access_control import can_edit_incident_report
 from incidents.helpers import is_deadline_exceeded
 from incidents.models import IncidentWorkflow, SectorRegulationWorkflow, Workflow
 
