@@ -248,8 +248,6 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
 WSGI_APPLICATION = "governanceplatform.wsgi.application"
 
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -448,43 +446,49 @@ except AttributeError:
 
 # SSL enforcement
 # redirect all HTTP to HTTPS
+# The HTTPS-dependent fallbacks below key off DEBUG rather than a literal False, so a
+# deployment that simply omits them is hardened, while a developer serving plain HTTP on
+# localhost can still hold a session. An explicit value in config.py always wins.
+#
+# SECURE_SSL_REDIRECT needs SECURE_PROXY_SSL_HEADER whenever TLS terminates at a proxy:
+# without it Django never sees a secure request and redirects in a loop.
 try:
     SECURE_SSL_REDIRECT = config.SECURE_SSL_REDIRECT
 except AttributeError:
-    SECURE_SSL_REDIRECT = False
+    SECURE_SSL_REDIRECT = not DEBUG
 # cookies are sent via HTTPS
 try:
     SESSION_COOKIE_SECURE = config.SESSION_COOKIE_SECURE
 except AttributeError:
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = not DEBUG
 # Secure CSRF via HTTPS
 try:
     CSRF_COOKIE_SECURE = config.CSRF_COOKIE_SECURE
 except AttributeError:
-    CSRF_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = not DEBUG
 # Secure Cookie language via HTTPS
 try:
     LANGUAGE_COOKIE_SECURE = config.LANGUAGE_COOKIE_SECURE
 except AttributeError:
-    LANGUAGE_COOKIE_SECURE = False
+    LANGUAGE_COOKIE_SECURE = not DEBUG
 
 # Secure cookie session
 try:
     SESSION_COOKIE_HTTPONLY = config.SESSION_COOKIE_HTTPONLY
 except AttributeError:
-    SESSION_COOKIE_HTTPONLY = False
+    SESSION_COOKIE_HTTPONLY = True
 
 # Secure CSRF cookie
 try:
     CSRF_COOKIE_HTTPONLY = config.CSRF_COOKIE_HTTPONLY
 except AttributeError:
-    CSRF_COOKIE_HTTPONLY = False
+    CSRF_COOKIE_HTTPONLY = True
 
 # Secure Language cookie
 try:
     LANGUAGE_COOKIE_HTTPONLY = config.LANGUAGE_COOKIE_HTTPONLY
 except AttributeError:
-    LANGUAGE_COOKIE_HTTPONLY = False
+    LANGUAGE_COOKIE_HTTPONLY = True
 
 # Samesite attribute for cookies
 try:
@@ -495,12 +499,12 @@ except AttributeError:
 try:
     CSRF_COOKIE_SAMESITE = config.CSRF_COOKIE_SAMESITE
 except AttributeError:
-    CSRF_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Strict"
 
 try:
     LANGUAGE_COOKIE_SAMESITE = config.LANGUAGE_COOKIE_SAMESITE
 except AttributeError:
-    LANGUAGE_COOKIE_SAMESITE = "Lax"
+    LANGUAGE_COOKIE_SAMESITE = "Strict"
 
 # SSL proxy config
 try:
