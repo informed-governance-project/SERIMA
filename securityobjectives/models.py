@@ -40,6 +40,10 @@ class MaturityLevel(TranslatableModel):
         default=None,
     )
 
+    def is_in_use(self) -> bool:
+        """Maturity levels stay editable; they are referenced by label, not consumed."""
+        return False
+
     def __str__(self):
         return self.label if self.label is not None else ""
 
@@ -82,6 +86,9 @@ class Domain(TranslatableModel):
         blank=True,
         default=None,
     )
+
+    def is_in_use(self) -> bool:
+        return SecurityMeasureAnswer.objects.filter(security_measure__security_objective__domain=self).exists()
 
     def __str__(self):
         return self.label if self.label is not None else ""
@@ -175,6 +182,9 @@ class SecurityObjective(TranslatableModel, models.Model):
             ),
         ]
 
+    def is_in_use(self) -> bool:
+        return SecurityMeasureAnswer.objects.filter(security_measure__security_objective=self).exists()
+
     def __str__(self):
         objective_translation = self.safe_translation_getter("objective", any_language=True)
         return f"{self.unique_code}:{objective_translation}" or ""
@@ -209,6 +219,10 @@ class SecurityObjectiveEmail(TranslatableModel, models.Model):
         blank=True,
         default=None,
     )
+
+    def is_in_use(self) -> bool:
+        """Email templates stay editable; the admin revises the wording in place."""
+        return False
 
     def __str__(self):
         return self.name or ""
@@ -274,6 +288,9 @@ class Standard(TranslatableModel):
             security_objectives = SecurityObjective.objects.filter(standard_link__standard=self)
             security_objectives.delete()
             super().delete(*args, **kwargs)
+
+    def is_in_use(self) -> bool:
+        return StandardAnswer.objects.filter(standard=self).exists()
 
     def __str__(self):
         label_translation = self.safe_translation_getter("label", any_language=True)
@@ -351,6 +368,9 @@ class SecurityMeasure(TranslatableModel):
         blank=True,
         default=None,
     )
+
+    def is_in_use(self) -> bool:
+        return SecurityMeasureAnswer.objects.filter(security_measure=self).exists()
 
     def __str__(self):
         return self.description if self.description is not None else ""
