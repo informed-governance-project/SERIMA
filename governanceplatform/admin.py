@@ -197,6 +197,11 @@ class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmi
 
     translated_fields: list[str] = []
 
+    def get_language_tabs(self, request, obj, available_languages, css_class=None):
+        tabs = super().get_language_tabs(request, obj, available_languages, css_class=css_class)
+        tabs.allow_deletion = False
+        return tabs
+
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
         lang = request.LANGUAGE_CODE
