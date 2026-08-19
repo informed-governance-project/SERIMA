@@ -79,6 +79,17 @@ def annotate_cross_border_impact(queryset):
     )
 
 
+def is_cross_border_incident(incident: Incident) -> bool:
+    """Whether this single incident is currently reported as cross-border.
+
+    Same rule as :func:`annotate_cross_border_impact`, for the one caller that
+    holds an incident rather than a queryset. Returns ``False`` when no question
+    is designated, so callers need no special case.
+    """
+    annotated = annotate_cross_border_impact(Incident.objects.filter(pk=incident.pk))
+    return annotated.values_list("is_cross_border_impact", flat=True).first() or False
+
+
 def is_deadline_exceeded(report: Workflow, incident: Incident) -> str:
     latest_incident_workflow = incident.get_latest_incident_workflow_by_workflow(report)
     if latest_incident_workflow is not None:

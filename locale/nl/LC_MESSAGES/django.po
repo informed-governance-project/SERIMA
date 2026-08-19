@@ -876,6 +876,10 @@ msgstr ""
 "Momenteel zijn aan de gebruikersaccount geen entiteiten gekoppeld. Neem "
 "contact op met de administrator."
 
+#: incidents/email.py:75
+msgid "Cross-border"
+msgstr "Grensoverschrijdend"
+
 #: incidents/filters.py:22
 msgid "Search"
 msgstr "Zoeken"

@@ -18,6 +18,7 @@ from incidents.models import (
     IncidentWorkflow,
     PredefinedAnswer,
     QuestionOptions,
+    ReportTimeline,
     Workflow,
 )
 
@@ -43,6 +44,10 @@ def answer_cross_border(incident, predefined_answer_label, submitted_at):
         incident=incident,
         workflow=Workflow.objects.first(),
         timestamp=submitted_at,
+        # save_answers() always creates one, and replace_email_variables()
+        # dereferences it, so a report without a timeline is not a realistic
+        # fixture.
+        report_timeline=ReportTimeline.objects.create(incident_detection_date=submitted_at),
     )
     answer = Answer.objects.create(
         incident_workflow=incident_workflow,

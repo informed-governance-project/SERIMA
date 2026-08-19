@@ -887,6 +887,10 @@ msgstr ""
 "Dem Benutzerkonto sind derzeit keine Entitäten zugeordnet. Bitte wenden Sie "
 "sich an den Administrator."
 
+#: incidents/email.py:75
+msgid "Cross-border"
+msgstr "Grenzüberschreitend"
+
 #: incidents/filters.py:22
 msgid "Search"
 msgstr "Suchen"

@@ -3,7 +3,8 @@ from datetime import date
 
 from django.conf import settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
+from django.utils.translation import gettext
 
 from governanceplatform.email import send_html_email
 from governanceplatform.helpers import render_to_string_multi_languages
@@ -12,6 +13,7 @@ from governanceplatform.rt import add_rt_correspondence, check_rt_config, create
 from incidents.globals import INCIDENT_EMAIL_VARIABLES
 
 from .access_control import observer_can_access_incident
+from .helpers import is_cross_border_incident
 from .models import RTTicket
 
 logger = logging.getLogger(__name__)
@@ -53,6 +55,12 @@ def replace_email_variables(content, incident):
             else:
                 deadline = timezone.localtime(deadline)
                 var_txt = deadline.strftime("%Y-%m-%d %H:%M %Z")
+        elif variable == "#CROSS_BORDER#":
+            # A marker rather than a value: it either marks the message or adds
+            # nothing at all, so a template carrying it reads correctly in both
+            # cases. Rendered in the language active for the section being
+            # written, like every other translated string in the body.
+            var_txt = f"[{gettext('Cross-border')}]" if is_cross_border_incident(incident) else ""
         else:
             var_txt = getattr(incident, key) if getattr(incident, key) is not None else ""
             if isinstance(var_txt, date):
@@ -103,10 +111,20 @@ def get_recipient_list(incident):
 
 
 def send_email(email, incident, send_to_observers=False):
-    subject = replace_email_variables(
-        email.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
-        incident,
-    )
+    # The subject text is taken in the instance language, so what is substituted
+    # into it follows the same language. Left to the ambient one, a translated
+    # placeholder would render in the language of whoever triggered the send and
+    # mix two languages inside a single subject line.
+    with translation.override(settings.LANGUAGE_CODE):
+        subject = replace_email_variables(
+            email.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
+            incident,
+        )
+    # A placeholder that renders empty leaves the spacing its template author
+    # wrote around it, which shows up in the mailbox as a subject starting with
+    # a space or carrying a double one. Harmless in a body, visible in a subject
+    # line, and routine now that a placeholder is empty by design half the time.
+    subject = " ".join(subject.split())
     html_content = render_to_string_multi_languages(
         "incidents/email.html",
         {
