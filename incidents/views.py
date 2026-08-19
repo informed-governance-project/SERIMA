@@ -12,9 +12,10 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
+from django.db.models import CharField, F, Q, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -732,11 +733,15 @@ def export_incidents(request):
 
     sectorregulation_qs = SectorRegulation.objects.filter(id__in=sectorregulation_ids).order_by("id")
 
+    # A workflow can be reused by several sector regulations, so every id the user
+    # may see is aggregated and the template exposes them all to the report filter.
     workflow_qs = (
         Workflow.objects.filter(id__in=workflows_ids)
         .annotate(
-            sectorregulation_id=Subquery(
-                SectorRegulationWorkflow.objects.filter(workflow=OuterRef("pk")).values("sector_regulation__id")[:1]
+            sectorregulation_ids=ArrayAgg(
+                "sectorregulation__id",
+                filter=Q(sectorregulation__id__in=sectorregulation_ids),
+                distinct=True,
             )
         )
         .order_by("id")
