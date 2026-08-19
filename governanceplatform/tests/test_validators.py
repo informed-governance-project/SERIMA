@@ -9,6 +9,7 @@ import socket
 import pytest
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
+from django.test import override_settings
 
 from governanceplatform.models import PasswordUserHistory, User
 from governanceplatform.validators import (
@@ -111,6 +112,31 @@ def test_returns_every_resolved_address(monkeypatch):
     _stub_dns(monkeypatch, "93.184.216.34", "2606:2800:220:1::1")
 
     assert resolve_rt_url("https://rt.example.org") == ["93.184.216.34", "2606:2800:220:1::1"]
+
+
+@override_settings(DEBUG=True)
+def test_debug_allows_plain_http_on_internal_address(monkeypatch):
+    """A development RT instance is normally plain HTTP on localhost."""
+    _stub_dns(monkeypatch, "127.0.0.1")
+
+    assert resolve_rt_url("http://localhost:8080") == ["127.0.0.1"]
+    assert validate_rt_url("http://localhost:8080") is True
+
+
+@override_settings(DEBUG=True)
+@pytest.mark.parametrize(
+    ("url", "reason"),
+    [
+        ("ftp://rt.example.org", "non-HTTP scheme"),
+        ("https://user:secret@rt.example.org", "credentials in the URL"),
+        ("https://", "no hostname"),
+    ],
+)
+def test_debug_still_rejects_malformed_url(monkeypatch, url, reason):
+    _stub_dns(monkeypatch, "127.0.0.1")
+
+    with pytest.raises(ValidationError):
+        resolve_rt_url(url)
 
 
 @pytest.fixture

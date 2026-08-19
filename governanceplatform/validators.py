@@ -2,6 +2,7 @@ import ipaddress
 import socket
 from urllib.parse import urlparse
 
+from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
@@ -60,10 +61,14 @@ def resolve_rt_url(base_url: str) -> list[str]:
     Every A and AAAA record has to be safe: a host answering with one public and one
     internal address would otherwise be reachable on retry. DNS can still change between
     this call and the connection, so callers must validate immediately before requesting.
+
+    Under DEBUG the scheme and address checks are relaxed, because a development RT
+    instance is normally plain HTTP on localhost or a private LAN address.
     """
     parsed = urlparse(base_url)
 
-    if parsed.scheme != "https":
+    allowed_schemes = ("https", "http") if settings.DEBUG else ("https",)
+    if parsed.scheme not in allowed_schemes:
         raise ValidationError(_("Only HTTPS allowed"))
 
     if parsed.username or parsed.password:
@@ -81,7 +86,7 @@ def resolve_rt_url(base_url: str) -> list[str]:
     addresses = []
     for *_unused, sockaddr in addr_info:
         ip = ipaddress.ip_address(sockaddr[0])
-        if _is_internal(ip):
+        if not settings.DEBUG and _is_internal(ip):
             raise ValidationError(_("Internal addresses are not allowed"))
         addresses.append(str(ip))
 
