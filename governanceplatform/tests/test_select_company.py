@@ -21,11 +21,13 @@ def _templates(response):
 
 @pytest.fixture
 def multi_company_user(populate_db):
-    """A user linked to two approved companies and belonging to no group."""
+    """Approved on two companies, administrator of the first one only."""
     user = User.objects.create(email="multi@com1.lu", first_name="Multi", last_name="Company")
-    for company in Company.objects.all()[:2]:
-        user.companies.add(company)
-        CompanyUser.objects.filter(user=user, company=company).update(approved=True)
+    for index, company in enumerate(Company.objects.all()[:2]):
+        # A real save, not companies.add(): the post_save signal on CompanyUser is what
+        # grants the operator group, and add()/update() would bypass it.
+        CompanyUser.objects.create(user=user, company=company, approved=True, is_company_administrator=index == 0)
+    user.refresh_from_db()
     return user
 
 
@@ -42,18 +44,16 @@ def onboarded_multi_company_user(multi_company_user):
 def user_owing_terms(populate_db):
     """A single-company user who has not accepted the terms yet."""
     user = User.objects.create(email="terms@com1.lu", first_name="Owes", last_name="Terms")
-    company = Company.objects.first()
-    user.companies.add(company)
-    CompanyUser.objects.filter(user=user, company=company).update(approved=True)
+    CompanyUser.objects.create(user=user, company=Company.objects.first(), approved=True)
+    user.refresh_from_db()
     return user
 
 
 @pytest.fixture
 def single_company_user(populate_db):
     user = User.objects.create(email="single@com1.lu", first_name="Single", last_name="Company")
-    company = Company.objects.first()
-    user.companies.add(company)
-    CompanyUser.objects.filter(user=user, company=company).update(approved=True)
+    CompanyUser.objects.create(user=user, company=Company.objects.first(), approved=True)
+    user.refresh_from_db()
     return user
 
 
@@ -98,29 +98,32 @@ def test_choosing_a_company_stores_it_in_the_session(client, multi_company_user,
 
 
 @pytest.mark.django_db()
-def test_choosing_a_company_grants_the_operator_group(client, multi_company_user, settings):
-    """The picker is how a company-linked user with no group acquires one."""
+def test_the_group_follows_the_company_that_was_chosen(client, multi_company_user, settings):
+    """The operator group is per active company, so it is recomputed on every selection.
+
+    CompanyUser's post_save signal already grants a group when the link is approved, so
+    the picker is not what makes the user an operator; it is what decides whether this
+    session is an administrator of the company in use.
+    """
     settings.DEBUG = False
-    assert not multi_company_user.groups.exists()
+    administered = multi_company_user.companyuser_set.get(is_company_administrator=True).company
     client.force_login(multi_company_user)
 
-    client.post("/", {"select_company": multi_company_user.companies.first().id})
-
+    client.post("/", {"select_company": administered.id})
     multi_company_user.refresh_from_db()
-    assert list(multi_company_user.groups.values_list("name", flat=True)) == ["OperatorUser"]
+    assert list(multi_company_user.groups.values_list("name", flat=True)) == ["OperatorAdmin"]
 
 
 @pytest.mark.django_db()
-def test_a_company_administrator_gets_the_admin_group(client, multi_company_user, settings):
+def test_choosing_a_company_the_user_only_belongs_to_gives_the_plain_group(client, multi_company_user, settings):
     settings.DEBUG = False
-    chosen = multi_company_user.companies.first()
-    CompanyUser.objects.filter(user=multi_company_user, company=chosen).update(is_company_administrator=True)
+    member_of = multi_company_user.companyuser_set.get(is_company_administrator=False).company
     client.force_login(multi_company_user)
 
-    client.post("/", {"select_company": chosen.id})
+    client.post("/", {"select_company": member_of.id})
 
     multi_company_user.refresh_from_db()
-    assert list(multi_company_user.groups.values_list("name", flat=True)) == ["OperatorAdmin"]
+    assert list(multi_company_user.groups.values_list("name", flat=True)) == ["OperatorUser"]
 
 
 @pytest.mark.django_db()
@@ -207,3 +210,28 @@ def test_the_picker_still_intercepts_everything_else(otp_client, onboarded_multi
     response = client.get("/incidents/")
 
     assert PICKER in _templates(response)
+
+
+@pytest.mark.django_db()
+def test_terms_are_asked_before_a_company_is_chosen(otp_client, multi_company_user, settings):
+    """Ordering guard: TermsAcceptanceMiddleware runs ahead of SessionExpiryMiddleware.
+
+    Terms are a precondition for everything, including the permission changes that
+    choosing a company makes. The terms pages are therefore exempt from the picker, or
+    the redirect would land on the picker instead of the terms form.
+    """
+    settings.DEBUG = False
+    client = otp_client(multi_company_user)
+
+    assert client.get("/").url == "/accept_terms/"
+
+    terms_page = client.get("/accept_terms/")
+    assert terms_page.status_code == 200
+    assert PICKER not in _templates(terms_page)
+
+    assert client.post("/accept_terms/", {"accept": "on"}).url == "/"
+    multi_company_user.refresh_from_db()
+    assert multi_company_user.accepted_terms is True
+
+    # only now does the company picker appear
+    assert PICKER in _templates(client.get("/"))
