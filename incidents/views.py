@@ -12,9 +12,10 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
+from django.db.models import CharField, F, Q, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -70,7 +71,7 @@ from .globals import (
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
 )
-from .helpers import get_workflow_categories, is_deadline_exceeded
+from .helpers import get_workflow_categories, is_deadline_exceeded, sanitize_spreadsheet_cell
 from .models import (
     Answer,
     Impact,
@@ -732,11 +733,15 @@ def export_incidents(request):
 
     sectorregulation_qs = SectorRegulation.objects.filter(id__in=sectorregulation_ids).order_by("id")
 
+    # A workflow can be reused by several sector regulations, so every id the user
+    # may see is aggregated and the template exposes them all to the report filter.
     workflow_qs = (
         Workflow.objects.filter(id__in=workflows_ids)
         .annotate(
-            sectorregulation_id=Subquery(
-                SectorRegulationWorkflow.objects.filter(workflow=OuterRef("pk")).values("sector_regulation__id")[:1]
+            sectorregulation_ids=ArrayAgg(
+                "sectorregulation__id",
+                filter=Q(sectorregulation__id__in=sectorregulation_ids),
+                distinct=True,
             )
         )
         .order_by("id")
@@ -908,10 +913,10 @@ def export_incidents(request):
                 ws = wb.active
                 ws.title = "Incidents"
 
-                headers = keys
+                headers = [sanitize_spreadsheet_cell(key) for key in keys]
                 ws.append(headers)
                 for entry in data:
-                    row = [entry.get(key, "") for key in headers]
+                    row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     ws.append(row)
 
                 for column_cells in ws.columns:
@@ -926,15 +931,13 @@ def export_incidents(request):
                 response = HttpResponse(content_type="text/csv")
                 response["Content-Disposition"] = 'attachment; filename="export.csv"'
 
-                writer = csv.DictWriter(
+                writer = csv.writer(
                     response,
-                    fieldnames=keys,
-                    extrasaction="ignore",
                     quoting=csv.QUOTE_ALL,
                 )
-                writer.writeheader()
+                writer.writerow([sanitize_spreadsheet_cell(key) for key in keys])
                 for entry in data:
-                    row = {key: entry.get(key, "") for key in keys}
+                    row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     writer.writerow(row)
 
             LogEntry.objects.log_actions(

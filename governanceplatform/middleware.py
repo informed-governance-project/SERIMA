@@ -17,6 +17,13 @@ from governanceplatform.models import Functionality
 from governanceplatform.settings import TERMS_ACCEPTANCE_TIME_IN_DAYS
 from governanceplatform.views import select_company
 
+INTERSTITIAL_EXEMPT_URL_NAMES = ("logout", "set_language", "javascript-catalog")
+
+
+def is_exempt_from_interstitial(request, extra_url_names=()) -> bool:
+    names = (*INTERSTITIAL_EXEMPT_URL_NAMES, *extra_url_names)
+    return request.path in [reverse(name) for name in names]
+
 
 class SessionExpiryMiddleware:
     """Middleware to check if the session has expired."""
@@ -62,9 +69,10 @@ class SessionExpiryMiddleware:
 
         if not request.session.get("company_in_use") and user.companies.exists():
             if user.companies.distinct().count() > 1:
-                return select_company(request)
-
-            request.session["company_in_use"] = user.companies.first().id
+                if not is_exempt_from_interstitial(request, ("accept_terms", "terms")):
+                    return select_company(request)
+            else:
+                request.session["company_in_use"] = user.companies.first().id
 
         return self.get_response(request)
 
@@ -161,7 +169,7 @@ class TermsAcceptanceMiddleware:
         user = request.user
         if user.is_authenticated and user.is_verified():
             # let the user logout and read terms
-            if request.path == reverse("logout") or request.path == reverse("terms"):
+            if is_exempt_from_interstitial(request, ("terms",)):
                 return self.get_response(request)
             if not request.user.accepted_terms and not request.path == reverse("accept_terms"):
                 return redirect("accept_terms")

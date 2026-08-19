@@ -214,9 +214,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django_otp.middleware.OTPMiddleware",
+    "governanceplatform.middleware.TermsAcceptanceMiddleware",
     "governanceplatform.middleware.SessionExpiryMiddleware",
     "governanceplatform.middleware.RestrictViewsMiddleware",
-    "governanceplatform.middleware.TermsAcceptanceMiddleware",
     "governanceplatform.middleware.ForceReloginMiddleware",
     "governanceplatform.middleware.CheckFunctionalityAccessMiddleware",
 ]

@@ -4,7 +4,23 @@ from itertools import chain
 
 from django.utils import timezone
 
-from .models import Incident, IncidentWorkflow, QuestionCategory, QuestionCategoryOptions, SectorRegulationWorkflow, Workflow
+from .models import (
+    Incident,
+    IncidentWorkflow,
+    QuestionCategory,
+    QuestionCategoryOptions,
+    SectorRegulationWorkflow,
+    Workflow,
+)
+
+SPREADSHEET_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
+
+
+def sanitize_spreadsheet_cell(value: object) -> object:
+    """Prevent spreadsheet applications from interpreting exported text as a formula."""
+    if isinstance(value, str) and value.startswith(SPREADSHEET_FORMULA_PREFIXES):
+        return f"'{value}"
+    return value
 
 
 def is_deadline_exceeded(report: Workflow, incident: Incident) -> str:
