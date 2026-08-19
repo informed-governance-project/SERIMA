@@ -2,10 +2,11 @@ function testRTConnection(url) {
     const result = document.getElementById("rt-test-result");
     result.textContent = gettext("Testing…");
     result.style.color = "#666";
+
     fetch(url, {
         method: "POST",
         headers: {
-            "X-CSRFToken": document.cookie.match(/csrftoken=([^;]+)/)?.[1] ?? "",
+            "X-CSRFToken": document.querySelector("input[name=csrfmiddlewaretoken]").value,
         },
     })
     .then(r => r.json())
