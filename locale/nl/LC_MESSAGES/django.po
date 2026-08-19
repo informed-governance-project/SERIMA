@@ -876,6 +876,39 @@ msgstr ""
 "Momenteel zijn aan de gebruikersaccount geen entiteiten gekoppeld. Neem "
 "contact op met de administrator."
 
+#: incidents/forms.py:1211
+msgid "Any report status"
+msgstr "Elke rapportstatus"
+
+#: incidents/forms.py:1214
+msgid ""
+"Restrict the export to reports in this state. A periodic regulatory "
+"filing usually wants passed reports only."
+msgstr ""
+"Beperkt de export tot rapporten in deze staat. Een periodieke "
+"wettelijke indiening neemt doorgaans alleen goedgekeurde rapporten op."
+
+#: incidents/forms.py:1220
+msgid "Apply the dates to"
+msgstr "Datums toepassen op"
+
+#: incidents/forms.py:1223
+msgid ""
+"The incident notification date is when the incident was first "
+"reported; the report date is when the exported report was submitted. "
+"They fall in different periods when a report is filed after the period "
+"it belongs to."
+msgstr ""
+"De datum van incidentmelding is het moment waarop het incident voor "
+"het eerst is gemeld; de rapportdatum is het moment waarop het "
+"geëxporteerde rapport is ingediend. Ze vallen in verschillende "
+"periodes wanneer een rapport wordt ingediend na de periode waartoe het "
+"behoort."
+
+#: incidents/globals.py:57
+msgid "Report date"
+msgstr "Datum van het rapport"
+
 #: incidents/filters.py:22
 msgid "Search"
 msgstr "Zoeken"

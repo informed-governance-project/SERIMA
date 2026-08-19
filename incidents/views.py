@@ -66,6 +66,7 @@ from .filters import IncidentFilter
 from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
 from .globals import (
     ALLOWED_SORT_FIELDS,
+    EXPORT_DATE_BASIS,
     REGIONAL_AREA,
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
@@ -757,7 +758,21 @@ def export_incidents(request):
             from_date = form.cleaned_data["from_date"]
             to_date = form.cleaned_data["to_date"]
             file_format = form.cleaned_data["file_format"]
+            review_status = form.cleaned_data.get("review_status") or ""
+            date_basis = form.cleaned_data.get("date_basis") or EXPORT_DATE_BASIS[0][0]
             are_incidents = False
+
+            # When the window applies to the report, the incident's own
+            # notification date must not narrow the selection first: the two
+            # dates belong to different periods for a report filed late.
+            notification_window = (
+                {}
+                if date_basis == "report"
+                else {
+                    "incident_notification_date__date__gte": from_date,
+                    "incident_notification_date__date__lte": to_date,
+                }
+            )
 
             if user_in_group(user, "RegulatorAdmin"):
                 incidents = (
@@ -765,8 +780,7 @@ def export_incidents(request):
                         sector_regulation=sectorregulation,
                         sector_regulation__regulation=regulation,
                         sector_regulation__regulator__in=user.regulators.all(),
-                        incident_notification_date__date__gte=from_date,
-                        incident_notification_date__date__lte=to_date,
+                        **notification_window,
                     )
                     .prefetch_related(
                         "affected_sectors",
@@ -787,7 +801,7 @@ def export_incidents(request):
                     for i in all_incidents
                     if i.sector_regulation.regulation == regulation
                     and i.sector_regulation == sectorregulation
-                    and from_date <= i.incident_notification_date.date() <= to_date
+                    and (date_basis == "report" or from_date <= i.incident_notification_date.date() <= to_date)
                 ]
 
                 are_incidents = bool(incidents)
@@ -803,6 +817,12 @@ def export_incidents(request):
                 last_report = incident.get_latest_incident_workflow_by_workflow(workflow)
 
                 if last_report is None:
+                    continue
+
+                if review_status and last_report.review_status != review_status:
+                    continue
+
+                if date_basis == "report" and not (from_date <= last_report.timestamp.date() <= to_date):
                     continue
 
                 incident_data = {
