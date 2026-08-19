@@ -741,7 +741,6 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.filesystem.FileSystemStorage",
         "OPTIONS": {
             "location": PATH_FOR_REPORTING_PDF,
-            "base_url": "/securityobjectives/settings-export-files/",
         },
     },
 }

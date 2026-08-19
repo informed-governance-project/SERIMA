@@ -23,7 +23,6 @@ from .views import (
     create_so_declaration,
     declaration,
     delete_declaration,
-    download_admin_file,
     download_declaration_pdf,
     get_security_objectives,
     import_so_declaration,
@@ -75,10 +74,5 @@ urlpatterns = [
         "access_log/<int:standard_answer_id>",
         access_log,
         name="so_access_log",
-    ),
-    path(
-        "settings-export-files/<path:path>",
-        download_admin_file,
-        name="download_admin_file",
     ),
 ]

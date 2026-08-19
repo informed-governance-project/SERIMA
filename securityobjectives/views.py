@@ -1,7 +1,6 @@
 import copy
 import json
 import logging
-import mimetypes
 import os
 from collections import defaultdict
 from datetime import date
@@ -9,7 +8,7 @@ from datetime import date
 import openpyxl
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import (
     BooleanField,
@@ -28,7 +27,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django.forms.models import model_to_dict
-from django.http import FileResponse, Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -1360,21 +1359,3 @@ def create_standard_answer_group(company, sectors, standard):
         company=company,
         group_id=(f"{company_for_ref}_{framework_for_ref}_{sector_for_ref}_{subsector_for_ref}_{number_of_group}_{current_year}"),
     )
-
-
-@login_required
-@permission_required("securityobjectives.view_standard")
-def download_admin_file(request, path):
-    base = os.path.realpath(settings.PATH_FOR_REPORTING_PDF)
-    full_path = os.path.join(settings.PATH_FOR_REPORTING_PDF, path)
-
-    if not full_path.startswith(base + os.sep):
-        raise Http404()
-
-    if not os.path.exists(full_path):
-        raise Http404()
-
-    content_type, _ = mimetypes.guess_type(full_path)
-    content_type = content_type or "application/octet-stream"
-
-    return FileResponse(open(full_path, "rb"), content_type=content_type)
