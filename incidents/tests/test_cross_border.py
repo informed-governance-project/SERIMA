@@ -1,10 +1,12 @@
 import datetime
 
 import pytest
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import activate
 
 from governanceplatform.models import ApplicationConfig
+from incidents.filters import ObserverIncidentFilter
 from incidents.helpers import (
     CROSS_BORDER_POSITIVE_ANSWER_KEY,
     CROSS_BORDER_QUESTION_REFERENCE_KEY,
@@ -146,3 +148,46 @@ def test_positive_answer_label_is_configurable(populate_incident_db):
     answer_cross_border(incident, "No", timezone.now())
 
     assert is_flagged(incident) is True
+
+
+@pytest.fixture
+def observer_client(otp_client, populate_incident_db):
+    """The seeded observer user, with the second factor satisfied."""
+    user = next(u for u in populate_incident_db["users"] if u.email == "obsadm@cert1.lu")
+    return otp_client(user)
+
+
+@pytest.mark.django_db
+def test_the_observer_list_view_carries_the_annotation(observer_client, populate_incident_db):
+    """The view is what wires the annotation and the filter to the observer role.
+
+    Covering the annotation alone leaves that wiring free to be rewritten from
+    under it, which is exactly what a refactor of the observer scoping does.
+    """
+    activate("en")
+    designate_cross_border_question()
+    incident = populate_incident_db["incidents"][0]
+    answer_cross_border(incident, "Yes", timezone.now())
+
+    response = observer_client.get(reverse("incidents"))
+
+    assert response.status_code == 200
+    listed = {i.incident_id: i for i in response.context["incidents"].object_list}
+    assert incident.incident_id in listed
+    assert listed[incident.incident_id].is_cross_border_impact is True
+    assert isinstance(response.context["filter"], ObserverIncidentFilter)
+
+
+@pytest.mark.django_db
+def test_the_observer_list_view_can_filter_on_it(observer_client, populate_incident_db):
+    activate("en")
+    designate_cross_border_question()
+    flagged, plain = populate_incident_db["incidents"][0], populate_incident_db["incidents"][1]
+    answer_cross_border(flagged, "Yes", timezone.now())
+    answer_cross_border(plain, "No", timezone.now())
+
+    response = observer_client.get(reverse("incidents"), {"cross_border_impact": "true"})
+
+    listed = {i.incident_id for i in response.context["incidents"].object_list}
+    assert flagged.incident_id in listed
+    assert plain.incident_id not in listed
