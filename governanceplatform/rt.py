@@ -25,7 +25,7 @@ def rt_request(method: str, url: str, **kwargs):
     request on to an address the validator never saw.
     """
     validate_rt_url(url)
-    return requests.request(method, url, allow_redirects=False, timeout=5, **kwargs)
+    return requests.request(method, url, allow_redirects=False, timeout=(5, 30), **kwargs)
 
 
 def _headers(observer) -> dict[str, str]:
