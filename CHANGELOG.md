@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Company selection now returns the user to the page they originally asked for instead of always landing on the home page
 - Incident export: a report shared by several incident workflows is now offered under each of them. The report list only carried one workflow id per report, so the report was hidden for every other workflow it belongs to
 - Removed the unrelated `parler` dependency (a Parler social-network API client, not part of `django-parler`). Both distributions install a `parler/__init__.py`, and the wrong one was shadowing `django-parler`'s, so every Django and Celery process started by globally suppressing urllib3 `HTTPWarning` — including the warning raised for unverified HTTPS requests
 - `requests` is now declared explicitly: `incidents/email.py` imports it directly but it was only installed as a transitive dependency of the removed `parler` package
