@@ -62,7 +62,7 @@ from .access_control import (
     get_observer_incidents,
 )
 from .email import send_email, send_html_email
-from .filters import IncidentFilter
+from .filters import IncidentFilter, ObserverIncidentFilter
 from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
 from .globals import (
     ALLOWED_SORT_FIELDS,
@@ -70,7 +70,11 @@ from .globals import (
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
 )
-from .helpers import get_workflow_categories, is_deadline_exceeded
+from .helpers import (
+    annotate_cross_border_impact,
+    get_workflow_categories,
+    is_deadline_exceeded,
+)
 from .models import (
     Answer,
     Impact,
@@ -145,7 +149,7 @@ def get_incidents(request):
             incidents = incidents.filter(sector_regulation__regulator__in=user.regulators.all())
     elif is_observer_user(user):
         html_view = "observer/incidents.html"
-        incidents = get_observer_incidents(user.observers.first())
+        incidents = annotate_cross_border_impact(get_observer_incidents(user.observers.first()))
     elif is_user_operator(user):
         # OperatorAdmin/User can see all the reports of the selected company.
         incidents = incidents.filter(
@@ -205,7 +209,8 @@ def get_incidents(request):
         ALLOWED_SORT_FIELDS,
     )
 
-    f = IncidentFilter(incidents_filter_params, queryset=incidents)
+    filter_class = ObserverIncidentFilter if is_observer_user(user) else IncidentFilter
+    f = filter_class(incidents_filter_params, queryset=incidents)
     incident_list = f.qs.prefetch_related(
         "sector_regulation__workflows__sectorregulationworkflow_set",
         "incidentworkflow_set__workflow__sectorregulationworkflow_set",

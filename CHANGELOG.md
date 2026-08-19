@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Unit tests for incident cleanup, log cleanup, workflow deadline notifications, and incident reminder scripts, helpers of governanceplatform
+- The observer incident list shows and filters incidents reported as having a cross-border impact, so a single point of contact can isolate the incidents that trigger a cross-border notification duty. The flag follows the most recent report answering the question, and stays inactive until a deployment names that question through the `cross_border_question_reference` application configuration key (#844)
+- A `#CROSS_BORDER#` placeholder is available in notification subjects and contents. It renders a marker when the incident is reported as having a cross-border impact and nothing otherwise, so a regulator can make the distinction visible in the mailbox rather than only in the incident list. Templates that do not carry the placeholder are unchanged (#846)
 
 ### Changed
 

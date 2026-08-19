@@ -884,9 +884,17 @@ msgstr ""
 "Le compte d'utilisateur n'a actuellement aucune entité associée. Veuillez "
 "contacter l'administrateur."
 
+#: incidents/email.py:75
+msgid "Cross-border"
+msgstr "Transfrontalier"
+
 #: incidents/filters.py:22
 msgid "Search"
 msgstr "Rechercher"
+
+#: incidents/filters.py:66
+msgid "Cross-border impact"
+msgstr "Impact transfrontalier"
 
 #: incidents/forms.py:246 incidents/forms.py:403
 msgid "Add details"
