@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.admin.utils import unquote
 from django.utils.translation import gettext_lazy as _
 
 from .helpers import can_change_or_delete_obj, filter_languages_not_translated
@@ -54,9 +55,12 @@ class ShowReminderForTranslationsMixin:
         messages.warning(request, self.reminder_message)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        self._add_reminder_message(request)
+        obj = self.get_object(request, unquote(object_id))
+        if obj is not None and self.has_change_permission(request, obj):
+            self._add_reminder_message(request)
         return super().change_view(request, object_id, form_url, extra_context)
 
     def add_view(self, request, form_url="", extra_context=None):
-        self._add_reminder_message(request)
+        if self.has_add_permission(request):
+            self._add_reminder_message(request)
         return super().add_view(request, form_url, extra_context)
