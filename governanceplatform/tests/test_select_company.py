@@ -1,10 +1,9 @@
 """How a user linked to several companies is made to pick one.
 
 SessionExpiryMiddleware calls the select_company view directly rather than redirecting,
-so the picker is rendered at whatever URL was requested and select_company has no route
-of its own. These tests pin the behaviour that a routed, redirect-based version would
-have to preserve. No seeded user has more than one company, so none of this is otherwise
-exercised.
+so the picker is rendered at whatever URL was requested, the form posts back to it, and
+select_company has no route of its own. No seeded user has more than one company, so none
+of this is otherwise exercised.
 """
 
 import pytest
@@ -93,8 +92,38 @@ def test_choosing_a_company_stores_it_in_the_session(client, multi_company_user,
 
     response = client.post("/", {"select_company": chosen.id})
 
-    assert response.status_code == 200
+    assert response.status_code == 302
     assert client.session["company_in_use"] == chosen.id
+
+
+@pytest.mark.django_db()
+def test_choosing_a_company_resumes_the_page_that_was_requested(client, multi_company_user, settings):
+    """The picker interrupts a destination; selecting a company has to give it back."""
+    settings.DEBUG = False
+    client.force_login(multi_company_user)
+    chosen = multi_company_user.companies.first()
+
+    response = client.post("/incidents/?page=2", {"select_company": chosen.id})
+
+    assert response.status_code == 302
+    assert response.url == "/incidents/?page=2"
+
+
+@pytest.mark.django_db()
+def test_a_protocol_relative_request_path_is_not_redirected_to(client, multi_company_user, settings):
+    """The picker is served before URL resolution, so its own path is untrusted input.
+
+    Reflecting it into Location would be a protocol-relative open redirect, and the
+    resolver would have refused the path anyway, so the interstitial answers as it would
+    have without the picker in front of it.
+    """
+    settings.DEBUG = False
+    client.force_login(multi_company_user)
+    chosen = multi_company_user.companies.first()
+
+    response = client.post("/", {"select_company": chosen.id}, PATH_INFO="//evil.example.com/")
+
+    assert response.status_code == 404
 
 
 @pytest.mark.django_db()

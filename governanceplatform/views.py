@@ -8,8 +8,10 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
 from django.core.mail import EmailMessage
 from django.db.models.functions import Now
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 
 from .context_processors import user_modules
@@ -208,7 +210,10 @@ def select_company(request):
             else:
                 set_operator_user_permissions(user)
 
-            return index(request)
+            next_url = request.get_full_path()
+            if not url_has_allowed_host_and_scheme(next_url, allowed_hosts=None):
+                raise Http404()
+            return redirect(next_url)
 
     else:
         form = SelectCompany(
