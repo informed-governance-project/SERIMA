@@ -880,6 +880,10 @@ msgstr ""
 msgid "Search"
 msgstr "Zoeken"
 
+#: incidents/filters.py:66
+msgid "Cross-border impact"
+msgstr "Grensoverschrijdende impact"
+
 #: incidents/forms.py:246 incidents/forms.py:403
 msgid "Add details"
 msgstr "Voeg details toe"

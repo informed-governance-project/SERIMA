@@ -888,6 +888,10 @@ msgstr ""
 msgid "Search"
 msgstr "Rechercher"
 
+#: incidents/filters.py:66
+msgid "Cross-border impact"
+msgstr "Impact transfrontalier"
+
 #: incidents/forms.py:246 incidents/forms.py:403
 msgid "Add details"
 msgstr "Ajouter des précisions"
