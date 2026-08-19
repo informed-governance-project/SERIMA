@@ -86,6 +86,68 @@ def populate_so_db(populate_db, create_standard_answer_group, create_standard_an
 
 
 @pytest.fixture
+def security_measure_from_another_standard(populate_so_db):
+    regulator = populate_so_db["regulators"][0]
+    other_standard = Standard(
+        regulator=regulator,
+        regulation=populate_so_db["regulations"][0],
+    )
+    other_standard.set_current_language("en")
+    other_standard.label = "Other standard"
+    other_standard.description = ""
+    other_standard.save()
+
+    other_domain = Domain(
+        position=1,
+        standard=other_standard,
+        creator=regulator,
+        creator_name=str(regulator),
+    )
+    other_domain.set_current_language("en")
+    other_domain.label = "Other domain"
+    other_domain.save()
+
+    other_objective = SecurityObjective(
+        unique_code="OTHER-SO",
+        domain=other_domain,
+        creator=regulator,
+        creator_name=str(regulator),
+    )
+    other_objective.set_current_language("en")
+    other_objective.objective = "Other objective"
+    other_objective.description = "Other objective description"
+    other_objective.save()
+    SecurityObjectivesInStandard.objects.create(
+        standard=other_standard,
+        security_objective=other_objective,
+    )
+
+    other_level = MaturityLevel(
+        level=1,
+        standard=other_standard,
+        creator=regulator,
+        creator_name=str(regulator),
+    )
+    other_level.set_current_language("en")
+    other_level.label = "Other level"
+    other_level.save()
+
+    other_measure = SecurityMeasure(
+        security_objective=other_objective,
+        maturity_level=other_level,
+        position=1,
+        creator=regulator,
+        creator_name=str(regulator),
+    )
+    other_measure.set_current_language("en")
+    other_measure.description = "Other measure"
+    other_measure.evidence = "Other evidence"
+    other_measure.save()
+
+    return other_measure
+
+
+@pytest.fixture
 def create_standard_answer_group():
     """
     Fixture to create a standard answer group

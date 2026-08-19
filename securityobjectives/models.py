@@ -488,6 +488,14 @@ class SecurityMeasureAnswer(models.Model):
     is_implemented = models.BooleanField(default=False, verbose_name=_("Implemented"))
     review_comment = models.TextField(verbose_name=_("Review comment"))
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["standard_answer", "security_measure"],
+                name="uniq_measure_answer_per_declaration",
+            ),
+        ]
+
 
 # SO Status set by regulator
 class SecurityObjectiveStatus(models.Model):
@@ -536,6 +544,14 @@ class SecurityObjectiveStatus(models.Model):
 
     def __str__(self):
         return str(self.security_objective)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["standard_answer", "security_objective"],
+                name="uniq_objective_status_per_declaration",
+            ),
+        ]
 
 
 class LogStandardAnswer(models.Model):

@@ -268,7 +268,10 @@ def declaration(request):
             form = SecurityObjectiveStatusForm(data)
             if form.is_valid():
                 try:
-                    security_objective = SecurityObjective.objects.get(pk=id_object)
+                    security_objective = SecurityObjective.objects.get(
+                        pk=id_object,
+                        standard_link__standard=standard,
+                    )
                     field_value = form.cleaned_data[field_name]
                     field_to_update = {field_name: form.cleaned_data[field_name]}
                     created = False
@@ -325,7 +328,10 @@ def declaration(request):
             form = SecurityObjectiveAnswerForm(data)
             if form.is_valid():
                 try:
-                    security_measure = SecurityMeasure.objects.get(pk=id_object)
+                    security_measure = SecurityMeasure.objects.get(
+                        pk=id_object,
+                        security_objective__standard_link__standard=standard,
+                    )
                     field_to_update = {field_name: form.cleaned_data[field_name]}
                     sma, sma_created = SecurityMeasureAnswer.objects.update_or_create(
                         standard_answer=standard_answer,

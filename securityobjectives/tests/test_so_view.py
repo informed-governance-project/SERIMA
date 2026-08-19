@@ -1,4 +1,7 @@
+import json
+
 import pytest
+from django.urls import reverse
 
 from conftest import (
     list_admin_add_urls,
@@ -8,6 +11,7 @@ from conftest import (
 from governanceplatform.helpers import (
     user_in_group,
 )
+from securityobjectives.models import SecurityMeasureAnswer, SecurityObjectiveStatus
 
 
 @pytest.mark.django_db
@@ -97,3 +101,55 @@ def test_pdf_download_so(otp_client, populate_so_db):
     sa = next((u for u in sas), None)
     url = "/securityobjectives/download/" + str(sa.id)
     test_get_with_otp(otp_client, users, authorized_users, unauthorized_user, url)
+
+
+@pytest.mark.django_db
+def test_cannot_update_security_objective_from_another_standard(
+    otp_client,
+    populate_so_db,
+    security_measure_from_another_standard,
+):
+    standard_answer = populate_so_db["sas"][0]
+    regulator = next(user for user in populate_so_db["users"] if user.email == "regadmin@reg1.lu")
+    client = otp_client(regulator)
+    foreign_objective = security_measure_from_another_standard.security_objective
+
+    response = client.post(
+        f"{reverse('so_declaration')}?id={standard_answer.pk}",
+        data=json.dumps({"id": foreign_objective.pk, "status": "PASS"}),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 404
+    assert not SecurityObjectiveStatus.objects.filter(
+        standard_answer=standard_answer,
+        security_objective=foreign_objective,
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_cannot_update_security_measure_from_another_standard(
+    otp_client,
+    populate_so_db,
+    security_measure_from_another_standard,
+):
+    standard_answer = populate_so_db["sas"][0]
+    standard_answer.status = "UNDE"
+    standard_answer.save()
+    operator = next(user for user in populate_so_db["users"] if user.email == "opadmin@com1.lu")
+    client = otp_client(operator)
+    session = client.session
+    session["company_in_use"] = standard_answer.submitter_company_id
+    session.save()
+
+    response = client.post(
+        f"{reverse('so_declaration')}?id={standard_answer.pk}",
+        data=json.dumps({"id": security_measure_from_another_standard.pk, "is_implemented": True}),
+        content_type="application/json",
+    )
+
+    assert response.status_code == 404
+    assert not SecurityMeasureAnswer.objects.filter(
+        standard_answer=standard_answer,
+        security_measure=security_measure_from_another_standard,
+    ).exists()
