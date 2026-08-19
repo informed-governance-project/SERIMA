@@ -71,7 +71,7 @@ from .globals import (
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
 )
-from .helpers import get_workflow_categories, is_deadline_exceeded
+from .helpers import get_workflow_categories, is_deadline_exceeded, sanitize_spreadsheet_cell
 from .models import (
     Answer,
     Impact,
@@ -913,10 +913,10 @@ def export_incidents(request):
                 ws = wb.active
                 ws.title = "Incidents"
 
-                headers = keys
+                headers = [sanitize_spreadsheet_cell(key) for key in keys]
                 ws.append(headers)
                 for entry in data:
-                    row = [entry.get(key, "") for key in headers]
+                    row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     ws.append(row)
 
                 for column_cells in ws.columns:
@@ -931,15 +931,13 @@ def export_incidents(request):
                 response = HttpResponse(content_type="text/csv")
                 response["Content-Disposition"] = 'attachment; filename="export.csv"'
 
-                writer = csv.DictWriter(
+                writer = csv.writer(
                     response,
-                    fieldnames=keys,
-                    extrasaction="ignore",
                     quoting=csv.QUOTE_ALL,
                 )
-                writer.writeheader()
+                writer.writerow([sanitize_spreadsheet_cell(key) for key in keys])
                 for entry in data:
-                    row = {key: entry.get(key, "") for key in keys}
+                    row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     writer.writerow(row)
 
             LogEntry.objects.log_actions(

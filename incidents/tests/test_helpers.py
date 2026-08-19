@@ -10,8 +10,20 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 
-from incidents.helpers import is_deadline_exceeded
+from incidents.helpers import is_deadline_exceeded, sanitize_spreadsheet_cell
 from incidents.models import IncidentWorkflow, SectorRegulationWorkflow
+
+
+@pytest.mark.parametrize("prefix", ["=", "+", "-", "@", "\t", "\r", "\n"])
+def test_sanitize_spreadsheet_cell_neutralizes_formula_prefixes(prefix):
+    value = f"{prefix}dangerous"
+
+    assert sanitize_spreadsheet_cell(value) == f"'{value}"
+
+
+@pytest.mark.parametrize("value", ["ordinary text", "", None, 42])
+def test_sanitize_spreadsheet_cell_preserves_safe_values(value):
+    assert sanitize_spreadsheet_cell(value) == value
 
 
 @pytest.fixture
