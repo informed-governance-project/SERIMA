@@ -77,6 +77,9 @@ def test_duplicate_answers_are_deduplicated_before_unique_constraints_are_added(
         status="PASS",
     )
 
+    # The loader still records 0041 as applied from before the rollback, so without a
+    # rebuild the forward plan is empty and the migration under test never runs.
+    executor.loader.build_graph()
     executor.migrate(migrate_to)
     new_apps = executor.loader.project_state(migrate_to).apps
     SecurityMeasureAnswer = new_apps.get_model("securityobjectives", "SecurityMeasureAnswer")
