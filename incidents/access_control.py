@@ -1,6 +1,8 @@
 """Who may read, create and edit a given incident report."""
 
-from django.db.models import Q, QuerySet  # noqa: TC002
+from typing import TYPE_CHECKING
+
+from django.db.models import Q
 
 from governanceplatform.helpers import (
     is_observer_user,
@@ -9,9 +11,13 @@ from governanceplatform.helpers import (
     is_user_regulator,
     user_in_group,
 )
-from governanceplatform.models import Observer, User  # noqa: TC001
 
 from .models import Incident
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
+
+    from governanceplatform.models import Observer, User
 
 
 def get_observer_incidents(observer: Observer) -> QuerySet[Incident]:

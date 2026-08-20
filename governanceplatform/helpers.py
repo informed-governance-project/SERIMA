@@ -1,27 +1,34 @@
+import logging
 import secrets
 from collections import defaultdict
-from collections.abc import Callable  # noqa: TC003
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.models import AnonymousUser  # noqa: TC002
 from django.db import connection
-from django.db.models import F, Max, Q, QuerySet, Value  # noqa: TC002
+from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
-from django.http import HttpRequest  # noqa: TC002
 from django.template.loader import render_to_string
-from django.template.response import TemplateResponse  # noqa: TC002
 from django.utils import translation
-from django.utils.functional import Promise  # noqa: TC002
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 
-from .models import Company, Sector, User  # noqa: TC001
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from django.contrib.auth.models import AnonymousUser
+    from django.db.models import QuerySet
+    from django.http import HttpRequest
+    from django.template.response import TemplateResponse
+    from django.utils.functional import Promise
+
+    from .models import Company, Sector, User
+
+logger = logging.getLogger(__name__)
 
 
 def table_exists(table_name: str) -> bool:
