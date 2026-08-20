@@ -1,5 +1,4 @@
-from collections.abc import Iterable  # noqa: TC003
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from governanceplatform.models import Sector
 from incidents.configuration_export import FORMAT_NAME, FORMAT_VERSION
@@ -22,6 +21,9 @@ from incidents.models import (
     SectorRegulationWorkflowEmail,
     Workflow,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 INCIDENT_EMAIL_TRIGGER_VALUES = {value for value, _label in INCIDENT_EMAIL_TRIGGER_EVENT}
 QUESTION_TYPE_VALUES = {value for value, _label in QUESTION_TYPES}

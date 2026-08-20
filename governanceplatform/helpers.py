@@ -28,6 +28,9 @@ if TYPE_CHECKING:
 
     from .models import Company, Sector, User
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 logger = logging.getLogger(__name__)
 
 
