@@ -1,5 +1,4 @@
-from collections.abc import Iterable  # noqa: TC003
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from django.utils import timezone
 
@@ -18,6 +17,9 @@ from incidents.models import (
     SectorRegulationWorkflowEmail,
     Workflow,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 FORMAT_NAME = "governance-platform-sector-regulation"
 FORMAT_VERSION = 1

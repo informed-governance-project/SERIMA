@@ -1,7 +1,6 @@
 import json
 from io import StringIO
-from pathlib import Path  # noqa: TC003
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from django.core.management import call_command
@@ -20,6 +19,9 @@ from incidents.models import (
     SectorRegulationWorkflowEmail,
     Workflow,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.mark.django_db

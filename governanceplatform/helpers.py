@@ -2,8 +2,7 @@ import logging
 import os
 import secrets
 from collections import defaultdict
-from collections.abc import Callable  # noqa: TC003
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
@@ -24,6 +23,9 @@ from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 
 from .models import Company, Sector, User  # noqa: TC001
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
