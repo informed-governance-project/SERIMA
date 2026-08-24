@@ -1217,8 +1217,16 @@ class UserAdmin(admin.ModelAdmin):
                 obj.groups.add(group)
                 set_platform_admin_permissions(obj)
 
-    # override delete to don't delete RegulatorAdmin RegulatorUser and PlatformAdmin (put them inactive)
+    # OperatorAdmin (remove the link with the company)
+    # override delete to don't delete RegulatorAdmin RegulatorUser
+    # PlatformAdmin (put them inactive)
     def delete_model(self, request, obj):
+        if user_in_group(request.user, "OperatorAdmin"):
+            company_in_use = get_active_company_from_session(request)
+            if company_in_use:
+                obj.companies.remove(company_in_use)
+                return
+
         if user_in_group(obj, "PlatformAdmin") or is_user_regulator(obj):
             obj.is_active = False
             obj.save()
