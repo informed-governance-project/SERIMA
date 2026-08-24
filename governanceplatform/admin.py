@@ -908,6 +908,11 @@ class UserAdmin(admin.ModelAdmin):
             del actions["delete_selected"]
         return actions
 
+    def get_list_filter(self, request):
+        if user_in_group(request.user, "OperatorAdmin"):
+            return []
+        return super().get_list_filter(request)
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
