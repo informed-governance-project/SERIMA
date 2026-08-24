@@ -886,7 +886,7 @@ class UserAdmin(admin.ModelAdmin):
         ),
     ]
     actions = [reset_2FA]
-    change_list_template = "admin/reset_accepted_terms.html"
+    change_list_template = "admin/custom_change_user_list.html"
 
     # manage the administrator field for operatorAdmin
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -928,8 +928,84 @@ class UserAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.reset_cookie_acceptation),
                 name="reset_cookie_acceptation",
             ),
+            path(
+                "<int:user_id>/approve-company-link/",
+                self.admin_site.admin_view(self.approve_company_link),
+                name="approve_company_link",
+            ),
+            path(
+                "<int:user_id>/reject-company-link/",
+                self.admin_site.admin_view(self.reject_company_link),
+                name="reject_company_link",
+            ),
         ]
         return custom_urls + urls
+
+    def get_pending_company_link(self, request, user_id):
+        """
+        The link the caller is allowed to act on: still awaiting approval, belonging to the
+        company the caller is currently acting for, and never their own. Resolving it here
+        rather than trusting the posted id keeps a crafted request out of another company.
+        """
+        company_in_use = get_active_company_from_session(request)
+        if request.method != "POST" or not user_in_group(request.user, "OperatorAdmin") or company_in_use is None:
+            raise Http404()
+
+        company_user = (
+            CompanyUser.objects.filter(user_id=user_id, company=company_in_use, approved=False)
+            .exclude(user=request.user)
+            .select_related("user")
+            .first()
+        )
+        if company_user is None:
+            raise Http404()
+
+        return company_user
+
+    def redirect_to_changelist(self, request):
+        changelist_url = reverse("admin:governanceplatform_user_changelist")
+        # Rebuilt from reverse() so a posted value can only add query parameters to our own
+        # changelist, never redirect elsewhere.
+        filters = request.POST.get("changelist_filters")
+        return redirect(f"{changelist_url}?{filters}" if filters else changelist_url)
+
+    def approve_company_link(self, request, user_id):
+        company_user = self.get_pending_company_link(request, user_id)
+        company_user.approved = True
+        # Saved through the model: the CompanyUser signals re-parent the incidents the account
+        # already notified and swap its IncidentUser permissions.
+        company_user.save()
+        messages.success(
+            request,
+            _("%(user)s is now linked to your operator.") % {"user": company_user.user.email},
+        )
+        return self.redirect_to_changelist(request)
+
+    def reject_company_link(self, request, user_id):
+        company_user = self.get_pending_company_link(request, user_id)
+        email = company_user.user.email
+        company_user.delete()
+        messages.success(
+            request,
+            _("The suggestion to link %(user)s has been rejected.") % {"user": email},
+        )
+        return self.redirect_to_changelist(request)
+
+    @admin.display(description=_("Account actions"))
+    def account_actions(self, obj):
+        if not obj.has_pending_company_link:
+            return ""
+
+        return format_html(
+            '<span class="link-pending">'
+            '<button type="submit" class="button approve-button" form="account-action-form" formaction="{}">{}</button> '
+            '<button type="submit" class="button reject-button" form="account-action-form" formaction="{}">{}</button>'
+            "</span>",
+            reverse("admin:approve_company_link", args=[obj.pk]),
+            _("Approve"),
+            reverse("admin:reject_company_link", args=[obj.pk]),
+            _("Reject"),
+        )
 
     def reset_cookie_acceptation(self, request):
         if not user_in_group(request.user, "PlatformAdmin"):
@@ -1086,32 +1162,19 @@ class UserAdmin(admin.ModelAdmin):
                 "get_regulators",
                 "get_observers",
                 "is_active",
+                "get_permissions_groups",
             ]
             list_display = [field for field in list_display if field not in fields_to_exclude]
+            list_display = [*list_display, "account_actions"]
 
         return list_display
 
     def get_queryset(self, request):
-        company_in_use = get_active_company_from_session(request)
         queryset = (
             super()
             .get_queryset(request)
             .annotate(
                 has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True)),
-                is_company_admin=Exists(
-                    CompanyUser.objects.filter(
-                        user=OuterRef("pk"),
-                        company=company_in_use,
-                        is_company_administrator=True,
-                    )
-                ),
-                is_approved=Exists(
-                    CompanyUser.objects.filter(
-                        user=OuterRef("pk"),
-                        company=company_in_use,
-                        approved=True,
-                    )
-                ),
             )
         )
         user = request.user
@@ -1161,9 +1224,44 @@ class UserAdmin(admin.ModelAdmin):
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
             company_in_use = get_active_company_from_session(request)
-            return queryset.filter(
-                companies__in=[company_in_use],
-            ).distinct()
+
+            annotated_queryset = (
+                queryset.filter(
+                    companies__in=[company_in_use],
+                )
+                .annotate(
+                    is_company_admin=Exists(
+                        CompanyUser.objects.filter(
+                            user=OuterRef("pk"),
+                            company=company_in_use,
+                            is_company_administrator=True,
+                        )
+                    ),
+                    is_approved=Exists(
+                        CompanyUser.objects.filter(
+                            user=OuterRef("pk"),
+                            company=company_in_use,
+                            approved=True,
+                        )
+                    ),
+                    has_pending_company_link=Exists(
+                        CompanyUser.objects.filter(
+                            user=OuterRef("pk"),
+                            company=company_in_use,
+                            approved=False,
+                        ).exclude(user=user)
+                    ),
+                )
+                .distinct()
+            )
+
+            if annotated_queryset.filter(has_pending_company_link=True).exists():
+                messages.info(
+                    request,
+                    _("There is a suggestion to link a User Account to you Company. Please Approve or Reject the suggestion."),
+                )
+
+            return annotated_queryset
         return queryset
 
     def has_change_permission(self, request, obj=None):
