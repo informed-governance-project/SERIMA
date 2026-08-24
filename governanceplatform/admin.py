@@ -953,12 +953,22 @@ class UserAdmin(admin.ModelAdmin):
     def get_2FA_activation(self, obj):
         return bool(user_has_device(obj))
 
+    @admin.display(description=_("Is Administrator"), boolean=True)
+    def get_is_administrator(self, obj):
+        return obj.is_company_admin
+
+    @admin.display(description=_("Approved"), boolean=True)
+    def get_is_approved(self, obj):
+        return obj.is_approved
+
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = (
             "get_permissions_groups",
             "date_joined",
             "get_2FA_activation",
             "email_verified",
+            "get_is_administrator",
+            "get_is_approved",
         )
 
         if obj is None:
@@ -1074,14 +1084,34 @@ class UserAdmin(admin.ModelAdmin):
                 "get_observers",
                 "is_active",
             ]
+            list_display += ["get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
 
         return list_display
 
     def get_queryset(self, request):
-        # stock the request
-        self._request = request
-        queryset = super().get_queryset(request).annotate(has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True)))
+        company_in_use = get_active_company_from_session(request)
+        queryset = (
+            super()
+            .get_queryset(request)
+            .annotate(
+                has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True)),
+                is_company_admin=Exists(
+                    CompanyUser.objects.filter(
+                        user=OuterRef("pk"),
+                        company=company_in_use,
+                        is_company_administrator=True,
+                    )
+                ),
+                is_approved=Exists(
+                    CompanyUser.objects.filter(
+                        user=OuterRef("pk"),
+                        company=company_in_use,
+                        approved=True,
+                    )
+                ),
+            )
+        )
         user = request.user
 
         PlatformAdminGroupId = get_group_id(name="PlatformAdmin")
