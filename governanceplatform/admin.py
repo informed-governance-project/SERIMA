@@ -949,7 +949,7 @@ class UserAdmin(admin.ModelAdmin):
             extra_context["reset_url_cookies"] = "reset-cookie-acceptation/"
         return super().changelist_view(request, extra_context=extra_context)
 
-    @admin.display(description="2FA", boolean=True, ordering="has_2fa")
+    @admin.display(description=_("2FA Activated"), boolean=True, ordering="has_2fa")
     def get_2FA_activation(self, obj):
         return bool(user_has_device(obj))
 
