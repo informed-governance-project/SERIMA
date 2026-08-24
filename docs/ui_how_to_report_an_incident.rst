@@ -3,7 +3,7 @@ How to report an incident?
 
 To report an incident, you should go to the incident notification dashboard.
 You can reach the dashboard by either clicking the **Modules** drop-down menu and selecting **Incident notification**,
-or by clicking the Go to Dashboard button of the **Incident notification** tile in the center of the screen.
+or by clicking the **Go to Dashboard** button on the **Incident notification** tile in the center of the screen.
 
 .. figure:: _static/user_manual_images/UM_SER_15.png
    :alt: Incident notification module
