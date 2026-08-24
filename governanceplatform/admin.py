@@ -996,15 +996,24 @@ class UserAdmin(admin.ModelAdmin):
         if not obj.has_pending_company_link:
             return ""
 
+        approve_message = _("Approving %(user)s will associate the account with your operator, including their notified incidents.") % {
+            "user": obj.email
+        }
+        reject_message = _("Rejecting %(user)s will remove the suggested link with your operator.") % {"user": obj.email}
+
         return format_html(
             '<span class="link-pending">'
-            '<button type="submit" class="button approve-button" form="account-action-form" formaction="{}">{}</button> '
-            '<button type="submit" class="button reject-button" form="account-action-form" formaction="{}">{}</button>'
+            '<button type="submit" class="button approve-button" form="account-action-form"'
+            ' formaction="{approve_url}" data-confirm-message="{approve_message}">{approve_label}</button> '
+            '<button type="submit" class="button reject-button" form="account-action-form"'
+            ' formaction="{reject_url}" data-confirm-message="{reject_message}">{reject_label}</button>'
             "</span>",
-            reverse("admin:approve_company_link", args=[obj.pk]),
-            _("Approve"),
-            reverse("admin:reject_company_link", args=[obj.pk]),
-            _("Reject"),
+            approve_url=reverse("admin:approve_company_link", args=[obj.pk]),
+            approve_message=approve_message,
+            approve_label=_("Approve"),
+            reject_url=reverse("admin:reject_company_link", args=[obj.pk]),
+            reject_message=reject_message,
+            reject_label=_("Reject"),
         )
 
     def reset_cookie_acceptation(self, request):
