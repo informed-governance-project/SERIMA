@@ -1099,13 +1099,10 @@ class UserAdmin(admin.ModelAdmin):
             # where there is no single account to name.
             extra_context["account_action_messages"] = {
                 approve_company_links.__name__: str(
-                    _(
-                        "Attention: approving the selected accounts will associate them with your operator, "
-                        "including their notified incidents."
-                    )
+                    _("Approving the selected accounts will associate them with your operator, including their notified incidents.")
                 ),
                 reject_company_links.__name__: str(
-                    _("Attention: rejecting the selected accounts will remove their suggested link with your operator.")
+                    _("Rejecting the selected accounts will remove their suggested link with your operator.")
                 ),
             }
         return super().changelist_view(request, extra_context=extra_context)
