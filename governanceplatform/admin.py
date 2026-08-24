@@ -838,6 +838,8 @@ class UserAdmin(admin.ModelAdmin):
         "get_permissions_groups",
         "get_2FA_activation",
         "email_verified",
+        "get_is_administrator",
+        "get_is_approved",
         "date_joined",
     ]
     search_fields = [
@@ -1069,21 +1071,14 @@ class UserAdmin(admin.ModelAdmin):
             list_display = [field for field in list_display if field not in fields_to_exclude]
 
         if user_in_group(request.user, "ObserverAdmin"):
-            fields_to_exclude = [
-                "get_companies",
-                "get_regulators",
-                "is_active",
-            ]
+            fields_to_exclude = ["get_companies", "get_regulators", "is_active", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
 
         if user_in_group(request.user, "RegulatorUser"):
-            fields_to_exclude = [
-                "get_regulators",
-                "get_observers",
-            ]
+            fields_to_exclude = ["get_regulators", "get_observers", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
         if user_in_group(request.user, "RegulatorAdmin"):
-            fields_to_exclude = ["get_observers"]
+            fields_to_exclude = ["get_observers", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
         if user_in_group(request.user, "OperatorAdmin"):
             fields_to_exclude = [
@@ -1092,7 +1087,6 @@ class UserAdmin(admin.ModelAdmin):
                 "get_observers",
                 "is_active",
             ]
-            list_display += ["get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
 
         return list_display
