@@ -1019,6 +1019,9 @@ class UserAdmin(admin.ModelAdmin):
         extra_fields = [f for f in readonly_fields if f not in existing_fields]
 
         if extra_fields:
+            if is_user_operator(user) and "get_permissions_groups" in extra_fields:
+                extra_fields.remove("get_permissions_groups")
+
             fieldsets = list(fieldsets) + [
                 (
                     _("Additional information"),
