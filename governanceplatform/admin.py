@@ -990,28 +990,44 @@ class UserAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.reject_company_link),
                 name="reject_company_link",
             ),
+            path(
+                "<int:user_id>/toggle-user-role/",
+                self.admin_site.admin_view(self.toggle_user_role),
+                name="toggle_user_role",
+            ),
+            path(
+                "<int:user_id>/reset-2fa-token/",
+                self.admin_site.admin_view(self.reset_2FA_token),
+                name="reset_2FA_token",
+            ),
         ]
         return custom_urls + urls
 
-    def pending_company_links(self, request, queryset):
+    def company_links(self, request, queryset, approved):
         """
-        The links in `queryset` the caller is allowed to act on: still awaiting approval,
-        belonging to the company the caller is currently acting for, and never their own.
-        Resolving them here rather than trusting the posted ids keeps a crafted request out of
-        another company, and keeps the row buttons and the batch actions on one rule.
+        The links in `queryset` the caller is allowed to act on: in the `approved` state, belonging
+        to the company the caller is currently acting for, and never their own. Resolving them here
+        rather than trusting the posted ids keeps a crafted request out of another company, and
+        keeps the row buttons and the batch actions on one rule.
+
+        Excluding the caller is also what keeps an operator from losing its last administrator:
+        the caller is one, and cannot demote itself.
         """
         company_in_use = get_active_company_from_session(request)
         if request.method != "POST" or not user_in_group(request.user, "OperatorAdmin") or company_in_use is None:
             return CompanyUser.objects.none()
 
         return (
-            CompanyUser.objects.filter(user__in=queryset, company=company_in_use, approved=False)
+            CompanyUser.objects.filter(user__in=queryset, company=company_in_use, approved=approved)
             .exclude(user=request.user)
             .select_related("user")
         )
 
-    def get_pending_company_link(self, request, user_id):
-        company_user = self.pending_company_links(request, User.objects.filter(pk=user_id)).first()
+    def pending_company_links(self, request, queryset):
+        return self.company_links(request, queryset, approved=False)
+
+    def get_company_link(self, request, user_id, approved):
+        company_user = self.company_links(request, User.objects.filter(pk=user_id), approved=approved).first()
         if company_user is None:
             raise Http404()
 
@@ -1025,7 +1041,7 @@ class UserAdmin(admin.ModelAdmin):
         return redirect(f"{changelist_url}?{filters}" if filters else changelist_url)
 
     def approve_company_link(self, request, user_id):
-        company_user = self.get_pending_company_link(request, user_id)
+        company_user = self.get_company_link(request, user_id, approved=False)
         company_user.approved = True
         # Saved through the model: the CompanyUser signals re-parent the incidents the account
         # already notified and swap its IncidentUser permissions.
@@ -1037,7 +1053,7 @@ class UserAdmin(admin.ModelAdmin):
         return self.redirect_to_changelist(request)
 
     def reject_company_link(self, request, user_id):
-        company_user = self.get_pending_company_link(request, user_id)
+        company_user = self.get_company_link(request, user_id, approved=False)
         email = company_user.user.email
         company_user.delete()
         messages.success(
@@ -1046,29 +1062,88 @@ class UserAdmin(admin.ModelAdmin):
         )
         return self.redirect_to_changelist(request)
 
+    def toggle_user_role(self, request, user_id):
+        company_user = self.get_company_link(request, user_id, approved=True)
+        company_user.is_company_administrator = not company_user.is_company_administrator
+        # Saved through the model: the CompanyUser signals move the account between the
+        # OperatorAdmin and OperatorUser groups and force it to reconnect.
+        company_user.save()
+
+        if company_user.is_company_administrator:
+            message = _("%(user)s is now an administrator of your operator.")
+        else:
+            message = _("%(user)s is no longer an administrator of your operator.")
+
+        messages.success(request, message % {"user": company_user.user.email})
+        return self.redirect_to_changelist(request)
+
+    def reset_2FA_token(self, request, user_id):
+        company_user = self.get_company_link(request, user_id, approved=True)
+        for device in devices_for_user(company_user.user):
+            device.delete()
+
+        messages.success(
+            request,
+            _("The 2FA token of %(user)s has been reset.") % {"user": company_user.user.email},
+        )
+        return self.redirect_to_changelist(request)
+
     @admin.display(description=_("Account actions"))
     def account_actions(self, obj):
-        if not obj.has_pending_company_link:
+        # The caller acts on their own account from their own profile, and the endpoints refuse
+        # their row, so offering buttons here would only ever dead-end.
+        if obj.is_current_user:
             return ""
 
-        approve_message = _("Approving %(user)s will associate the account with your operator, including their notified incidents.") % {
-            "user": obj.email
-        }
-        reject_message = _("Rejecting %(user)s will remove the suggested link with your operator.") % {"user": obj.email}
+        if obj.has_pending_company_link:
+            approve_message = _("Approving %(user)s will associate the account with your operator, including their notified incidents.")
+            reject_message = _("Rejecting %(user)s will remove the suggested link with your operator.")
+
+            return format_html(
+                '<span class="link-pending">'
+                '<button type="submit" class="button approve-button" form="account-action-form"'
+                ' formaction="{approve_url}" data-confirm-message="{approve_message}">{approve_label}</button> '
+                '<button type="submit" class="button reject-button" form="account-action-form"'
+                ' formaction="{reject_url}" data-confirm-message="{reject_message}">{reject_label}</button>'
+                "</span>",
+                approve_url=reverse("admin:approve_company_link", args=[obj.pk]),
+                approve_message=approve_message % {"user": obj.email},
+                approve_label=_("Approve"),
+                reject_url=reverse("admin:reject_company_link", args=[obj.pk]),
+                reject_message=reject_message % {"user": obj.email},
+                reject_label=_("Reject"),
+            )
+
+        if obj.is_company_admin:
+            role_label = _("Remove administrator")
+            role_message = _(
+                "Removing %(user)s as an administrator will limit the account to operator user permissions "
+                "and log it out of its current session."
+            )
+        else:
+            role_label = _("Set as administrator")
+            role_message = _(
+                "Making %(user)s an administrator will let the account manage your operator, its users and its "
+                "settings, and will log it out of its current session."
+            )
+
+        reset_2FA_message = _(
+            "Resetting the 2FA token of %(user)s will require the account to enrol a new authenticator at its next login."
+        )
 
         return format_html(
-            '<span class="link-pending">'
-            '<button type="submit" class="button approve-button" form="account-action-form"'
-            ' formaction="{approve_url}" data-confirm-message="{approve_message}">{approve_label}</button> '
-            '<button type="submit" class="button reject-button" form="account-action-form"'
-            ' formaction="{reject_url}" data-confirm-message="{reject_message}">{reject_label}</button>'
+            '<span class="account-actions">'
+            '<button type="submit" class="button" form="account-action-form"'
+            ' formaction="{role_url}" data-confirm-message="{role_message}">{role_label}</button> '
+            '<button type="submit" class="button" form="account-action-form"'
+            ' formaction="{reset_2FA_url}" data-confirm-message="{reset_2FA_message}">{reset_2FA_label}</button>'
             "</span>",
-            approve_url=reverse("admin:approve_company_link", args=[obj.pk]),
-            approve_message=approve_message,
-            approve_label=_("Approve"),
-            reject_url=reverse("admin:reject_company_link", args=[obj.pk]),
-            reject_message=reject_message,
-            reject_label=_("Reject"),
+            role_url=reverse("admin:toggle_user_role", args=[obj.pk]),
+            role_message=role_message % {"user": obj.email},
+            role_label=role_label,
+            reset_2FA_url=reverse("admin:reset_2FA_token", args=[obj.pk]),
+            reset_2FA_message=reset_2FA_message % {"user": obj.email},
+            reset_2FA_label=_("Reset 2FA token"),
         )
 
     def reset_cookie_acceptation(self, request):
@@ -1319,6 +1394,7 @@ class UserAdmin(admin.ModelAdmin):
                             approved=True,
                         )
                     ),
+                    is_current_user=Q(pk=user.pk),
                     has_pending_company_link=Exists(
                         CompanyUser.objects.filter(
                             user=OuterRef("pk"),
