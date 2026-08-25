@@ -1200,8 +1200,6 @@ class UserAdmin(admin.ModelAdmin):
             "date_joined",
             "get_2FA_activation",
             "email_verified",
-            "get_is_administrator",
-            "get_is_approved",
         )
 
         if obj is None:
@@ -1213,6 +1211,8 @@ class UserAdmin(admin.ModelAdmin):
             return ("get_regulators",) + readonly_fields
         if is_observer_user(obj):
             return ("get_observers",) + readonly_fields
+        if user_in_group(request.user, "OperatorAdmin"):
+            return readonly_fields + ("email", "get_is_administrator", "get_is_approved")
 
         return readonly_fields
 
