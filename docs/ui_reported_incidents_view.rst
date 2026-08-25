@@ -16,13 +16,21 @@ The description of the columns is as follows:
 
 
 When you submit an incident, the system creates a reference. It is a human-readable reference number editable by the regulator regarding the incident.
-Each incident is composed of one or several reports. **Reports** are different steps, depending on the options you choose when creating the incident.
+
+   **Each incident is composed of one or several reports. Reports are different steps, depending on the options you choose when creating the       incident.**
+
 You have to fill in the first report, and after that, you can unlock the second.
 
 Please note that once you fill in a report, you can see all the historical steps relevant to that report.
-Each report has a status: **”Not delivered”, “Delivered but not yet reviewed”, “Review passed”, “Review failed”, and “Not delivered and deadline exceeded”**.
+Each report has one of the following statuses:
 
-The Incident List View is where you can see the incident reports you sent and the information about them.
+- **Not delivered**
+- **Delivered but not yet reviewed**
+- **Review passed**
+- **Review failed**
+- **Not delivered and deadline exceeded**
+
+The **Incident List View** is where you can see the incident reports you sent and the information about them.
 If there are many incidents in the table, you can sort them in alphabetical order using the arrows at the top of the columns.
 
 Only one sorting aspect can be active at a time, and the active aspect is shown by a darker grey triangle.
