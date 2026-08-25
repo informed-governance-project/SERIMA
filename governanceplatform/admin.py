@@ -18,7 +18,6 @@ from django.utils import timezone, translation
 from django.utils.html import format_html
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import ngettext
 from django_otp import devices_for_user, user_has_device
 from django_otp.decorators import otp_required
 from django_otp.plugins.otp_totp.models import TOTPDevice
@@ -705,55 +704,6 @@ def reset_2FA(modeladmin, request, queryset):
         modeladmin.log_change(request, user, _("Reset the 2FA token."))
 
 
-@admin.action(description=_("Approve the link with the operator"))
-def approve_company_links(modeladmin, request, queryset):
-    company_users = list(modeladmin.pending_company_links(request, queryset))
-
-    for company_user in company_users:
-        company_user.approved = True
-        # Saved one at a time: the CompanyUser signals re-parent the incidents the account
-        # already notified and swap its IncidentUser permissions, and a queryset update
-        # would fire neither.
-        company_user.save()
-        modeladmin.log_change(request, company_user.user, _("Approved the link with the operator."))
-
-    if not company_users:
-        messages.warning(request, _("No pending link to approve in the selection."))
-        return
-
-    messages.success(
-        request,
-        ngettext(
-            "%(count)d user account is now linked to your operator.",
-            "%(count)d user accounts are now linked to your operator.",
-            len(company_users),
-        )
-        % {"count": len(company_users)},
-    )
-
-
-@admin.action(description=_("Reject the link with the operator"))
-def reject_company_links(modeladmin, request, queryset):
-    company_users = list(modeladmin.pending_company_links(request, queryset))
-
-    for company_user in company_users:
-        company_user.delete()
-
-    if not company_users:
-        messages.warning(request, _("No pending link to reject in the selection."))
-        return
-
-    messages.success(
-        request,
-        ngettext(
-            "The suggestion to link %(count)d user account has been rejected.",
-            "The suggestions to link %(count)d user accounts have been rejected.",
-            len(company_users),
-        )
-        % {"count": len(company_users)},
-    )
-
-
 class UserRegulatorsListFilter(SimpleListFilter):
     title = _("Regulators")
     parameter_name = "regulators"
@@ -936,7 +886,7 @@ class UserAdmin(admin.ModelAdmin):
             },
         ),
     ]
-    actions = [reset_2FA, approve_company_links, reject_company_links]
+    actions = [reset_2FA]
     change_list_template = "admin/custom_change_user_list.html"
 
     # manage the administrator field for operatorAdmin
@@ -956,12 +906,13 @@ class UserAdmin(admin.ModelAdmin):
         return super().get_form(request, obj, change, **kwargs)
 
     def get_actions(self, request):
+        # Remove the bulk actions for OperatorAdmin users
+        if user_in_group(request.user, "OperatorAdmin"):
+            return {}
+
         actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
-        if not user_in_group(request.user, "OperatorAdmin"):
-            actions.pop(approve_company_links.__name__, None)
-            actions.pop(reject_company_links.__name__, None)
         return actions
 
     def get_list_filter(self, request):
@@ -1024,9 +975,6 @@ class UserAdmin(admin.ModelAdmin):
             .exclude(user=request.user)
             .select_related("user")
         )
-
-    def pending_company_links(self, request, queryset):
-        return self.company_links(request, queryset, approved=False)
 
     def get_company_link(self, request, user_id, approved):
         company_user = self.company_links(request, User.objects.filter(pk=user_id), approved=approved).first()
@@ -1176,17 +1124,6 @@ class UserAdmin(admin.ModelAdmin):
         if user_in_group(request.user, "PlatformAdmin"):
             extra_context["reset_url"] = "reset-accepted-terms/"
             extra_context["reset_url_cookies"] = "reset-cookie-acceptation/"
-        if user_in_group(request.user, "OperatorAdmin"):
-            # Read by the confirmation dialog when the operator runs one of these on a selection,
-            # where there is no single account to name.
-            extra_context["account_action_messages"] = {
-                approve_company_links.__name__: str(
-                    _("Approving the selected accounts will associate them with your operator, including their notified incidents.")
-                ),
-                reject_company_links.__name__: str(
-                    _("Rejecting the selected accounts will remove their suggested link with your operator.")
-                ),
-            }
         return super().changelist_view(request, extra_context=extra_context)
 
     @admin.display(description=_("2FA Activated"), boolean=True, ordering="has_2fa")
