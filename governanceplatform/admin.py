@@ -1186,11 +1186,11 @@ class UserAdmin(admin.ModelAdmin):
     def get_2FA_activation(self, obj):
         return bool(user_has_device(obj))
 
-    @admin.display(description=_("Is Administrator"), boolean=True)
+    @admin.display(description=_("Is Administrator"), boolean=True, ordering="is_company_admin")
     def get_is_administrator(self, obj):
         return obj.is_company_admin
 
-    @admin.display(description=_("Approved"), boolean=True)
+    @admin.display(description=_("Approved"), boolean=True, ordering="is_approved")
     def get_is_approved(self, obj):
         return obj.is_approved
 
