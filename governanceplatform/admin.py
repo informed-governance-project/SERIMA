@@ -439,7 +439,7 @@ class CompanyAdmin(admin.ModelAdmin):
         user = request.user
         # Exclude CompanyUserMultipleInline for RegulatorAdmin
         # because if we go for user creation it asks company and that's not good
-        if user_in_group(user, "RegulatorAdmin"):
+        if user_in_group(user, "RegulatorAdmin") or user_in_group(user, "OperatorAdmin"):
             inline_instances = []
 
         return inline_instances
