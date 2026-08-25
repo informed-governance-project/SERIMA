@@ -450,7 +450,7 @@ class CompanyAdmin(admin.ModelAdmin):
         user = request.user
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
-            readonly_fields += ("identifier", "sectors")
+            readonly_fields += ("name", "address", "country", "identifier", "sectors")
         if not (user_in_group(user, "RegulatorUser") or user_in_group(user, "RegulatorAdmin")):
             readonly_fields += ("entity_categories",)
 
