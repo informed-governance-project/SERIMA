@@ -702,6 +702,7 @@ def reset_2FA(modeladmin, request, queryset):
         devices = devices_for_user(user)
         for device in devices:
             device.delete()
+        modeladmin.log_change(request, user, _("Reset the 2FA token."))
 
 
 @admin.action(description=_("Approve the link with the operator"))
@@ -714,6 +715,7 @@ def approve_company_links(modeladmin, request, queryset):
         # already notified and swap its IncidentUser permissions, and a queryset update
         # would fire neither.
         company_user.save()
+        modeladmin.log_change(request, company_user.user, _("Approved the link with the operator."))
 
     if not company_users:
         messages.warning(request, _("No pending link to approve in the selection."))
@@ -1046,6 +1048,7 @@ class UserAdmin(admin.ModelAdmin):
         # Saved through the model: the CompanyUser signals re-parent the incidents the account
         # already notified and swap its IncidentUser permissions.
         company_user.save()
+        self.log_change(request, company_user.user, _("Approved the link with the operator."))
         messages.success(
             request,
             _("%(user)s is now linked to your operator.") % {"user": company_user.user.email},
@@ -1071,9 +1074,12 @@ class UserAdmin(admin.ModelAdmin):
 
         if company_user.is_company_administrator:
             message = _("%(user)s is now an administrator of your operator.")
+            history_message = _("Set as administrator of the operator.")
         else:
             message = _("%(user)s is no longer an administrator of your operator.")
+            history_message = _("Removed as administrator of the operator.")
 
+        self.log_change(request, company_user.user, history_message)
         messages.success(request, message % {"user": company_user.user.email})
         return self.redirect_to_changelist(request)
 
@@ -1082,6 +1088,7 @@ class UserAdmin(admin.ModelAdmin):
         for device in devices_for_user(company_user.user):
             device.delete()
 
+        self.log_change(request, company_user.user, _("Reset the 2FA token."))
         messages.success(
             request,
             _("The 2FA token of %(user)s has been reset.") % {"user": company_user.user.email},
@@ -1476,6 +1483,7 @@ class UserAdmin(admin.ModelAdmin):
             company_in_use = get_active_company_from_session(request)
             if company_in_use:
                 obj.companies.remove(company_in_use)
+                self.log_change(request, obj, _("Removed from the operator."))
                 return
 
         if user_in_group(obj, "PlatformAdmin") or is_user_regulator(obj):
