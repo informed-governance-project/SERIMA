@@ -21,11 +21,11 @@ You must complete the **Contact, Legal Bases**, and **Regulators** forms.
 
 Contact form
 ~~~~~~~~~~~~~~
-The **Contact** form appears. Please fill in the required fields, so the authorities to whom you are sending the incident report can get back to you.
+The **Contact** form appears. Please fill in the required fields so the authorities to whom you are sending the incident report can get back to you.
 The form has three main parts:
 
-1.	**Name of the operator**: This is the person in charge of the incident notification. Provide your name, job title, email, and telephone number.
-2.	**Technical contact** (if the same person, please activate the slider, so it will be red)
+1.	**Name of the Operator**: This is the person in charge of the incident notification. Provide your name, job title, email, and telephone number.
+2.	**Technical contact** (if it is the same person, please activate the slider (Is the incident notification manager also the technical contact?), so it will be red)
 3.	**References** (Optional): Incident reference, Complaint reference.
 
 .. figure:: _static/user_manual_images/UM_SER_33.png
@@ -85,8 +85,6 @@ You will then be redirected to the main screen (**Incident List View**), where t
 
 The table displays the information you entered during the incident report preparation,
 along with additional columns such as **Significant Impact, Incident Status**, and **Actions**.
-
-   .. note::
 
    **Please note that the system creates one incident entry for each sector you select.**
 
