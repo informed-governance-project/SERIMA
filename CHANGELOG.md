@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Deleting a user as an operator administrator now asks for confirmation in a dialog on the page instead of on a separate confirmation page (#861)
 - The batch action selector is no longer offered to operator administrators on the Users list, which act on one account at a time from the Account actions column. Other roles keep it (#861)
 - An account left without any link to a company is deactivated (#861)
+- Operator administrator group permissions: `delete` on users added, and the unused `CompanyUser` permissions dropped. Existing deployments must run `python manage.py update_group_permissions` for the change to take effect; until then the delete action is not offered to operator administrators (#861)
 - Sector regulation configuration imports now require an explicit import mode and support `--reuse` to reuse matching workflow configuration objects without duplicating them (#826)
 - PostgreSQL upgraded from 15 to 18 in CI and in the shipped Docker compose files. Existing deployments are unaffected and keep running on their current PostgreSQL version. Operators who bump the `postgres` image tag in their own compose file must dump and restore the database first: a major version bump invalidates the PostgreSQL data directory, so an existing volume will not start under the new image
 
