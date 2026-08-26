@@ -473,6 +473,38 @@ def test_a_banner_announces_a_pending_suggestion(otp_client, operator_admin_with
 
 
 @pytest.mark.django_db
+def test_the_banner_stays_on_the_changelist(otp_client, operator_admin_with_pending_link):
+    """
+    Raised from changelist_view, not from get_queryset, which every view for this model calls: the
+    banner belongs to the list it is about and to no other page.
+    """
+    context = operator_admin_with_pending_link
+    client = operator_client(otp_client, context["operator_admin"], context["company"])
+
+    for page in (
+        f"{CHANGELIST_URL}{context['member'].pk}/change/",
+        f"{CHANGELIST_URL}{context['incident_user'].pk}/change/",
+        f"{CHANGELIST_URL}{context['member'].pk}/delete/",
+    ):
+        assert "There is a suggestion to link a User Account" not in client.get(page).content.decode(), page
+
+
+@pytest.mark.django_db
+def test_the_banner_does_not_follow_the_operator_out_of_the_admin(otp_client, operator_admin_with_pending_link):
+    """
+    A request that queues a message without rendering one leaves it for the next page, which used
+    to carry an admin instruction onto the operator front end.
+    """
+    context = operator_admin_with_pending_link
+    client = operator_client(otp_client, context["operator_admin"], context["company"])
+
+    client.post(f"{CHANGELIST_URL}{context['member'].pk}/delete/", {"post": "yes"})
+    front_end = client.get("/", follow=True)
+
+    assert "There is a suggestion to link a User Account" not in front_end.content.decode()
+
+
+@pytest.mark.django_db
 def test_no_banner_when_nothing_is_pending(otp_client, operator_admin_with_pending_link):
     context = operator_admin_with_pending_link
     context["pending_link"].delete()

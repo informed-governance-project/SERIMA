@@ -1174,6 +1174,16 @@ class UserAdmin(admin.ModelAdmin):
         if user_in_group(request.user, "PlatformAdmin"):
             extra_context["reset_url"] = "reset-accepted-terms/"
             extra_context["reset_url_cookies"] = "reset-cookie-acceptation/"
+
+        # Raised here rather than in get_queryset, which every view for this model calls: a request
+        # that queues a message without rendering one leaves it for whatever page the operator
+        # opens next, including the pages outside this admin.
+        if user_in_group(request.user, "OperatorAdmin") and self.get_queryset(request).filter(has_pending_company_link=True).exists():
+            messages.info(
+                request,
+                _("There is a suggestion to link a User Account to your company. Please Approve or Reject the suggestion."),
+            )
+
         return super().changelist_view(request, extra_context=extra_context)
 
     @admin.display(description=_("2FA Activated"), boolean=True, ordering="has_2fa")
@@ -1380,7 +1390,7 @@ class UserAdmin(admin.ModelAdmin):
         if user_in_group(user, "OperatorAdmin"):
             company_in_use = get_active_company_from_session(request)
 
-            annotated_queryset = (
+            return (
                 queryset.filter(
                     companies__in=[company_in_use],
                 )
@@ -1410,14 +1420,6 @@ class UserAdmin(admin.ModelAdmin):
                 )
                 .distinct()
             )
-
-            if annotated_queryset.filter(has_pending_company_link=True).exists():
-                messages.info(
-                    request,
-                    _("There is a suggestion to link a User Account to your company. Please Approve or Reject the suggestion."),
-                )
-
-            return annotated_queryset
         return queryset
 
     def is_awaiting_approval(self, request, obj):
