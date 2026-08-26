@@ -1153,8 +1153,8 @@ class UserAdmin(admin.ModelAdmin):
         else:
             label = _("Set Administrator")
             message = _(
-                "Making %(user)s an administrator will let the account manage your company, its users and its "
-                "settings, and will log it out of its current session."
+                "Adding %(user)s an Administrator will let the account manage your operator, its users and settings. "
+                "The user will be logged out of the current session."
             )
 
         return format_html(
