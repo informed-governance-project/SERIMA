@@ -702,7 +702,7 @@ def reset_2FA(modeladmin, request, queryset):
         devices = devices_for_user(user)
         for device in devices:
             device.delete()
-        modeladmin.log_change(request, user, _("Reset the 2FA token."))
+        modeladmin.log_change(request, user, "Reset the 2FA token.")
 
 
 class UserRegulatorsListFilter(SimpleListFilter):
@@ -997,10 +997,10 @@ class UserAdmin(admin.ModelAdmin):
         # Saved through the model: the CompanyUser signals re-parent the incidents the account
         # already notified and swap its IncidentUser permissions.
         company_user.save()
-        self.log_change(request, company_user.user, _("Approved the link with the operator."))
+        self.log_change(request, company_user.user, "Approved the link with the operator.")
         messages.success(
             request,
-            _("%(user)s is now linked to your operator.") % {"user": company_user.user.email},
+            _("%(user)s is now linked to your company.") % {"user": company_user.user.email},
         )
         return self.redirect_to_changelist(request)
 
@@ -1010,7 +1010,7 @@ class UserAdmin(admin.ModelAdmin):
         email = user.email
         company_user.delete()
         user.save(update_fields=["is_active"])
-        self.log_change(request, user, _("Rejected the link with the operator."))
+        self.log_change(request, user, "Rejected the link with the operator.")
         messages.success(
             request,
             _("The suggestion to link %(user)s has been rejected.") % {"user": email},
@@ -1025,11 +1025,11 @@ class UserAdmin(admin.ModelAdmin):
         company_user.save()
 
         if company_user.is_company_administrator:
-            message = _("%(user)s is now an administrator of your operator.")
-            history_message = _("Set as administrator of the operator.")
+            message = _("%(user)s is now an administrator of your company.")
+            history_message = "Changed as administrator of the operator."
         else:
-            message = _("%(user)s is no longer an administrator of your operator.")
-            history_message = _("Removed as administrator of the operator.")
+            message = _("%(user)s is no longer an administrator of your company.")
+            history_message = "Removed as administrator of the operator."
 
         self.log_change(request, company_user.user, history_message)
         messages.success(request, message % {"user": company_user.user.email})
@@ -1040,7 +1040,7 @@ class UserAdmin(admin.ModelAdmin):
         for device in devices_for_user(company_user.user):
             device.delete()
 
-        self.log_change(request, company_user.user, _("Reset the 2FA token."))
+        self.log_change(request, company_user.user, "Reset the 2FA token.")
         messages.success(
             request,
             _("The 2FA token of %(user)s has been reset.") % {"user": company_user.user.email},
@@ -1051,9 +1051,7 @@ class UserAdmin(admin.ModelAdmin):
         is_operator_admin = user_in_group(request.user, "OperatorAdmin")
 
         if is_operator_admin and obj is not None:
-            context["delete_confirm_message"] = _(
-                "Removing %(user)s will detach the account from your operator. The account itself is kept."
-            ) % {"user": obj.email}
+            context["delete_confirm_message"] = _("Removing %(user)s will detach the account from your company.") % {"user": obj.email}
 
             if self.is_awaiting_approval(request, obj):
                 # Reused rather than restated, so the prompt cannot drift from the changelist buttons.
@@ -1075,8 +1073,8 @@ class UserAdmin(admin.ModelAdmin):
             return ""
 
         if obj.has_pending_company_link:
-            approve_message = _("Approving %(user)s will associate the account with your operator, including their notified incidents.")
-            reject_message = _("Rejecting %(user)s will remove the suggested link with your operator and deactivate the account.")
+            approve_message = _("Approving %(user)s will associate the account with your company, including their notified incidents.")
+            reject_message = _("Rejecting %(user)s will remove the suggested link with your company.")
 
             return format_html(
                 '<span class="link-pending">'
@@ -1102,7 +1100,7 @@ class UserAdmin(admin.ModelAdmin):
         else:
             role_label = _("Set as administrator")
             role_message = _(
-                "Making %(user)s an administrator will let the account manage your operator, its users and its "
+                "Making %(user)s an administrator will let the account manage your company, its users and its "
                 "settings, and will log it out of its current session."
             )
 
@@ -1148,7 +1146,7 @@ class UserAdmin(admin.ModelAdmin):
             return ""
 
         if obj.is_company_admin:
-            label = _("Remove administrator")
+            label = _("Unset as administrator")
             message = _(
                 "Removing %(user)s as an administrator will limit the account to operator user permissions "
                 "and log it out of its current session."
@@ -1156,7 +1154,7 @@ class UserAdmin(admin.ModelAdmin):
         else:
             label = _("Set as administrator")
             message = _(
-                "Making %(user)s an administrator will let the account manage your operator, its users and its "
+                "Making %(user)s an administrator will let the account manage your company, its users and its "
                 "settings, and will log it out of its current session."
             )
 
@@ -1430,7 +1428,7 @@ class UserAdmin(admin.ModelAdmin):
             if annotated_queryset.filter(has_pending_company_link=True).exists():
                 messages.info(
                     request,
-                    _("There is a suggestion to link a User Account to you Company. Please Approve or Reject the suggestion."),
+                    _("There is a suggestion to link a User Account to your company. Please Approve or Reject the suggestion."),
                 )
 
             return annotated_queryset
@@ -1519,7 +1517,7 @@ class UserAdmin(admin.ModelAdmin):
             company_in_use = get_active_company_from_session(request)
             if company_in_use:
                 obj.companies.remove(company_in_use)
-                self.log_change(request, obj, _("Removed from the operator."))
+                self.log_change(request, obj, "Removed from the operator.")
                 return
 
         if user_in_group(obj, "PlatformAdmin") or is_user_regulator(obj):
