@@ -1056,7 +1056,7 @@ class UserAdmin(admin.ModelAdmin):
                 "Removing %(user)s will detach the account from your operator. The account itself is kept."
             ) % {"user": obj.email}
 
-            if obj.has_pending_company_link:
+            if self.is_awaiting_approval(request, obj):
                 # Reused rather than restated, so the prompt cannot drift from the changelist buttons.
                 context["pending_link_company"] = get_active_company_from_session(request)
                 context["pending_link_actions"] = self.account_actions(obj)
@@ -1441,9 +1441,19 @@ class UserAdmin(admin.ModelAdmin):
         """
         An account whose link to the operator has not been approved yet. The only thing an operator
         admin may do with it is approve or reject that suggestion, so everything else is withheld
-        until then. The annotation exists only on the operator admin queryset.
+        until then.
         """
-        return obj is not None and user_in_group(request.user, "OperatorAdmin") and obj.has_pending_company_link
+        if obj is None or not user_in_group(request.user, "OperatorAdmin"):
+            return False
+
+        company_in_use = get_active_company_from_session(request)
+        # Queried rather than read off the has_pending_company_link annotation: Django calls the
+        # permission methods with objects that never went through get_queryset, such as the one
+        # response_add hands back straight from form.save().
+        return (
+            company_in_use is not None
+            and CompanyUser.objects.filter(user=obj, company=company_in_use, approved=False).exclude(user=request.user).exists()
+        )
 
     def has_change_permission(self, request, obj=None):
         user = request.user
