@@ -1092,13 +1092,13 @@ class UserAdmin(admin.ModelAdmin):
             )
 
         if obj.is_company_admin:
-            role_label = _("Unset as administrator")
+            role_label = _("Unset Administrator")
             role_message = _(
                 "Removing %(user)s as Administrator will limit the account permissions to Operator User. "
                 "The user will be logged out of the current session."
             )
         else:
-            role_label = _("Set as administrator")
+            role_label = _("Set Administrator")
             role_message = _(
                 "Adding %(user)s an Administrator will let the account manage your operator, its users and settings. "
                 "The user will be logged out of the current session."
@@ -1146,13 +1146,13 @@ class UserAdmin(admin.ModelAdmin):
             return ""
 
         if obj.is_company_admin:
-            label = _("Unset as administrator")
+            label = _("Unset Administrator")
             message = _(
                 "Removing %(user)s as Administrator will limit the account permissions to Operator User. "
                 "The user will be logged out of the current session."
             )
         else:
-            label = _("Set as administrator")
+            label = _("Set Administrator")
             message = _(
                 "Making %(user)s an administrator will let the account manage your company, its users and its "
                 "settings, and will log it out of its current session."
