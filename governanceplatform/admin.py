@@ -1051,7 +1051,7 @@ class UserAdmin(admin.ModelAdmin):
         is_operator_admin = user_in_group(request.user, "OperatorAdmin")
 
         if is_operator_admin and obj is not None:
-            context["delete_confirm_message"] = _("Removing %(user)s will detach the account from your company.") % {"user": obj.email}
+            context["delete_confirm_message"] = _("Removing %(user)s will unlink the account from your company.") % {"user": obj.email}
 
             if self.is_awaiting_approval(request, obj):
                 # Reused rather than restated, so the prompt cannot drift from the changelist buttons.
@@ -1094,18 +1094,18 @@ class UserAdmin(admin.ModelAdmin):
         if obj.is_company_admin:
             role_label = _("Unset as administrator")
             role_message = _(
-                "Removing %(user)s as an administrator will limit the account to operator user permissions "
-                "and log it out of its current session."
+                "Removing %(user)s as Administrator will limit the account permissions to Operator User. "
+                "The user will be logged out of the current session."
             )
         else:
             role_label = _("Set as administrator")
             role_message = _(
-                "Making %(user)s an administrator will let the account manage your company, its users and its "
-                "settings, and will log it out of its current session."
+                "Adding %(user)s an Administrator will let the account manage your operator, its users and settings. "
+                "The user will be logged out of the current session."
             )
 
         reset_2FA_message = _(
-            "Resetting the 2FA token of %(user)s will require the account to enrol a new authenticator at its next login."
+            "Resetting the 2FA token of %(user)s will require the account to setup a new authenticator at the next login."
         )
 
         return format_html(
@@ -1128,7 +1128,7 @@ class UserAdmin(admin.ModelAdmin):
         if obj.is_current_user or not obj.is_approved:
             return ""
 
-        message = _("Resetting the 2FA token of %(user)s will require the account to enrol a new authenticator at its next login.")
+        message = _("Resetting the 2FA token of %(user)s will require the account to setup a new authenticator at the next login.")
 
         return format_html(
             '<span class="account-actions">'
@@ -1148,8 +1148,8 @@ class UserAdmin(admin.ModelAdmin):
         if obj.is_company_admin:
             label = _("Unset as administrator")
             message = _(
-                "Removing %(user)s as an administrator will limit the account to operator user permissions "
-                "and log it out of its current session."
+                "Removing %(user)s as Administrator will limit the account permissions to Operator User. "
+                "The user will be logged out of the current session."
             )
         else:
             label = _("Set as administrator")
