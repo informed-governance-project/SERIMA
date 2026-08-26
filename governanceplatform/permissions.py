@@ -86,8 +86,7 @@ GROUP_PERMISSIONS = {
     },
     "ObserverUser": {},
     "OperatorAdmin": {
-        "user": ["add", "change"],
-        "companyuser": ["view", "change", "delete"],
+        "user": ["add", "change", "delete"],
         "company": ["change"],
     },
     "OperatorUser": {},

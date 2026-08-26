@@ -226,6 +226,7 @@ def delete_user_groups(sender, instance, **kwargs):
     if not user.companyuser_set.exists():
         user.is_staff = False
         user.is_superuser = False
+        user.is_active = False
         user.groups.clear()
         user.groups.add(get_group("IncidentUser"))
         user.incident_set.filter(company__isnull=False).update(contact_user=None)
