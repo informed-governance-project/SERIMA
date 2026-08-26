@@ -11,10 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Operator administrators manage the accounts of their own company from the Users list: an "Account actions" column offers Approve and Reject for an account whose link to the company is still a suggestion, and Set/Unset Administrator and Reset 2FA token for accounts already approved. Every button asks for confirmation first and states what the action implies — approving an incident-notification account, for instance, associates it with the company along with the incidents it has already notified (#861)
+- A suggestion waiting to be resolved is announced by a banner above the Users list and the row is highlighted; the account's own page carries the same Approve/Reject prompt (#861)
+- Users list columns for "2FA Activated", "Is Administrator" and "Approved" (#861)
+- The account history now records approving and rejecting a link, granting and removing the administrator role, resetting the 2FA token, and removing an account from the company (#861)
 - Unit tests for incident cleanup, log cleanup, workflow deadline notifications, and incident reminder scripts, helpers of governanceplatform
 
 ### Changed
 
+- An account whose link to the company is still awaiting approval is read-only for operator administrators: Approve and Reject are the only actions offered, and editing or deleting it is withheld until one of them is chosen (#861)
+- Deleting a user as an operator administrator now asks for confirmation in a dialog on the page instead of on a separate confirmation page (#861)
+- The batch action selector is no longer offered to operator administrators on the Users list, which act on one account at a time from the Account actions column. Other roles keep it (#861)
+- An account left without any link to a company is deactivated (#861)
 - Sector regulation configuration imports now require an explicit import mode and support `--reuse` to reuse matching workflow configuration objects without duplicating them (#826)
 - PostgreSQL upgraded from 15 to 18 in CI and in the shipped Docker compose files. Existing deployments are unaffected and keep running on their current PostgreSQL version. Operators who bump the `postgres` image tag in their own compose file must dump and restore the database first: a major version bump invalidates the PostgreSQL data directory, so an existing volume will not start under the new image
 
