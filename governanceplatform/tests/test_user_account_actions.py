@@ -5,6 +5,9 @@ from types import SimpleNamespace
 import pytest
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from governanceplatform.admin import UserAdmin
@@ -761,3 +764,77 @@ def test_unlinking_the_last_company_deactivates_the_account(otp_client, operator
 
     context["member"].refresh_from_db()
     assert context["member"].is_active is False
+
+
+@pytest.mark.django_db
+def test_unlinking_one_company_does_not_re_enable_a_disabled_account(otp_client, operator_admin_with_pending_link):
+    """
+    Losing a link is not a reason to re-enable an account. An account disabled on purpose stays
+    disabled when an operator removes one of its other company links.
+    """
+    context = operator_admin_with_pending_link
+    member = context["member"]
+    CompanyUser.objects.create(user=member, company=Company.objects.get(identifier="COM2"), approved=True)
+    member.refresh_from_db()
+    member.is_active = False
+    member.save(update_fields=["is_active"])
+
+    operator_client(otp_client, context["operator_admin"], context["company"]).post(f"{CHANGELIST_URL}{member.pk}/delete/", {"post": "yes"})
+
+    member.refresh_from_db()
+    assert member.is_active is False
+
+
+@pytest.mark.django_db
+def test_the_permission_question_is_asked_once_per_object(operator_admin_with_pending_link):
+    """
+    Django asks for change and delete permission repeatedly while rendering one page, and the
+    answer costs a query, so it is only looked up once.
+    """
+    context = operator_admin_with_pending_link
+    request = fake_request(context["operator_admin"], context["company"])
+    pending = User.objects.get(pk=context["incident_user"].pk)
+    admin = model_admin()
+
+    with CaptureQueriesContext(connection) as queries:
+        for _ in range(5):
+            assert admin.is_awaiting_approval(request, pending) is True
+
+    pending_lookups = [q for q in queries.captured_queries if 'FROM "governanceplatform_companyuser"' in q["sql"]]
+    assert len(pending_lookups) == 1
+    assert len(queries.captured_queries) <= 3
+
+
+@pytest.mark.django_db
+def test_the_2fa_column_counts_a_static_device(otp_client, operator_admin_with_pending_link):
+    """
+    otp_static is installed, so the column has to answer for every device type the platform
+    accepts, not only for TOTP.
+    """
+    context = operator_admin_with_pending_link
+    StaticDevice.objects.create(user=context["member"], name="backup tokens", confirmed=True)
+
+    response = operator_client(otp_client, context["operator_admin"], context["company"]).get(CHANGELIST_URL)
+    row = next(user for user in response.context["cl"].queryset if user.pk == context["member"].pk)
+
+    assert row.has_2fa is True
+    assert model_admin().get_2FA_activation(row) is True
+
+
+@pytest.mark.django_db
+def test_the_changelist_cost_does_not_grow_with_the_number_of_rows(otp_client, operator_admin_with_pending_link):
+    """The 2FA column used to query per row instead of reading the annotation."""
+    context = operator_admin_with_pending_link
+    client = operator_client(otp_client, context["operator_admin"], context["company"])
+
+    with CaptureQueriesContext(connection) as before:
+        client.get(CHANGELIST_URL)
+
+    for index in range(6):
+        extra = User.objects.create(email=f"extra{index}@com1.lu", first_name="x", last_name="y")
+        CompanyUser.objects.create(user=extra, company=context["company"], approved=True)
+
+    with CaptureQueriesContext(connection) as after:
+        client.get(CHANGELIST_URL)
+
+    assert len(after.captured_queries) <= len(before.captured_queries) + 2

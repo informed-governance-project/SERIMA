@@ -19,8 +19,9 @@ from django.utils import timezone, translation
 from django.utils.html import format_html
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
-from django_otp import devices_for_user, user_has_device
+from django_otp import devices_for_user
 from django_otp.decorators import otp_required
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
@@ -1177,7 +1178,7 @@ class UserAdmin(admin.ModelAdmin):
 
     @admin.display(description=_("2FA Activated"), boolean=True, ordering="has_2fa")
     def get_2FA_activation(self, obj):
-        return bool(user_has_device(obj))
+        return obj.has_2fa
 
     @admin.display(description=_("Is Administrator"), boolean=True, ordering="is_company_admin")
     def get_is_administrator(self, obj):
@@ -1325,7 +1326,10 @@ class UserAdmin(admin.ModelAdmin):
             super()
             .get_queryset(request)
             .annotate(
-                has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True)),
+                # Both device types, so the column keeps matching what user_has_device() reported
+                # and the has_2fa ordering agrees with the value shown.
+                has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True))
+                | Exists(StaticDevice.objects.filter(user=OuterRef("pk"), confirmed=True)),
             )
         )
         user = request.user
@@ -1422,17 +1426,22 @@ class UserAdmin(admin.ModelAdmin):
         admin may do with it is approve or reject that suggestion, so everything else is withheld
         until then.
         """
-        if obj is None or not user_in_group(request.user, "OperatorAdmin"):
+        if obj is None:
             return False
 
-        company_in_use = get_active_company_from_session(request)
-        # Queried rather than read off the has_pending_company_link annotation: Django calls the
-        # permission methods with objects that never went through get_queryset, such as the one
-        # response_add hands back straight from form.save().
-        return (
-            company_in_use is not None
-            and CompanyUser.objects.filter(user=obj, company=company_in_use, approved=False).exclude(user=request.user).exists()
-        )
+        # Django asks for change and delete permission many times while rendering one page, and the
+        # answer costs queries, so it is kept on the instance it was asked about. Queried rather
+        # than read off the has_pending_company_link annotation because the permission methods also
+        # receive objects that never went through get_queryset, such as the one response_add hands
+        # back straight from form.save().
+        if not hasattr(obj, "_awaiting_approval"):
+            obj._awaiting_approval = (
+                user_in_group(request.user, "OperatorAdmin")
+                and (company_in_use := get_active_company_from_session(request)) is not None
+                and CompanyUser.objects.filter(user=obj, company=company_in_use, approved=False).exclude(user=request.user).exists()
+            )
+
+        return obj._awaiting_approval
 
     def has_change_permission(self, request, obj=None):
         user = request.user
