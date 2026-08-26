@@ -1009,7 +1009,6 @@ class UserAdmin(admin.ModelAdmin):
         user = company_user.user
         email = user.email
         company_user.delete()
-        user.save(update_fields=["is_active"])
         self.log_change(request, user, "Rejected the link with the operator.")
         messages.success(
             request,
