@@ -838,8 +838,8 @@ class UserAdmin(admin.ModelAdmin):
         "get_companies",
         "get_observers",
         "get_permissions_groups",
-        "get_2FA_activation",
         "email_verified",
+        "get_2FA_activation",
         "get_is_administrator",
         "get_is_approved",
         "date_joined",
@@ -1433,13 +1433,25 @@ class UserAdmin(admin.ModelAdmin):
             return annotated_queryset
         return queryset
 
+    def is_awaiting_approval(self, request, obj):
+        """
+        An account whose link to the operator has not been approved yet. The only thing an operator
+        admin may do with it is approve or reject that suggestion, so everything else is withheld
+        until then. The annotation exists only on the operator admin queryset.
+        """
+        return obj is not None and user_in_group(request.user, "OperatorAdmin") and obj.has_pending_company_link
+
     def has_change_permission(self, request, obj=None):
         user = request.user
+        if self.is_awaiting_approval(request, obj):
+            return False
         if obj and user_in_group(user, "RegulatorUser") and (obj == user or is_user_operator(obj) or user_in_group(obj, "IncidentUser")):
             return True
         return super().has_change_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
+        if self.is_awaiting_approval(request, obj):
+            return False
         if obj:
             if (
                 user_in_group(obj, "RegulatorUser")
