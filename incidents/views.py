@@ -1407,6 +1407,9 @@ class WorkflowWizardView(SessionWizardView):
         # Regulator : See the report
         form = super().get_form(step=step, data=data, files=files)
 
+        if self.incident:
+            form.incident = self.incident
+
         # Read only for regulator except for last form (save comment)
         # Read only for operator review (read_only = True)
         if self.read_only:
