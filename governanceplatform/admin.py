@@ -1158,8 +1158,8 @@ class UserAdmin(admin.ModelAdmin):
         readonly_fields = (
             "get_permissions_groups",
             "date_joined",
-            "get_2FA_activation",
             "email_verified",
+            "get_2FA_activation",
         )
 
         if obj is None:
@@ -1208,6 +1208,7 @@ class UserAdmin(admin.ModelAdmin):
 
         if extra_fields:
             if is_user_operator(user) and "get_permissions_groups" in extra_fields:
+                extra_fields.remove("email")
                 extra_fields.remove("get_permissions_groups")
 
             fieldsets = list(fieldsets) + [
