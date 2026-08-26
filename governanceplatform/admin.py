@@ -1315,7 +1315,7 @@ class UserAdmin(admin.ModelAdmin):
         list_display = super().get_list_display(request)
 
         if user_in_group(request.user, "PlatformAdmin"):
-            fields_to_exclude = ["get_companies"]
+            fields_to_exclude = ["get_companies", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
 
         if user_in_group(request.user, "ObserverAdmin"):
