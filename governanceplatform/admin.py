@@ -1064,86 +1064,22 @@ class UserAdmin(admin.ModelAdmin):
 
         return response
 
-    @admin.display(description=_("Account actions"))
-    def account_actions(self, obj):
-        # The caller acts on their own account from their own profile, and the endpoints refuse
-        # their row, so offering buttons here would only ever dead-end.
-        if obj.is_current_user:
-            return ""
-
-        if obj.has_pending_company_link:
-            approve_message = _("Approving %(user)s will associate the account with your company, including their notified incidents.")
-            reject_message = _("Rejecting %(user)s will remove the suggested link with your company.")
-
-            return format_html(
-                '<span class="link-pending">'
-                '<button type="submit" class="button approve-button" form="account-action-form"'
-                ' formaction="{approve_url}" data-confirm-message="{approve_message}">{approve_label}</button> '
-                '<button type="submit" class="button reject-button" form="account-action-form"'
-                ' formaction="{reject_url}" data-confirm-message="{reject_message}">{reject_label}</button>'
-                "</span>",
-                approve_url=reverse("admin:approve_company_link", args=[obj.pk]),
-                approve_message=approve_message % {"user": obj.email},
-                approve_label=_("Approve"),
-                reject_url=reverse("admin:reject_company_link", args=[obj.pk]),
-                reject_message=reject_message % {"user": obj.email},
-                reject_label=_("Reject"),
-            )
-
-        if obj.is_company_admin:
-            role_label = _("Unset Administrator")
-            role_message = _(
-                "Removing %(user)s as Administrator will limit the account permissions to Operator User. "
-                "The user will be logged out of the current session."
-            )
-        else:
-            role_label = _("Set Administrator")
-            role_message = _(
-                "Adding %(user)s an Administrator will let the account manage your operator, its users and settings. "
-                "The user will be logged out of the current session."
-            )
-
-        reset_2FA_message = _(
-            "Resetting the 2FA token of %(user)s will require the account to setup a new authenticator at the next login."
-        )
-
+    def action_button(self, url_name, obj, label, message, css_class="button"):
+        """
+        One account action button. It posts to its own endpoint rather than to the enclosing admin
+        form, and carries the text the confirmation dialog shows before letting the post through.
+        """
         return format_html(
-            '<span class="account-actions">'
-            '<button type="submit" class="button" form="account-action-form"'
-            ' formaction="{role_url}" data-confirm-message="{role_message}">{role_label}</button> '
-            '<button type="submit" class="button" form="account-action-form"'
-            ' formaction="{reset_2FA_url}" data-confirm-message="{reset_2FA_message}">{reset_2FA_label}</button>'
-            "</span>",
-            role_url=reverse("admin:toggle_user_role", args=[obj.pk]),
-            role_message=role_message % {"user": obj.email},
-            role_label=role_label,
-            reset_2FA_url=reverse("admin:reset_2FA_token", args=[obj.pk]),
-            reset_2FA_message=reset_2FA_message % {"user": obj.email},
-            reset_2FA_label=_("Reset 2FA token"),
-        )
-
-    @admin.display(description="")
-    def reset_2FA_action(self, obj):
-        if obj.is_current_user or not obj.is_approved:
-            return ""
-
-        message = _("Resetting the 2FA token of %(user)s will require the account to setup a new authenticator at the next login.")
-
-        return format_html(
-            '<span class="account-actions">'
-            '<button type="submit" class="button" form="account-action-form"'
-            ' formaction="{url}" data-confirm-message="{message}">{label}</button>'
-            "</span>",
-            url=reverse("admin:reset_2FA_token", args=[obj.pk]),
+            '<button type="submit" class="{css_class}" form="account-action-form"'
+            ' formaction="{url}" data-confirm-message="{message}">{label}</button>',
+            css_class=css_class,
+            url=reverse(f"admin:{url_name}", args=[obj.pk]),
             message=message % {"user": obj.email},
-            label=_("Reset 2FA token"),
+            label=label,
         )
 
-    @admin.display(description="")
-    def administrator_action(self, obj):
-        if obj.is_current_user or not obj.is_approved:
-            return ""
-
+    def administrator_button(self, obj):
+        """The administrator toggle, defined once for both the changelist and the detail view."""
         if obj.is_company_admin:
             label = _("Unset Administrator")
             message = _(
@@ -1157,15 +1093,62 @@ class UserAdmin(admin.ModelAdmin):
                 "The user will be logged out of the current session."
             )
 
-        return format_html(
-            '<span class="account-actions">'
-            '<button type="submit" class="button" form="account-action-form"'
-            ' formaction="{url}" data-confirm-message="{message}">{label}</button>'
-            "</span>",
-            url=reverse("admin:toggle_user_role", args=[obj.pk]),
-            message=message % {"user": obj.email},
-            label=label,
+        return self.action_button("toggle_user_role", obj, label, message)
+
+    def reset_2FA_button(self, obj):
+        """The 2FA reset, defined once for both the changelist and the detail view."""
+        return self.action_button(
+            "reset_2FA_token",
+            obj,
+            _("Reset 2FA token"),
+            _("Resetting the 2FA token of %(user)s will require the account to setup a new authenticator at the next login."),
         )
+
+    @admin.display(description=_("Account actions"))
+    def account_actions(self, obj):
+        # The caller acts on their own account from their own profile, and the endpoints refuse
+        # their row, so offering buttons here would only ever dead-end.
+        if obj.is_current_user:
+            return ""
+
+        if obj.has_pending_company_link:
+            return format_html(
+                '<span class="link-pending">{} {}</span>',
+                self.action_button(
+                    "approve_company_link",
+                    obj,
+                    _("Approve"),
+                    _("Approving %(user)s will associate the account with your company, including their notified incidents."),
+                    css_class="button approve-button",
+                ),
+                self.action_button(
+                    "reject_company_link",
+                    obj,
+                    _("Reject"),
+                    _("Rejecting %(user)s will remove the suggested link with your company."),
+                    css_class="button reject-button",
+                ),
+            )
+
+        return format_html(
+            '<span class="account-actions">{} {}</span>',
+            self.administrator_button(obj),
+            self.reset_2FA_button(obj),
+        )
+
+    @admin.display(description="")
+    def reset_2FA_action(self, obj):
+        if obj.is_current_user or not obj.is_approved:
+            return ""
+
+        return format_html('<span class="account-actions">{}</span>', self.reset_2FA_button(obj))
+
+    @admin.display(description="")
+    def administrator_action(self, obj):
+        if obj.is_current_user or not obj.is_approved:
+            return ""
+
+        return format_html('<span class="account-actions">{}</span>', self.administrator_button(obj))
 
     def reset_cookie_acceptation(self, request):
         if not user_in_group(request.user, "PlatformAdmin"):
