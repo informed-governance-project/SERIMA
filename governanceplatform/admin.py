@@ -275,7 +275,7 @@ class CompanyUserInline(admin.TabularInline):
                             regulatorUserGroupId,
                         ]
                     )
-                    .filter(regulators=None, observers=None)
+                    .filter(regulators=None, observers=None, is_active=True)
                     .order_by("email")
                 )
 
@@ -291,7 +291,7 @@ class CompanyUserInline(admin.TabularInline):
                             regulatorUserGroupId,
                         ]
                     )
-                    .filter(companies__in=[company_in_use])
+                    .filter(companies__in=[company_in_use], is_active=True)
                     .exclude(id=user.id)
                     .distinct()
                     .order_by("email")
@@ -1006,8 +1006,12 @@ class UserAdmin(admin.ModelAdmin):
 
     def reject_company_link(self, request, user_id):
         company_user = self.get_company_link(request, user_id, approved=False)
-        email = company_user.user.email
+        user = company_user.user
+        email = user.email
         company_user.delete()
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        self.log_change(request, user, _("Rejected the link with the operator and deactivated the account."))
         messages.success(
             request,
             _("The suggestion to link %(user)s has been rejected.") % {"user": email},
@@ -1073,7 +1077,7 @@ class UserAdmin(admin.ModelAdmin):
 
         if obj.has_pending_company_link:
             approve_message = _("Approving %(user)s will associate the account with your operator, including their notified incidents.")
-            reject_message = _("Rejecting %(user)s will remove the suggested link with your operator.")
+            reject_message = _("Rejecting %(user)s will remove the suggested link with your operator and deactivate the account.")
 
             return format_html(
                 '<span class="link-pending">'
