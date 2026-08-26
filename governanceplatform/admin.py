@@ -1052,6 +1052,11 @@ class UserAdmin(admin.ModelAdmin):
                 "Removing %(user)s will detach the account from your operator. The account itself is kept."
             ) % {"user": obj.email}
 
+            if obj.has_pending_company_link:
+                # Reused rather than restated, so the prompt cannot drift from the changelist buttons.
+                context["pending_link_company"] = get_active_company_from_session(request)
+                context["pending_link_actions"] = self.account_actions(obj)
+
         response = super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
         if is_operator_admin and isinstance(response, TemplateResponse):
@@ -1117,6 +1122,51 @@ class UserAdmin(admin.ModelAdmin):
             reset_2FA_label=_("Reset 2FA token"),
         )
 
+    @admin.display(description="")
+    def reset_2FA_action(self, obj):
+        if obj.is_current_user or not obj.is_approved:
+            return ""
+
+        message = _("Resetting the 2FA token of %(user)s will require the account to enrol a new authenticator at its next login.")
+
+        return format_html(
+            '<span class="account-actions">'
+            '<button type="submit" class="button" form="account-action-form"'
+            ' formaction="{url}" data-confirm-message="{message}">{label}</button>'
+            "</span>",
+            url=reverse("admin:reset_2FA_token", args=[obj.pk]),
+            message=message % {"user": obj.email},
+            label=_("Reset 2FA token"),
+        )
+
+    @admin.display(description="")
+    def administrator_action(self, obj):
+        if obj.is_current_user or not obj.is_approved:
+            return ""
+
+        if obj.is_company_admin:
+            label = _("Remove administrator")
+            message = _(
+                "Removing %(user)s as an administrator will limit the account to operator user permissions "
+                "and log it out of its current session."
+            )
+        else:
+            label = _("Set as administrator")
+            message = _(
+                "Making %(user)s an administrator will let the account manage your operator, its users and its "
+                "settings, and will log it out of its current session."
+            )
+
+        return format_html(
+            '<span class="account-actions">'
+            '<button type="submit" class="button" form="account-action-form"'
+            ' formaction="{url}" data-confirm-message="{message}">{label}</button>'
+            "</span>",
+            url=reverse("admin:toggle_user_role", args=[obj.pk]),
+            message=message % {"user": obj.email},
+            label=label,
+        )
+
     def reset_cookie_acceptation(self, request):
         if not user_in_group(request.user, "PlatformAdmin"):
             raise Http404()
@@ -1172,7 +1222,7 @@ class UserAdmin(admin.ModelAdmin):
         if is_observer_user(obj):
             return ("get_observers",) + readonly_fields
         if user_in_group(request.user, "OperatorAdmin"):
-            return readonly_fields + ("email", "get_is_administrator", "get_is_approved")
+            return readonly_fields + ("email", "get_is_administrator", "get_is_approved", "reset_2FA_action", "administrator_action")
 
         return readonly_fields
 
@@ -1210,6 +1260,13 @@ class UserAdmin(admin.ModelAdmin):
             if is_user_operator(user) and "get_permissions_groups" in extra_fields:
                 extra_fields.remove("email")
                 extra_fields.remove("get_permissions_groups")
+
+            # A tuple inside "fields" is one row, which puts each action beside the field it changes.
+            for field, action in (("get_2FA_activation", "reset_2FA_action"), ("get_is_administrator", "administrator_action")):
+                if action in extra_fields:
+                    extra_fields.remove(action)
+                    if field in extra_fields:
+                        extra_fields[extra_fields.index(field)] = (field, action)
 
             fieldsets = list(fieldsets) + [
                 (
