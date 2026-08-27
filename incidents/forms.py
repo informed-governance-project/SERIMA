@@ -739,6 +739,7 @@ class RegulatorForm(forms.Form):
             if regulator.sectorregulation_set.filter(
                 regulation__id__in=regulations,
                 sectorregulationworkflow__isnull=False,
+                active=True,
             ).exists()
         ]
 
@@ -787,7 +788,7 @@ class SectorForm(forms.Form):
 
 
 def construct_sectors_array(regulations, regulators):
-    sector_regulations = SectorRegulation.objects.filter(regulation__id__in=regulations, regulator__id__in=regulators)
+    sector_regulations = SectorRegulation.objects.filter(regulation__id__in=regulations, regulator__id__in=regulators, active=True)
     all_sectors = Sector.objects.filter(sectorregulation__in=sector_regulations).distinct().order_by("parent")
 
     categs = {}
