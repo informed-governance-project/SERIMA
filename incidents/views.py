@@ -1128,15 +1128,23 @@ class FormWizardView(SessionWizardView):
         if company or regulator:
             company_name = company.name if company else str(regulator)
 
+        sectors_filter = Q(sectors__in=sectors_id) if sectors_id else Q(sectors__isnull=True)
+
         sector_regulations = (
             SectorRegulation.objects.filter(
-                Q(sectors__in=sectors_id) | Q(sectors__isnull=True),
+                sectors_filter,
                 regulator__in=regulators_id,
                 regulation__in=regulations_id,
+                workflows__isnull=False,
+                active=True,
             )
             .order_by()
             .distinct()
         )
+
+        if not sector_regulations.exists():
+            messages.error(self.request, _("No incident notification workflow found for the selected criteria."))
+            return redirect("incidents")
 
         incident_timezone = data.get("incident_timezone", TIME_ZONE)
         incident_detection_date = data.get("detection_date", None)
