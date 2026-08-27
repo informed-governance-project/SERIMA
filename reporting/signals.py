@@ -1,7 +1,9 @@
 import os
-import subprocess
+import re
 
 import kaleido
+import plotly.io as pio
+import psutil
 from celery.signals import worker_process_init, worker_process_shutdown
 from celery.utils.log import get_task_logger
 from choreographer.browsers.chromium import Chromium
@@ -26,6 +28,8 @@ logger = get_task_logger(__name__)
 
 # define a signal to update project
 project_needs_update = Signal()
+
+SOFFICE_PIPE_OWNER = re.compile(r"name=update_toc_(\d+)")
 
 
 # Update project when a company is changed
@@ -176,10 +180,17 @@ def delete_orphaned_recommendationdata(sender, instance, **kwargs):
 
 
 @worker_process_init.connect
-def cleanup_stale_soffice(**kwargs):
-    result = subprocess.run(["pkill", "-f", "soffice.*update_toc"], capture_output=True, check=False)
-    if result.returncode == 0:
-        logger.info("Cleaned up stale soffice pipes on worker startup")
+def cleanup_orphaned_soffice(**kwargs):
+    # soffice is reachable only through the pipe named after the child that started
+    # it, so an instance whose owner is gone is unusable and must not be left behind.
+    for proc in psutil.process_iter(["cmdline"]):
+        try:
+            owner = SOFFICE_PIPE_OWNER.search(" ".join(proc.info["cmdline"] or ()))
+            if owner and not psutil.pid_exists(int(owner.group(1))):
+                proc.kill()
+                logger.info("Reclaimed orphaned soffice %d, owner %s is gone", proc.pid, owner.group(1))
+        except psutil.NoSuchProcess, psutil.AccessDenied:
+            continue
 
 
 @worker_process_init.connect
@@ -208,6 +219,9 @@ def init_kaleido(**kwargs):
             mathjax=False,
         )
         logger.info("Kaleido sync server started successfully. Concurrency: %d", settings.KALEIDO_CONCURRENCY_PER_WORKER)
+        # plotly's non-empty default headers become per-call kopts, which a shared
+        # server ignores with a warning on every figure
+        pio.defaults.headers = {}
     except Exception as e:
         logger.critical("Kaleido failed to start: %s", e)
 
