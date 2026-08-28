@@ -99,7 +99,7 @@ Clicking the icon opens a pop-up showing the comment of the Regulator Admin.
 If the report is NOT accepted by the Regulator Admin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If the report is not accepted by the Regulator Admin, the Preliminary Incident Report is displayed with a red background.
+If the report is not accepted by the Regulator Admin, the **Preliminary Incident Report** is displayed with a red background.
 
 .. figure:: _static/user_manual_images/UM_SER_77.png
    :alt: Preliminary Incident Report - not passed
@@ -112,7 +112,9 @@ If the Operator Admin hovers the mouse over the report, a pop-up appears indicat
    :target: _static/user_manual_images/UM_SER_78.png
 
 If the Operator Admin wants more information on why the report failed, they should click the **speech bubble icon with a green plus**,
-which indicates that a comment is available. The comment displays the text entered by the Regulator Admin on the **Comment/Explanation** form
+which indicates that a comment is available. 
+
+The comment displays the text entered by the Regulator Admin on the **Comment/Explanation** form
 (see the step describing the Regulator Admin’s workflow).
 Clicking the icon opens a pop-up showing the reason why the report was not accepted.
 
