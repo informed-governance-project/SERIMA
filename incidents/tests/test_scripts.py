@@ -83,7 +83,7 @@ class TestWorkflowUpdateStatus:
 
         workflow_update_status.run()
 
-        send_email.assert_called_once_with(status_email, incident)
+        send_email.assert_called_once_with(status_email, incident, workflow=report.workflow)
 
     def test_run_ignores_closed_incidents(self, populate_incident_db, monkeypatch):
         """Ignore closed incidents even when one of their reports has reached its deadline."""
@@ -119,7 +119,7 @@ class TestEmailReminder:
 
         email_reminder.run()
 
-        send_email.assert_called_once_with(reminder_email, incident)
+        send_email.assert_called_once_with(reminder_email, incident, workflow=report.workflow)
 
     def test_run_sends_previous_workflow_reminder(self, populate_incident_db, monkeypatch):
         """Send a reminder when the delay after the previous workflow has elapsed."""
@@ -146,7 +146,9 @@ class TestEmailReminder:
 
         email_reminder.run()
 
-        send_email.assert_called_once_with(reminder_email, incident)
+        send_email.assert_called_once_with(
+            reminder_email, incident, workflow=incident_workflow.workflow, incident_workflow=incident_workflow
+        )
 
     def test_run_sends_notification_date_reminder(self, populate_incident_db, monkeypatch):
         """Send a reminder based on the submitted workflow notification date."""
@@ -169,4 +171,6 @@ class TestEmailReminder:
 
         email_reminder.run()
 
-        send_email.assert_called_once_with(reminder_email, incident)
+        send_email.assert_called_once_with(
+            reminder_email, incident, workflow=incident_workflow.workflow, incident_workflow=incident_workflow
+        )
