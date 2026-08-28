@@ -17,12 +17,11 @@ when creating the security objective.
    :alt: Security Objective header
    :target: _static/user_manual_images/UM_SER_87.png
 
-Beneath the header section, you can see the Comment, Submit, and Close buttons.
+Beneath the header section, you can see the **Comment**, **Submit**, and **Close** buttons.
 You can see the form numbers (1-29) in grey when you open a security objective entry.
 
-The active form is indicated by a slightly larger icon than the others.
-In the screenshot below, the first form is active, as shown by its slightly larger icon.
-Below the row of icons, you can see that this is the first form and its topic.
+The active form is indicated by a slightly larger icon. In the screenshot below, the first form is active, as indicated by its larger icon. 
+The information below the row of icons shows that this is the first form and displays its topic.
 
 .. figure:: _static/user_manual_images/UM_SER_88.png
    :alt: Security Objective header
