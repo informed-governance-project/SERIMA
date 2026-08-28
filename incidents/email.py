@@ -1,64 +1,155 @@
 import logging
-from datetime import date
+from dataclasses import KW_ONLY, dataclass
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
-from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from django.utils.functional import Promise
 
 from governanceplatform.email import send_html_email
 from governanceplatform.helpers import render_to_string_multi_languages
 from governanceplatform.models import Observer, RegulatorUser
 from governanceplatform.rt import add_rt_correspondence, check_rt_config, create_rt_ticket
-from incidents.globals import INCIDENT_EMAIL_VARIABLES
 
 from .access_control import observer_can_access_incident
-from .models import RTTicket
+from .globals import WORKFLOW_REVIEW_STATUS
+from .helpers import is_deadline_exceeded
+from .models import Email, Incident, IncidentWorkflow, ReportTimeline, RTTicket, Workflow
 
 logger = logging.getLogger(__name__)
 
 
-def replace_email_variables(content, incident):
-    # find the incidents which don't have final notification.
-    modify_content = content
-    modify_content = modify_content.replace("#PUBLIC_URL#", settings.PUBLIC_URL)
-    for _i, (variable, key) in enumerate(INCIDENT_EMAIL_VARIABLES):
-        if variable == "#INCIDENT_FINAL_NOTIFICATION_URL#":
-            incident_id = getattr(incident, key)
-            final_notification_url = settings.PUBLIC_URL + reverse("final-notification", args=[incident_id])
-            var_txt = f'<a href="{final_notification_url}">{final_notification_url}</a>'
-        elif variable == "#INCIDENT_DETECTION_DATE#":
-            last_report = incident.get_latest_incident_workflow()
-            if not last_report:
-                var_txt = incident.incident_detection_date.strftime("%Y-%m-%d") if incident.incident_detection_date is not None else ""
-            else:
-                var_txt = (
-                    last_report.report_timeline.incident_detection_date.strftime("%Y-%m-%d")
-                    if last_report.report_timeline.incident_detection_date is not None
-                    else ""
-                )
-        elif variable == "#INCIDENT_STARTING_DATE#":
-            last_report = incident.get_latest_incident_workflow()
-            if not last_report:
-                var_txt = ""
-            else:
-                var_txt = (
-                    last_report.report_timeline.incident_starting_date.strftime("%Y-%m-%d")
-                    if last_report.report_timeline.incident_starting_date is not None
-                    else ""
-                )
-        elif variable == "#DEADLINE#":
-            deadline = incident.get_deadline()
-            if not deadline:
-                var_txt = ""
-            else:
-                deadline = timezone.localtime(deadline)
-                var_txt = deadline.strftime("%Y-%m-%d %H:%M %Z")
-        else:
-            var_txt = getattr(incident, key) if getattr(incident, key) is not None else ""
-            if isinstance(var_txt, date):
-                var_txt = getattr(incident, key).strftime("%Y-%m-%d")
-        modify_content = modify_content.replace(variable, var_txt)
-    return modify_content
+@dataclass(frozen=True)
+class EmailContext:
+    """What an email is about.
+
+    Pass ``incident_workflow`` when the email concerns a submission, so its review status is read from it
+    rather than derived. Reminders and deadline notices chase a report with no submission at all: they pass
+    ``workflow`` instead, and the status is derived from the deadline.
+    """
+
+    incident: Incident
+    _: KW_ONLY
+    workflow: Workflow | None = None
+    incident_workflow: IncidentWorkflow | None = None
+
+
+@dataclass(frozen=True)
+class EmailPlaceholder:
+    """A token a regulator can type in an email template, and how to resolve it against an incident."""
+
+    token: str
+    description: str | Promise
+    resolve: Callable[[EmailContext], Any]
+
+    def render(self, context: EmailContext) -> str:
+        value = self.resolve(context)
+        return "" if value is None else str(value)
+
+
+def _format_date(value: datetime | None) -> str:
+    return value.strftime("%Y-%m-%d") if value is not None else ""
+
+
+def _latest_report_timeline(context: EmailContext) -> ReportTimeline | None:
+    latest_report = context.incident.get_latest_incident_workflow()
+    return latest_report.report_timeline if latest_report is not None else None
+
+
+def _resolve_detection_date(context: EmailContext) -> str:
+    timeline = _latest_report_timeline(context)
+    if timeline is None:
+        return _format_date(context.incident.incident_detection_date)
+    return _format_date(timeline.incident_detection_date)
+
+
+def _resolve_starting_date(context: EmailContext) -> str:
+    timeline = _latest_report_timeline(context)
+    if timeline is None:
+        return ""
+    return _format_date(timeline.incident_starting_date)
+
+
+def _report_in_context(context: EmailContext) -> Workflow | None:
+    """The report the email is about, falling back to the latest submitted one for incident-wide emails."""
+    if context.incident_workflow is not None:
+        return context.incident_workflow.workflow
+    if context.workflow is not None:
+        return context.workflow
+    latest_report = context.incident.get_latest_incident_workflow()
+    return latest_report.workflow if latest_report is not None else None
+
+
+def _resolve_report_name(context: EmailContext) -> str:
+    workflow = _report_in_context(context)
+    return str(workflow) if workflow is not None else ""
+
+
+def _resolve_review_status(context: EmailContext) -> str | Promise:
+    if context.incident_workflow is not None:
+        return context.incident_workflow.get_review_status_display()
+    workflow = _report_in_context(context)
+    if workflow is None:
+        return ""
+    # Mirrors the incident list: the status of the latest submission, or the one derived from the deadline
+    # when nothing has been submitted for that report yet.
+    return dict(WORKFLOW_REVIEW_STATUS).get(is_deadline_exceeded(workflow, context.incident), "")
+
+
+def _submission_in_context(context: EmailContext) -> IncidentWorkflow | None:
+    """The submission the email is about. A reminder names a report instead, which may have none yet."""
+    if context.incident_workflow is not None:
+        return context.incident_workflow
+    if context.workflow is not None:
+        return context.incident.get_latest_incident_workflow_by_workflow(context.workflow)
+    return context.incident.get_latest_incident_workflow()
+
+
+def _resolve_comment_added(context: EmailContext) -> str | Promise:
+    # Plain truthiness, as the comment icon the operator sees on its incident list uses.
+    submission = _submission_in_context(context)
+    return _("New comment added") if submission is not None and submission.comment else ""
+
+
+def _resolve_deadline(context: EmailContext) -> str:
+    deadline = context.incident.get_deadline()
+    if deadline is None:
+        return ""
+    return timezone.localtime(deadline).strftime("%Y-%m-%d %H:%M %Z")
+
+
+# The placeholders usable in the email templates of the admin interface.
+# Adding a new one is a single entry here: the admin help text and the substitution both read from this list.
+
+INCIDENT_EMAIL_PLACEHOLDERS = [
+    EmailPlaceholder("#PUBLIC_URL#", _("Address of the platform"), lambda context: settings.PUBLIC_URL),
+    EmailPlaceholder("#INCIDENT_ID#", _("Incident reference"), lambda context: context.incident.incident_id),
+    EmailPlaceholder(
+        "#INCIDENT_NOTIFICATION_DATE#",
+        _("Date the incident was notified"),
+        lambda context: _format_date(context.incident.incident_notification_date),
+    ),
+    EmailPlaceholder("#INCIDENT_DETECTION_DATE#", _("Date the incident was detected"), _resolve_detection_date),
+    EmailPlaceholder("#INCIDENT_STARTING_DATE#", _("Date the incident started"), _resolve_starting_date),
+    EmailPlaceholder("#INCIDENT_STATUS#", _("Status of the incident"), lambda context: context.incident.get_incident_status_display()),
+    EmailPlaceholder("#REPORT_NAME#", _("Name of the report"), _resolve_report_name),
+    EmailPlaceholder("#REPORT_REVIEW_STATUS#", _("Status of that report"), _resolve_review_status),
+    EmailPlaceholder("#REPORT_COMMENT_ADDED#", _("Notice that the regulator left a review comment"), _resolve_comment_added),
+    EmailPlaceholder("#DEADLINE#", _("Deadline of the next report"), _resolve_deadline),
+]
+
+
+def replace_email_variables(content: str, context: EmailContext) -> str:
+    for placeholder in INCIDENT_EMAIL_PLACEHOLDERS:
+        if placeholder.token in content:
+            content = content.replace(placeholder.token, placeholder.render(context))
+    return content
 
 
 def get_emails_from_qs(queryset):
@@ -102,10 +193,18 @@ def get_recipient_list(incident):
     return recipient_list
 
 
-def send_email(email, incident, send_to_observers=False):
+def send_email(
+    email_template: Email,
+    incident: Incident,
+    *,
+    workflow: Workflow | None = None,
+    incident_workflow: IncidentWorkflow | None = None,
+    send_to_observers: bool = False,
+) -> None:
+    context = EmailContext(incident, workflow=workflow, incident_workflow=incident_workflow)
     subject = replace_email_variables(
-        email.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
-        incident,
+        email_template.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
+        context,
     )
     html_content = render_to_string_multi_languages(
         "incidents/email.html",
@@ -121,8 +220,8 @@ def send_email(email, incident, send_to_observers=False):
             "technical_contact_lastname": incident.technical_lastname,
         },
         replace_email_variables,
-        content=email,
-        object=incident,
+        content=email_template,
+        object=context,
     )
     recipient_list = get_recipient_list(incident)
 

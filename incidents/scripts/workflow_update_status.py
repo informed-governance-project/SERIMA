@@ -50,6 +50,7 @@ def run(logger=logger):
                             send_email(
                                 incident.sector_regulation.report_status_changed_email,
                                 incident,
+                                workflow=report.workflow,
                             )
                 except Exception as e:
                     logger.error(
