@@ -108,7 +108,8 @@ In addition to the Status icon, the **blue dot** on the Review Comment icon indi
 
 The Operator Admin can read the Regulator Admin’s comment. If the Operator Admin clicks the **Review** icon, the following pop-up appears, allowing the Admin to decide whether to review or update the Security Objective.
 
-If the admin does not want to make any changes in the first round and only wants to view the rejected declaration, then click the review button; if they want to make changes, then click the update button.
+If the admin does not want to make any changes in the first round and only wants to view the rejected declaration, then they click the **Review** button.
+If they want to make changes, then they click the **Update** button.
 
 .. figure:: _static/user_manual_images/UM_SER_107.png
    :alt: Security Objectives - update or review statement pop-up
