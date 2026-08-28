@@ -66,6 +66,10 @@ jobs:
           cp -r default-theme/* theme/
 
 
+      - name: Compile translations
+        run: |
+          poetry run python manage.py compilemessages
+
       - name: Run migrations
         run: |
           poetry run python manage.py migrate

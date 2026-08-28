@@ -1,7 +1,10 @@
 from datetime import timedelta
 
 import pytest
+from django.template import TemplateDoesNotExist
+from django.template.loader import get_template
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 
 from governanceplatform.models import User
@@ -104,6 +107,8 @@ def test_incident_status_renders_its_label(incident):
 @pytest.mark.django_db
 def test_incident_status_is_translated_into_the_email_language(incident):
     with override("fr"):
+        if str(_("Ongoing")) == "Ongoing":
+            pytest.skip("French catalogue is not compiled; run manage.py compilemessages")
         assert replace_email_variables("#INCIDENT_STATUS#", EmailContext(incident)) == "En cours"
 
 
@@ -275,6 +280,10 @@ def test_deadline_renders_a_localised_datetime(populate_incident_db, create_inci
 
 @pytest.fixture
 def email_change_form(otp_client, populate_incident_db):
+    try:
+        get_template("admin/incidents/email/change_form.html")
+    except TemplateDoesNotExist:
+        pytest.skip("theme does not provide the Email change form, so the placeholder dialog cannot render")
     email = Email.objects.first()
     client = otp_client(User.objects.get(email="regadmin@reg1.lu"))
     return client.get(f"/admin/incidents/email/{email.pk}/change/")
