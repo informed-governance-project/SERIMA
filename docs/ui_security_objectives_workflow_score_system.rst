@@ -7,7 +7,7 @@ How does the Score system work?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 On each form, you can indicate the security measures in place, which correspond to your maturity level.
-Each form has four maturity levels, ranging from 0 to 3.
+Each form has four maturity levels, ranging from **0** to **3**.
 
 Use the sliders in the **Measures Implemented** column to show the measures you have taken, and in the **Justification** column,
 you can explain why you believe you have reached that maturity level.
