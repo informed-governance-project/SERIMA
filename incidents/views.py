@@ -1128,11 +1128,9 @@ class FormWizardView(SessionWizardView):
         if company or regulator:
             company_name = company.name if company else str(regulator)
 
-        sectors_filter = Q(sectors__in=sectors_id) if sectors_id else Q(sectors__isnull=True)
-
         sector_regulations = (
             SectorRegulation.objects.filter(
-                sectors_filter,
+                Q(sectors__in=sectors_id) | Q(sectors__isnull=True),
                 regulator__in=regulators_id,
                 regulation__in=regulations_id,
                 workflows__isnull=False,
