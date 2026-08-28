@@ -17,7 +17,8 @@ incident. If the Admin needs to contact the Operator Admin directly, this featur
    :alt: Contacts pop-up
    :target: _static/user_manual_images/UM_SER_68.png
 
-**After this explanatory section, the following steps outline how the Regulator Admin reviews the reported incident reports.**
+   
+   **After this explanatory section, the following steps outline how the Regulator Admin reviews the reported incident reports.**
 
 1.	The Regulator Admin clicks the **Preliminary Incident Report** link.
 
@@ -47,7 +48,7 @@ If the content of the report is acceptable, the Regulator Admin selects **Passed
    :target: _static/user_manual_images/UM_SER_71.png
 
 After submitting, the platform returns the Regulator Admin to the **Overview of Reported Incidents** dashboard.
-The Preliminary Incident Report is now displayed in green, with a green checkmark icon indicating its updated status.
+The **Preliminary Incident Report** is now displayed in green, with a green checkmark icon indicating its updated status.
 
 .. figure:: _static/user_manual_images/UM_SER_72.png
    :alt: Overview of Reported Incidents
@@ -56,7 +57,7 @@ The Preliminary Incident Report is now displayed in green, with a green checkmar
 If the Regulator Admin hovers the mouse over the report, a pop-up appears indicating that the **report has passed the review**.
 
 .. figure:: _static/user_manual_images/UM_SER_73.png
-   :alt: the report has passed the review
+   :alt: The report has passed the review
    :target: _static/user_manual_images/UM_SER_73.png
 
 If the report is NOT accepted by the Regulator Admin
@@ -64,7 +65,7 @@ If the report is NOT accepted by the Regulator Admin
 If the report requires further revision, the Regulator Admin provides an explanation and sets the report status to **Revision Required**.
 
 .. figure:: _static/user_manual_images/UM_SER_74.png
-   :alt: the report requires a revision
+   :alt: The report requires a revision
    :target: _static/user_manual_images/UM_SER_74.png
 
 After submitting, the platform returns the Regulator Admin to the **Overview of Reported Incidents** dashboard.
@@ -77,5 +78,5 @@ The **Preliminary Incident Report** is now displayed in red, with a red cross ic
 If the Regulator Admin hovers the mouse over the report, a pop-up appears indicating that the **report has failed the review**.
 
 .. figure:: _static/user_manual_images/UM_SER_76.png
-   :alt: the report has failed the review
+   :alt: The report has failed the review
    :target: _static/user_manual_images/UM_SER_76.png
