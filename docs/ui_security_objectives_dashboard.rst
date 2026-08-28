@@ -3,10 +3,10 @@ Security Objectives Dashboard
 
 The other main part of the **SERIMA** platform is the **Security Objectives module**.
 
-  **The security objectives module is a self-assessment tool used to evaluate security objectives and provide evidence of the security measures in place.**
+  **The Security Objectives module is a self-assessment tool used to evaluate security objectives and provide evidence of the security measures in place.**
 
 You can begin the process by either clicking the **Modules** drop-down menu and selecting **Security Objectives**,
-or by clicking the Go to Dashboard button on the **Security Objectives** tile in the center of the screen.
+or by clicking the **Go to Dashboard** button on the **Security Objectives** tile in the center of the screen.
 
 .. figure:: _static/user_manual_images/UM_SER_41.png
    :alt: Security Objectives Module
@@ -20,14 +20,14 @@ Due to the complexity of the screen, its different parts will be presented one b
    :alt: Security Objectives Dashboard
    :target: _static/user_manual_images/UM_SER_42.png
 
-1. **Dashboard**: By clicking the **Dashboard** link in the top-right corner, you can return to the landing page of the Security objectives dashboard.
-2.	**New submission**: By clicking the red **New submission** button in the top-right corner, you can create a new security objectives entry.
+1. **Dashboard**: By clicking the **Dashboard** link in the top-right corner, you can return to the landing page of the Security Objectives dashboard.
+2.	**New submission**: By clicking the red **New submission** button in the top-right corner, you can create a new security objective entry.
 
-The **Create a new security objectives** pop-up opens, where you can begin the process by using the dropdown menus to select the evaluation framework,
+The **Create a new security objectives statement** pop-up opens, where you can begin the process by using the dropdown menus to select the evaluation framework,
 year, and sector options.
 
 .. figure:: _static/user_manual_images/UM_SER_43.png
-   :alt: Create a new security objectives
+   :alt: Create a new security objective
    :target: _static/user_manual_images/UM_SER_43.png
 
 3.	**Search**: The search function can be useful if there are many security objective entries and you want to filter among them according to different
@@ -40,16 +40,16 @@ Passed, Passed and sent, Revision required, and Revision required and sent), and
 Clicking this icon displays the legend above the security objective submission entries list (highlighted in yellow in the screenshot below).
 
 .. figure:: _static/user_manual_images/UM_SER_44.png
-   :alt: Icon guid - legends
+   :alt: Icon guide - legends
    :target: _static/user_manual_images/UM_SER_44.png
 
-These legends appear in the Status column on the far left of the security objectives list.
+These legends appear in the **Status** column on the far left of the security objectives list.
 By looking at the status of the entry item, you can have a quick overview of its status. You can hide the legend by clicking the Icon guide again.
-As you can see in the screenshot below, the status of the security objective entry is Unsubmitted. You can also see that the progress of completing
-the security objective is currently only 3% (Progress column).
+
+As you can see in the screenshot below, the status of the security objective entry is Unsubmitted. You can also see that the progress of completing the security objective is currently only 3% (Progress column).
 
 .. figure:: _static/user_manual_images/UM_SER_45.png
-   :alt: Icon guid - legends
+   :alt: Icon guide - legends
    :target: _static/user_manual_images/UM_SER_45.png
 
 6.	**Column headers**: On the dashboard, security objective entries are displayed in a table with the following headers:
@@ -59,10 +59,9 @@ the security objective is currently only 3% (Progress column).
    :alt: Column headers
    :target: _static/user_manual_images/UM_SER_46.png
 
-Each column has an up-and-down arrow on its right edge. Clicking the arrow sorts the entries in ascending or descending order based on that column.
-Only one sorting option can be active at a time, and the active option is indicated by a darker grey triangle.
-As shown in the screenshot below, the two entries are sorted by **Last update** in ascending order, with the most recent incident at the bottom
-and the earlier one above.
+Each column has an up-and-down arrow on its right edge. Clicking the arrow sorts the entries in ascending or descending order based on that column. Only one sorting option can be active at a time, and the active option is indicated by a darker grey triangle.
+
+As shown in the screenshot below, the two entries are sorted by **Last update** in ascending order, with the most recent incident at the bottom and the earlier one above.
 
 .. figure:: _static/user_manual_images/UM_SER_47.png
    :alt: Last update column
@@ -95,15 +94,14 @@ Once it has been submitted, you can only review it; editing is no longer possibl
 
 9.	**Send**: Click the envelope icon to send the security objective. This icon is being replaced with the **Comment** feature in SERIMA.
 
-10.	**Duplicate**: If you want to duplicate a security objective, click the duplicate icon (highlighted in yellow in the screenshot below).
-Please note that creating an entry can be time-consuming, as you need to complete 29 forms.
+10.	**Duplicate**: If you want to duplicate a security objective, click the **Duplicate** icon (highlighted in yellow in the screenshot below). Please note that creating an entry can be time-consuming, as you need to complete 29 forms.
 This function is, therefore, very useful when creating similar security objectives, as it can save a considerable amount of time and effort.
 
 .. figure:: _static/user_manual_images/UM_SER_50.png
    :alt: Duplicate a security objective
    :target: _static/user_manual_images/UM_SER_50.png
 
-Once clicked, the pop-up below appears. Select the year from the dropdown, choose a sector, and then click **Duplicate**.
+Once clicked, the pop-up **Duplicate the selected security objectives statement to** appears. Select the year from the dropdown, choose a sector, and then click **Duplicate**.
 
 .. figure:: _static/user_manual_images/UM_SER_51.png
    :alt: Duplicate a security objective
@@ -148,8 +146,7 @@ Once it has been submitted, the delete icon becomes inactive. In the screenshot 
    :alt: Delete an entry
    :target: _static/user_manual_images/UM_SER_55.png
 
-You can also see that in the Status column. The top icon shows that the entry is **Unsubmitted**, whereas the bottom icon shows that the entry
-is **Under review**. You can see these statuses by hovering your mouse over the relevant icons.
+You can also see that in the Status column. The top icon shows that the entry is **Unsubmitted**, whereas the bottom icon shows that the entry is **Under review**. You can see these statuses by hovering your mouse over the relevant icons.
 
 .. figure:: _static/user_manual_images/UM_SER_56.png
    :alt: Dashboard - entry statuses
