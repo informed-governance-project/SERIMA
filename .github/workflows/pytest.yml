@@ -66,6 +66,12 @@ jobs:
           cp -r default-theme/* theme/
 
 
+      - name: Compile translations
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+          poetry run python manage.py compilemessages
+
       - name: Run migrations
         run: |
           poetry run python manage.py migrate

@@ -1133,10 +1133,16 @@ class FormWizardView(SessionWizardView):
                 Q(sectors__in=sectors_id) | Q(sectors__isnull=True),
                 regulator__in=regulators_id,
                 regulation__in=regulations_id,
+                workflows__isnull=False,
+                active=True,
             )
             .order_by()
             .distinct()
         )
+
+        if not sector_regulations.exists():
+            messages.error(self.request, _("No incident notification workflow found for the selected criteria."))
+            return redirect("incidents")
 
         incident_timezone = data.get("incident_timezone", TIME_ZONE)
         incident_detection_date = data.get("detection_date", None)
@@ -1561,7 +1567,13 @@ class WorkflowWizardView(SessionWizardView):
             create_entry_log(user, self.incident, incident_workflow, "CREATE", self.request)
 
             if email and not self.incident.incident_status == "CLOSE":
-                send_email(email, self.incident, send_to_observers=True)
+                send_email(
+                    email,
+                    self.incident,
+                    workflow=incident_workflow.workflow,
+                    incident_workflow=incident_workflow,
+                    send_to_observers=True,
+                )
         # save the comment if the user is regulator
         elif is_user_regulator(user) and not self.read_only:
             incident_workflow = (
@@ -1569,15 +1581,13 @@ class WorkflowWizardView(SessionWizardView):
             )
             incident_workflow.comment = data.get("comment", None)
             review_status = data.get("review_status", None)
+            status_changed_email = None
             if incident_workflow.review_status != review_status:
                 if (
                     incident_workflow.incident.sector_regulation.report_status_changed_email
                     and not incident_workflow.incident.incident_status == "CLOSE"
                 ):
-                    send_email(
-                        incident_workflow.incident.sector_regulation.report_status_changed_email,
-                        incident_workflow.incident,
-                    )
+                    status_changed_email = incident_workflow.incident.sector_regulation.report_status_changed_email
             if review_status is not None:
                 incident_workflow.review_status = review_status
                 with override(PARLER_DEFAULT_LANGUAGE_CODE):
@@ -1597,6 +1607,14 @@ class WorkflowWizardView(SessionWizardView):
                 "COMMENT",
                 self.request,
             )
+
+            if status_changed_email is not None:
+                send_email(
+                    status_changed_email,
+                    incident_workflow.incident,
+                    workflow=incident_workflow.workflow,
+                    incident_workflow=incident_workflow,
+                )
 
         return redirect("regulator_incidents") if self.is_regulator_incident else redirect("incidents")
 
