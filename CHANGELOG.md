@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Users list columns for "2FA Activated", "Is Administrator" and "Approved" (#861)
 - The account history now records approving and rejecting a link, granting and removing the administrator role, resetting the 2FA token, and removing an account from the company (#861)
 - Unit tests for incident cleanup, log cleanup, workflow deadline notifications, and incident reminder scripts, helpers of governanceplatform
+- Email templates accept four more placeholders: `#INCIDENT_STATUS#` for the status of the incident, and `#REPORT_NAME#`, `#REPORT_REVIEW_STATUS#` and `#REPORT_COMMENT_ADDED#` for the name of the report, its review status, and a notice when the regulator left a review comment on it. The report an email describes is the one it concerns: a reminder or a deadline notice names the report it is chasing, which is generally not the latest one and often has no submission at all (#856)
+- The placeholders usable in an email template are listed in the admin: an "Available placeholders" button above the content field opens a dialog naming each one and what it is replaced by, `#PUBLIC_URL#` included, which was supported but undocumented (#856)
+- Unit tests for the substitution of email template placeholders (#505)
 
 ### Changed
 
@@ -30,9 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Company selection now returns the user to the page they originally asked for instead of always landing on the home page
+- The email announcing that a report status changed is now sent after the new status is saved, so it no longer announces a change while quoting the previous status, and is not sent at all if the save fails (#856)
+- An email sent for an incident whose latest report carries no timeline no longer fails: `#INCIDENT_DETECTION_DATE#` falls back to the detection date of the incident and `#INCIDENT_STARTING_DATE#` renders empty (#856)
 - Incident export: a report shared by several incident workflows is now offered under each of them. The report list only carried one workflow id per report, so the report was hidden for every other workflow it belongs to
 - Removed the unrelated `parler` dependency (a Parler social-network API client, not part of `django-parler`). Both distributions install a `parler/__init__.py`, and the wrong one was shadowing `django-parler`'s, so every Django and Celery process started by globally suppressing urllib3 `HTTPWarning` — including the warning raised for unverified HTTPS requests
-- `requests` is now declared explicitly: `incidents/email.py` imports it directly but it was only installed as a transitive dependency of the removed `parler` package
+- `requests` is now declared explicitly: `governanceplatform/rt.py` imports it directly but it was only installed as a transitive dependency of the removed `parler` package
 
 ## [0.5.17] - 2026-08-04
 
