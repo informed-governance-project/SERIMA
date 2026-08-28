@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.utils import timezone
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 if TYPE_CHECKING:
@@ -102,6 +103,9 @@ def _resolve_review_status(context: EmailContext) -> str | Promise:
     return dict(WORKFLOW_REVIEW_STATUS).get(is_deadline_exceeded(workflow, context.incident), "")
 
 
+COMMENT_ADDED_NOTICE = _("New comment added")
+
+
 def _submission_in_context(context: EmailContext) -> IncidentWorkflow | None:
     """The submission the email is about. A reminder names a report instead, which may have none yet."""
     if context.incident_workflow is not None:
@@ -114,7 +118,7 @@ def _submission_in_context(context: EmailContext) -> IncidentWorkflow | None:
 def _resolve_comment_added(context: EmailContext) -> str | Promise:
     # Plain truthiness, as the comment icon the operator sees on its incident list uses.
     submission = _submission_in_context(context)
-    return _("New comment added") if submission is not None and submission.comment else ""
+    return COMMENT_ADDED_NOTICE if submission is not None and submission.comment else ""
 
 
 def _resolve_deadline(context: EmailContext) -> str:
@@ -140,7 +144,12 @@ INCIDENT_EMAIL_PLACEHOLDERS = [
     EmailPlaceholder("#INCIDENT_STATUS#", _("Status of the incident"), lambda context: context.incident.get_incident_status_display()),
     EmailPlaceholder("#REPORT_NAME#", _("Name of the report"), _resolve_report_name),
     EmailPlaceholder("#REPORT_REVIEW_STATUS#", _("Status of the report"), _resolve_review_status),
-    EmailPlaceholder("#REPORT_COMMENT_ADDED#", _("Return `New comment added`"), _resolve_comment_added),
+    EmailPlaceholder(
+        "#REPORT_COMMENT_ADDED#",
+        # Same lazy string the resolver returns, so what the admin advertises cannot drift from what is sent.
+        format_lazy('"{}" — {}', COMMENT_ADDED_NOTICE, _("empty when the regulator left no comment")),
+        _resolve_comment_added,
+    ),
     EmailPlaceholder("#DEADLINE#", _("Deadline of the next report"), _resolve_deadline),
 ]
 
