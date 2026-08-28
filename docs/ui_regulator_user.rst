@@ -52,7 +52,7 @@ were selected, and a test description was added.
 The **Recommendation Name** field is mandatory (indicated by a red asterisk); all other fields and options are optional.
 At least one sector must be selected. You can select multiple sectors at a time, or select all by clicking the **Choose All Sectors** button.
 
-If you do not choose a sector, then the recommendation will be linked to all sectors.
+  **If you do not choose a sector, then the recommendation will be linked to all sectors.**
 
 .. figure:: _static/regulator_user_images/Reg_User_02.png
    :alt: Reporting - Recommendations
