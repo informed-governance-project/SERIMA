@@ -139,8 +139,8 @@ INCIDENT_EMAIL_PLACEHOLDERS = [
     EmailPlaceholder("#INCIDENT_STARTING_DATE#", _("Date the incident started"), _resolve_starting_date),
     EmailPlaceholder("#INCIDENT_STATUS#", _("Status of the incident"), lambda context: context.incident.get_incident_status_display()),
     EmailPlaceholder("#REPORT_NAME#", _("Name of the report"), _resolve_report_name),
-    EmailPlaceholder("#REPORT_REVIEW_STATUS#", _("Status of that report"), _resolve_review_status),
-    EmailPlaceholder("#REPORT_COMMENT_ADDED#", _("Notice that the regulator left a review comment"), _resolve_comment_added),
+    EmailPlaceholder("#REPORT_REVIEW_STATUS#", _("Status of the report"), _resolve_review_status),
+    EmailPlaceholder("#REPORT_COMMENT_ADDED#", _("Return `New comment added`"), _resolve_comment_added),
     EmailPlaceholder("#DEADLINE#", _("Deadline of the next report"), _resolve_deadline),
 ]
 
