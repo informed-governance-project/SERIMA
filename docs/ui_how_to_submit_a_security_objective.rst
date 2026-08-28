@@ -10,7 +10,7 @@ or by clicking the **Go to Dashboard** button on the Security Objectives tile in
    :target: _static/user_manual_images/UM_SER_41.png
 
 Either way, you will be taken to the **Security Objectives** dashboard, where you can view an overview of all submitted security objectives.
-Once on the dashboard, click the **New submission** button in the top-right corner of the screen.
+Once you are on the dashboard, click the **New submission** button in the top-right corner of the screen.
 
 .. figure:: _static/user_manual_images/UM_SER_57.png
    :alt: New submission
@@ -22,7 +22,7 @@ The **Create a new security objectives statement** pop-up appears. Choose the ev
    :alt: Create a new security objectives statement
    :target: _static/user_manual_images/UM_SER_58.png
 
-The **Sectors** drop-down menu offers multiple options. Once you have selected an option, it will appear in the dropdown (in the screenshot below, the option **Digital infrastructure** is selected). To select more, click the dropdown again so the options appear, with the checkmark indicating the already selected option.
+The **Sectors** drop-down menu offers multiple options. Once you have selected an option, it will appear in the drop-down (in the screenshot below, the option **Digital infrastructure** is selected).
 
 .. figure:: _static/user_manual_images/UM_SER_83.png
    :alt: Create a new security objectives statement - Digital infrastructure
@@ -47,6 +47,6 @@ If multiple options are selected, not all of them may be visible. Hover your mou
    :alt: Create a new security objectives statement - selected several sectors
    :target: _static/user_manual_images/UM_SER_86.png
 
-If all three drop-down menus (Evaluation Framework, Year, and Sectors) contain appropriate values, click the create button.
+If all three drop-down menus (Evaluation Framework, Year, and Sectors) contain appropriate values, click the **Create** button.
 The **Security Objectives Dashboard** appears, and you can start the process.
 In the following chapter, you can read about the workflow for submitting a security objective.
