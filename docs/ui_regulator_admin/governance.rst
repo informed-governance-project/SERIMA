@@ -7,7 +7,7 @@ In the **Governance** section, you can find the following functionalities:
    :alt: Governance
    :target: /_static/regulator_admin_images/Reg_Admin_06.png
 
-On the left panel, you can see the functionalities and their links. To the right, you can see whether the Regulator Admin has write access (**Add/Change**) or only read access (**View**) for each functionality. **These permissions are set by the Platform Admin.**
+In the left panel, you can see the functionalities and their links. To the right, you can see whether the Regulator Admin has write access (**Add/Change**) or only read access (**View**) for each functionality. **These permissions are set by the Platform Admin.**
 
 Entity categories
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -27,10 +27,10 @@ You only have read-only access to the Entity categories. Once you click the name
 Functionalities
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Click the **Functionalities** link to go to the **Select Functionality to view** screen. On this screen, you can check what kind of functionalities are defined in your system. The screenshot below shows two configured functionalities (Reporting and Security Objective):
+Click the **Functionalities** link to go to the **Select Functionality to view** screen. On this screen, you can check what kind of functionalities are defined in your system. The screenshot below shows two configured functionalities (**Reporting** and **Security Objective**):
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_08.png
-   :alt: Select Functionality to view
+   :alt: Select a functionality to view
    :target: /_static/regulator_admin_images/Reg_Admin_08.png
 
 You only have read-only access to the **Functionalities**. Once you click the name of the Functionality in the **Type** column, you will be directed to the **View Functionality** screen:
@@ -53,7 +53,7 @@ Click the name of the Observer in the **Name** column to view it. Once you click
 Operators
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Click the **Operators** link to go to the **Select Operator to change** screen. On this screen, you can check what kind of operators are defined in your system. The screenshot below shows two configured operators:
+Click the **Operators** link to go to the **Select Operator to change** screen. On this screen, you can see what types of operators are defined in your system. The screenshot below shows two configured operators:
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_12.png
    :alt: Select Operator to change
@@ -123,7 +123,7 @@ Once you set up a new sector and click Save, the newly-added sector appears on t
 Users
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-To view the users and their types, select the **Users** link in the **Governance** panel on the left. After clicking the Users link, you will be directed to the **Select User to Change** screen (also called the **User Table**). You can create new users by clicking the **+Add** link or by clicking the **Add User** button in the top right-hand corner.
+To view the users and their types, select the **Users** link in the **Governance** panel on the left. After clicking the Users link, you will be directed to the **Select User to Change** screen (also called the **User Table**). You can create new users by clicking the **+Add** link or by choosing the **Add User** button in the top right-hand corner.
 
 The User table contains several columns (Active, First Name, Last Name, Email Address, etc.). If you have many users, you can search among them using the **Search** field or filter them using the **Filter** panel on the right.
 
