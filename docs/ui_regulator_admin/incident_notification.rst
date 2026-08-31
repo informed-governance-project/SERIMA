@@ -28,9 +28,13 @@ Beneath the Content area, you can see the usable placeholders you can use to rep
    :alt: New Incident Notification
    :target: /_static/regulator_admin_images/Reg_Admin_64.png
 
-These placeholders are automatically populated and replace the relevant information whenever the email is sent. You can set up your template emails in four languages: English, French, Dutch, and German. English is the platform’s default language, so email templates are typically created in English and translated into other languages when needed.
+These placeholders are automatically populated and replace the relevant information whenever the email is sent. You can set up your template emails in four languages: English, French, Dutch, and German. 
 
-You can switch between these four languages on the platform using the **language selector dropdown** in the top-right corner of the application. The default language is English. If you switch to another language, but the email template has not been translated into that language, the platform will fall back to English and display the English version of the email.
+   **English is the platform’s default language, so email templates are typically created in English and translated into other languages when needed.**
+
+You can switch between these four languages on the platform using the **language selector dropdown** in the top-right corner of the application. The default language is English. 
+
+   **If you switch to another language, but the email template has not been translated into that language, the platform will fall back to English and display the English version of the email.**
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_25.png
    :alt: language selector dropdown
@@ -146,12 +150,14 @@ Incident reports
 Click the **Incident reports** link to go to the **Select Incident report to change** screen. On this screen, you can check what kind of incident reports are defined in your system. The reports are in a table format with the following columns: **Name, Label, Description, Impacts Disclosure Required, Submission Email**, and **Creator**.
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_29.png
-   :alt: Select Incident report to change
+   :alt: Select an incident report to change
    :target: /_static/regulator_admin_images/Reg_Admin_29.png
 
-Reports are the building blocks of a workflow; they are the steps you create to assemble a process called a workflow. You can configure different workflows to best suit your needs. You can create new reports either by clicking the **Add** link in the Incident Notification section on the left, or by clicking the **Add Notification Report** button in the top-right corner.
+   **Reports are the building blocks of a workflow; they are the steps you create to assemble a process called a workflow.**
 
-   **How to delete a selected incident report?**
+You can configure different workflows to best suit your needs. You can create new reports either by clicking the **Add** link in the Incident Notification section on the left, or by clicking the **Add Notification Report** button in the top-right corner.
+
+**How to delete a selected incident report?**
 
 Select the incident report or reports you want to delete by checking the box next to each relevant report. Then, open the **Action** dropdown menu, choose **Delete Selected Incident Reports**, and click **Go**. The selected reports will be deleted.
 
@@ -159,8 +165,7 @@ Select the incident report or reports you want to delete by checking the box nex
    :alt: Delete selected Incident reports
    :target: /_static/regulator_admin_images/Reg_Admin_28.png
 
-
-   **How to check the details of a report?**
+**How to check the details of a report?**
 
 Click the name of a report to view its details. You will then be directed to the **Change Incident Report** screen. At the top of this screen is the **General** section, which displays the name, label, and description of the report. The second section is the **Notification email**, where you can set which email template you want to use for the selected report. 
 
