@@ -22,6 +22,8 @@ def run(logger=logger):
         incident_to_delete_qs = Incident.objects.filter(
             incident_notification_date__lte=Now() - timedelta(days=INCIDENT_RETENTION_TIME_IN_DAY)
         )
+        # Querysets are lazy, so count() is what actually reaches the database here.
+        deleted_number = incident_to_delete_qs.count()
     except DatabaseError as e:
         logger.error("Failed to fetch incident to delete: %s", e, exc_info=True)
         raise
@@ -29,7 +31,7 @@ def run(logger=logger):
     try:
         ScriptLogEntry.objects.create(
             object_id=None,
-            object_repr="System:Incident script deletion " + str(incident_to_delete_qs.count()) + " incident(s) deleted",
+            object_repr=f"System:Incident script deletion {deleted_number} incident(s) deleted",
             action_flag=3,
         )
     except Exception as e:

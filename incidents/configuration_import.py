@@ -1,5 +1,4 @@
-from collections.abc import Iterable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from governanceplatform.models import Sector
 from incidents.configuration_export import FORMAT_NAME, FORMAT_VERSION
@@ -23,6 +22,9 @@ from incidents.models import (
     Workflow,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
 INCIDENT_EMAIL_TRIGGER_VALUES = {value for value, _label in INCIDENT_EMAIL_TRIGGER_EVENT}
 QUESTION_TYPE_VALUES = {value for value, _label in QUESTION_TYPES}
 WORKFLOW_TRIGGER_VALUES = {value for value, _label in SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT}
@@ -41,13 +43,22 @@ class SectorRegulationConfigurationImporter:
         target: SectorRegulation,
         *,
         create_all: bool = False,
+        reuse_all: bool = False,
     ) -> None:
         self.data = data
         self.target = target
         self.create_all = create_all
+        self.reuse_all = reuse_all
         self.creator = target.regulator
         self.creator_name = target.regulator.safe_translation_getter("name", any_language=True) or str(target.regulator)
         self.reused_question_keys: set[str] = set()
+        self.reused_answer_keys: set[str] = set()
+        self.reused_email_keys: set[str] = set()
+        self.reused_report_keys: set[str] = set()
+        self.reused_category_keys: set[str] = set()
+        self.reused_category_option_keys: set[str] = set()
+        self.reused_question_option_keys: set[str] = set()
+        self.reused_question_options: dict[str, QuestionOptions] = {}
         self.skipped_answer_keys: set[str] = set()
         self.sectors_by_acronym: dict[str, list[Sector]] | None = None
 
@@ -152,20 +163,26 @@ class SectorRegulationConfigurationImporter:
                 )
 
         emails = self._import_emails(email_data)
-        reports = self._import_reports(report_data, emails)
         categories = self._import_categories(category_data)
         category_options = self._import_category_options(
             category_option_data,
             categories,
         )
         questions, answers = self._import_questions(question_data)
+        reports = self._import_reports(
+            report_data,
+            emails,
+            question_option_data,
+            questions,
+            category_options,
+        )
         question_options = self._import_question_options(
             question_option_data,
             reports,
             questions,
             category_options,
         )
-        conditional_count = self._import_conditional_questions(
+        conditional_created, conditional_reused = self._import_conditional_questions(
             answers,
             question_options,
         )
@@ -174,23 +191,31 @@ class SectorRegulationConfigurationImporter:
             emails,
         )
         sectors_created, sectors_reused = self._import_sectors(sector_data)
-        impact_count = self._import_impacts()
+        impacts_created, impacts_reused = self._import_impacts()
         sector_count = self._update_target(emails)
 
         return {
-            "emails": len(emails),
-            "reports": len(reports),
-            "categories": len(categories),
-            "category_options": len(category_options),
+            "emails_created": len(emails) - len(self.reused_email_keys),
+            "emails_reused": len(self.reused_email_keys),
+            "reports_created": len(reports) - len(self.reused_report_keys),
+            "reports_reused": len(self.reused_report_keys),
+            "categories_created": len(categories) - len(self.reused_category_keys),
+            "categories_reused": len(self.reused_category_keys),
+            "category_options_created": len(category_options) - len(self.reused_category_option_keys),
+            "category_options_reused": len(self.reused_category_option_keys),
             "questions_created": len(questions) - len(self.reused_question_keys),
             "questions_reused": len(self.reused_question_keys),
-            "predefined_answers": len(answers),
+            "predefined_answers_created": len(answers) - len(self.reused_answer_keys),
+            "predefined_answers_reused": len(self.reused_answer_keys),
             "predefined_answers_skipped": len(self.skipped_answer_keys),
-            "question_options": len(question_options),
-            "conditional_questions": conditional_count,
+            "question_options_created": len(question_options) - len(self.reused_question_option_keys),
+            "question_options_reused": len(self.reused_question_option_keys),
+            "conditional_questions_created": conditional_created,
+            "conditional_questions_reused": conditional_reused,
             "report_links": report_link_count,
             "reminder_emails": reminder_count,
-            "impacts": impact_count,
+            "impacts_created": impacts_created,
+            "impacts_reused": impacts_reused,
             "sectors_created": sectors_created,
             "sectors_reused": sectors_reused,
             "sectors_linked": sector_count,
@@ -247,6 +272,27 @@ class SectorRegulationConfigurationImporter:
     ) -> dict[str, Email]:
         imported = {}
         for key, item in catalog.items():
+            if self.reuse_all:
+                existing = next(
+                    (
+                        email
+                        for email in Email.objects.filter(
+                            name=self._string(item, "name"),
+                        )
+                        .prefetch_related("translations")
+                        .order_by("pk")
+                        if self._translations_match(
+                            email,
+                            item.get("translations"),
+                            ("subject", "content"),
+                        )
+                    ),
+                    None,
+                )
+                if existing is not None:
+                    imported[key] = existing
+                    self.reused_email_keys.add(key)
+                    continue
             email = Email.objects.create(
                 name=self._string(item, "name"),
                 creator=self.creator,
@@ -264,13 +310,99 @@ class SectorRegulationConfigurationImporter:
         self,
         catalog: dict[str, dict[str, Any]],
         emails: dict[str, Email],
+        question_option_catalog: dict[str, dict[str, Any]],
+        questions: dict[str, Question],
+        category_options: dict[str, QuestionCategoryOptions],
     ) -> dict[str, Workflow]:
         imported = {}
         for key, item in catalog.items():
+            original_name = self._string(item, "name")
+            if self.reuse_all:
+                existing = (
+                    Workflow.objects.filter(name=original_name).select_related("submission_email").prefetch_related("translations").first()
+                )
+                report_matches = (
+                    existing is not None
+                    and existing.is_impact_needed == self._boolean(item, "is_impact_needed", default=False)
+                    and existing.submission_email
+                    == self._optional_reference(
+                        emails,
+                        item.get("submission_email"),
+                        "email",
+                    )
+                    and self._translations_match(
+                        existing,
+                        item.get("translations"),
+                        ("label", "description"),
+                    )
+                )
+                expected_options = [
+                    (option_key, option_item)
+                    for option_key, option_item in question_option_catalog.items()
+                    if option_item.get("report") == key
+                ]
+                available_options = (
+                    list(
+                        QuestionOptions.objects.filter(
+                            report=existing,
+                            deleted_date__isnull=True,
+                        )
+                        .select_related("question", "category_option")
+                        .order_by("pk")
+                    )
+                    if existing is not None
+                    else []
+                )
+                report_matches = report_matches and len(available_options) == len(expected_options)
+                reused_options: dict[str, QuestionOptions] = {}
+                for option_key, option_item in expected_options:
+                    question = self._reference(
+                        questions,
+                        option_item.get("question"),
+                        "question",
+                    )
+                    category_option = self._reference(
+                        category_options,
+                        option_item.get("category_option"),
+                        "category option",
+                    )
+                    match = next(
+                        (
+                            option
+                            for option in available_options
+                            if option.question == question
+                            and option.category_option == category_option
+                            and option.position == self._integer(option_item, "position")
+                            and option.is_mandatory
+                            == self._boolean(
+                                option_item,
+                                "is_mandatory",
+                                default=False,
+                            )
+                            and option.is_conditional
+                            == self._boolean(
+                                option_item,
+                                "is_conditional",
+                                default=False,
+                            )
+                        ),
+                        None,
+                    )
+                    if match is None:
+                        report_matches = False
+                        break
+                    reused_options[option_key] = match
+                    available_options.remove(match)
+                if existing is not None and report_matches:
+                    imported[key] = existing
+                    self.reused_report_keys.add(key)
+                    self.reused_question_options.update(reused_options)
+                    self.reused_question_option_keys.update(reused_options)
+                    continue
             name = self._unique_value(
                 Workflow,
                 "name",
-                self._string(item, "name"),
+                original_name,
                 " (import {number})",
             )
             report = Workflow.objects.create(
@@ -302,6 +434,25 @@ class SectorRegulationConfigurationImporter:
     ) -> dict[str, QuestionCategory]:
         imported = {}
         for key, item in catalog.items():
+            if self.reuse_all:
+                existing = next(
+                    (
+                        category
+                        for category in QuestionCategory.objects.prefetch_related(
+                            "translations",
+                        ).order_by("pk")
+                        if self._translations_match(
+                            category,
+                            item.get("translations"),
+                            ("label",),
+                        )
+                    ),
+                    None,
+                )
+                if existing is not None:
+                    imported[key] = existing
+                    self.reused_category_keys.add(key)
+                    continue
             category = QuestionCategory.objects.create(
                 creator=self.creator,
                 creator_name=self.creator_name,
@@ -321,13 +472,24 @@ class SectorRegulationConfigurationImporter:
     ) -> dict[str, QuestionCategoryOptions]:
         imported = {}
         for key, item in catalog.items():
+            category = self._reference(
+                categories,
+                item.get("category"),
+                "category",
+            )
+            position = self._integer(item, "position")
+            if self.reuse_all:
+                existing = QuestionCategoryOptions.objects.filter(
+                    question_category=category,
+                    position=position,
+                ).first()
+                if existing is not None:
+                    imported[key] = existing
+                    self.reused_category_option_keys.add(key)
+                    continue
             imported[key] = QuestionCategoryOptions.objects.create(
-                question_category=self._reference(
-                    categories,
-                    item.get("category"),
-                    "category",
-                ),
-                position=self._integer(item, "position"),
+                question_category=category,
+                position=position,
             )
         return imported
 
@@ -353,8 +515,61 @@ class SectorRegulationConfigurationImporter:
                 known_answer_keys.add(answer_key)
                 validated_answers.append((answer_key, answer_item))
 
-            existing = Question.objects.filter(reference=reference).first()
-            if existing is not None and not self.create_all:
+            existing = (
+                Question.objects.filter(reference=reference)
+                .prefetch_related(
+                    "translations",
+                    "predefinedanswer_set__translations",
+                )
+                .first()
+            )
+            if existing is not None and self.reuse_all:
+                available_answers = list(existing.predefinedanswer_set.all())
+                existing_answers: dict[str, PredefinedAnswer] = {}
+                question_matches = (
+                    existing.question_type
+                    == self._choice(
+                        item,
+                        "question_type",
+                        QUESTION_TYPE_VALUES,
+                    )
+                    and self._translations_match(
+                        existing,
+                        item.get("translations"),
+                        ("label", "tooltip"),
+                    )
+                    and len(available_answers) == len(validated_answers)
+                )
+                for answer_key, answer_item in validated_answers:
+                    match = next(
+                        (
+                            answer
+                            for answer in available_answers
+                            if answer.position
+                            == self._optional_integer(
+                                answer_item,
+                                "position",
+                            )
+                            and self._translations_match(
+                                answer,
+                                answer_item.get("translations"),
+                                ("predefined_answer",),
+                            )
+                        ),
+                        None,
+                    )
+                    if match is None:
+                        question_matches = False
+                        break
+                    existing_answers[answer_key] = match
+                    available_answers.remove(match)
+                if question_matches:
+                    questions[key] = existing
+                    answers.update(existing_answers)
+                    self.reused_question_keys.add(key)
+                    self.reused_answer_keys.update(existing_answers)
+                    continue
+            if existing is not None and not self.create_all and not self.reuse_all:
                 questions[key] = existing
                 self.reused_question_keys.add(key)
                 self.skipped_answer_keys.update(answer_key for answer_key, _answer_item in validated_answers)
@@ -408,6 +623,9 @@ class SectorRegulationConfigurationImporter:
     ) -> dict[str, QuestionOptions]:
         imported = {}
         for key, item in catalog.items():
+            if key in self.reused_question_options:
+                imported[key] = self.reused_question_options[key]
+                continue
             imported[key] = QuestionOptions.objects.create(
                 report=self._reference(reports, item.get("report"), "report"),
                 question=self._reference(
@@ -438,38 +656,53 @@ class SectorRegulationConfigurationImporter:
         self,
         answers: dict[str, PredefinedAnswer],
         question_options: dict[str, QuestionOptions],
-    ) -> int:
+    ) -> tuple[int, int]:
         items = self.data.get("conditional_questions", [])
         if not isinstance(items, list):
             raise ConfigurationImportError("conditional_questions must be a list.")
         count = 0
+        reused_count = 0
         for item in items:
             if not isinstance(item, dict):
                 raise ConfigurationImportError("Invalid conditional question.")
             answer_key = item.get("predefined_answer")
             if answer_key in self.skipped_answer_keys:
                 continue
+            question_option = self._reference(
+                question_options,
+                item.get("question_option"),
+                "question option",
+            )
+            predefined_answer = self._reference(
+                answers,
+                answer_key,
+                "predefined answer",
+            )
+            next_question_option = self._reference(
+                question_options,
+                item.get("next_question_option"),
+                "next question option",
+            )
+            if (
+                self.reuse_all
+                and ConditionalQuestionOption.objects.filter(
+                    question_options=question_option,
+                    predefined_answer=predefined_answer,
+                    next_question_options=next_question_option,
+                    deleted_at__isnull=True,
+                ).exists()
+            ):
+                reused_count += 1
+                continue
             ConditionalQuestionOption.objects.create(
-                question_options=self._reference(
-                    question_options,
-                    item.get("question_option"),
-                    "question option",
-                ),
-                predefined_answer=self._reference(
-                    answers,
-                    answer_key,
-                    "predefined answer",
-                ),
-                next_question_options=self._reference(
-                    question_options,
-                    item.get("next_question_option"),
-                    "next question option",
-                ),
+                question_options=question_option,
+                predefined_answer=predefined_answer,
+                next_question_options=next_question_option,
                 creator=self.creator,
                 creator_name=self.creator_name,
             )
             count += 1
-        return count
+        return count, reused_count
 
     def _import_report_links(
         self,
@@ -586,13 +819,48 @@ class SectorRegulationConfigurationImporter:
 
         return created_count, reused_count
 
-    def _import_impacts(self) -> int:
+    def _import_impacts(self) -> tuple[int, int]:
         items = self.data.get("impacts", [])
         if not isinstance(items, list):
             raise ConfigurationImportError("impacts must be a list.")
+        created_count = 0
+        reused_count = 0
         for item in items:
             if not isinstance(item, dict):
                 raise ConfigurationImportError("Invalid impact.")
+            sector_acronyms = item.get("sectors", [])
+            if not isinstance(sector_acronyms, list):
+                raise ConfigurationImportError("Impact sectors must be a list.")
+            sectors = self._resolve_sectors(sector_acronyms)
+            if self.reuse_all:
+                regulation_ids = {self.target.regulation_id}
+                sector_ids = {sector.pk for sector in sectors}
+                existing = next(
+                    (
+                        impact
+                        for impact in Impact.objects.filter(
+                            regulations=self.target.regulation,
+                        )
+                        .distinct()
+                        .prefetch_related(
+                            "translations",
+                            "regulations",
+                            "sectors",
+                        )
+                        .order_by("pk")
+                        if {regulation.pk for regulation in impact.regulations.all()} == regulation_ids
+                        and {sector.pk for sector in impact.sectors.all()} == sector_ids
+                        and self._translations_match(
+                            impact,
+                            item.get("translations"),
+                            ("label", "headline"),
+                        )
+                    ),
+                    None,
+                )
+                if existing is not None:
+                    reused_count += 1
+                    continue
             impact = Impact.objects.create(
                 creator=self.creator,
                 creator_name=self.creator_name,
@@ -603,11 +871,9 @@ class SectorRegulationConfigurationImporter:
                 ("label", "headline"),
             )
             impact.regulations.add(self.target.regulation)
-            sector_acronyms = item.get("sectors", [])
-            if not isinstance(sector_acronyms, list):
-                raise ConfigurationImportError("Impact sectors must be a list.")
-            impact.sectors.set(self._resolve_sectors(sector_acronyms))
-        return len(items)
+            impact.sectors.set(sectors)
+            created_count += 1
+        return created_count, reused_count
 
     def _update_target(self, emails: dict[str, Email]) -> int:
         item = self.data["sector_regulation"]
@@ -650,26 +916,56 @@ class SectorRegulationConfigurationImporter:
         self.target.sectors.set(self._resolve_sectors(acronyms))
         return len(acronyms)
 
-    @staticmethod
+    @classmethod
     def _set_translations(
+        cls,
         instance,
         translations: Any,
         fields: tuple[str, ...],
     ) -> None:
+        values_by_language = cls._translation_values(translations, fields)
+        for language_code, values in values_by_language.items():
+            instance.set_current_language(language_code)
+            for field, value in zip(fields, values, strict=True):
+                setattr(instance, field, value)
+            instance.save()
+
+    @classmethod
+    def _translations_match(
+        cls,
+        instance,
+        translations: Any,
+        fields: tuple[str, ...],
+    ) -> bool:
+        expected = cls._translation_values(translations, fields)
+        actual = {
+            translation.language_code: tuple(getattr(translation, field) for field in fields) for translation in instance.translations.all()
+        }
+        return actual == expected
+
+    @staticmethod
+    def _translation_values(
+        translations: Any,
+        fields: tuple[str, ...],
+    ) -> dict[str, tuple[Any, ...]]:
         if not isinstance(translations, list) or not translations:
-            raise ConfigurationImportError(f"Missing translations for {instance.__class__.__name__}.")
+            raise ConfigurationImportError("Missing translations.")
+        values_by_language = {}
         for translation in translations:
             if not isinstance(translation, dict):
                 raise ConfigurationImportError("Invalid translation object.")
             language_code = translation.get("language_code")
             if not isinstance(language_code, str) or not language_code:
                 raise ConfigurationImportError("Every translation requires a language_code.")
-            instance.set_current_language(language_code)
+            if language_code in values_by_language:
+                raise ConfigurationImportError(f"Duplicate translation language {language_code!r}.")
+            values = []
             for field in fields:
                 if field not in translation:
                     raise ConfigurationImportError(f"Translation {language_code!r} is missing {field!r}.")
-                setattr(instance, field, translation[field])
-            instance.save()
+                values.append(translation[field])
+            values_by_language[language_code] = tuple(values)
+        return values_by_language
 
     def _resolve_sectors(self, acronyms: Iterable[Any]) -> list[Sector]:
         self._load_sectors()

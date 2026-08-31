@@ -7,6 +7,38 @@ All notable changes to SERIMA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Operator administrators manage the accounts of their own company from the Users list: an "Account actions" column offers Approve and Reject for an account whose link to the company is still a suggestion, and Set/Unset Administrator and Reset 2FA token for accounts already approved. Every button asks for confirmation first and states what the action implies — approving an incident-notification account, for instance, associates it with the company along with the incidents it has already notified (#861)
+- A suggestion waiting to be resolved is announced by a banner above the Users list and the row is highlighted; the account's own page carries the same Approve/Reject prompt (#861)
+- Users list columns for "2FA Activated", "Is Administrator" and "Approved" (#861)
+- The account history now records approving and rejecting a link, granting and removing the administrator role, resetting the 2FA token, and removing an account from the company (#861)
+- Unit tests for incident cleanup, log cleanup, workflow deadline notifications, and incident reminder scripts, helpers of governanceplatform
+- Email templates accept four more placeholders: `#INCIDENT_STATUS#` for the status of the incident, and `#REPORT_NAME#`, `#REPORT_REVIEW_STATUS#` and `#REPORT_COMMENT_ADDED#` for the name of the report, its review status, and a notice when the regulator left a review comment on it. The report an email describes is the one it concerns: a reminder or a deadline notice names the report it is chasing, which is generally not the latest one and often has no submission at all (#856)
+- The placeholders usable in an email template are listed in the admin: an "Available placeholders" button above the content field opens a dialog naming each one and what it is replaced by, `#PUBLIC_URL#` included, which was supported but undocumented (#856)
+- Unit tests for the substitution of email template placeholders (#505)
+
+### Changed
+
+- An account whose link to the company is still awaiting approval is read-only for operator administrators: Approve and Reject are the only actions offered, and editing or deleting it is withheld until one of them is chosen (#861)
+- Deleting a user as an operator administrator now asks for confirmation in a dialog on the page instead of on a separate confirmation page (#861)
+- The batch action selector is no longer offered to operator administrators on the Users list, which act on one account at a time from the Account actions column. Other roles keep it (#861)
+- An account left without any link to a company is deactivated (#861)
+- Operator administrator group permissions: `delete` on users added, and the unused `CompanyUser` permissions dropped. Existing deployments must run `python manage.py update_group_permissions` for the change to take effect; until then the delete action is not offered to operator administrators (#861)
+- Sector regulation configuration imports now require an explicit import mode and support `--reuse` to reuse matching workflow configuration objects without duplicating them (#826)
+- PostgreSQL upgraded from 15 to 18 in CI and in the shipped Docker compose files. Existing deployments are unaffected and keep running on their current PostgreSQL version. Operators who bump the `postgres` image tag in their own compose file must dump and restore the database first: a major version bump invalidates the PostgreSQL data directory, so an existing volume will not start under the new image
+
+### Fixed
+
+- Company selection now returns the user to the page they originally asked for instead of always landing on the home page
+- The email announcing that a report status changed is now sent after the new status is saved, so it no longer announces a change while quoting the previous status, and is not sent at all if the save fails (#856)
+- An email sent for an incident whose latest report carries no timeline no longer fails: `#INCIDENT_DETECTION_DATE#` falls back to the detection date of the incident and `#INCIDENT_STARTING_DATE#` renders empty (#856)
+- Incident export: a report shared by several incident workflows is now offered under each of them. The report list only carried one workflow id per report, so the report was hidden for every other workflow it belongs to
+- Removed the unrelated `parler` dependency (a Parler social-network API client, not part of `django-parler`). Both distributions install a `parler/__init__.py`, and the wrong one was shadowing `django-parler`'s, so every Django and Celery process started by globally suppressing urllib3 `HTTPWarning` — including the warning raised for unverified HTTPS requests
+- `requests` is now declared explicitly: `governanceplatform/rt.py` imports it directly but it was only installed as a transitive dependency of the removed `parler` package
+
 ## [0.5.17] - 2026-08-04
 
 ### Added

@@ -10,7 +10,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:18
         env:
           POSTGRES_USER: "<user>"
           POSTGRES_PASSWORD: "<password>"
@@ -48,7 +48,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Install Poetry
         run: |
@@ -65,6 +65,12 @@ jobs:
           mkdir -p theme
           cp -r default-theme/* theme/
 
+
+      - name: Compile translations
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gettext
+          poetry run python manage.py compilemessages
 
       - name: Run migrations
         run: |

@@ -64,6 +64,10 @@ class Impact(TranslatableModel):
         default=None,
     )
 
+    def is_in_use(self) -> bool:
+        """Impacts stay editable; incidents reference them without consuming them."""
+        return False
+
     def __str__(self):
         headline_translation = self.safe_translation_getter("headline", any_language=True)
         return headline_translation or ""
@@ -146,6 +150,11 @@ class Question(TranslatableModel):
             return f"[{self.reference}] {str(self)}"
         return str(self)
 
+    def is_in_use(self) -> bool:
+        return (
+            Answer.objects.filter(question_options__question=self).exists() or QuestionOptionsHistory.objects.filter(question=self).exists()
+        )
+
     def __str__(self):
         return (
             self.safe_translation_getter("label", any_language=True)
@@ -186,6 +195,9 @@ class PredefinedAnswer(TranslatableModel):
         default=None,
     )
 
+    def is_in_use(self) -> bool:
+        return Answer.objects.filter(predefined_answers=self).exists()
+
     def __str__(self):
         return (
             self.safe_translation_getter("predefined_answer", any_language=True)
@@ -207,13 +219,6 @@ class Email(TranslatableModel, models.Model):
         ),
         content=models.TextField(
             verbose_name=_("Content"),
-            help_text=_(
-                """Available placeholders: #INCIDENT_NOTIFICATION_DATE#,
-                #INCIDENT_DETECTION_DATE#,
-                #INCIDENT_STARTING_DATE#,
-                #INCIDENT_ID#,
-                #DEADLINE#"""
-            ),
         ),
     )
     name = models.CharField(verbose_name=_("Name"), max_length=255)
@@ -279,6 +284,10 @@ class Workflow(TranslatableModel):
         blank=True,
         default=None,
     )
+
+    def is_in_use(self) -> bool:
+        """Workflows stay editable after use; the admin revises them in place."""
+        return False
 
     def __str__(self):
         label_translation = self.safe_translation_getter("label", any_language=True)
@@ -347,6 +356,9 @@ class SectorRegulation(TranslatableModel):
     class Meta:
         verbose_name_plural = _("Incident notification workflows")
         verbose_name = _("Incident notification workflow")
+
+    def is_in_use(self) -> bool:
+        return Incident.objects.filter(sector_regulation=self).exists()
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)
@@ -672,6 +684,9 @@ class Incident(models.Model):
             .first()
         )
 
+        if not current:
+            return False
+
         previous = (
             SectorRegulationWorkflow.objects.all()
             .filter(
@@ -965,6 +980,12 @@ class LogReportRead(models.Model):
 class QuestionCategoryOptions(models.Model):
     question_category = models.ForeignKey(QuestionCategory, on_delete=models.CASCADE)
     position = models.IntegerField(verbose_name=_("Position"))
+
+    def is_in_use(self) -> bool:
+        return (
+            Answer.objects.filter(question_options__category_option=self).exists()
+            or QuestionOptionsHistory.objects.filter(category_option=self).exists()
+        )
 
     def __str__(self):
         return self.question_category.label or ""

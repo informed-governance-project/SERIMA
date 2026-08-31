@@ -1,6 +1,7 @@
+import logging
 import secrets
 from collections import defaultdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import bleach
 from bleach.css_sanitizer import CSSSanitizer
@@ -10,26 +11,27 @@ from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
-from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 
-from incidents.models import (
-    Answer,
-    ConditionalQuestionOption,
-    Incident,
-    PredefinedAnswer,
-    Question,
-    QuestionCategoryOptions,
-    QuestionOptionsHistory,
-    SectorRegulation,
-    Workflow,
-)
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
-from .models import Company, User
+    from django.contrib.auth.models import AnonymousUser
+    from django.db.models import QuerySet
+    from django.http import HttpRequest
+    from django.template.response import TemplateResponse
+    from django.utils.functional import Promise
+
+    from .models import Company, Sector, User
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+logger = logging.getLogger(__name__)
 
 
 def table_exists(table_name: str) -> bool:
@@ -38,161 +40,40 @@ def table_exists(table_name: str) -> bool:
     return table_name in all_tables
 
 
-def generate_token():
+def generate_token() -> str:
     """Generates a random token-safe text string."""
     return secrets.token_urlsafe(32)[:32]
 
 
-def user_in_group(user, group_name) -> bool:
+# The role checks live on User. These wrappers exist only because callers pass
+# request.user, which may be an AnonymousUser and so has no such methods.
+def user_in_group(user: User | AnonymousUser, group_name: str) -> bool:
     """Check user group"""
-    if not user.is_authenticated:
-        return False
-    return any(user_group.name == group_name for user_group in user.groups.all())
+    return user.is_authenticated and user.in_group(group_name)
 
 
-def instance_user_in_group(user_instance, group_name) -> bool:
-    return any(user_group.name == group_name for user_group in user_instance.groups.all())
+def is_user_regulator(user: User | AnonymousUser) -> bool:
+    return user.is_authenticated and user.is_regulator()
 
 
-def is_user_regulator(user: User) -> bool:
-    return user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser")
+def is_user_operator(user: User | AnonymousUser) -> bool:
+    return user.is_authenticated and user.is_operator()
 
 
-def is_user_operator(user: User) -> bool:
-    return user_in_group(user, "OperatorAdmin") or user_in_group(user, "OperatorUser")
+def is_observer_user(user: User | AnonymousUser) -> bool:
+    return user.is_authenticated and user.is_observer()
 
 
-def is_observer_user(user: User) -> bool:
-    return user_in_group(user, "ObserverAdmin") or user_in_group(user, "ObserverUser")
-
-
-def is_observer_user_viewing_all_incident(user: User) -> bool:
+def is_observer_user_viewing_all_incident(user: User | AnonymousUser) -> bool:
     if not is_observer_user(user):
         return False
     observer = user.observers.first()
     return observer is not None and observer.is_receiving_all_incident
 
 
-def get_active_company_from_session(request) -> Company | None:
+def get_active_company_from_session(request: HttpRequest) -> Company | None:
     company_in_use = request.session.get("company_in_use")
     return request.user.companies.filter(id=company_in_use).first() if company_in_use else None
-
-
-def can_access_incident(user: User, incident: Incident, company_id=-1) -> bool:
-    # if it's regulator incident
-    if (
-        is_user_regulator(user)
-        and Incident.objects.filter(
-            pk=incident.id,
-            regulator=user.regulators.first(),
-        ).exists()
-    ):
-        return True
-
-    # RegulatorUser can access only incidents from accessible sectors.
-    if (
-        user_in_group(user, "RegulatorUser")
-        and Incident.objects.filter(pk=incident.id, sector_regulation__regulator=user.regulators.first()).exists()
-    ):
-        return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
-
-    # RegulatorAdmin can access only incidents from accessible regulators.
-    if (
-        user_in_group(user, "RegulatorAdmin")
-        and Incident.objects.filter(pk=incident.id, sector_regulation__regulator=user.regulators.first()).exists()
-    ):
-        return True
-    # OperatorAdmin/User can access only incidents related to selected company.
-    if (
-        is_user_operator(user)
-        and user.companyuser_set.filter(company__id=company_id, approved=True).exists()
-        and Incident.objects.filter(pk=incident.id, company__id=company_id).exists()
-    ):
-        return True
-    # IncidentUser can access their reports.
-    if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
-        return True
-    # ObserverUser access all incident if he is in a observer who can access all incident.
-    if is_observer_user_viewing_all_incident(user):
-        return True
-    if is_observer_user(user):
-        incident_lists = user.observers.first().get_incidents()
-        if incident in incident_lists:
-            return True
-
-    return False
-
-
-# check if the user is allowed to create an incident_workflow
-def can_create_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
-    # if it's incident user
-    if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
-        return True
-
-    # if it's the incident of the user he can create
-    if company_id and incident.contact_user == user and user.companyuser_set.filter(company__id=company_id, approved=True).exists():
-        return True
-
-    # if it's regulator incident
-    if (
-        is_user_regulator(user)
-        and Incident.objects.filter(
-            pk=incident.id,
-            regulator=user.regulators.first(),
-        ).exists()
-    ):
-        return True
-
-    # OperatorAdmin/User can create only incidents related to selected company.
-    if (
-        company_id
-        and is_user_operator(user)
-        and user.companyuser_set.filter(company__id=company_id, approved=True).exists()
-        and Incident.objects.filter(pk=incident.id, company__id=company_id).exists()
-    ):
-        return True
-
-    return False
-
-
-# check if the user is allowed to edit an incident_workflow
-# for regulators to add message
-def can_edit_incident_report(user: User, incident: Incident, company_id=-1) -> bool:
-    # if it's incident user
-    if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
-        return True
-
-    # if it's the incident of the user he can create
-    if company_id and incident.contact_user == user and user.companyuser_set.filter(company__id=company_id, approved=True).exists():
-        return True
-
-    # if it's regulator incident
-    if (
-        is_user_regulator(user)
-        and Incident.objects.filter(
-            pk=incident.id,
-            regulator=user.regulators.first(),
-        ).exists()
-    ):
-        return True
-
-    # OperatorAdmin/User can edit only incidents related to selected company.
-    if (
-        company_id
-        and is_user_operator(user)
-        and user.companyuser_set.filter(company__id=company_id, approved=True).exists()
-        and Incident.objects.filter(pk=incident.id, company__id=company_id).exists()
-    ):
-        return True
-
-    # if he is the regulator admin of the incident need to be link to his regulator
-    if user_in_group(user, "RegulatorAdmin") and incident.sector_regulation.regulator == user.regulators.first():
-        return True
-    # if he is the regulator user of the incident, he need to have the sectors
-    if user_in_group(user, "RegulatorUser") and incident.sector_regulation.regulator == user.regulators.first():
-        return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
-
-    return False
 
 
 def set_creator(request: HttpRequest, obj: Any, change: bool) -> Any:
@@ -209,7 +90,7 @@ def set_creator(request: HttpRequest, obj: Any, change: bool) -> Any:
     return obj
 
 
-def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool:
+def can_change_or_delete_obj(request: HttpRequest, obj: Any, message: str | Promise = "") -> bool:
     # Cache per (type, pk) so multiple objects in one request are each evaluated once.
     cache = getattr(request, "_can_change_or_delete_obj", {})
     cache_key = (type(obj).__name__, getattr(obj, "pk", None))
@@ -227,35 +108,9 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
         cache[cache_key] = True
         return True
 
-    in_use = True
-    # [Predefined Answer] Check if obj is already in use
-    if isinstance(obj, PredefinedAnswer):
-        in_use = Answer.objects.filter(predefined_answers=obj).exists()
-
-    # [Question Category] Check if obj is already in use
-    if isinstance(obj, QuestionCategoryOptions):
-        in_use = (
-            Answer.objects.filter(question_options__category_option=obj).exists()
-            or QuestionOptionsHistory.objects.filter(category_option=obj).exists()
-        )
-
-    # [Question] Check if obj is already in use
-    if isinstance(obj, Question):
-        in_use = (
-            Answer.objects.filter(question_options__question=obj).exists() or QuestionOptionsHistory.objects.filter(question=obj).exists()
-        )
-
-    # [Workflow] in_use flag is set to False
-    if isinstance(obj, Workflow):
-        in_use = False
-
-    # [ConditionalQuestionOption] in_use flag is set to False
-    if isinstance(obj, ConditionalQuestionOption):
-        in_use = obj.is_in_use()
-
-    # [Sector Regulation] Check if obj is already in use
-    if isinstance(obj, SectorRegulation):
-        in_use = Incident.objects.filter(sector_regulation=obj).exists()
+    # Models that can tell whether they are still referenced answer for themselves;
+    # anything else is treated as in use, which is the conservative answer.
+    in_use = obj.is_in_use() if hasattr(obj, "is_in_use") else True
 
     regulator = request.user.regulators.first()
     if creator == regulator and not in_use:
@@ -285,7 +140,7 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message="") -> bool
 
 
 # Remove languages are not translated
-def filter_languages_not_translated(form):
+def filter_languages_not_translated(form: TemplateResponse) -> TemplateResponse:
     tabs = form.context_data.get("language_tabs")
     if not tabs:
         return form
@@ -295,7 +150,7 @@ def filter_languages_not_translated(form):
     return form
 
 
-def get_sectors_grouped(sectors):
+def get_sectors_grouped(sectors: QuerySet[Sector]) -> list[tuple[str, list[list[Any]]]]:
     sectors = sectors.prefetch_related("children")
     categs = defaultdict(list)
     for sector in sectors:
@@ -324,7 +179,13 @@ def get_sectors_grouped(sectors):
 # These *_sort fields are case-insensitive (they ignore uppercase/lowercase when sorting).
 # If it is important to sort with case sensitivity, set orderable = False
 # and order directly by the translated field, e.g. .order_by("_label").
-def translated_queryset(qs, language, default_language, translated_fields=None, orderable=False):
+def translated_queryset(
+    qs: QuerySet,
+    language: str,
+    default_language: str,
+    translated_fields: list[str] | None = None,
+    orderable: bool = False,
+) -> QuerySet:
     default_lang = default_language
     lang = language
     annotations = {}
@@ -360,11 +221,11 @@ def translated_queryset(qs, language, default_language, translated_fields=None, 
 
 
 def annotate_translated_field_from_related_models(
-    qs,
+    qs: QuerySet,
     *,
-    full_path,
-    annotated_name,
-):
+    full_path: str,
+    annotated_name: str,
+) -> QuerySet:
     default_lang = settings.PARLER_DEFAULT_LANGUAGE_CODE
     lang = translation.get_language()
     relation_path, translated_field = full_path.rsplit("__translations__", 1)
@@ -394,7 +255,10 @@ def annotate_translated_field_from_related_models(
     )
 
 
-def generate_display_methods(translated_fields, related_fields=None):
+def generate_display_methods(
+    translated_fields: list[str],
+    related_fields: list[tuple[str, str]] | None = None,
+) -> dict[str, Callable[..., Any]]:
     """
     Dynamically generates display methods for translated fields.
     Example: for “label” → creates label_display() with
@@ -441,12 +305,12 @@ def generate_display_methods(translated_fields, related_fields=None):
 
 
 def render_to_string_multi_languages(
-    template_name,
-    context,
-    replace_email_variables=None,
-    content=None,
-    object=None,
-):
+    template_name: str,
+    context: dict[str, Any],
+    replace_email_variables: Callable[[str, Any], str] | None = None,
+    content: Any = None,
+    object: Any = None,
+) -> str:
     """
     Render a template in multiple languages.
     - 'content' and 'object' are ONLY used to replace variables
@@ -489,7 +353,12 @@ def render_to_string_multi_languages(
     return "<hr>".join(parts)
 
 
-def sanitize_html(html, tags=None, attributes=None, styles=None):
+def sanitize_html(
+    html: str,
+    tags: list[str] | None = None,
+    attributes: dict[str, list[str]] | None = None,
+    styles: list[str] | None = None,
+) -> str:
     """
     Docstring for sanitize_html with bleach
     :param html: The HTML to sanitize
@@ -546,12 +415,12 @@ def sanitize_html(html, tags=None, attributes=None, styles=None):
 
 
 def sort_queryset_by_field(
-    qs,
-    sort_field,
-    sort_direction,
-    default_sort_field,
-    allowed_sort_fields,
-):
+    qs: QuerySet,
+    sort_field: str,
+    sort_direction: str,
+    default_sort_field: str,
+    allowed_sort_fields: dict[str, dict[str, str]],
+) -> QuerySet:
 
     config_field = allowed_sort_fields.get(sort_field)
     if not config_field:

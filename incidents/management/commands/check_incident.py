@@ -28,11 +28,8 @@ class Command(BaseCommand):
         def safe(v, fmt=None):
             if v is None:
                 return ""
-            if fmt and isinstance(v, (datetime,)):
-                try:
-                    return v.strftime(fmt)
-                except Exception:
-                    return str(v)
+            if fmt and isinstance(v, datetime):
+                return v.strftime(fmt)
             return str(v)
 
         incidents = Incident.objects.filter(sector_regulation__isnull=True)

@@ -1,17 +1,20 @@
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from conftest import (
     list_admin_add_urls,
     list_url_freetext_filter,
     test_get_with_otp,
 )
-from governanceplatform.helpers import (
+from governanceplatform.helpers import user_in_group
+from governanceplatform.models import CompanyUser, RegulatorUser
+from incidents.access_control import (
     can_access_incident,
     can_create_incident_report,
     can_edit_incident_report,
-    user_in_group,
 )
-from governanceplatform.models import RegulatorUser
+from incidents.models import SectorRegulation, SectorRegulationWorkflow
 
 
 @pytest.mark.django_db
@@ -111,7 +114,7 @@ def test_can_access_incident_function(populate_incident_db):
     incident_regulator = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
 
     for u in users:
-        company = -1
+        company = None
         if u.companies.first() is not None:
             company = u.companies.first().id
         if u in authorized_users:
@@ -132,7 +135,7 @@ def test_can_access_incident_function(populate_incident_db):
             authorized_users.append(regulator_user)
             ru.sectors.add(sector)
             for u in users:
-                company = -1
+                company = None
                 if u.companies.first() is not None:
                     company = u.companies.first().id
                 if u in authorized_users:
@@ -150,9 +153,9 @@ def test_can_access_incident_function(populate_incident_db):
     ]
     for u in users:
         if u in authorized_users:
-            assert can_access_incident(u, incident_regulator, -1) is True
+            assert can_access_incident(u, incident_regulator, None) is True
         else:
-            assert can_access_incident(u, incident_regulator, -1) is False
+            assert can_access_incident(u, incident_regulator, None) is False
 
 
 @pytest.mark.django_db()
@@ -168,7 +171,7 @@ def test_can_create_incident_report_function(populate_incident_db):
     authorized_users = [u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu"]
     # operator incident
     for u in users:
-        company = -1
+        company = None
         if u.companies.first() is not None:
             company = u.companies.first().id
         if u in authorized_users:
@@ -180,9 +183,9 @@ def test_can_create_incident_report_function(populate_incident_db):
     authorized_users = [u for u in users if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"]
     for u in users:
         if u in authorized_users:
-            assert can_create_incident_report(u, incident_regulator, -1) is True
+            assert can_create_incident_report(u, incident_regulator, None) is True
         else:
-            assert can_create_incident_report(u, incident_regulator, -1) is False
+            assert can_create_incident_report(u, incident_regulator, None) is False
 
 
 @pytest.mark.django_db()
@@ -199,7 +202,7 @@ def test_can_edit_incident_report_function(populate_incident_db):
             u for u in users if u.email == "opadmin@com1.lu" or u.email == "opuser@com1.lu" or u.email == "regadmin@reg1.lu"
         ]
         for u in users:
-            company_id = -1
+            company_id = None
             if u.companies.first() is not None:
                 company_id = u.companies.first().id
             if u in authorized_users:
@@ -210,9 +213,53 @@ def test_can_edit_incident_report_function(populate_incident_db):
         authorized_users = [u for u in users if u.email == "reguser@reg1.lu" or u.email == "regadmin@reg1.lu"]
         for u in users:
             if u in authorized_users:
-                assert can_edit_incident_report(u, incident_regulator, -1) is True
+                assert can_edit_incident_report(u, incident_regulator, None) is True
             else:
-                assert can_edit_incident_report(u, incident_regulator, -1) is False
+                assert can_edit_incident_report(u, incident_regulator, None) is False
+
+
+def test_company_user_company_stays_non_nullable():
+    """
+    can_access_incident only stays safe for a null company_id because CompanyUser.company
+    can never be NULL: `filter(company__id=None)` therefore matches no row. Making the
+    field nullable would turn that lookup into a way to match unrelated memberships.
+    """
+    assert CompanyUser._meta.get_field("company").null is False
+
+
+@pytest.mark.django_db()
+def test_operator_cannot_access_incident_whose_company_was_deleted(populate_incident_db):
+    """
+    Incident.company is SET_NULL, so deleting a Company leaves company-less incidents.
+    An operator with no company selected in session must not reach one of them.
+    """
+    users = populate_incident_db["users"]
+    incidents = populate_incident_db["incidents"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    incident = next(i for i in incidents if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+
+    incident.company = None
+    incident.save()
+
+    assert can_access_incident(operator, incident, None) is False
+
+
+@pytest.mark.django_db()
+def test_access_check_skips_company_lookups_when_no_company_selected(populate_incident_db):
+    """
+    With no company in session the operator branch cannot apply, so it must short-circuit
+    before querying. Without that guard the company lookups run as `IS NULL` comparisons.
+    """
+    users = populate_incident_db["users"]
+    incidents = populate_incident_db["incidents"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    incident = next(i for i in incidents if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+
+    with CaptureQueriesContext(connection) as context:
+        can_access_incident(operator, incident, None)
+
+    company_queries = [query for query in context.captured_queries if "governanceplatform_companyuser" in query["sql"]]
+    assert company_queries == []
 
 
 @pytest.mark.django_db
@@ -247,3 +294,50 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
     incident = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
     url = "/incidents/access_log/" + str(incident.id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)
+
+
+@pytest.mark.django_db
+def test_export_incidents_reports_list_every_sector_regulation(otp_client, populate_incident_db):
+    """
+    A report shared by several sector regulations must be selectable under each of them
+    """
+    users = populate_incident_db["users"]
+    regulator_admin = next(u for u in users if u.email == "regadmin@reg1.lu")
+    regulator = regulator_admin.regulators.first()
+    RegulatorUser.objects.filter(user=regulator_admin, regulator=regulator).update(
+        is_regulator_administrator=True,
+        can_export_incidents=True,
+    )
+
+    sector_regulations = populate_incident_db["incidents_workflows"]
+    own_sector_regulation = next(sr for sr in sector_regulations if sr.regulator == regulator)
+    shared_report = own_sector_regulation.workflows.first()
+
+    # Fixtures insert explicit primary keys, so the id sequence cannot be relied on here
+    other_sector_regulation = SectorRegulation.objects.create(
+        id=100,
+        regulation=own_sector_regulation.regulation,
+        regulator=regulator,
+    )
+    other_sector_regulation.set_current_language("en")
+    other_sector_regulation.name = "second asectorial workflow"
+    other_sector_regulation.save()
+    SectorRegulationWorkflow.objects.create(
+        sector_regulation=other_sector_regulation,
+        workflow=shared_report,
+        position=1,
+    )
+    # Owned by another regulator, so its id must stay out of the exposed list
+    foreign_sector_regulation = next(sr for sr in sector_regulations if sr.regulator != regulator)
+    SectorRegulationWorkflow.objects.create(
+        sector_regulation=foreign_sector_regulation,
+        workflow=shared_report,
+        position=3,
+    )
+
+    response = otp_client(regulator_admin).get("/incidents/export_incidents")
+
+    assert response.status_code == 200
+    report = next(wf for wf in response.context["form"].fields["workflow"].queryset if wf.pk == shared_report.pk)
+    assert sorted(report.sectorregulation_ids) == sorted([own_sector_regulation.pk, other_sector_regulation.pk])
+    assert f'data-sectorregulation="{own_sector_regulation.pk},{other_sector_regulation.pk}"' in response.content.decode()

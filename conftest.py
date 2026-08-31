@@ -1,9 +1,25 @@
 import pytest
-from django.db import models
+from django.core.management.color import no_style
+from django.db import connection, models
 from django.test import Client
 from django.urls import get_resolver
 from django.utils.translation import activate
 from parler.models import TranslatableModel
+
+
+@pytest.fixture(autouse=True)
+def disable_https_enforcement(settings):
+    """
+    Serve the suite over plain HTTP.
+
+    Deployments derive these from DEBUG (see config_dev.py), so CI — which runs with
+    DEBUG=False — would otherwise enforce HTTPS. The test client only speaks HTTP, so
+    SecurityMiddleware would answer every request with a 301 to https://testserver
+    before the view runs, and before AuthenticationMiddleware attaches request.user.
+    """
+    settings.SECURE_SSL_REDIRECT = False
+    settings.SESSION_COOKIE_SECURE = False
+    settings.CSRF_COOKIE_SECURE = False
 
 
 @pytest.fixture
@@ -56,7 +72,8 @@ def pytest_itemcollected(item):
     # fetch the docstring
     doc = item.function.__doc__
     if doc:
-        item._obj.description = doc.strip()
+        test_function = getattr(item._obj, "__func__", item._obj)
+        test_function.description = doc.strip()
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -175,6 +192,18 @@ def get_or_create_related(related_model, val: dict):
     return obj
 
 
+def sync_pk_sequence(model):
+    """
+    Realign the PostgreSQL primary-key sequence with the rows just imported.
+
+    Fixture entries carrying an explicit "id" are inserted without touching the
+    sequence, so a later implicit insert would hand out an id that is already taken.
+    """
+    with connection.cursor() as cursor:
+        for statement in connection.ops.sequence_reset_sql(no_style(), [model]):
+            cursor.execute(statement)
+
+
 # import_not_null=True, is used to import field which have NOT NULL Constraint
 # only_simple_field=False, is used to import FK which are mandatory
 def import_from_json(model, data, import_not_null=False, only_simple_field=True):
@@ -244,5 +273,7 @@ def import_from_json(model, data, import_not_null=False, only_simple_field=True)
         obj.refresh_from_db()
 
         created_objects.append(obj)
+
+    sync_pk_sequence(model)
 
     return created_objects

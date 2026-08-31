@@ -1,7 +1,6 @@
 import json
 from io import StringIO
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from django.core.management import call_command
@@ -12,14 +11,20 @@ from incidents.configuration_export import FORMAT_NAME, FORMAT_VERSION
 from incidents.models import (
     ConditionalQuestionOption,
     Email,
+    Impact,
     PredefinedAnswer,
     Question,
     QuestionCategory,
+    QuestionCategoryOptions,
+    QuestionOptions,
     SectorRegulation,
     SectorRegulationWorkflow,
     SectorRegulationWorkflowEmail,
     Workflow,
 )
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.mark.django_db
@@ -36,6 +41,7 @@ def test_import_sector_regulation_reuses_questions(populate_db, tmp_path):
         "import_sector_regulation",
         input_path,
         target.pk,
+        "--usesectorsandquestions",
         stdout=stdout,
     )
 
@@ -71,7 +77,7 @@ def test_import_sector_regulation_create_forces_new_questions(
         "import_sector_regulation",
         input_path,
         target.pk,
-        create=True,
+        "--create",
         stdout=stdout,
     )
 
@@ -89,14 +95,201 @@ def test_import_sector_regulation_create_forces_new_questions(
     assert ConditionalQuestionOption.objects.count() == 1
     assert (
         stdout.getvalue() == "Imported configuration into SectorRegulation "
-        f"{target.pk}: 1 reports, 1 report links, 1 emails created, "
-        "1 categories created, 1 category options created, "
+        f"{target.pk}: 1 reports created, 0 reports reused, 1 report links, "
+        "1 emails created, 0 emails reused, "
+        "1 categories created, 0 categories reused, "
+        "1 category options created, 0 category options reused, "
         "2 questions created, 0 questions reused, "
-        "1 predefined answers created, 0 predefined answers skipped, "
-        "2 question options created, 1 conditional questions created, "
+        "1 predefined answers created, 0 predefined answers reused, "
+        "0 predefined answers skipped, "
+        "2 question options created, 0 question options reused, "
+        "1 conditional questions created, 0 conditional questions reused, "
         "1 reminder emails created, 0 impacts created, "
+        "0 impacts reused, "
         "0 sectors created, 0 sectors reused, 0 sectors linked.\n"
     )
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_reuse_avoids_shared_object_duplicates(
+    populate_db,
+    tmp_path,
+):
+    source_target = _create_target(populate_db)
+    destination_target = _create_target(populate_db)
+    data = _configuration_data()
+    data["emails"][0]["translations"].append(
+        {
+            "language_code": "fr",
+            "subject": "Sujet importé",
+            "content": "Contenu importé",
+        }
+    )
+    data["impacts"] = [
+        {
+            "translations": _translations(
+                label="Imported impact",
+                headline="Imported impact title",
+            ),
+            "sectors": [],
+        }
+    ]
+    input_path = _write_configuration(tmp_path, data)
+
+    call_command(
+        "import_sector_regulation",
+        input_path,
+        source_target.pk,
+        "--create",
+    )
+    counts_before = (
+        Email.objects.count(),
+        Workflow.objects.count(),
+        QuestionCategory.objects.count(),
+        QuestionCategoryOptions.objects.count(),
+        Question.objects.count(),
+        PredefinedAnswer.objects.count(),
+        QuestionOptions.objects.count(),
+        ConditionalQuestionOption.objects.count(),
+        Impact.objects.count(),
+    )
+    stdout = StringIO()
+
+    call_command(
+        "import_sector_regulation",
+        input_path,
+        destination_target.pk,
+        "--reuse",
+        stdout=stdout,
+    )
+
+    assert (
+        Email.objects.count(),
+        Workflow.objects.count(),
+        QuestionCategory.objects.count(),
+        QuestionCategoryOptions.objects.count(),
+        Question.objects.count(),
+        PredefinedAnswer.objects.count(),
+        QuestionOptions.objects.count(),
+        ConditionalQuestionOption.objects.count(),
+        Impact.objects.count(),
+    ) == counts_before
+    assert SectorRegulationWorkflow.objects.filter(
+        sector_regulation=destination_target,
+        workflow=SectorRegulationWorkflow.objects.get(
+            sector_regulation=source_target,
+        ).workflow,
+    ).exists()
+    output = stdout.getvalue()
+    assert "0 reports created, 1 reports reused" in output
+    assert "0 emails created, 1 emails reused" in output
+    assert "0 categories created, 1 categories reused" in output
+    assert "0 category options created, 1 category options reused" in output
+    assert "0 questions created, 2 questions reused" in output
+    assert "0 predefined answers created, 1 predefined answers reused" in output
+    assert "0 question options created, 2 question options reused" in output
+    assert "0 conditional questions created, 1 conditional questions reused" in output
+    assert "0 impacts created, 1 impacts reused" in output
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_reuse_recreates_changed_translations(
+    populate_db,
+    tmp_path,
+):
+    source_target = _create_target(populate_db)
+    destination_target = _create_target(populate_db)
+    original = _configuration_data()
+    original["emails"][0]["translations"].append(
+        {
+            "language_code": "fr",
+            "subject": "Sujet importé",
+            "content": "Contenu importé",
+        }
+    )
+    original["impacts"] = [
+        {
+            "translations": _translations(
+                label="Imported impact",
+                headline="Imported impact title",
+            ),
+            "sectors": [],
+        }
+    ]
+    call_command(
+        "import_sector_regulation",
+        _write_configuration(tmp_path, original),
+        source_target.pk,
+        "--create",
+    )
+    changed = _configuration_data()
+    changed["emails"][0]["translations"].append(
+        {
+            "language_code": "fr",
+            "subject": "Sujet importé",
+            "content": "Contenu modifié",
+        }
+    )
+    changed["reports"][0]["translations"][0]["label"] = "Changed report"
+    changed["categories"][0]["translations"][0]["label"] = "Changed category"
+    changed["questions"][0]["translations"][0]["label"] = "Changed question"
+    changed["impacts"] = [
+        {
+            "translations": _translations(
+                label="Imported impact",
+                headline="Changed impact title",
+            ),
+            "sectors": [],
+        }
+    ]
+    stdout = StringIO()
+
+    call_command(
+        "import_sector_regulation",
+        _write_configuration(tmp_path, changed),
+        destination_target.pk,
+        "--reuse",
+        stdout=stdout,
+    )
+
+    output = stdout.getvalue()
+    assert "1 reports created, 0 reports reused" in output
+    assert "1 emails created, 0 emails reused" in output
+    assert "1 categories created, 0 categories reused" in output
+    assert "1 category options created, 0 category options reused" in output
+    assert "1 questions created, 1 questions reused" in output
+    assert "1 predefined answers created, 0 predefined answers reused" in output
+    assert "1 impacts created, 0 impacts reused" in output
+
+
+@pytest.mark.django_db
+def test_import_sector_regulation_reuse_recreates_report_when_options_differ(
+    populate_db,
+    tmp_path,
+):
+    source_target = _create_target(populate_db)
+    destination_target = _create_target(populate_db)
+    call_command(
+        "import_sector_regulation",
+        _write_configuration(tmp_path),
+        source_target.pk,
+        "--create",
+    )
+    changed = _configuration_data()
+    changed["question_options"][0]["is_mandatory"] = True
+    stdout = StringIO()
+
+    call_command(
+        "import_sector_regulation",
+        _write_configuration(tmp_path, changed),
+        destination_target.pk,
+        "--reuse",
+        stdout=stdout,
+    )
+
+    output = stdout.getvalue()
+    assert "1 reports created, 0 reports reused" in output
+    assert "2 question options created, 0 question options reused" in output
 
 
 @pytest.mark.django_db
@@ -147,6 +340,7 @@ def test_import_sector_regulation_creates_missing_sectors_and_reuses_existing(
         "import_sector_regulation",
         _write_configuration(tmp_path, data),
         target.pk,
+        "--usesectorsandquestions",
         stdout=stdout,
     )
 
@@ -189,7 +383,12 @@ def test_import_sector_regulation_rolls_back_on_late_failure(
     )
 
     with pytest.raises(CommandError, match="no changes were saved"):
-        call_command("import_sector_regulation", input_path, target.pk)
+        call_command(
+            "import_sector_regulation",
+            input_path,
+            target.pk,
+            "--usesectorsandquestions",
+        )
 
     assert not SectorRegulationWorkflow.objects.filter(sector_regulation=target).exists()
     assert (
@@ -220,6 +419,7 @@ def test_import_sector_regulation_rejects_non_blank_target(
             "import_sector_regulation",
             _write_configuration(tmp_path),
             target.pk,
+            "--usesectorsandquestions",
         )
 
 
@@ -237,6 +437,7 @@ def test_import_sector_regulation_rejects_invalid_boolean(
             "import_sector_regulation",
             _write_configuration(tmp_path, data),
             target.pk,
+            "--usesectorsandquestions",
         )
 
 
@@ -254,6 +455,7 @@ def test_import_sector_regulation_rejects_invalid_choice(
             "import_sector_regulation",
             _write_configuration(tmp_path, data),
             target.pk,
+            "--usesectorsandquestions",
         )
 
 
@@ -271,6 +473,7 @@ def test_import_sector_regulation_rejects_unknown_reference(
             "import_sector_regulation",
             _write_configuration(tmp_path, data),
             target.pk,
+            "--usesectorsandquestions",
         )
 
     assert not Email.objects.exists()
@@ -290,6 +493,7 @@ def test_import_sector_regulation_rejects_malformed_sector(
             "import_sector_regulation",
             _write_configuration(tmp_path, data),
             target.pk,
+            "--usesectorsandquestions",
         )
 
 
@@ -300,6 +504,7 @@ def test_import_sector_regulation_reports_unknown_target(populate_db, tmp_path):
             "import_sector_regulation",
             _write_configuration(tmp_path),
             999_999,
+            "--usesectorsandquestions",
         )
 
 
@@ -317,6 +522,7 @@ def test_import_sector_regulation_rejects_unknown_format_version(
             "import_sector_regulation",
             _write_configuration(tmp_path, data),
             target.pk,
+            "--usesectorsandquestions",
         )
 
 
@@ -326,6 +532,7 @@ def test_import_sector_regulation_reports_missing_input(tmp_path):
             "import_sector_regulation",
             tmp_path / "missing.json",
             1,
+            "--usesectorsandquestions",
         )
 
 
@@ -334,7 +541,21 @@ def test_import_sector_regulation_reports_invalid_json(tmp_path):
     input_path.write_text("{", encoding="utf-8")
 
     with pytest.raises(CommandError, match="Cannot read"):
-        call_command("import_sector_regulation", input_path, 1)
+        call_command(
+            "import_sector_regulation",
+            input_path,
+            1,
+            "--usesectorsandquestions",
+        )
+
+
+def test_import_sector_regulation_requires_an_import_mode(tmp_path):
+    with pytest.raises(CommandError, match="one of the arguments.*is required"):
+        call_command(
+            "import_sector_regulation",
+            tmp_path / "configuration.json",
+            1,
+        )
 
 
 def _create_target(populate_db) -> SectorRegulation:

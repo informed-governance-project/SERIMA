@@ -20,7 +20,8 @@ def run(logger=logger):
     # for all unclosed incident
     actual_time = timezone.now()
     try:
-        ongoing_incidents = Incident.objects.filter(incident_status="GOING")
+        # Querysets are lazy; materialise here so a fetch failure is reported as one.
+        ongoing_incidents = list(Incident.objects.filter(incident_status="GOING"))
     except DatabaseError as e:
         logger.error("Failed to fetch ongoing incidents: %s", e, exc_info=True)
         raise
@@ -49,6 +50,7 @@ def run(logger=logger):
                             send_email(
                                 incident.sector_regulation.report_status_changed_email,
                                 incident,
+                                workflow=report.workflow,
                             )
                 except Exception as e:
                     logger.error(

@@ -1,7 +1,8 @@
 import importlib
+import logging
 import uuid
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
@@ -9,19 +10,18 @@ from django.contrib.sessions.base_session import AbstractBaseSession
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import models
-from django.db.models import Deferrable, Q
+from django.db.models import Deferrable
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from parler.models import TranslatableModel, TranslatedFields
 from phonenumber_field.modelfields import PhoneNumberField
 
-import governanceplatform
-from incidents.models import Incident
-
 from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
 from .managers import CustomUserManager
 from .settings import RT_SECRET_KEY
 from .validators import validate_rt_url
+
+logger = logging.getLogger(__name__)
 
 
 class ApplicationConfig(models.Model):
@@ -295,7 +295,10 @@ class Observer(TranslatableModel):
             cipher_suite = Fernet(RT_SECRET_KEY)
             val = cipher_suite.decrypt(str.encode(self._rt_token))
             return val.decode()
-        except Exception:
+        except InvalidToken, ValueError, TypeError:
+            # A rotated or malformed RT_SECRET_KEY makes every stored token unreadable.
+            # Degrade to "no token" so the admin still renders, but say so in the logs.
+            logger.exception("Unable to decrypt the RT token of observer %s", self.pk)
             return ""
 
     @rt_token.setter
@@ -310,48 +313,6 @@ class Observer(TranslatableModel):
         self._rt_token = enc_val.decode()
 
     rt_queue = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Queue"))
-
-    def get_incidents(self):
-        base_qs = Incident.objects.exclude(sector_regulation__isnull=True)
-
-        if self.is_receiving_all_incident:
-            return base_qs
-
-        observer_regulations = self.observerregulation_set.all()
-        if not observer_regulations:
-            return Incident.objects.none()
-
-        final_q = Q()
-
-        for observer_regulation in observer_regulations:
-            regulation = observer_regulation.regulation
-            sectors = observer_regulation.sectors.all()
-            filter_conditions = observer_regulation.incident_rule
-            conditions = filter_conditions.get("conditions", [])
-
-            regulation_q = Q(sector_regulation__regulation=regulation)
-            sectors_q = Q(affected_sectors__in=sectors)
-
-            if conditions:
-                for condition in conditions:
-                    condition_q = Q()
-
-                    for code in condition.get("include", []):
-                        condition_q &= Q(company__entity_categories__code=code)
-
-                    for code in condition.get("exclude", []):
-                        condition_q &= ~Q(company__entity_categories__code=code)
-
-                    final_q |= regulation_q & sectors_q & condition_q
-            else:
-                final_q |= regulation_q & sectors_q
-
-        return base_qs.filter(final_q).distinct()
-
-    def can_access_incident(self, incident):
-        if incident in self.get_incidents():
-            return True
-        return False
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)
@@ -447,22 +408,36 @@ class User(AbstractUser, PermissionsMixin):
         self.email = self.email.lower()
         super().save(*args, **kwargs)
 
+    def in_group(self, group_name: str) -> bool:
+        """Scan the prefetched group set rather than filtering, so callers that already
+        prefetched groups do not pay one query per role check."""
+        return any(group.name == group_name for group in self.groups.all())
+
+    def is_regulator(self) -> bool:
+        return self.in_group("RegulatorAdmin") or self.in_group("RegulatorUser")
+
+    def is_operator(self) -> bool:
+        return self.in_group("OperatorAdmin") or self.in_group("OperatorUser")
+
+    def is_observer(self) -> bool:
+        return self.in_group("ObserverAdmin") or self.in_group("ObserverUser")
+
     def get_sectors(self):
         sectors = Sector.objects.none()
-        if governanceplatform.helpers.user_in_group(self, "RegulatorUser"):
+        if self.in_group("RegulatorUser"):
             ru = RegulatorUser.objects.filter(user=self).first()
             sectors = ru.sectors
-        elif governanceplatform.helpers.user_in_group(self, "RegulatorAdmin"):
+        elif self.in_group("RegulatorAdmin"):
             sectors = Sector.objects.all()
         return sectors
 
     def get_module_permissions(self):
         user_entity = None
-        if governanceplatform.helpers.is_user_regulator(self):
+        if self.is_regulator():
             regulator_user = self.regulatoruser_set.first()
             if regulator_user:
                 user_entity = regulator_user.regulator
-        elif governanceplatform.helpers.is_observer_user(self):
+        elif self.is_observer():
             observer_user = self.observeruser_set.first()
             if observer_user:
                 user_entity = observer_user.observer

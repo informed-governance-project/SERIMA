@@ -29,7 +29,7 @@ services:
 
   db:
     container_name: governanceplatform-postgres-${SERIMA_ENVIRONMENT?:err}
-    image: postgres:15
+    image: postgres:18
     environment: *env
     restart: unless-stopped
     volumes:
@@ -49,6 +49,9 @@ services:
     pull_policy: always
     environment: *env
     command: worker
+    # kaleido's headless chrome orphans two crashpad handlers per launch onto PID 1,
+    # which is the celery master here and never reaps them
+    init: true
     volumes:
       - ./volumes/config/config.py:/app/governanceplatform/config.py:ro
       - theme:/app/theme

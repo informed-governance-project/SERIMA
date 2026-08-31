@@ -13,20 +13,22 @@ from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce
 from django.http import Http404, JsonResponse
 from django.shortcuts import redirect
+from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
-from django_otp import devices_for_user, user_has_device
+from django_otp import devices_for_user
 from django_otp.decorators import otp_required
+from django_otp.plugins.otp_static.models import StaticDevice
 from django_otp.plugins.otp_totp.models import TOTPDevice
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
-from incidents.decorators import check_user_is_correct
-from incidents.email import check_rt_config, create_or_update_rt_ticket, send_html_email
 
+from .decorators import check_user_is_correct
+from .email import send_html_email
 from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
@@ -57,6 +59,7 @@ from .models import (  # OperatorType,; Service,
     User,
 )
 from .permissions import set_platform_admin_permissions
+from .rt import check_rt_config, create_rt_ticket
 from .settings import SITE_NAME
 
 
@@ -117,6 +120,11 @@ class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmi
     form = CustomTranslatableAdminForm
 
     translated_fields: list[str] = []
+
+    def get_language_tabs(self, request, obj, available_languages, css_class=None):
+        tabs = super().get_language_tabs(request, obj, available_languages, css_class=css_class)
+        tabs.allow_deletion = False
+        return tabs
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
@@ -268,7 +276,7 @@ class CompanyUserInline(admin.TabularInline):
                             regulatorUserGroupId,
                         ]
                     )
-                    .filter(regulators=None, observers=None)
+                    .filter(regulators=None, observers=None, is_active=True)
                     .order_by("email")
                 )
 
@@ -284,7 +292,7 @@ class CompanyUserInline(admin.TabularInline):
                             regulatorUserGroupId,
                         ]
                     )
-                    .filter(companies__in=[company_in_use])
+                    .filter(companies__in=[company_in_use], is_active=True)
                     .exclude(id=user.id)
                     .distinct()
                     .order_by("email")
@@ -432,7 +440,7 @@ class CompanyAdmin(admin.ModelAdmin):
         user = request.user
         # Exclude CompanyUserMultipleInline for RegulatorAdmin
         # because if we go for user creation it asks company and that's not good
-        if user_in_group(user, "RegulatorAdmin"):
+        if user_in_group(user, "RegulatorAdmin") or user_in_group(user, "OperatorAdmin"):
             inline_instances = []
 
         return inline_instances
@@ -443,7 +451,7 @@ class CompanyAdmin(admin.ModelAdmin):
         user = request.user
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
-            readonly_fields += ("identifier", "sectors")
+            readonly_fields += ("name", "address", "country", "identifier", "sectors")
         if not (user_in_group(user, "RegulatorUser") or user_in_group(user, "RegulatorAdmin")):
             readonly_fields += ("entity_categories",)
 
@@ -695,6 +703,7 @@ def reset_2FA(modeladmin, request, queryset):
         devices = devices_for_user(user)
         for device in devices:
             device.delete()
+        modeladmin.log_change(request, user, "Reset the 2FA token.")
 
 
 class UserRegulatorsListFilter(SimpleListFilter):
@@ -830,8 +839,10 @@ class UserAdmin(admin.ModelAdmin):
         "get_companies",
         "get_observers",
         "get_permissions_groups",
-        "get_2FA_activation",
         "email_verified",
+        "get_2FA_activation",
+        "get_is_administrator",
+        "get_is_approved",
         "date_joined",
     ]
     search_fields = [
@@ -878,7 +889,7 @@ class UserAdmin(admin.ModelAdmin):
         ),
     ]
     actions = [reset_2FA]
-    change_list_template = "admin/reset_accepted_terms.html"
+    change_list_template = "admin/custom_change_user_list.html"
 
     # manage the administrator field for operatorAdmin
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -897,10 +908,19 @@ class UserAdmin(admin.ModelAdmin):
         return super().get_form(request, obj, change, **kwargs)
 
     def get_actions(self, request):
+        # Remove the bulk actions for OperatorAdmin users
+        if user_in_group(request.user, "OperatorAdmin"):
+            return {}
+
         actions = super().get_actions(request)
         if "delete_selected" in actions:
             del actions["delete_selected"]
         return actions
+
+    def get_list_filter(self, request):
+        if user_in_group(request.user, "OperatorAdmin"):
+            return []
+        return super().get_list_filter(request)
 
     def get_urls(self):
         urls = super().get_urls()
@@ -915,8 +935,221 @@ class UserAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.reset_cookie_acceptation),
                 name="reset_cookie_acceptation",
             ),
+            path(
+                "<int:user_id>/approve-company-link/",
+                self.admin_site.admin_view(self.approve_company_link),
+                name="approve_company_link",
+            ),
+            path(
+                "<int:user_id>/reject-company-link/",
+                self.admin_site.admin_view(self.reject_company_link),
+                name="reject_company_link",
+            ),
+            path(
+                "<int:user_id>/toggle-user-role/",
+                self.admin_site.admin_view(self.toggle_user_role),
+                name="toggle_user_role",
+            ),
+            path(
+                "<int:user_id>/reset-2fa-token/",
+                self.admin_site.admin_view(self.reset_2FA_token),
+                name="reset_2FA_token",
+            ),
         ]
         return custom_urls + urls
+
+    def company_links(self, request, queryset, approved):
+        """
+        The links in `queryset` the caller is allowed to act on: in the `approved` state, belonging
+        to the company the caller is currently acting for, and never their own. Resolving them here
+        rather than trusting the posted ids keeps a crafted request out of another company, and
+        keeps the row buttons and the batch actions on one rule.
+
+        Excluding the caller is also what keeps an operator from losing its last administrator:
+        the caller is one, and cannot demote itself.
+        """
+        company_in_use = get_active_company_from_session(request)
+        if request.method != "POST" or not user_in_group(request.user, "OperatorAdmin") or company_in_use is None:
+            return CompanyUser.objects.none()
+
+        return (
+            CompanyUser.objects.filter(user__in=queryset, company=company_in_use, approved=approved)
+            .exclude(user=request.user)
+            .select_related("user")
+        )
+
+    def get_company_link(self, request, user_id, approved):
+        company_user = self.company_links(request, User.objects.filter(pk=user_id), approved=approved).first()
+        if company_user is None:
+            raise Http404()
+
+        return company_user
+
+    def redirect_to_changelist(self, request):
+        changelist_url = reverse("admin:governanceplatform_user_changelist")
+        # Rebuilt from reverse() so a posted value can only add query parameters to our own
+        # changelist, never redirect elsewhere.
+        filters = request.POST.get("changelist_filters")
+        return redirect(f"{changelist_url}?{filters}" if filters else changelist_url)
+
+    def approve_company_link(self, request, user_id):
+        company_user = self.get_company_link(request, user_id, approved=False)
+        company_user.approved = True
+        # Saved through the model: the CompanyUser signals re-parent the incidents the account
+        # already notified and swap its IncidentUser permissions.
+        company_user.save()
+        self.log_change(request, company_user.user, "Approved the link with the operator.")
+        messages.success(
+            request,
+            _("%(user)s is now linked to your company.") % {"user": company_user.user.email},
+        )
+        return self.redirect_to_changelist(request)
+
+    def reject_company_link(self, request, user_id):
+        company_user = self.get_company_link(request, user_id, approved=False)
+        user = company_user.user
+        email = user.email
+        company_user.delete()
+        self.log_change(request, user, "Rejected the link with the operator.")
+        messages.success(
+            request,
+            _("The suggestion to link %(user)s has been rejected.") % {"user": email},
+        )
+        return self.redirect_to_changelist(request)
+
+    def toggle_user_role(self, request, user_id):
+        company_user = self.get_company_link(request, user_id, approved=True)
+        company_user.is_company_administrator = not company_user.is_company_administrator
+        # Saved through the model: the CompanyUser signals move the account between the
+        # OperatorAdmin and OperatorUser groups and force it to reconnect.
+        company_user.save()
+
+        if company_user.is_company_administrator:
+            message = _("%(user)s is now an administrator of your company.")
+            history_message = "Changed as administrator of the operator."
+        else:
+            message = _("%(user)s is no longer an administrator of your company.")
+            history_message = "Removed as administrator of the operator."
+
+        self.log_change(request, company_user.user, history_message)
+        messages.success(request, message % {"user": company_user.user.email})
+        return self.redirect_to_changelist(request)
+
+    def reset_2FA_token(self, request, user_id):
+        company_user = self.get_company_link(request, user_id, approved=True)
+        for device in devices_for_user(company_user.user):
+            device.delete()
+
+        self.log_change(request, company_user.user, "Reset the 2FA token.")
+        messages.success(
+            request,
+            _("The 2FA token of %(user)s has been reset.") % {"user": company_user.user.email},
+        )
+        return self.redirect_to_changelist(request)
+
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        is_operator_admin = user_in_group(request.user, "OperatorAdmin")
+
+        if is_operator_admin and obj is not None:
+            context["delete_confirm_message"] = _("Removing %(user)s will unlink the account from your company.") % {"user": obj.email}
+
+            if self.is_awaiting_approval(request, obj):
+                # Reused rather than restated, so the prompt cannot drift from the changelist buttons.
+                context["pending_link_company"] = get_active_company_from_session(request)
+                context["pending_link_actions"] = self.account_actions(obj)
+
+        response = super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
+
+        if is_operator_admin and isinstance(response, TemplateResponse):
+            response.template_name = "admin/custom_change_user_form.html"
+
+        return response
+
+    def action_button(self, url_name, obj, label, message, css_class="button"):
+        """
+        One account action button. It posts to its own endpoint rather than to the enclosing admin
+        form, and carries the text the confirmation dialog shows before letting the post through.
+        """
+        return format_html(
+            '<button type="submit" class="{css_class}" form="account-action-form"'
+            ' formaction="{url}" data-confirm-message="{message}">{label}</button>',
+            css_class=css_class,
+            url=reverse(f"admin:{url_name}", args=[obj.pk]),
+            message=message % {"user": obj.email},
+            label=label,
+        )
+
+    def administrator_button(self, obj):
+        """The administrator toggle, defined once for both the changelist and the detail view."""
+        if obj.is_company_admin:
+            label = _("Unset Administrator")
+            message = _(
+                "Removing %(user)s as Administrator will limit the account permissions to Operator User. "
+                "The user will be logged out of the current session."
+            )
+        else:
+            label = _("Set Administrator")
+            message = _(
+                "Adding %(user)s an Administrator will let the account manage your operator, its users and settings. "
+                "The user will be logged out of the current session."
+            )
+
+        return self.action_button("toggle_user_role", obj, label, message)
+
+    def reset_2FA_button(self, obj):
+        """The 2FA reset, defined once for both the changelist and the detail view."""
+        return self.action_button(
+            "reset_2FA_token",
+            obj,
+            _("Reset 2FA token"),
+            _("Resetting the 2FA token of %(user)s will require the account to setup a new authenticator at the next login."),
+        )
+
+    @admin.display(description=_("Account actions"))
+    def account_actions(self, obj):
+        # The caller acts on their own account from their own profile, and the endpoints refuse
+        # their row, so offering buttons here would only ever dead-end.
+        if obj.is_current_user:
+            return ""
+
+        if obj.has_pending_company_link:
+            return format_html(
+                '<span class="link-pending">{} {}</span>',
+                self.action_button(
+                    "approve_company_link",
+                    obj,
+                    _("Approve"),
+                    _("Approving %(user)s will associate the account with your company, including their notified incidents."),
+                    css_class="button approve-button",
+                ),
+                self.action_button(
+                    "reject_company_link",
+                    obj,
+                    _("Reject"),
+                    _("Rejecting %(user)s will remove the suggested link with your company."),
+                    css_class="button reject-button",
+                ),
+            )
+
+        return format_html(
+            '<span class="account-actions">{} {}</span>',
+            self.administrator_button(obj),
+            self.reset_2FA_button(obj),
+        )
+
+    @admin.display(description="")
+    def reset_2FA_action(self, obj):
+        if obj.is_current_user or not obj.is_approved:
+            return ""
+
+        return format_html('<span class="account-actions">{}</span>', self.reset_2FA_button(obj))
+
+    @admin.display(description="")
+    def administrator_action(self, obj):
+        if obj.is_current_user or not obj.is_approved:
+            return ""
+
+        return format_html('<span class="account-actions">{}</span>', self.administrator_button(obj))
 
     def reset_cookie_acceptation(self, request):
         if not user_in_group(request.user, "PlatformAdmin"):
@@ -941,18 +1174,36 @@ class UserAdmin(admin.ModelAdmin):
         if user_in_group(request.user, "PlatformAdmin"):
             extra_context["reset_url"] = "reset-accepted-terms/"
             extra_context["reset_url_cookies"] = "reset-cookie-acceptation/"
+
+        # Raised here rather than in get_queryset, which every view for this model calls: a request
+        # that queues a message without rendering one leaves it for whatever page the operator
+        # opens next, including the pages outside this admin.
+        if user_in_group(request.user, "OperatorAdmin") and self.get_queryset(request).filter(has_pending_company_link=True).exists():
+            messages.info(
+                request,
+                _("There is a suggestion to link a User Account to your company. Please Approve or Reject the suggestion."),
+            )
+
         return super().changelist_view(request, extra_context=extra_context)
 
-    @admin.display(description="2FA", boolean=True, ordering="has_2fa")
+    @admin.display(description=_("2FA Activated"), boolean=True, ordering="has_2fa")
     def get_2FA_activation(self, obj):
-        return bool(user_has_device(obj))
+        return obj.has_2fa
+
+    @admin.display(description=_("Is Administrator"), boolean=True, ordering="is_company_admin")
+    def get_is_administrator(self, obj):
+        return obj.is_company_admin
+
+    @admin.display(description=_("Approved"), boolean=True, ordering="is_approved")
+    def get_is_approved(self, obj):
+        return obj.is_approved
 
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = (
             "get_permissions_groups",
             "date_joined",
-            "get_2FA_activation",
             "email_verified",
+            "get_2FA_activation",
         )
 
         if obj is None:
@@ -964,6 +1215,8 @@ class UserAdmin(admin.ModelAdmin):
             return ("get_regulators",) + readonly_fields
         if is_observer_user(obj):
             return ("get_observers",) + readonly_fields
+        if user_in_group(request.user, "OperatorAdmin"):
+            return readonly_fields + ("email", "get_is_administrator", "get_is_approved", "reset_2FA_action", "administrator_action")
 
         return readonly_fields
 
@@ -998,6 +1251,17 @@ class UserAdmin(admin.ModelAdmin):
         extra_fields = [f for f in readonly_fields if f not in existing_fields]
 
         if extra_fields:
+            if is_user_operator(user) and "get_permissions_groups" in extra_fields:
+                extra_fields.remove("email")
+                extra_fields.remove("get_permissions_groups")
+
+            # A tuple inside "fields" is one row, which puts each action beside the field it changes.
+            for field, action in (("get_2FA_activation", "reset_2FA_action"), ("get_is_administrator", "administrator_action")):
+                if action in extra_fields:
+                    extra_fields.remove(action)
+                    if field in extra_fields:
+                        extra_fields[extra_fields.index(field)] = (field, action)
+
             fieldsets = list(fieldsets) + [
                 (
                     _("Additional information"),
@@ -1041,25 +1305,18 @@ class UserAdmin(admin.ModelAdmin):
         list_display = super().get_list_display(request)
 
         if user_in_group(request.user, "PlatformAdmin"):
-            fields_to_exclude = ["get_companies"]
+            fields_to_exclude = ["get_companies", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
 
         if user_in_group(request.user, "ObserverAdmin"):
-            fields_to_exclude = [
-                "get_companies",
-                "get_regulators",
-                "is_active",
-            ]
+            fields_to_exclude = ["get_companies", "get_regulators", "is_active", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
 
         if user_in_group(request.user, "RegulatorUser"):
-            fields_to_exclude = [
-                "get_regulators",
-                "get_observers",
-            ]
+            fields_to_exclude = ["get_regulators", "get_observers", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
         if user_in_group(request.user, "RegulatorAdmin"):
-            fields_to_exclude = ["get_observers"]
+            fields_to_exclude = ["get_observers", "get_is_administrator", "get_is_approved"]
             list_display = [field for field in list_display if field not in fields_to_exclude]
         if user_in_group(request.user, "OperatorAdmin"):
             fields_to_exclude = [
@@ -1067,15 +1324,24 @@ class UserAdmin(admin.ModelAdmin):
                 "get_regulators",
                 "get_observers",
                 "is_active",
+                "get_permissions_groups",
             ]
             list_display = [field for field in list_display if field not in fields_to_exclude]
+            list_display = [*list_display, "account_actions"]
 
         return list_display
 
     def get_queryset(self, request):
-        # stock the request
-        self._request = request
-        queryset = super().get_queryset(request).annotate(has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True)))
+        queryset = (
+            super()
+            .get_queryset(request)
+            .annotate(
+                # Both device types, so the column keeps matching what user_has_device() reported
+                # and the has_2fa ordering agrees with the value shown.
+                has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True))
+                | Exists(StaticDevice.objects.filter(user=OuterRef("pk"), confirmed=True)),
+            )
+        )
         user = request.user
 
         PlatformAdminGroupId = get_group_id(name="PlatformAdmin")
@@ -1123,18 +1389,73 @@ class UserAdmin(admin.ModelAdmin):
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
             company_in_use = get_active_company_from_session(request)
-            return queryset.filter(
-                companies__in=[company_in_use],
-            ).distinct()
+
+            return (
+                queryset.filter(
+                    companies__in=[company_in_use],
+                )
+                .annotate(
+                    is_company_admin=Exists(
+                        CompanyUser.objects.filter(
+                            user=OuterRef("pk"),
+                            company=company_in_use,
+                            is_company_administrator=True,
+                        )
+                    ),
+                    is_approved=Exists(
+                        CompanyUser.objects.filter(
+                            user=OuterRef("pk"),
+                            company=company_in_use,
+                            approved=True,
+                        )
+                    ),
+                    is_current_user=Q(pk=user.pk),
+                    has_pending_company_link=Exists(
+                        CompanyUser.objects.filter(
+                            user=OuterRef("pk"),
+                            company=company_in_use,
+                            approved=False,
+                        ).exclude(user=user)
+                    ),
+                )
+                .distinct()
+            )
         return queryset
+
+    def is_awaiting_approval(self, request, obj):
+        """
+        An account whose link to the operator has not been approved yet. The only thing an operator
+        admin may do with it is approve or reject that suggestion, so everything else is withheld
+        until then.
+        """
+        if obj is None:
+            return False
+
+        # Django asks for change and delete permission many times while rendering one page, and the
+        # answer costs queries, so it is kept on the instance it was asked about. Queried rather
+        # than read off the has_pending_company_link annotation because the permission methods also
+        # receive objects that never went through get_queryset, such as the one response_add hands
+        # back straight from form.save().
+        if not hasattr(obj, "_awaiting_approval"):
+            obj._awaiting_approval = (
+                user_in_group(request.user, "OperatorAdmin")
+                and (company_in_use := get_active_company_from_session(request)) is not None
+                and CompanyUser.objects.filter(user=obj, company=company_in_use, approved=False).exclude(user=request.user).exists()
+            )
+
+        return obj._awaiting_approval
 
     def has_change_permission(self, request, obj=None):
         user = request.user
+        if self.is_awaiting_approval(request, obj):
+            return False
         if obj and user_in_group(user, "RegulatorUser") and (obj == user or is_user_operator(obj) or user_in_group(obj, "IncidentUser")):
             return True
         return super().has_change_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
+        if self.is_awaiting_approval(request, obj):
+            return False
         if obj:
             if (
                 user_in_group(obj, "RegulatorUser")
@@ -1181,8 +1502,17 @@ class UserAdmin(admin.ModelAdmin):
                 obj.groups.add(group)
                 set_platform_admin_permissions(obj)
 
-    # override delete to don't delete RegulatorAdmin RegulatorUser and PlatformAdmin (put them inactive)
+    # OperatorAdmin (remove the link with the company)
+    # override delete to don't delete RegulatorAdmin RegulatorUser
+    # PlatformAdmin (put them inactive)
     def delete_model(self, request, obj):
+        if user_in_group(request.user, "OperatorAdmin"):
+            company_in_use = get_active_company_from_session(request)
+            if company_in_use:
+                obj.companies.remove(company_in_use)
+                self.log_change(request, obj, "Removed from the operator.")
+                return
+
         if user_in_group(obj, "PlatformAdmin") or is_user_regulator(obj):
             obj.is_active = False
             obj.save()
@@ -1497,8 +1827,8 @@ class ObserverAdmin(CustomTranslatableAdmin):
                 timezone.now().strftime("%Y-%m-%d %H:%M %Z"),
                 user.get_full_name(),
             )
-            incident = None
-            create_or_update_rt_ticket(observer, subject, content, incident)
+            # Not recorded as an RTTicket: that row requires an incident, and this one has none.
+            create_rt_ticket(observer, subject, content)
             return JsonResponse({"success": True, "message": _("RT connection successful.")})
 
         return JsonResponse({"success": False, "message": _("RT connection failed. Check URL, queue and token.")})

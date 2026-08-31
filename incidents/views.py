@@ -12,9 +12,10 @@ from django.contrib import messages
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
+from django.db.models import CharField, F, Q, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -30,11 +31,9 @@ from django_otp.decorators import otp_required
 from formtools.wizard.views import SessionWizardView
 from openpyxl import Workbook
 
+from governanceplatform.decorators import check_user_is_correct, regulator_role_required
 from governanceplatform.helpers import (
     annotate_translated_field_from_related_models,
-    can_access_incident,
-    can_create_incident_report,
-    can_edit_incident_report,
     get_active_company_from_session,
     is_observer_user,
     is_user_operator,
@@ -57,7 +56,12 @@ from governanceplatform.settings import (
     TIME_ZONE,
 )
 
-from .decorators import check_user_is_correct, regulator_role_required
+from .access_control import (
+    can_access_incident,
+    can_create_incident_report,
+    can_edit_incident_report,
+    get_observer_incidents,
+)
 from .email import send_email, send_html_email
 from .filters import IncidentFilter
 from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
@@ -67,7 +71,7 @@ from .globals import (
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
 )
-from .helpers import get_workflow_categories, is_deadline_exceeded
+from .helpers import get_workflow_categories, is_deadline_exceeded, sanitize_spreadsheet_cell
 from .models import (
     Answer,
     Impact,
@@ -142,7 +146,7 @@ def get_incidents(request):
             incidents = incidents.filter(sector_regulation__regulator__in=user.regulators.all())
     elif is_observer_user(user):
         html_view = "observer/incidents.html"
-        incidents = user.observers.first().get_incidents()
+        incidents = get_observer_incidents(user.observers.first())
     elif is_user_operator(user):
         # OperatorAdmin/User can see all the reports of the selected company.
         incidents = incidents.filter(
@@ -490,13 +494,15 @@ def edit_workflow(request):
 def edit_incident(request, incident_id: int):
     """Returns the list of incident as regulator."""
 
+    company_id = request.session.get("company_in_use")
+
     try:
         incident = Incident.objects.get(pk=incident_id)
     except Incident.DoesNotExist:
         messages.error(request, _("Incident not found"))
         return redirect("incidents")
 
-    if not can_edit_incident_report(request.user, incident):
+    if not can_edit_incident_report(request.user, incident, company_id):
         return redirect("incidents")
 
     incident_form = IncidentStatusForm(request.POST, instance=incident)
@@ -505,21 +511,21 @@ def edit_incident(request, incident_id: int):
         incident = incident_form.save(commit=False)
         response = {"id": incident.pk}
         incident_status = incident_form.cleaned_data.get("incident_status")
-        if incident_status == "CLOSE" and incident.sector_regulation.closing_email:
+        old, new = incident_form.get_field_change("is_significative_impact")
+
+        with transaction.atomic():
+            incident.save()
+            if old != new:
+                message = "IMP. True" if new is True else "IMP. False"
+                create_entry_log(request.user, incident, None, message, request)
+
+        # Notify only once the closure is committed: a failed save must not leave
+        # regulators told about a closure that never happened.
+        if incident_status == "CLOSE" and incident.sector_regulation and incident.sector_regulation.closing_email:
             send_email(incident.sector_regulation.closing_email, incident)
 
         for field_name in incident_form.cleaned_data:
             response[field_name] = incident_form.cleaned_data[field_name]
-
-        old, new = incident_form.get_field_change("is_significative_impact")
-        if old != new:
-            if new is True:
-                message = "IMP. True"
-            else:
-                message = "IMP. False"
-            create_entry_log(request.user, incident, None, message, request)
-
-        incident.save()
 
         return JsonResponse(response)
 
@@ -665,11 +671,16 @@ def delete_incident(request, incident_id: int):
         return redirect("incidents")
 
     try:
-        if incident.workflows.count() == 0:
-            incident.delete()
-            messages.success(request, _("The incident has been deleted."))
-        else:
-            messages.error(request, _("The incident could not be deleted."))
+        with transaction.atomic():
+            # Lock the row for the whole check-then-delete. On PostgreSQL a concurrent
+            # IncidentWorkflow insert must take FOR KEY SHARE on this parent row, which
+            # conflicts with FOR UPDATE, so a report cannot slip in and be cascaded away.
+            locked_incident = Incident.objects.select_for_update().get(pk=incident.pk)
+            if locked_incident.workflows.exists():
+                messages.error(request, _("The incident could not be deleted."))
+            else:
+                locked_incident.delete()
+                messages.success(request, _("The incident has been deleted."))
     except Exception:
         logger.error(
             "Error deleting incident",
@@ -722,11 +733,15 @@ def export_incidents(request):
 
     sectorregulation_qs = SectorRegulation.objects.filter(id__in=sectorregulation_ids).order_by("id")
 
+    # A workflow can be reused by several sector regulations, so every id the user
+    # may see is aggregated and the template exposes them all to the report filter.
     workflow_qs = (
         Workflow.objects.filter(id__in=workflows_ids)
         .annotate(
-            sectorregulation_id=Subquery(
-                SectorRegulationWorkflow.objects.filter(workflow=OuterRef("pk")).values("sector_regulation__id")[:1]
+            sectorregulation_ids=ArrayAgg(
+                "sectorregulation__id",
+                filter=Q(sectorregulation__id__in=sectorregulation_ids),
+                distinct=True,
             )
         )
         .order_by("id")
@@ -770,7 +785,7 @@ def export_incidents(request):
                 are_incidents = incidents.exists()
 
             if is_observer_user(user):
-                all_incidents = user.observers.first().get_incidents().order_by("-incident_notification_date")
+                all_incidents = get_observer_incidents(user.observers.first()).order_by("-incident_notification_date")
 
                 incidents = [
                     i
@@ -898,10 +913,10 @@ def export_incidents(request):
                 ws = wb.active
                 ws.title = "Incidents"
 
-                headers = keys
+                headers = [sanitize_spreadsheet_cell(key) for key in keys]
                 ws.append(headers)
                 for entry in data:
-                    row = [entry.get(key, "") for key in headers]
+                    row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     ws.append(row)
 
                 for column_cells in ws.columns:
@@ -916,15 +931,13 @@ def export_incidents(request):
                 response = HttpResponse(content_type="text/csv")
                 response["Content-Disposition"] = 'attachment; filename="export.csv"'
 
-                writer = csv.DictWriter(
+                writer = csv.writer(
                     response,
-                    fieldnames=keys,
-                    extrasaction="ignore",
                     quoting=csv.QUOTE_ALL,
                 )
-                writer.writeheader()
+                writer.writerow([sanitize_spreadsheet_cell(key) for key in keys])
                 for entry in data:
-                    row = {key: entry.get(key, "") for key in keys}
+                    row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     writer.writerow(row)
 
             LogEntry.objects.log_actions(
@@ -1120,10 +1133,16 @@ class FormWizardView(SessionWizardView):
                 Q(sectors__in=sectors_id) | Q(sectors__isnull=True),
                 regulator__in=regulators_id,
                 regulation__in=regulations_id,
+                workflows__isnull=False,
+                active=True,
             )
             .order_by()
             .distinct()
         )
+
+        if not sector_regulations.exists():
+            messages.error(self.request, _("No incident notification workflow found for the selected criteria."))
+            return redirect("incidents")
 
         incident_timezone = data.get("incident_timezone", TIME_ZONE)
         incident_detection_date = data.get("detection_date", None)
@@ -1273,10 +1292,14 @@ class WorkflowWizardView(SessionWizardView):
             self.incident = self.incident_workflow.incident
             self.workflow = self.incident_workflow.workflow
             self.is_regulator_incident = True if self.incident.regulator == user.regulators.first() and is_regulator_incidents else False
-            regulation_sector_has_impacts = Impact.objects.filter(
-                regulations=self.incident.sector_regulation.regulation,
-                sectors__in=self.incident.affected_sectors.all(),
-            ).exists()
+            sector_regulation = self.incident.sector_regulation
+            regulation_sector_has_impacts = (
+                sector_regulation is not None
+                and Impact.objects.filter(
+                    regulations=sector_regulation.regulation,
+                    sectors__in=self.incident.affected_sectors.all(),
+                ).exists()
+            )
 
             self.workflow.is_impact_needed = bool(self.workflow.is_impact_needed and regulation_sector_has_impacts)
 
@@ -1331,10 +1354,14 @@ class WorkflowWizardView(SessionWizardView):
             else:
                 self.workflow = self.request.workflow
 
-            regulation_sector_has_impacts = Impact.objects.filter(
-                regulations=self.incident.sector_regulation.regulation,
-                sectors__in=self.incident.affected_sectors.all(),
-            ).exists()
+            sector_regulation = self.incident.sector_regulation
+            regulation_sector_has_impacts = (
+                sector_regulation is not None
+                and Impact.objects.filter(
+                    regulations=sector_regulation.regulation,
+                    sectors__in=self.incident.affected_sectors.all(),
+                ).exists()
+            )
 
             self.workflow.is_impact_needed = bool(self.workflow.is_impact_needed and regulation_sector_has_impacts)
 
@@ -1385,6 +1412,9 @@ class WorkflowWizardView(SessionWizardView):
         # Operator : Complete an existing workflow or see historic
         # Regulator : See the report
         form = super().get_form(step=step, data=data, files=files)
+
+        if self.incident:
+            form.incident = self.incident
 
         # Read only for regulator except for last form (save comment)
         # Read only for operator review (read_only = True)
@@ -1441,10 +1471,14 @@ class WorkflowWizardView(SessionWizardView):
             context["steps"].append(_("Incident Timeline"))
             context["steps"].extend(self.categories_workflow)
             if self.workflow.is_impact_needed:
-                regulation_sector_has_impacts = Impact.objects.filter(
-                    regulations=self.incident.sector_regulation.regulation,
-                    sectors__in=self.incident.affected_sectors.all(),
-                ).exists()
+                sector_regulation = self.incident.sector_regulation
+                regulation_sector_has_impacts = (
+                    sector_regulation is not None
+                    and Impact.objects.filter(
+                        regulations=sector_regulation.regulation,
+                        sectors__in=self.incident.affected_sectors.all(),
+                    ).exists()
+                )
                 if regulation_sector_has_impacts:
                     context["steps"].append(_("Impacts"))
 
@@ -1512,7 +1546,9 @@ class WorkflowWizardView(SessionWizardView):
             if incident_starting_date:
                 incident_starting_date = convert_to_utc(incident_starting_date, local_tz)
 
-            if incident_detection_date and not self.incident.sector_regulation.is_detection_date_needed:
+            if incident_detection_date and not (
+                self.incident.sector_regulation and self.incident.sector_regulation.is_detection_date_needed
+            ):
                 self.incident.incident_detection_date = convert_to_utc(incident_detection_date, local_tz)
 
             if incident_resolution_date:
@@ -1531,7 +1567,13 @@ class WorkflowWizardView(SessionWizardView):
             create_entry_log(user, self.incident, incident_workflow, "CREATE", self.request)
 
             if email and not self.incident.incident_status == "CLOSE":
-                send_email(email, self.incident, send_to_observers=True)
+                send_email(
+                    email,
+                    self.incident,
+                    workflow=incident_workflow.workflow,
+                    incident_workflow=incident_workflow,
+                    send_to_observers=True,
+                )
         # save the comment if the user is regulator
         elif is_user_regulator(user) and not self.read_only:
             incident_workflow = (
@@ -1539,15 +1581,13 @@ class WorkflowWizardView(SessionWizardView):
             )
             incident_workflow.comment = data.get("comment", None)
             review_status = data.get("review_status", None)
+            status_changed_email = None
             if incident_workflow.review_status != review_status:
                 if (
                     incident_workflow.incident.sector_regulation.report_status_changed_email
                     and not incident_workflow.incident.incident_status == "CLOSE"
                 ):
-                    send_email(
-                        incident_workflow.incident.sector_regulation.report_status_changed_email,
-                        incident_workflow.incident,
-                    )
+                    status_changed_email = incident_workflow.incident.sector_regulation.report_status_changed_email
             if review_status is not None:
                 incident_workflow.review_status = review_status
                 with override(PARLER_DEFAULT_LANGUAGE_CODE):
@@ -1567,6 +1607,14 @@ class WorkflowWizardView(SessionWizardView):
                 "COMMENT",
                 self.request,
             )
+
+            if status_changed_email is not None:
+                send_email(
+                    status_changed_email,
+                    incident_workflow.incident,
+                    workflow=incident_workflow.workflow,
+                    incident_workflow=incident_workflow,
+                )
 
         return redirect("regulator_incidents") if self.is_regulator_incident else redirect("incidents")
 
@@ -1600,7 +1648,7 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
         question_id = None
         try:
             question_id = int(key)
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             continue
         if question_id:
             question_option = question_options_map.get(question_id)

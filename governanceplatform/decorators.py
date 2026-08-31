@@ -5,7 +5,7 @@ from django.contrib.auth import logout
 from django.shortcuts import redirect
 from django.utils.translation import gettext_lazy as _
 
-from governanceplatform.helpers import (
+from .helpers import (
     is_observer_user,
     is_user_operator,
     is_user_regulator,

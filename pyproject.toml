@@ -6,7 +6,7 @@ readme = "README.md"
 license = "AGPL-3.0-or-later"
 license-files = ["LICENSE"]
 keywords = ["NC3-LU", "NIS", "NIS2", "incident-notification"]
-requires-python = ">=3.12,<4"
+requires-python = ">=3.14,<4"
 authors = [
     { name = "Cédric Bonhomme", email = "cedric.bonhomme@nc3.lu" },
     { name = "Jérôme Lombardi", email = "jerome.lombardi@nc3.lu" },
@@ -26,7 +26,6 @@ dependencies = [
     "django-two-factor-auth>=1.15.5,<2",
     "phonenumbers>=9.0.27,<10",
     "django-import-export>=4.4.0,<5",
-    "parler>=1.0.1,<2",
     "django-parler>=2.4,<3",
     "django-countries>=9.0.0,<10",
     "weasyprint>=69.0,<70",
@@ -48,6 +47,7 @@ dependencies = [
     "markdown>=3.10.1,<4",
     "bleach>=6.3.0,<7",
     "gunicorn>=26.0.0,<27",
+    "requests>=2.34.2,<3",
 ]
 
 [project.urls]
@@ -62,7 +62,7 @@ poetry-plugin-export = ">=1.8"
 ruff = "^0.16.1"
 pre-commit = "^4.2.0"
 autoflake = "^2.3.1"
-mypy = "<1.19"
+mypy = "<2.4"
 django-stubs = {version = "^6.0.3", extras = ["compatible-mypy"]}
 types-requests = "^2.32.0.20250515"
 pip-audit = "^2.9.0"
@@ -86,7 +86,7 @@ requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.14"
 check_untyped_defs = true
 ignore_errors = false
 ignore_missing_imports = true
@@ -113,7 +113,7 @@ django_settings_module = "governanceplatform.settings"
 
 [tool.ruff]
 exclude = ["migrations"]
-target-version = "py312"
+target-version = "py314"
 line-length = 140
 
 [tool.ruff.lint]

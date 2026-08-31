@@ -703,14 +703,11 @@ class RegulationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        try:
-            self.fields["regulations"].choices = [
-                (regulation.id, str(regulation))
-                for regulation in Regulation.objects.filter(regulators__isnull=False).distinct("id")
-                if regulation.sectorregulation_set.filter(sectorregulationworkflow__isnull=False, active=True).exists()
-            ]
-        except Exception:
-            self.fields["regulations"].choices = []
+        self.fields["regulations"].choices = [
+            (regulation.id, str(regulation))
+            for regulation in Regulation.objects.filter(regulators__isnull=False).distinct("id")
+            if regulation.sectorregulation_set.filter(sectorregulationworkflow__isnull=False, active=True).exists()
+        ]
 
 
 class RegulatorForm(forms.Form):
@@ -742,6 +739,7 @@ class RegulatorForm(forms.Form):
             if regulator.sectorregulation_set.filter(
                 regulation__id__in=regulations,
                 sectorregulationworkflow__isnull=False,
+                active=True,
             ).exists()
         ]
 
@@ -790,7 +788,7 @@ class SectorForm(forms.Form):
 
 
 def construct_sectors_array(regulations, regulators):
-    sector_regulations = SectorRegulation.objects.filter(regulation__id__in=regulations, regulator__id__in=regulators)
+    sector_regulations = SectorRegulation.objects.filter(regulation__id__in=regulations, regulator__id__in=regulators, active=True)
     all_sectors = Sector.objects.filter(sectorregulation__in=sector_regulations).distinct().order_by("parent")
 
     categs = {}
