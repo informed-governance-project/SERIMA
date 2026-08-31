@@ -1,7 +1,7 @@
 Administration
 ~~~~~~~~~~~~~~~~~~~
 
-In the Administration section, you can check the **Log entries** and the **Script execution logs**.
+In the **Administration** section, you can check the **Log entries** and the **Script execution logs**.
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_03.png
    :alt: Regulator Admin - Log entries
@@ -18,7 +18,7 @@ Click either the **Log Entries** or **View links** to go to the **Select log ent
 
 By default, the list items are sorted by **Action Time** in descending order, with the most recent entry at the top and the oldest at the bottom. In this default view, there are no up or down arrows on the right side of the columns.
 
-To sort the list items, first, select the column you want to sort and choose the **sorting order** (ascending or descending). To refine the sorting further, you can select additional columns and specify their sorting order.
+To sort the list items, first select the column you want to sort and choose the **sorting order** (ascending or descending). To refine the sorting further, you can select additional columns and specify their sorting order.
 
 When more than one column is used for sorting, numbers appear next to the up or down arrows to indicate the **sorting sequence**. In the example below, the list of entries is sorted first by **Action Time** (descending), then by **User** (ascending), and finally by **Content Type** (descending).
 
