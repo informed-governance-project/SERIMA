@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-26 15:27+0200\n"
+"POT-Creation-Date: 2026-09-01 14:45+0200\n"
 "PO-Revision-Date: 2026-08-04 05:29+0000\n"
 "Last-Translator: Chris Frings <Chris.frings+RegAdmin@ilr.lu>\n"
 "Language: de\n"
@@ -45,9 +45,9 @@ msgid "Entity categories"
 msgstr "Entitäts-Kategorien"
 
 #: governanceplatform/admin.py:506 governanceplatform/models.py:82
-#: governanceplatform/models.py:606 incidents/admin.py:595
-#: incidents/admin.py:663 incidents/admin.py:998 incidents/filters.py:19
-#: incidents/forms.py:774 incidents/models.py:48 incidents/models.py:332
+#: governanceplatform/models.py:606 incidents/admin.py:597
+#: incidents/admin.py:665 incidents/admin.py:1013 incidents/filters.py:19
+#: incidents/forms.py:775 incidents/models.py:48 incidents/models.py:325
 #: incidents/views.py:1061 reporting/admin.py:65 reporting/filters.py:31
 #: reporting/forms.py:47 reporting/forms.py:166 reporting/models.py:323
 #: reporting/models.py:497 securityobjectives/filters.py:21
@@ -66,7 +66,7 @@ msgstr "2FA zurücksetzen"
 
 #: governanceplatform/admin.py:788 governanceplatform/models.py:230
 #: governanceplatform/models.py:339 governanceplatform/models.py:557
-#: governanceplatform/models.py:560 incidents/models.py:571
+#: governanceplatform/models.py:560 incidents/models.py:564
 #: incidents/views.py:1060
 msgid "Regulators"
 msgstr "Aufsichtsbehörden"
@@ -97,7 +97,6 @@ msgstr ""
 
 #: governanceplatform/admin.py:1094
 #, python-format
-#| msgid "The incident has been deleted."
 msgid "The suggestion to link %(user)s has been rejected."
 msgstr ""
 
@@ -122,7 +121,6 @@ msgid "Removing %(user)s will unlink the account from your company."
 msgstr ""
 
 #: governanceplatform/admin.py:1163
-#| msgid "Administrator"
 msgid "Unset Administrator"
 msgstr ""
 
@@ -134,7 +132,6 @@ msgid ""
 msgstr ""
 
 #: governanceplatform/admin.py:1169
-#| msgid "Administrator"
 msgid "Set Administrator"
 msgstr ""
 
@@ -146,7 +143,6 @@ msgid ""
 msgstr ""
 
 #: governanceplatform/admin.py:1182
-#| msgid "Reset 2FA"
 msgid "Reset 2FA token"
 msgstr ""
 
@@ -158,12 +154,10 @@ msgid ""
 msgstr ""
 
 #: governanceplatform/admin.py:1186
-#| msgid "Acceptation"
 msgid "Account actions"
 msgstr ""
 
 #: governanceplatform/admin.py:1199
-#| msgid "Approved"
 msgid "Approve"
 msgstr ""
 
@@ -175,7 +169,6 @@ msgid ""
 msgstr ""
 
 #: governanceplatform/admin.py:1206
-#| msgid "Subject"
 msgid "Reject"
 msgstr ""
 
@@ -199,12 +192,10 @@ msgid ""
 msgstr ""
 
 #: governanceplatform/admin.py:1267
-#| msgid "Active"
 msgid "2FA Activated"
 msgstr ""
 
 #: governanceplatform/admin.py:1271
-#| msgid "Is administrator"
 msgid "Is Administrator"
 msgstr ""
 
@@ -389,13 +380,13 @@ msgstr "Telefonnummer"
 msgid "Email address"
 msgstr "E-Mail-Adresse"
 
-#: governanceplatform/forms.py:48 incidents/models.py:958
+#: governanceplatform/forms.py:48 incidents/models.py:951
 #: reporting/models.py:377 securityobjectives/models.py:567
 msgid "Role"
 msgstr "Rolle"
 
-#: governanceplatform/forms.py:111 incidents/models.py:254
-#: incidents/models.py:467
+#: governanceplatform/forms.py:111 incidents/models.py:247
+#: incidents/models.py:460
 msgid "Email"
 msgstr "E-Mail"
 
@@ -522,7 +513,7 @@ msgstr ""
 #: governanceplatform/models.py:38 governanceplatform/models.py:87
 #: governanceplatform/models.py:101 governanceplatform/models.py:147
 #: governanceplatform/models.py:201 governanceplatform/models.py:236
-#: incidents/models.py:231 incidents/models.py:260 incidents/models.py:314
+#: incidents/models.py:224 incidents/models.py:253 incidents/models.py:307
 #: reporting/filters.py:16 reporting/models.py:47 reporting/models.py:73
 #: reporting/models.py:99 reporting/models.py:484
 #: securityobjectives/models.py:205
@@ -540,7 +531,7 @@ msgstr "Akronym"
 
 #: governanceplatform/models.py:52 incidents/models.py:52
 #: incidents/models.py:85 incidents/models.py:129 incidents/models.py:183
-#: incidents/models.py:234 incidents/models.py:280 incidents/models.py:1062
+#: incidents/models.py:227 incidents/models.py:273 incidents/models.py:1055
 #: securityobjectives/models.py:28 securityobjectives/models.py:75
 #: securityobjectives/models.py:141 securityobjectives/models.py:208
 #: securityobjectives/models.py:357 securityobjectives/models.py:440
@@ -549,7 +540,7 @@ msgstr "Ersteller Name"
 
 #: governanceplatform/models.py:60 incidents/models.py:60
 #: incidents/models.py:93 incidents/models.py:137 incidents/models.py:191
-#: incidents/models.py:242 incidents/models.py:288 incidents/models.py:1070
+#: incidents/models.py:235 incidents/models.py:281 incidents/models.py:1063
 #: securityobjectives/models.py:36 securityobjectives/models.py:83
 #: securityobjectives/models.py:149 securityobjectives/models.py:216
 #: securityobjectives/models.py:365
@@ -557,7 +548,7 @@ msgid "Creator"
 msgstr "Ersteller"
 
 #: governanceplatform/models.py:81 governanceplatform/models.py:88
-#: incidents/admin.py:703 reporting/models.py:30 reporting/models.py:280
+#: incidents/admin.py:705 reporting/models.py:30 reporting/models.py:280
 #: reporting/models.py:551
 msgid "Sector"
 msgstr "Sektor"
@@ -602,7 +593,7 @@ msgid "sectors"
 msgstr "Sektoren"
 
 #: governanceplatform/models.py:194 governanceplatform/models.py:456
-#: incidents/models.py:510
+#: incidents/models.py:503
 msgid "Operator"
 msgstr "Betreiber"
 
@@ -611,7 +602,7 @@ msgid "Full name"
 msgstr "Vollständiger Name"
 
 #: governanceplatform/models.py:203 governanceplatform/models.py:238
-#: incidents/models.py:264 reporting/filters.py:22
+#: incidents/models.py:257 reporting/filters.py:22
 #: securityobjectives/models.py:122 securityobjectives/models.py:239
 #: securityobjectives/models.py:348
 msgid "Description"
@@ -622,8 +613,8 @@ msgid "E-mail address for incident notification"
 msgstr "E-Mail-Adresse für die Vorfallsmeldung"
 
 #: governanceplatform/models.py:229 governanceplatform/models.py:375
-#: governanceplatform/models.py:502 incidents/admin.py:745
-#: incidents/models.py:328 incidents/models.py:518 reporting/models.py:396
+#: governanceplatform/models.py:502 incidents/admin.py:747
+#: incidents/models.py:321 incidents/models.py:511 reporting/models.py:396
 #: securityobjectives/models.py:243
 msgid "Regulator"
 msgstr "Regulierungsbehörde"
@@ -671,13 +662,13 @@ msgstr "Gibt an, ob der Benutzer seine E-Mail-Adresse bestätigt hat."
 msgid "Companies"
 msgstr "Unternehmen"
 
-#: governanceplatform/models.py:437 incidents/admin.py:76
+#: governanceplatform/models.py:437 incidents/admin.py:78
 msgid "Users"
 msgstr "Benutzer"
 
 #: governanceplatform/models.py:438 governanceplatform/models.py:461
 #: governanceplatform/models.py:497 governanceplatform/models.py:524
-#: incidents/models.py:952 incidents/templatetags/custom_filters.py:84
+#: incidents/models.py:945 incidents/templatetags/custom_filters.py:84
 #: reporting/models.py:371 securityobjectives/models.py:561
 #: securityobjectives/templatetags/SO_custom_filters.py:132
 msgid "User"
@@ -720,17 +711,17 @@ msgstr "Benutzer der Regulierungsbehörde"
 
 #: governanceplatform/models.py:550 governanceplatform/models.py:578
 #: incidents/models.py:30 incidents/models.py:82 incidents/models.py:124
-#: incidents/models.py:263 securityobjectives/models.py:14
+#: incidents/models.py:256 securityobjectives/models.py:14
 #: securityobjectives/models.py:65 securityobjectives/models.py:238
 msgid "Label"
 msgstr "Bezeichnung"
 
-#: governanceplatform/models.py:569 incidents/admin.py:699
+#: governanceplatform/models.py:569 incidents/admin.py:701
 msgid "Regulations"
 msgstr "Vorschriften"
 
-#: governanceplatform/models.py:570 incidents/forms.py:1192
-#: incidents/models.py:488 reporting/admin.py:108 reporting/forms.py:141
+#: governanceplatform/models.py:570 incidents/forms.py:1193
+#: incidents/models.py:481 reporting/admin.py:108 reporting/forms.py:141
 #: securityobjectives/models.py:248
 msgid "Regulation"
 msgstr "Verordnung"
@@ -743,8 +734,8 @@ msgstr "Referenz"
 msgid "Entity category"
 msgstr "Entitätskategorie"
 
-#: governanceplatform/models.py:603 incidents/admin.py:613
-#: incidents/models.py:44 incidents/models.py:323
+#: governanceplatform/models.py:603 incidents/admin.py:615
+#: incidents/models.py:44 incidents/models.py:316
 msgid "Legal basis"
 msgstr "Rechtsgrundlage"
 
@@ -752,15 +743,15 @@ msgstr "Rechtsgrundlage"
 msgid "Incident rules"
 msgstr "Vorfallregeln"
 
-#: governanceplatform/models.py:637 incidents/models.py:846
-#: incidents/models.py:955 incidents/models.py:1011 incidents/models.py:1032
-#: incidents/models.py:1238 reporting/models.py:374 reporting/models.py:587
+#: governanceplatform/models.py:637 incidents/models.py:839
+#: incidents/models.py:948 incidents/models.py:1004 incidents/models.py:1025
+#: incidents/models.py:1231 reporting/models.py:374 reporting/models.py:587
 #: securityobjectives/models.py:564
 msgid "Timestamp"
 msgstr "Zeitstempel"
 
-#: governanceplatform/models.py:638 incidents/admin.py:110
-#: incidents/admin.py:192
+#: governanceplatform/models.py:638 incidents/admin.py:112
+#: incidents/admin.py:194
 msgid "Activity"
 msgstr "Aktivität"
 
@@ -908,37 +899,37 @@ msgstr "Ihre Nachricht wurde gesendet."
 msgid "Invalid captcha"
 msgstr "Ungültiges Captcha"
 
-#: incidents/admin.py:226 incidents/forms.py:1288 incidents/models.py:167
-#: incidents/models.py:175 incidents/models.py:1041
+#: incidents/admin.py:228 incidents/forms.py:1289 incidents/models.py:167
+#: incidents/models.py:175 incidents/models.py:1034
 msgid "Question"
 msgstr "Frage"
 
-#: incidents/admin.py:227 incidents/models.py:1232
+#: incidents/admin.py:229 incidents/models.py:1225
 msgid "Questionnaire"
 msgstr "Fragebogen"
 
-#: incidents/admin.py:262
+#: incidents/admin.py:264
 msgid "Predefined answer"
 msgstr "Vordefinierte Antwort"
 
-#: incidents/admin.py:263
+#: incidents/admin.py:265
 msgid "Predefined answers"
 msgstr "Vordefinierte Antworten"
 
-#: incidents/admin.py:268
+#: incidents/admin.py:270
 msgid "Duplicate selected items"
 msgstr "Ausgewählte Elemente duplizieren"
 
-#: incidents/admin.py:358 incidents/models.py:116
+#: incidents/admin.py:360 incidents/models.py:116
 msgid "Question Type"
 msgstr "Frageart"
 
-#: incidents/admin.py:460 incidents/forms.py:1197 incidents/models.py:377
-#: incidents/models.py:551
+#: incidents/admin.py:462 incidents/forms.py:1198 incidents/models.py:370
+#: incidents/models.py:544
 msgid "Workflow"
 msgstr "Workflow"
 
-#: incidents/admin.py:490
+#: incidents/admin.py:492
 msgid ""
 "To create a conditional question, the question must exist in an incident "
 "report and be marked as “Conditional display”. Please select a report first "
@@ -950,42 +941,46 @@ msgstr ""
 "zunächst einen Bericht aus, um die verfügbaren Fragen zu laden. Es werden "
 "nur Berichte angezeigt, die bedingte Fragen enthalten."
 
-#: incidents/admin.py:647 incidents/admin.py:864 incidents/admin.py:977
+#: incidents/admin.py:649 incidents/admin.py:879 incidents/admin.py:992
 #: securityobjectives/admin.py:662
 msgid "General"
 msgstr "Allgemein"
 
-#: incidents/admin.py:654 incidents/admin.py:988
+#: incidents/admin.py:656 incidents/admin.py:1003
 msgid "Supervision"
 msgstr "Supervision"
 
-#: incidents/admin.py:712
+#: incidents/admin.py:714
 msgid "Sub-sector"
 msgstr "Untersektor"
 
-#: incidents/admin.py:758
+#: incidents/admin.py:760
 msgid "Email type"
 msgstr "E-Mail-Typ"
 
-#: incidents/admin.py:805 incidents/models.py:221
+#: incidents/admin.py:790
+msgid "Available placeholders"
+msgstr ""
+
+#: incidents/admin.py:815 incidents/models.py:221
 #: securityobjectives/admin.py:1172 securityobjectives/models.py:201
 msgid "Content"
 msgstr "Inhalt"
 
-#: incidents/admin.py:812 securityobjectives/admin.py:1182
+#: incidents/admin.py:827 securityobjectives/admin.py:1182
 msgid "HTML preview"
 msgstr "HTML-Vorschau"
 
-#: incidents/admin.py:815 securityobjectives/admin.py:1185
+#: incidents/admin.py:830 securityobjectives/admin.py:1185
 msgid "No preview yet"
 msgstr "Noch keine Vorschau"
 
-#: incidents/admin.py:871 incidents/admin.py:1004
+#: incidents/admin.py:886 incidents/admin.py:1019
 #: securityobjectives/admin.py:669
 msgid "Notification Email"
 msgstr "Benachrichtigungs-E-Mail"
 
-#: incidents/admin.py:919 incidents/admin.py:1115
+#: incidents/admin.py:934 incidents/admin.py:1130
 #, python-brace-format
 msgid ""
 "<strong>Deletion forbidden</strong><br>- This {object_name} is either in use."
@@ -994,26 +989,26 @@ msgstr ""
 "<strong>Löschen verboten</strong><br>- Dieses {object_name} wird entweder "
 "verwendet.<br>"
 
-#: incidents/admin.py:936 incidents/models.py:305 incidents/models.py:378
-#: incidents/models.py:843
+#: incidents/admin.py:951 incidents/models.py:298 incidents/models.py:371
+#: incidents/models.py:836
 msgid "Incident report"
 msgstr "Vorfallbericht"
 
-#: incidents/admin.py:937 incidents/models.py:304 incidents/models.py:330
-#: incidents/models.py:559
+#: incidents/admin.py:952 incidents/models.py:297 incidents/models.py:323
+#: incidents/models.py:552
 msgid "Incident reports"
 msgstr "Vorfallberichte"
 
-#: incidents/admin.py:946
+#: incidents/admin.py:961
 msgid "Toggle active status of selected items"
 msgstr "Aktivierungsstatus der ausgewählten Elemente umschalten"
 
-#: incidents/admin.py:953
+#: incidents/admin.py:968
 #, python-format
 msgid "You don't have permission to change the status of %s."
 msgstr "Sie haben keine Berechtigung, den Status von %s zu ändern."
 
-#: incidents/admin.py:1107
+#: incidents/admin.py:1122
 #, python-brace-format
 msgid ""
 "<strong>Deletion is not allowed.</strong><br>- This {object_name} is either "
@@ -1021,6 +1016,50 @@ msgid ""
 msgstr ""
 "<strong>Löschen ist nicht zulässig.</strong><br> {object_name} wird derzeit "
 "verwendet oder Sie sind nicht dessen Ersteller ({creator_name})."
+
+#: incidents/email.py:106
+msgid "New comment added"
+msgstr ""
+
+#: incidents/email.py:135
+msgid "Address of the platform"
+msgstr ""
+
+#: incidents/email.py:136 incidents/forms.py:636
+msgid "Incident reference"
+msgstr "Vorfallreferenz"
+
+#: incidents/email.py:139
+msgid "Date the incident was notified"
+msgstr ""
+
+#: incidents/email.py:142
+msgid "Date the incident was detected"
+msgstr ""
+
+#: incidents/email.py:143
+msgid "Date the incident started"
+msgstr ""
+
+#: incidents/email.py:144
+msgid "Status of the incident"
+msgstr ""
+
+#: incidents/email.py:145
+msgid "Name of the report"
+msgstr ""
+
+#: incidents/email.py:146
+msgid "Status of the report"
+msgstr ""
+
+#: incidents/email.py:150
+msgid "empty when the regulator left no comment"
+msgstr ""
+
+#: incidents/email.py:153
+msgid "Deadline of the next report"
+msgstr ""
 
 #: incidents/filters.py:22 reporting/filters.py:50 reporting/filters.py:102
 #: securityobjectives/filters.py:22
@@ -1031,18 +1070,14 @@ msgstr "Suchen"
 msgid "Add details"
 msgstr "Details hinzufügen"
 
-#: incidents/forms.py:429 incidents/forms.py:766 incidents/forms.py:973
-#: incidents/forms.py:980 incidents/forms.py:987 incidents/forms.py:994
+#: incidents/forms.py:429 incidents/forms.py:767 incidents/forms.py:974
+#: incidents/forms.py:981 incidents/forms.py:988 incidents/forms.py:995
 msgid "Date format yyyy-mm-dd hh:mm"
 msgstr "Datumsformat JJJJ-MM-TT HH:MM"
 
-#: incidents/forms.py:567 incidents/models.py:507
+#: incidents/forms.py:567 incidents/models.py:500
 msgid "Legal Entity Name"
 msgstr "Name der juristischen Entität"
-
-#: incidents/forms.py:636
-msgid "Incident reference"
-msgstr "Vorfallreferenz"
 
 #: incidents/forms.py:640
 msgid ""
@@ -1068,134 +1103,134 @@ msgstr ""
 msgid "Send notification to"
 msgstr "Benachrichtigung senden an"
 
-#: incidents/forms.py:755 incidents/forms.py:965
+#: incidents/forms.py:756 incidents/forms.py:966
 msgid "Select the incident time zone"
 msgstr "Zeitzone des Vorfalls auswählen"
 
-#: incidents/forms.py:765
+#: incidents/forms.py:766
 msgid "Select date and time"
 msgstr "Datum und Uhrzeit auswählen"
 
-#: incidents/forms.py:879 incidents/globals.py:47 incidents/globals.py:55
-#: incidents/globals.py:76 securityobjectives/forms.py:74
+#: incidents/forms.py:880 incidents/globals.py:38 incidents/globals.py:46
+#: incidents/globals.py:67 securityobjectives/forms.py:74
 #: securityobjectives/globals.py:6 securityobjectives/models.py:521
 msgid "Passed"
 msgstr "Bestanden"
 
-#: incidents/forms.py:880 incidents/globals.py:48 incidents/globals.py:56
-#: incidents/globals.py:81 securityobjectives/forms.py:75
+#: incidents/forms.py:881 incidents/globals.py:39 incidents/globals.py:47
+#: incidents/globals.py:72 securityobjectives/forms.py:75
 #: securityobjectives/globals.py:8 securityobjectives/models.py:522
 msgid "Revision required"
 msgstr "Überarbeitung erforderlich"
 
-#: incidents/forms.py:972
+#: incidents/forms.py:973
 msgid "Incident notification date"
 msgstr "Datum der Vorfallmeldung"
 
-#: incidents/forms.py:979 incidents/models.py:825
+#: incidents/forms.py:980 incidents/models.py:818
 msgid "Incident detection date"
 msgstr "Datum der Vorfallentdeckung"
 
-#: incidents/forms.py:986
+#: incidents/forms.py:987
 msgid "Incident start date"
 msgstr "Datum des Vorfallbeginns"
 
-#: incidents/forms.py:993 incidents/models.py:827
+#: incidents/forms.py:994 incidents/models.py:820
 msgid "Incident resolution date"
 msgstr "Datum der Vorfalllösung"
 
-#: incidents/forms.py:1081
+#: incidents/forms.py:1082
 msgid "Starting date cannot be after detection date."
 msgstr "Das Startdatum darf nicht nach dem Erkennungsdatum liegen."
 
-#: incidents/forms.py:1087
+#: incidents/forms.py:1088
 msgid "Resolution date cannot be before detection date."
 msgstr "Das Auflösungsdatum darf nicht vor dem Entdeckungsdatum liegen."
 
-#: incidents/forms.py:1128
+#: incidents/forms.py:1129
 msgid "Set to significant impact"
 msgstr "Auf „erhebliche Auswirkungen“ einstellen"
 
-#: incidents/forms.py:1130
+#: incidents/forms.py:1131
 msgid "Set to no significant impact"
 msgstr "Auf „keine erhebliche Auswirkungen“ eingestellt"
 
-#: incidents/forms.py:1132
+#: incidents/forms.py:1133
 msgid "Set to Active"
 msgstr "Auf „Aktiv“ setzen"
 
-#: incidents/forms.py:1134
+#: incidents/forms.py:1135
 msgid "Set to Inactive"
 msgstr "Auf „Inaktiv“ setzen"
 
-#: incidents/forms.py:1203 incidents/forms.py:1284 incidents/models.py:399
-#: incidents/models.py:464
+#: incidents/forms.py:1204 incidents/forms.py:1285 incidents/models.py:392
+#: incidents/models.py:457
 msgid "Report"
 msgstr "Bericht"
 
-#: incidents/forms.py:1210
+#: incidents/forms.py:1211
 msgid "File format"
 msgstr "Dateiformat"
 
-#: incidents/forms.py:1231
+#: incidents/forms.py:1232
 msgid "From"
 msgstr "Von"
 
-#: incidents/forms.py:1239
+#: incidents/forms.py:1240
 msgid "To"
 msgstr "Zu"
 
-#: incidents/forms.py:1292 incidents/models.py:1047
+#: incidents/forms.py:1293 incidents/models.py:1040
 msgid "Selected answer"
 msgstr "Ausgewählte Antwort"
 
-#: incidents/forms.py:1296 incidents/models.py:1053
+#: incidents/forms.py:1297 incidents/models.py:1046
 msgid "Next question"
 msgstr "Nächste Frage"
 
-#: incidents/globals.py:40 reporting/helpers.py:617
+#: incidents/globals.py:31 reporting/helpers.py:617
 msgid "Closed"
 msgstr "Geschlossen"
 
-#: incidents/globals.py:41
+#: incidents/globals.py:32 incidents/tests/test_email.py:110
 msgid "Ongoing"
 msgstr "Andauernd"
 
-#: incidents/globals.py:45 incidents/globals.py:53 incidents/globals.py:101
+#: incidents/globals.py:36 incidents/globals.py:44 incidents/globals.py:92
 #: securityobjectives/globals.py:4
 msgid "Unsubmitted"
 msgstr "Noch nicht eingereicht"
 
-#: incidents/globals.py:46 incidents/globals.py:54 incidents/globals.py:86
+#: incidents/globals.py:37 incidents/globals.py:45 incidents/globals.py:77
 #: securityobjectives/globals.py:5
 msgid "Under review"
 msgstr "Wird geprüft"
 
-#: incidents/globals.py:49 incidents/globals.py:57 incidents/globals.py:96
+#: incidents/globals.py:40 incidents/globals.py:48 incidents/globals.py:87
 msgid "Submission overdue"
 msgstr "Einreichung überfällig"
 
-#: incidents/globals.py:58 incidents/globals.py:91
+#: incidents/globals.py:49 incidents/globals.py:82
 msgid "Late submission"
 msgstr "Verspätete Einreichung"
 
-#: incidents/globals.py:77
+#: incidents/globals.py:68
 msgid "The report has passed the review."
 msgstr "Der Bericht hat die Prüfung bestanden."
 
-#: incidents/globals.py:82
+#: incidents/globals.py:73
 msgid "The report has failed the review."
 msgstr "Der Bericht hat die Prüfung nicht bestanden."
 
-#: incidents/globals.py:87 incidents/globals.py:92
+#: incidents/globals.py:78 incidents/globals.py:83
 msgid "The report is currently under review."
 msgstr "Der Bericht wird derzeit geprüft."
 
-#: incidents/globals.py:97
+#: incidents/globals.py:88
 msgid "The submission of the report is overdue."
 msgstr "Die Einreichung des Berichts ist überfällig."
 
-#: incidents/globals.py:102
+#: incidents/globals.py:93
 msgid "The report has not been submitted yet."
 msgstr "Der Bericht wurde noch nicht eingereicht."
 
@@ -1207,8 +1242,8 @@ msgstr "Titel"
 msgid "Impact"
 msgstr "Auswirkung"
 
-#: incidents/models.py:77 incidents/models.py:562 incidents/models.py:856
-#: incidents/views.py:1474
+#: incidents/models.py:77 incidents/models.py:555 incidents/models.py:849
+#: incidents/views.py:1483
 msgid "Impacts"
 msgstr "Auswirkungen"
 
@@ -1228,7 +1263,7 @@ msgstr "Referenz"
 msgid "Tooltip"
 msgstr "Tooltip"
 
-#: incidents/models.py:144 incidents/models.py:1245
+#: incidents/models.py:144 incidents/models.py:1238
 msgid "Answers"
 msgstr "Antworten"
 
@@ -1236,7 +1271,7 @@ msgstr "Antworten"
 msgid "Questions"
 msgstr "Fragen"
 
-#: incidents/models.py:172 incidents/models.py:1229 incidents/models.py:1244
+#: incidents/models.py:172 incidents/models.py:1222 incidents/models.py:1237
 msgid "Answer"
 msgstr "Antwort"
 
@@ -1252,260 +1287,246 @@ msgstr "Frage – vordefinierte Antwort"
 msgid "Subject"
 msgstr "Betreff"
 
-#: incidents/models.py:223
-msgid ""
-"Available placeholders: #INCIDENT_NOTIFICATION_DATE#,\n"
-"                #INCIDENT_DETECTION_DATE#,\n"
-"                #INCIDENT_STARTING_DATE#,\n"
-"                #INCIDENT_ID#,\n"
-"                #DEADLINE#"
-msgstr ""
-"Available placeholders : #INCIDENT_NOTIFICATION_DATE#,\n"
-"                #INCIDENT_DETECTION_DATE#,\n"
-"                #INCIDENT_STARTING_DATE#,\n"
-"                #INCIDENT_ID#,\n"
-"                #DEADLINE#"
-
-#: incidents/models.py:253 incidents/models.py:389
+#: incidents/models.py:246 incidents/models.py:382
 msgid "Emails"
 msgstr "E-Mails"
 
-#: incidents/models.py:266
+#: incidents/models.py:259
 msgid "Impacts disclosure required"
 msgstr "Angabe der Auswirkungen erforderlich"
 
-#: incidents/models.py:270
+#: incidents/models.py:263
 msgid "Submission email"
 msgstr "Einreichungs-E-Mail"
 
-#: incidents/models.py:317
+#: incidents/models.py:310
 msgid "Active"
 msgstr "Aktiv"
 
-#: incidents/models.py:333
+#: incidents/models.py:326
 msgid "Incident detection date required"
 msgstr "Entdeckungsdatum des Vorfalls erforderlich"
 
-#: incidents/models.py:337
+#: incidents/models.py:330
 msgid "Opening email"
 msgstr "Eröffnungs-E-Mail"
 
-#: incidents/models.py:346
+#: incidents/models.py:339
 msgid "Closing email"
 msgstr "Abschluss-E-Mail"
 
-#: incidents/models.py:355
+#: incidents/models.py:348
 msgid "Status update email"
 msgstr "Status-Aktualisierungs E-Mail"
 
-#: incidents/models.py:364
+#: incidents/models.py:357
 msgid "Incident notification workflows"
 msgstr "Workflow für die Vorfallmeldungen"
 
-#: incidents/models.py:365
+#: incidents/models.py:358
 msgid "Incident notification workflow"
 msgstr "Workflow für die Vorfallmeldung"
 
-#: incidents/models.py:379 incidents/models.py:989 incidents/models.py:1015
-#: incidents/models.py:1138 reporting/models.py:426
+#: incidents/models.py:372 incidents/models.py:982 incidents/models.py:1008
+#: incidents/models.py:1131 reporting/models.py:426
 #: securityobjectives/models.py:67 securityobjectives/models.py:323
 #: securityobjectives/models.py:351
 msgid "Position"
 msgstr "Position"
 
-#: incidents/models.py:381
+#: incidents/models.py:374
 msgid "Deadline in hours"
 msgstr "Abgabefrist in Stunden"
 
-#: incidents/models.py:383
+#: incidents/models.py:376
 msgid "Event triggering deadline"
 msgstr "Ereignis, das die Abgabefrist auslöst"
 
-#: incidents/models.py:400
+#: incidents/models.py:393
 msgid "Reports"
 msgstr "Berichte"
 
-#: incidents/models.py:459
+#: incidents/models.py:452
 msgid "Email subject"
 msgstr "E-Mail Betreff"
 
-#: incidents/models.py:470
+#: incidents/models.py:463
 msgid "Trigger event"
 msgstr "Trigger-Ereignis"
 
-#: incidents/models.py:477
+#: incidents/models.py:470
 msgid "Delay in hours"
 msgstr "Verzögerung in Stunden"
 
-#: incidents/models.py:480
+#: incidents/models.py:473
 msgid "Reminder emails"
 msgstr "Erinnerungs-E-Mails"
 
-#: incidents/models.py:481
+#: incidents/models.py:474
 msgid "Reminder email"
 msgstr "Erinnerungs-E-Mail"
 
-#: incidents/models.py:498
+#: incidents/models.py:491
 msgid "Incident Reference"
 msgstr "Vorfallsreferenz"
 
-#: incidents/models.py:527
+#: incidents/models.py:520
 msgid "Contact user"
 msgstr "Ansprechpartner"
 
-#: incidents/models.py:533
+#: incidents/models.py:526
 msgid "Contact last name"
 msgstr "Nachname des Ansprechpartners"
 
-#: incidents/models.py:534
+#: incidents/models.py:527
 msgid "Contact first name"
 msgstr "Vorname des Ansprechpartners"
 
-#: incidents/models.py:535
+#: incidents/models.py:528
 msgid "Contact job title"
 msgstr "Jobtitel des Ansprechpartners"
 
-#: incidents/models.py:536
+#: incidents/models.py:529
 msgid "Contact email"
 msgstr "E-Mail des Ansprechpartners"
 
-#: incidents/models.py:537
+#: incidents/models.py:530
 msgid "Contact telephone"
 msgstr "Telefon des Ansprechpartners"
 
-#: incidents/models.py:539
+#: incidents/models.py:532
 msgid "Technical last name"
 msgstr "Name des technischen Ansprechpartners"
 
-#: incidents/models.py:540
+#: incidents/models.py:533
 msgid "Technical first name"
 msgstr "Vorname des technischen Ansprechpartners"
 
-#: incidents/models.py:541
+#: incidents/models.py:534
 msgid "Technical job title"
 msgstr "Jobtitel des technischen Ansprechpartners"
 
-#: incidents/models.py:542
+#: incidents/models.py:535
 msgid "Technical email"
 msgstr "E-Mail des technischen Ansprechpartners"
 
-#: incidents/models.py:543
+#: incidents/models.py:536
 msgid "Technical telephone"
 msgstr "Telefon des technischen Ansprechpartners"
 
-#: incidents/models.py:545
+#: incidents/models.py:538
 msgid "Internal incident reference"
 msgstr "Interne Vorfall-Nummer"
 
-#: incidents/models.py:546
+#: incidents/models.py:539
 msgid "Criminal complaint file number"
 msgstr "Aktenzeichen der Strafanzeige"
 
-#: incidents/models.py:548
+#: incidents/models.py:541
 msgid "Impacted service"
 msgstr "Betroffener Dienst"
 
-#: incidents/models.py:558
+#: incidents/models.py:551
 msgid "Impacted sectors"
 msgstr "Betroffene Sektoren"
 
-#: incidents/models.py:565
+#: incidents/models.py:558
 msgid "Significant impact"
 msgstr "Erhebliche Auswirkungen"
 
-#: incidents/models.py:580 incidents/models.py:848
+#: incidents/models.py:573 incidents/models.py:841
 msgid "Report status"
 msgstr "Berichtstatus"
 
-#: incidents/models.py:584
+#: incidents/models.py:577
 msgid "Incident status"
 msgstr "Vorfallstatus"
 
-#: incidents/models.py:820 incidents/models.py:838 incidents/models.py:869
+#: incidents/models.py:813 incidents/models.py:831 incidents/models.py:862
 msgid "Incident"
 msgstr "Vorfall"
 
-#: incidents/models.py:821 incidents/models.py:870
+#: incidents/models.py:814 incidents/models.py:863
 msgid "Incidents"
 msgstr "Vorfälle"
 
-#: incidents/models.py:826
+#: incidents/models.py:819
 msgid "Incident starting date"
 msgstr "Beginn des Vorfalls"
 
-#: incidents/models.py:832
+#: incidents/models.py:825
 msgid "Report timeline timezone"
 msgstr "Bericht Zeitablauf Zeitzone"
 
-#: incidents/models.py:859 incidents/views.py:1478
+#: incidents/models.py:852 incidents/views.py:1487
 msgid "Comment/Explanation"
 msgstr "Kommentar/Erläuterung"
 
-#: incidents/models.py:864
+#: incidents/models.py:857
 msgid "Timeline"
 msgstr "Zeitablauf"
 
-#: incidents/models.py:957
+#: incidents/models.py:950
 msgid "Full username"
 msgstr "Vollständiger Benutzername"
 
-#: incidents/models.py:959 reporting/models.py:378
+#: incidents/models.py:952 reporting/models.py:378
 #: securityobjectives/models.py:568
 msgid "Entity name"
 msgstr "Name der Entität"
 
-#: incidents/models.py:962 incidents/models.py:969 incidents/models.py:1226
+#: incidents/models.py:955 incidents/models.py:962 incidents/models.py:1219
 msgid "Incident report processed"
 msgstr "Vorfallbericht bearbeitet"
 
-#: incidents/models.py:975 reporting/models.py:386
+#: incidents/models.py:968 reporting/models.py:386
 #: securityobjectives/models.py:575
 msgid "Action performed"
 msgstr "Aktion ausgeführt"
 
-#: incidents/models.py:1001
+#: incidents/models.py:994
 msgid "Question category options"
 msgstr "Optionen für dir Fragekategorie"
 
-#: incidents/models.py:1002
+#: incidents/models.py:995
 msgid "Question category option"
 msgstr "Option für dir Fragekategorie"
 
-#: incidents/models.py:1013 incidents/models.py:1136
+#: incidents/models.py:1006 incidents/models.py:1129
 msgid "Mandatory"
 msgstr "Erforderlich"
 
-#: incidents/models.py:1014 incidents/models.py:1137
+#: incidents/models.py:1007 incidents/models.py:1130
 msgid "Conditional display"
 msgstr "Bedingte Anzeige"
 
-#: incidents/models.py:1058
+#: incidents/models.py:1051
 msgid "Deleted at"
 msgstr "Gelöscht am"
 
-#: incidents/models.py:1080
+#: incidents/models.py:1073
 msgid "The selected answer does not belong to this question."
 msgstr "Die ausgewählte Antwort bezieht sich nicht auf diese Frage."
 
-#: incidents/models.py:1083
+#: incidents/models.py:1076
 msgid ""
 "Conditional questions are only available for single and multiple choice "
 "questions."
 msgstr ""
 "Bedingte Fragen sind nur für Einzel- und Mehrfachauswahlfragen verfügbar."
 
-#: incidents/models.py:1089
+#: incidents/models.py:1082
 msgid ""
 "The conditional question must be in the same category as the current "
 "question."
 msgstr ""
 "Die bedingte Frage muss derselben Kategorie angehören wie die aktuelle Frage."
 
-#: incidents/models.py:1092
+#: incidents/models.py:1085
 msgid "A question cannot redirect to itself."
 msgstr "Eine Frage kann nicht auf sich selbst verweisen."
 
-#: incidents/models.py:1097
+#: incidents/models.py:1090
 msgid ""
 "The target question is already used as a trigger in another conditional "
 "jump. Conditional questions are limited to one level of depth."
@@ -1513,30 +1534,29 @@ msgstr ""
 "Die Zielfrage wird bereits als Auslöser in einem anderen bedingten Sprung "
 "verwendet. Bedingte Fragen sind auf eine Ebene beschränkt."
 
-#: incidents/models.py:1123
+#: incidents/models.py:1116
 msgid "Conditional questions"
 msgstr "Bedingte Fragen"
 
-#: incidents/models.py:1124
+#: incidents/models.py:1117
 msgid "Conditional question"
 msgstr "Bedingte Frage"
 
-#: incidents/models.py:1144 reporting/models.py:474
+#: incidents/models.py:1137 reporting/models.py:474
 msgid "Updated at"
 msgstr "Aktualisiert am"
 
-#: incidents/models.py:1146
+#: incidents/models.py:1139
 msgid "Deleted date"
 msgstr "Löschdatum"
 
-#: incidents/models.py:1166
+#: incidents/models.py:1159
 msgid "A question cannot be both mandatory and conditionally displayed."
 msgstr ""
 "Eine Frage kann nicht gleichzeitig als Pflichtfeld und als bedingt angezeigt "
 "werden."
 
 #: incidents/pdf_generation.py:142
-#| msgid "Add details"
 msgid "Details"
 msgstr ""
 
@@ -1627,11 +1647,14 @@ msgid "Detection date"
 msgstr "Datum der Entdeckung"
 
 #: incidents/views.py:1127
-#| msgid "Email verified"
 msgid "Not verified"
 msgstr ""
 
-#: incidents/views.py:1462
+#: incidents/views.py:1144
+msgid "No incident notification workflow found for the selected criteria."
+msgstr ""
+
+#: incidents/views.py:1471
 msgid "Incident Timeline"
 msgstr "Vorfallverlauf"
 
