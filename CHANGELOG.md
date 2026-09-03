@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The batch action selector is no longer offered to operator administrators on the Users list, which act on one account at a time from the Account actions column. Other roles keep it (#861)
 - An account left without any link to a company is deactivated (#861)
 - Operator administrator group permissions: `delete` on users added, and the unused `CompanyUser` permissions dropped. Existing deployments must run `python manage.py update_group_permissions` for the change to take effect; until then the delete action is not offered to operator administrators (#861)
-- Sector regulation configuration imports now require an explicit import mode and support `--reuse` to reuse matching workflow configuration objects without duplicating them (#826)
+- Sector regulation configuration imports now reuse every matching workflow configuration object by default instead of duplicating it; `--create-all` creates a fully independent copy. The mode that reused a question on its reference alone, ignoring the label, type and answers carried by the file, is gone (#826)
+- An imported sector regulation is left inactive whatever the `active` value in the file, so the configuration is reviewed before it is offered to operators (#826)
 - PostgreSQL upgraded from 15 to 18 in CI and in the shipped Docker compose files. Existing deployments are unaffected and keep running on their current PostgreSQL version. Operators who bump the `postgres` image tag in their own compose file must dump and restore the database first: a major version bump invalidates the PostgreSQL data directory, so an existing volume will not start under the new image
 
 ### Fixed
@@ -38,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incident export: a report shared by several incident workflows is now offered under each of them. The report list only carried one workflow id per report, so the report was hidden for every other workflow it belongs to
 - Removed the unrelated `parler` dependency (a Parler social-network API client, not part of `django-parler`). Both distributions install a `parler/__init__.py`, and the wrong one was shadowing `django-parler`'s, so every Django and Celery process started by globally suppressing urllib3 `HTTPWarning` — including the warning raised for unverified HTTPS requests
 - `requests` is now declared explicitly: `governanceplatform/rt.py` imports it directly but it was only installed as a transitive dependency of the removed `parler` package
+- Sector regulation configuration import with `--reuse` now recognises a report whose categories sit at the same position as another report's. Category options carry no link back to the report they belong to, so they were matched on category and position alone and resolved to another report's rows, which made the report look different and duplicated it along with all of its questions. A report that is created is now given its own category options instead of sharing another report's (#826)
 
 ## [0.5.17] - 2026-08-04
 
