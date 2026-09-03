@@ -42,12 +42,10 @@ class SectorRegulationConfigurationImporter:
         data: dict[str, Any],
         target: SectorRegulation,
         *,
-        create_all: bool = False,
-        reuse_all: bool = False,
+        reuse_all: bool = True,
     ) -> None:
         self.data = data
         self.target = target
-        self.create_all = create_all
         self.reuse_all = reuse_all
         self.creator = target.regulator
         self.creator_name = target.regulator.safe_translation_getter("name", any_language=True) or str(target.regulator)
@@ -56,10 +54,10 @@ class SectorRegulationConfigurationImporter:
         self.reused_email_keys: set[str] = set()
         self.reused_report_keys: set[str] = set()
         self.reused_category_keys: set[str] = set()
-        self.reused_category_option_keys: set[str] = set()
+        self.reused_category_option_pks: set[int] = set()
         self.reused_question_option_keys: set[str] = set()
         self.reused_question_options: dict[str, QuestionOptions] = {}
-        self.skipped_answer_keys: set[str] = set()
+        self.created_category_options: dict[str, QuestionCategoryOptions] = {}
         self.sectors_by_acronym: dict[str, list[Sector]] | None = None
 
     def import_configuration(self) -> dict[str, int]:
@@ -164,23 +162,21 @@ class SectorRegulationConfigurationImporter:
 
         emails = self._import_emails(email_data)
         categories = self._import_categories(category_data)
-        category_options = self._import_category_options(
-            category_option_data,
-            categories,
-        )
         questions, answers = self._import_questions(question_data)
         reports = self._import_reports(
             report_data,
             emails,
             question_option_data,
+            category_option_data,
+            categories,
             questions,
-            category_options,
         )
         question_options = self._import_question_options(
             question_option_data,
+            category_option_data,
             reports,
+            categories,
             questions,
-            category_options,
         )
         conditional_created, conditional_reused = self._import_conditional_questions(
             answers,
@@ -201,13 +197,12 @@ class SectorRegulationConfigurationImporter:
             "reports_reused": len(self.reused_report_keys),
             "categories_created": len(categories) - len(self.reused_category_keys),
             "categories_reused": len(self.reused_category_keys),
-            "category_options_created": len(category_options) - len(self.reused_category_option_keys),
-            "category_options_reused": len(self.reused_category_option_keys),
+            "category_options_created": len(self.created_category_options),
+            "category_options_reused": len(self.reused_category_option_pks),
             "questions_created": len(questions) - len(self.reused_question_keys),
             "questions_reused": len(self.reused_question_keys),
             "predefined_answers_created": len(answers) - len(self.reused_answer_keys),
             "predefined_answers_reused": len(self.reused_answer_keys),
-            "predefined_answers_skipped": len(self.skipped_answer_keys),
             "question_options_created": len(question_options) - len(self.reused_question_option_keys),
             "question_options_reused": len(self.reused_question_option_keys),
             "conditional_questions_created": conditional_created,
@@ -311,8 +306,9 @@ class SectorRegulationConfigurationImporter:
         catalog: dict[str, dict[str, Any]],
         emails: dict[str, Email],
         question_option_catalog: dict[str, dict[str, Any]],
+        category_option_catalog: dict[str, dict[str, Any]],
+        categories: dict[str, QuestionCategory],
         questions: dict[str, Question],
-        category_options: dict[str, QuestionCategoryOptions],
     ) -> dict[str, Workflow]:
         imported = {}
         for key, item in catalog.items():
@@ -355,42 +351,68 @@ class SectorRegulationConfigurationImporter:
                 )
                 report_matches = report_matches and len(available_options) == len(expected_options)
                 reused_options: dict[str, QuestionOptions] = {}
+                # A category option row holds the position of a category inside one report and
+                # carries no link back to it, so several reports own rows with identical values.
+                # The key can therefore only be resolved against the options of the candidate report.
+                bound_category_options: dict[str, QuestionCategoryOptions] = {}
                 for option_key, option_item in expected_options:
                     question = self._reference(
                         questions,
                         option_item.get("question"),
                         "question",
                     )
-                    category_option = self._reference(
-                        category_options,
-                        option_item.get("category_option"),
-                        "category option",
-                    )
-                    match = next(
-                        (
-                            option
-                            for option in available_options
-                            if option.question == question
-                            and option.category_option == category_option
-                            and option.position == self._integer(option_item, "position")
-                            and option.is_mandatory
-                            == self._boolean(
-                                option_item,
-                                "is_mandatory",
-                                default=False,
-                            )
-                            and option.is_conditional
-                            == self._boolean(
-                                option_item,
-                                "is_conditional",
-                                default=False,
-                            )
-                        ),
-                        None,
-                    )
+                    candidates = [
+                        option
+                        for option in available_options
+                        if option.question == question
+                        and option.position == self._integer(option_item, "position")
+                        and option.is_mandatory
+                        == self._boolean(
+                            option_item,
+                            "is_mandatory",
+                            default=False,
+                        )
+                        and option.is_conditional
+                        == self._boolean(
+                            option_item,
+                            "is_conditional",
+                            default=False,
+                        )
+                    ]
+                    category_option_key = self._string(option_item, "category_option")
+                    bound = bound_category_options.get(category_option_key)
+                    if bound is not None:
+                        match = next(
+                            (option for option in candidates if option.category_option == bound),
+                            None,
+                        )
+                    else:
+                        category_option_item = self._reference(
+                            category_option_catalog,
+                            category_option_key,
+                            "category option",
+                        )
+                        category = self._reference(
+                            categories,
+                            category_option_item.get("category"),
+                            "category",
+                        )
+                        position = self._integer(category_option_item, "position")
+                        taken = list(bound_category_options.values())
+                        match = next(
+                            (
+                                option
+                                for option in candidates
+                                if option.category_option.question_category == category
+                                and option.category_option.position == position
+                                and option.category_option not in taken
+                            ),
+                            None,
+                        )
                     if match is None:
                         report_matches = False
                         break
+                    bound_category_options[category_option_key] = match.category_option
                     reused_options[option_key] = match
                     available_options.remove(match)
                 if existing is not None and report_matches:
@@ -398,6 +420,7 @@ class SectorRegulationConfigurationImporter:
                     self.reused_report_keys.add(key)
                     self.reused_question_options.update(reused_options)
                     self.reused_question_option_keys.update(reused_options)
+                    self.reused_category_option_pks.update(option.category_option_id for option in reused_options.values())
                     continue
             name = self._unique_value(
                 Workflow,
@@ -463,34 +486,6 @@ class SectorRegulationConfigurationImporter:
                 ("label",),
             )
             imported[key] = category
-        return imported
-
-    def _import_category_options(
-        self,
-        catalog: dict[str, dict[str, Any]],
-        categories: dict[str, QuestionCategory],
-    ) -> dict[str, QuestionCategoryOptions]:
-        imported = {}
-        for key, item in catalog.items():
-            category = self._reference(
-                categories,
-                item.get("category"),
-                "category",
-            )
-            position = self._integer(item, "position")
-            if self.reuse_all:
-                existing = QuestionCategoryOptions.objects.filter(
-                    question_category=category,
-                    position=position,
-                ).first()
-                if existing is not None:
-                    imported[key] = existing
-                    self.reused_category_option_keys.add(key)
-                    continue
-            imported[key] = QuestionCategoryOptions.objects.create(
-                question_category=category,
-                position=position,
-            )
         return imported
 
     def _import_questions(
@@ -569,12 +564,6 @@ class SectorRegulationConfigurationImporter:
                     self.reused_question_keys.add(key)
                     self.reused_answer_keys.update(existing_answers)
                     continue
-            if existing is not None and not self.create_all and not self.reuse_all:
-                questions[key] = existing
-                self.reused_question_keys.add(key)
-                self.skipped_answer_keys.update(answer_key for answer_key, _answer_item in validated_answers)
-                continue
-
             if existing is not None:
                 reference = self._unique_value(
                     Question,
@@ -617,9 +606,10 @@ class SectorRegulationConfigurationImporter:
     def _import_question_options(
         self,
         catalog: dict[str, dict[str, Any]],
+        category_option_catalog: dict[str, dict[str, Any]],
         reports: dict[str, Workflow],
+        categories: dict[str, QuestionCategory],
         questions: dict[str, Question],
-        category_options: dict[str, QuestionCategoryOptions],
     ) -> dict[str, QuestionOptions]:
         imported = {}
         for key, item in catalog.items():
@@ -633,10 +623,10 @@ class SectorRegulationConfigurationImporter:
                     item.get("question"),
                     "question",
                 ),
-                category_option=self._reference(
-                    category_options,
+                category_option=self._new_category_option(
+                    category_option_catalog,
                     item.get("category_option"),
-                    "category option",
+                    categories,
                 ),
                 position=self._integer(item, "position"),
                 is_mandatory=self._boolean(
@@ -652,6 +642,28 @@ class SectorRegulationConfigurationImporter:
             )
         return imported
 
+    def _new_category_option(
+        self,
+        catalog: dict[str, dict[str, Any]],
+        key: Any,
+        categories: dict[str, QuestionCategory],
+    ) -> QuestionCategoryOptions:
+        # Reusing an existing row here would tie the new report to another one: moving a
+        # category in either report would move it in both.
+        item = self._reference(catalog, key, "category option")
+        category_option = self.created_category_options.get(key)
+        if category_option is None:
+            category_option = QuestionCategoryOptions.objects.create(
+                question_category=self._reference(
+                    categories,
+                    item.get("category"),
+                    "category",
+                ),
+                position=self._integer(item, "position"),
+            )
+            self.created_category_options[key] = category_option
+        return category_option
+
     def _import_conditional_questions(
         self,
         answers: dict[str, PredefinedAnswer],
@@ -666,8 +678,6 @@ class SectorRegulationConfigurationImporter:
             if not isinstance(item, dict):
                 raise ConfigurationImportError("Invalid conditional question.")
             answer_key = item.get("predefined_answer")
-            if answer_key in self.skipped_answer_keys:
-                continue
             question_option = self._reference(
                 question_options,
                 item.get("question_option"),
@@ -877,7 +887,9 @@ class SectorRegulationConfigurationImporter:
 
     def _update_target(self, emails: dict[str, Email]) -> int:
         item = self.data["sector_regulation"]
-        self.target.active = self._boolean(item, "active", default=True)
+        # An imported configuration is never published by the import itself: the regulator
+        # activates the sector regulation once the result has been reviewed.
+        self.target.active = False
         self.target.is_detection_date_needed = self._boolean(
             item,
             "is_detection_date_needed",
