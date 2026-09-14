@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
-from .globals import STANDARD_ANSWER_REVIEW_STATUS
+from .globals import SO_ACTIONS_LABEL, SO_DECLARATION_COLUMNS, SO_SCORE_DISPLAY, STANDARD_ANSWER_REVIEW_STATUS
 
 
 # Maturity level : define a matury (e.g. sophisticated)
@@ -237,6 +237,26 @@ class Standard(TranslatableModel):
     translations = TranslatedFields(
         label=models.CharField(verbose_name=_("Label"), max_length=255),
         description=models.TextField(verbose_name=_("Description"), blank=True, default=None, null=True),
+        maturity_level_label=models.CharField(verbose_name=_("Maturity Level label"), max_length=255, blank=True, default=""),
+        security_measure_label=models.CharField(verbose_name=_("Security Measure label"), max_length=255, blank=True, default=""),
+        evidence_label=models.CharField(verbose_name=_("Evidence label"), max_length=255, blank=True, default=""),
+        is_implemented_label=models.CharField(verbose_name=_("Measure Implemented? label"), max_length=255, blank=True, default=""),
+        justification_label=models.CharField(verbose_name=_("Justification label"), max_length=255, blank=True, default=""),
+        review_comment_label=models.CharField(verbose_name=_("Review Comment label"), max_length=255, blank=True, default=""),
+        actions_label=models.CharField(verbose_name=_("Planned Measures label"), max_length=255, blank=True, default=""),
+    )
+    show_maturity_level_column = models.BooleanField(verbose_name=_("Show"), default=True)
+    show_evidence_column = models.BooleanField(verbose_name=_("Show"), default=True)
+    show_review_comment_column = models.BooleanField(verbose_name=_("Show"), default=True)
+    show_justification_column = models.BooleanField(verbose_name=_("Show"), default=True)
+    show_actions = models.BooleanField(verbose_name=_("Show"), default=True)
+    justification_mandatory = models.BooleanField(verbose_name=_("Mandatory"), default=True)
+    actions_mandatory = models.BooleanField(verbose_name=_("Mandatory"), default=True)
+    score_display = models.CharField(
+        verbose_name=_("Score"),
+        max_length=5,
+        choices=SO_SCORE_DISPLAY,
+        default=SO_SCORE_DISPLAY[0][0],
     )
     regulator = models.ForeignKey(
         "governanceplatform.regulator",
@@ -281,6 +301,37 @@ class Standard(TranslatableModel):
         default=None,
         related_name="security_objective_closure_email",
     )
+
+    def get_column_config(self) -> dict[str, dict[str, str | bool]]:
+        """Labels and visibility of the declaration table columns for this standard.
+
+        Only the active language is consulted, so a label filled in for one
+        language does not leak into another; an empty one falls back to the
+        translated default instead.
+        """
+        config = {}
+        for key, column in SO_DECLARATION_COLUMNS.items():
+            custom_label = self.safe_translation_getter(f"{key}_label", any_language=False)
+            visible = getattr(self, f"show_{key}_column") if column.get("toggleable") else True
+            config[key] = {"label": custom_label or column["label"], "visible": visible}
+        return config
+
+    def get_actions_config(self) -> dict[str, str | bool]:
+        """Label and obligation of the planned measures row."""
+        custom_label = self.safe_translation_getter("actions_label", any_language=False)
+        return {
+            "label": custom_label or SO_ACTIONS_LABEL,
+            "visible": self.show_actions,
+            # A row nobody can fill cannot be one they must fill.
+            "mandatory": self.actions_mandatory and self.show_actions,
+        }
+
+    def get_score_display_config(self) -> dict[str, bool]:
+        """Whether the security objective score is shown, and whether its maximum is."""
+        return {
+            "visible": self.score_display != "NONE",
+            "with_maximum": self.score_display == "FULL",
+        }
 
     def delete(self, *args, **kwargs):
         with transaction.atomic():
