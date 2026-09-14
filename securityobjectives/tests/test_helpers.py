@@ -8,7 +8,8 @@ declared nothing.
 import pytest
 
 from governanceplatform.models import Sector
-from securityobjectives.helpers import security_objective_exists
+from securityobjectives.globals import SO_COLUMN_GRID_TOTAL
+from securityobjectives.helpers import security_objective_exists, set_declaration_column_widths
 
 
 @pytest.fixture
@@ -64,3 +65,86 @@ def test_requires_both_a_year_and_a_sector(submitted_answer):
     assert security_objective_exists(company) is False
     assert security_objective_exists(company, submitted_answer.year_of_submission, None) is False
     assert security_objective_exists(company, None, sector) is False
+
+
+def _config(hidden=()):
+    """A column config with the named columns hidden."""
+    from securityobjectives.globals import SO_DECLARATION_COLUMNS
+
+    return {key: {"label": str(column["label"]), "visible": key not in hidden} for key, column in SO_DECLARATION_COLUMNS.items()}
+
+
+@pytest.mark.parametrize(
+    ("hidden", "expected"),
+    [
+        ((), {"maturity_level": 1, "security_measure": 3, "evidence": 3, "is_implemented": 1, "justification": 2, "review_comment": 2}),
+        (("review_comment",), {"maturity_level": 1, "security_measure": 4, "evidence": 4, "is_implemented": 1, "justification": 2}),
+        (("maturity_level",), {"security_measure": 4, "evidence": 3, "is_implemented": 1, "justification": 2, "review_comment": 2}),
+        (("evidence",), {"maturity_level": 1, "security_measure": 4, "is_implemented": 1, "justification": 3, "review_comment": 3}),
+        (("maturity_level", "evidence"), {"security_measure": 5, "is_implemented": 1, "justification": 3, "review_comment": 3}),
+        (("maturity_level", "evidence", "review_comment"), {"security_measure": 6, "is_implemented": 2, "justification": 4}),
+    ],
+)
+def test_visible_columns_are_widened_in_proportion_to_their_original_width(hidden, expected):
+    config = set_declaration_column_widths(_config(hidden))
+
+    assert {key: column["width"] for key, column in config.items() if column["visible"]} == expected
+
+
+def test_a_wider_column_gains_more_than_a_narrower_one():
+    """Proportional means the share of the freed width follows the original width."""
+    base = _config()
+    set_declaration_column_widths(base)
+    widened = set_declaration_column_widths(_config(("review_comment",)))
+
+    measure_gain = widened["security_measure"]["width"] - base["security_measure"]["width"]
+    implemented_gain = widened["is_implemented"]["width"] - base["is_implemented"]["width"]
+
+    assert measure_gain > implemented_gain
+
+
+def test_no_column_is_ever_narrower_than_when_the_whole_table_is_shown():
+    """Scaling only ever grows a column, so none can round away to nothing."""
+    from securityobjectives.globals import SO_DECLARATION_COLUMNS
+
+    for hidden in [(), ("review_comment",), ("maturity_level",), ("evidence",), ("maturity_level", "evidence")]:
+        config = set_declaration_column_widths(_config(hidden))
+        for key, column in config.items():
+            if column["visible"]:
+                assert column["width"] >= SO_DECLARATION_COLUMNS[key]["width"]
+
+
+def test_a_fully_shown_table_keeps_the_widths_it_always_had():
+    """The default layout must be untouched by the width calculation."""
+    config = set_declaration_column_widths(_config())
+
+    assert {key: column["width"] for key, column in config.items()} == {
+        "maturity_level": 1,
+        "security_measure": 3,
+        "evidence": 3,
+        "is_implemented": 1,
+        "justification": 2,
+        "review_comment": 2,
+    }
+
+
+@pytest.mark.parametrize(
+    "hidden",
+    [
+        (),
+        ("review_comment",),
+        ("maturity_level",),
+        ("evidence",),
+        ("maturity_level", "evidence"),
+        ("maturity_level", "review_comment"),
+        ("evidence", "review_comment"),
+        ("maturity_level", "evidence", "review_comment"),
+    ],
+)
+def test_visible_columns_always_span_the_full_grid(hidden):
+    """A row that does not total 12 either overhangs the table or under-fills it."""
+    config = set_declaration_column_widths(_config(hidden))
+
+    spanned = sum(column["width"] for column in config.values() if column["visible"])
+
+    assert spanned == SO_COLUMN_GRID_TOTAL
