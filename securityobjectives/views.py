@@ -32,6 +32,7 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 from django.views.decorators.http import require_http_methods
@@ -61,7 +62,7 @@ from .forms import (
     SelectSOStandardForm,
 )
 from .globals import ALLOWED_SORT_FIELDS, STANDARD_ANSWER_REVIEW_STATUS
-from .helpers import security_objective_exists
+from .helpers import security_objective_exists, set_declaration_column_widths
 from .models import (
     LogStandardAnswer,
     MaturityLevel,
@@ -487,10 +488,29 @@ def declaration(request):
     standard_answer.ready_to_submit = declaration_is_ready_to(standard_answer)["submit"]
     standard_answer.ready_to_send = declaration_is_ready_to(standard_answer)["send"]
 
+    column_config = standard.get_column_config()
+    # Rule: the review comment column is for regulators, or once the
+    # declaration has left the operator's hands.
+    column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and (
+        is_user_regulator(user) or bool(standard_answer.review_comment) or standard_answer.status != "UNDE"
+    )
+    set_declaration_column_widths(column_config)
+
     context = {
         "last_maturity_level": levels["last_level"],
         "security_objectives": security_objectives,
         "standard_answer": standard_answer,
+        "column_config": column_config,
+        "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
+        "score_display": standard.get_score_display_config(),
+        "actions_config": standard.get_actions_config(),
+        "justification_mandatory": standard.justification_mandatory,
+        # Nothing to prompt for when the column is not on the page.
+        "justification_placeholder": (
+            format_lazy(_("{label} required"), label=column_config["justification"]["label"])
+            if column_config["justification"]["visible"]
+            else ""
+        ),
     }
 
     return render(request, "security_objectives/declaration.html", context=context)
@@ -809,12 +829,22 @@ def download_declaration_pdf(request, standard_answer_id: int):
         static_theme_dir = settings.STATIC_THEME_DIR
         font_config = FontConfiguration()
 
+        column_config = standard.get_column_config()
+        column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and (
+            is_user_regulator(user) or standard_answer.status != "UNDE"
+        )
+        set_declaration_column_widths(column_config)
+
         output_from_parsed_template = render_to_string(
             "report/security_objectives/template.html",
             {
                 "last_maturity_level": levels["last_level"],
                 "standard_answer": standard_answer,
                 "security_objectives": security_objectives,
+                "column_config": column_config,
+                "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
+                "score_display": standard.get_score_display_config(),
+                "actions_config": standard.get_actions_config(),
             },
             request=request,
         )
@@ -1170,34 +1200,39 @@ def get_completion_objective(security_objective, standard_answer):
             "is_partially": False,
             "is_not_started": True,
         }
+    # StandardAnswer.standard is nullable, and a declaration whose standard is gone
+    # keeps the stricter rule it was answered under.
+    standard = standard_answer.standard
+    # A hidden field cannot be a required one: the operator has no way to fill it.
+    justification_mandatory = (standard.justification_mandatory and standard.show_justification_column) if standard else True
+    actions_mandatory = (standard.actions_mandatory and standard.show_actions) if standard else True
+
+    at_first_level = Q(security_measure__maturity_level__level=first_maturity_level)
+
+    if justification_mandatory:
+        is_completed_condition = (
+            Q(is_implemented=True, justification__gt="") | Q(is_implemented=False, justification="", review_comment__gt="") | at_first_level
+        )
+        # Implemented without a reason, or a reason given without implementing it.
+        is_partially_condition = (
+            (Q(is_implemented=True) & Q(justification="")) | (~Q(is_implemented=True) & Q(justification__gt=""))
+        ) & ~at_first_level
+    else:
+        is_completed_condition = Q(is_implemented=True) | Q(is_implemented=False, review_comment__gt="") | at_first_level
+        is_partially_condition = None
+
     annotated_queryset = queryset.annotate(
         is_completed=Case(
-            When(
-                Q(
-                    is_implemented=True,
-                    justification__gt="",
-                )
-                | Q(
-                    is_implemented=False,
-                    justification="",
-                    review_comment__gt="",
-                )
-                | Q(
-                    security_measure__maturity_level__level=first_maturity_level,
-                ),
-                then=True,
-            ),
+            When(is_completed_condition, then=True),
             default=False,
             output_field=BooleanField(),
         ),
-        is_partially=Case(
-            When(
-                ((Q(is_implemented=True) & Q(justification="")) | (~Q(is_implemented=True) & Q(justification__gt="")))
-                & ~Q(security_measure__maturity_level__level=first_maturity_level),
-                then=True,
-            ),
-            default=False,
-            output_field=BooleanField(),
+        # Without a justification to leave blank there is no half-answered state: a
+        # measure is either implemented or it is not.
+        is_partially=(
+            Case(When(is_partially_condition, then=True), default=False, output_field=BooleanField())
+            if is_partially_condition is not None
+            else Value(False, output_field=BooleanField())
         ),
     )
 
@@ -1230,7 +1265,7 @@ def get_completion_objective(security_objective, standard_answer):
 
         needs_actions = first_checked or not others_all_checked
 
-        if needs_actions:
+        if needs_actions and actions_mandatory:
             actions_planned = bool(so_status and so_status.actions)
             all_completed = actions_planned
             any_partially = not actions_planned
