@@ -1,13 +1,15 @@
 import re
 
 from diff_match_patch import diff_match_patch
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin.utils import unquote
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
 from django.utils.encoding import force_str
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
+from django.utils.text import format_lazy
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
@@ -33,6 +35,7 @@ from governanceplatform.mixins import (
 from governanceplatform.models import Regulation, User
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 from governanceplatform.widgets import TranslatedNameWidget
+from securityobjectives.globals import SO_ACTIONS_LABEL, SO_DECLARATION_COLUMNS
 from securityobjectives.models import (
     Domain,
     MaturityLevel,
@@ -43,6 +46,7 @@ from securityobjectives.models import (
     Standard,
 )
 
+from .forms import StandardAdminForm
 from .mixins import CreatorMixin
 
 
@@ -613,6 +617,21 @@ class SecurityObjectiveInline(admin.TabularInline):
     ordering = ["position"]
     extra = 0
 
+    # StandardAdmin keeps its form open while the standard is in use so the
+    # declaration table columns stay configurable; which objectives the standard
+    # contains must still not move once answers reference them.
+    def _standard_is_in_use(self, obj):
+        return bool(obj and obj.is_in_use())
+
+    def has_add_permission(self, request, obj=None):
+        return super().has_add_permission(request, obj) and not self._standard_is_in_use(obj)
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj) and not self._standard_is_in_use(obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return super().has_delete_permission(request, obj) and not self._standard_is_in_use(obj)
+
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         user = request.user
         if db_field.name == "security_objective" and is_user_regulator(user):
@@ -645,8 +664,23 @@ class SecurityObjectiveInline(admin.TabularInline):
 
 @admin.register(Standard, site=admin_site)
 class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin):
+    form = StandardAdminForm
     resource_class = StandardResource
     should_escape_html = False
+    # The declaration table columns are presentation and stay editable for the life
+    # of the standard; get_readonly_fields keeps the structural fields frozen.
+    change_ignores_in_use = True
+    # Frozen once any declaration references the standard.
+    STRUCTURAL_FIELDS = (
+        "justification_mandatory",
+        "actions_mandatory",
+        "show_justification_column",
+        "show_actions",
+        "regulation",
+        "submission_email",
+        "security_objective_status_changed_email",
+        "security_objective_closure_email",
+    )
     list_display = ["label_display", "description_display", "regulator"]
     search_fields = [
         "translations__label",
@@ -676,6 +710,31 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
                 ],
             },
         ),
+        (
+            _("Columns display settings"),
+            {
+                "classes": ["extrapretty", "so-columns"],
+                "description": _("Leave a label empty to use the default translation."),
+                # Each toggle shares a row with the column it governs. Only these three
+                # columns may be hidden; the other four always render.
+                "fields": [
+                    ("maturity_level_label", "show_maturity_level_column"),
+                    "security_measure_label",
+                    ("evidence_label", "show_evidence_column"),
+                    "is_implemented_label",
+                    ("justification_label", "show_justification_column", "justification_mandatory"),
+                    ("review_comment_label", "show_review_comment_column"),
+                    ("actions_label", "show_actions", "actions_mandatory"),
+                ],
+            },
+        ),
+        (
+            _("Score display settings"),
+            {
+                "classes": ["extrapretty"],
+                "fields": ["score_display"],
+            },
+        ),
     ]
 
     def has_import_permission(self, request):
@@ -702,9 +761,40 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         return inline_instances
 
     def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return ("regulator",)
-        return ()
+        if not obj:
+            return ()
+        if obj.is_in_use():
+            return ("regulator", *self.STRUCTURAL_FIELDS)
+        return ("regulator",)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        # Named here rather than as help_text on the model: the default is already
+        # held by SO_DECLARATION_COLUMNS, and a field attribute would cost an
+        # AlterField migration for something that never reaches the database.
+        for key, column in SO_DECLARATION_COLUMNS.items():
+            field = form.base_fields.get(f"{key}_label")
+            if field:
+                field.help_text = format_lazy(_("Default: {label}"), label=column["label"])
+        actions_field = form.base_fields.get("actions_label")
+        if actions_field:
+            actions_field.help_text = format_lazy(_("Default: {label}"), label=SO_ACTIONS_LABEL)
+        return form
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        obj = self.get_object(request, unquote(object_id))
+        # Only while the form is on screen: a save redirects to the changelist, and a
+        # message queued here would surface there instead.
+        if request.method == "GET" and obj is not None and obj.is_in_use() and self.has_change_permission(request, obj):
+            messages.warning(
+                request,
+                _(
+                    "This standard is in use: declarations already reference it. "
+                    "Its name and the configuration of the declaration table columns stay editable; "
+                    "the regulation, the notification e-mails and the list of security objectives do not."
+                ),
+            )
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def get_fieldsets(self, request, obj=None):
         fieldsets = list(super().get_fieldsets(request, obj))

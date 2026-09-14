@@ -2,9 +2,32 @@ from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from governanceplatform.forms import CustomTranslatableAdminForm
 from incidents.forms import DropdownCheckboxSelectMultiple
 
 from .models import StandardAnswer
+
+
+class StandardAdminForm(CustomTranslatableAdminForm):
+    # Pairs of (obligation, visibility) that cannot disagree. The completion rules
+    # already treat a hidden field as optional; this is so the admin is told rather
+    # than left with a checkbox that quietly does nothing.
+    OBLIGATION_NEEDS_VISIBILITY = (
+        ("justification_mandatory", "show_justification_column"),
+        ("actions_mandatory", "show_actions"),
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        for obligation, visibility in self.OBLIGATION_NEEDS_VISIBILITY:
+            # Absent from cleaned_data when the field is read-only, which is the case
+            # for a standard in use — so this can never block a form nobody can fix.
+            if obligation in cleaned_data and cleaned_data.get(obligation) and not cleaned_data.get(visibility):
+                self.add_error(
+                    obligation,
+                    _("A hidden field cannot be mandatory. Show the field, or drop the requirement."),
+                )
+        return cleaned_data
 
 
 class SecurityObjectiveAnswerForm(forms.Form):
