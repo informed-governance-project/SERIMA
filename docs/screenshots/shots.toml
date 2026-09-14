@@ -63,7 +63,7 @@ steps = [{ action = "click", selector = "#with-account" }]
 annotate = [{ selector = ["#id_auth-username", "#id_auth-password"], box = true }]
 
 [[shots]]
-name = "login/create_account"
+name = "login/create_account_button"
 path = "/account/login"
 full_page = true
 annotate = [
@@ -72,6 +72,12 @@ annotate = [
   { selector = "a#registration_button.btn-link", box = true },
   { selector = "#login_card a.report-incident-button", box = true },
 ]
+
+[[shots]]
+name = "login/sign_up"
+path = "/account/signup"
+full_page = true
+
 
 # --- Anonymous pages -------------------------------------------------------
 

@@ -5,9 +5,9 @@ If you do not have an account yet, create one by using the **Report an incident 
 or by clicking the **Create account** link in the top right corner.
 Populate the required fields and provide a password you would like to use.
 
-.. figure:: _static/login/UM_SER_4.png
+.. figure:: _static/login/sign_up.png
    :alt: Create an account
-   :target: _static/login/UM_SER_4.png
+   :target: _static/login/sign_up.png
 
 After you complete the required fields and accept the terms of service,
 you will receive an email, and the following message will appear on the **SERIMA** platform.

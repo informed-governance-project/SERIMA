@@ -24,8 +24,8 @@ If you do not have an account:
 
 Please choose the **Report an incident without account** button in the centre or click the **Create account** link in the top right corner:
 
-.. figure:: _static/login/create_account.png
+.. figure:: _static/login/create_account_button.png
    :alt: Login page.
-   :target: _static/login/create_account.png
+   :target: _static/login/create_account_button.png
 
 Both options will take you to the account creation page.
