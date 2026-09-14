@@ -42,9 +42,22 @@ ANNOTATION_JS = """
   };
 
   for (const item of items) {
-    const target = document.querySelector(item.selector);
-    if (!target) throw new Error(`annotation target not found: ${item.selector}`);
-    const rect = target.getBoundingClientRect();
+    // A list of selectors is annotated as one shape covering all of them, which
+    // is how adjacent form fields get a single outline.
+    const selectors = Array.isArray(item.selector) ? item.selector : [item.selector];
+    const rects = selectors.map((sel) => {
+      const el = document.querySelector(sel);
+      if (!el) throw new Error(`annotation target not found: ${sel}`);
+      return el.getBoundingClientRect();
+    });
+    const rect = {
+      left: Math.min(...rects.map((r) => r.left)),
+      top: Math.min(...rects.map((r) => r.top)),
+      right: Math.max(...rects.map((r) => r.right)),
+      bottom: Math.max(...rects.map((r) => r.bottom)),
+    };
+    rect.width = rect.right - rect.left;
+    rect.height = rect.bottom - rect.top;
     const box = {
       left: rect.left + window.scrollX,
       top: rect.top + window.scrollY,
@@ -216,6 +229,9 @@ def annotate(page: Page, items: list[dict[str, Any]], color: str) -> None:
 
 
 def capture(page: Page, shot: dict[str, Any], base_url: str, out_dir: Path, defaults: dict[str, Any]) -> Path:
+    if shot_viewport := shot.get("viewport"):
+        page.set_viewport_size(shot_viewport)
+
     page.goto(f"{base_url}{shot['path']}", wait_until="networkidle")
 
     if steps := shot.get("steps"):
@@ -228,6 +244,7 @@ def capture(page: Page, shot: dict[str, Any], base_url: str, out_dir: Path, defa
     annotate(page, shot.get("annotate", []), defaults.get("annotation_color", "#1a56db"))
 
     target = out_dir / f"{shot['name']}.png"
+    target.parent.mkdir(parents=True, exist_ok=True)
     if selector := shot.get("selector"):
         page.locator(selector).screenshot(path=target)
     else:

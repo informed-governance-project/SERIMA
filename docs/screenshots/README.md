@@ -62,6 +62,7 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | `full_page` | capture the whole scroll height |
 | `hide` | extra selectors to hide, on top of the defaults |
 | `settle_ms` | wait longer before the capture |
+| `viewport` | `{ width, height }` just for this shot |
 | `annotate` | arrows, outlines and labels drawn over the page |
 
 ## Annotating a screenshot
@@ -80,6 +81,9 @@ annotate = [
   { selector = "a.text-muted", arrow = "top", label = "Forgotten it?" },
 ]
 ```
+
+`selector` also accepts a list, in which case the callout covers all of the
+elements at once — that is how the two credential fields get a single outline.
 
 `arrow` is `left`, `right`, `top` or `bottom` — the side the arrow comes in
 from, pointing at the element. `box` outlines the element, `label` prints text

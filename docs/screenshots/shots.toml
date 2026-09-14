@@ -21,9 +21,9 @@ hide = [
   # release, for a number the docs never refer to.
   "footer .justify-content-between > .text-end",
 ]
-# Annotations default to blue rather than the theme red, so a callout is never
-# mistaken for part of the interface.
-annotation_color = "#1a56db"
+# Matches the red of the hand-drawn callouts already in the manual.
+annotation_color = "#2980b9"
+# The manual is laid out around 1440px-wide figures.
 
 [roles.operator]
 username_env = "SERIMA_SHOT_OPERATOR_USER"
@@ -39,6 +39,38 @@ password_env = "SERIMA_SHOT_REGULATOR_PASS"
 [roles.platform_admin]
 username_env = "SERIMA_SHOT_PLATFORM_USER"
 password_env = "SERIMA_SHOT_PLATFORM_PASS"
+
+# --- Login page (docs/ui_login_page.rst) ------------------------------------
+#
+# The callouts reproduce the hand-drawn arrows these three images used to
+# carry.
+
+[[shots]]
+name = "login/log_in"
+path = "/account/login"
+full_page = true
+annotate = [
+  { selector = "#login_button", box = true },
+  { selector = "#with-account", box = true },
+]
+
+[[shots]]
+name = "login/sign_in"
+path = "/account/login"
+full_page = true
+steps = [{ action = "click", selector = "#with-account" }]
+annotate = [{ selector = ["#id_auth-username", "#id_auth-password"], box = true }]
+
+[[shots]]
+name = "login/create_account"
+path = "/account/login"
+full_page = true
+annotate = [
+  # Both the header link and the card button carry id="registration_button";
+  # the class is what separates them.
+  { selector = "a#registration_button.btn-link", box = true },
+  { selector = "#login_card a.report-incident-button", box = true },
+]
 
 # --- Anonymous pages -------------------------------------------------------
 
