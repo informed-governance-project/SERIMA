@@ -20,10 +20,15 @@ class TranslationUpdateMixin:
 
 
 class PermissionMixin:
+    # Set by admins whose form keeps some fields editable for the lifetime of the
+    # object. Changing it relaxes the "in use" half of the change rule only:
+    # ownership is still enforced, and deletion stays strict either way.
+    change_ignores_in_use = False
+
     def has_change_permission(self, request, obj=None):
         permission = super().has_change_permission(request, obj)
         if obj and permission:
-            permission = can_change_or_delete_obj(request, obj)
+            permission = can_change_or_delete_obj(request, obj, ignore_in_use=self.change_ignores_in_use)
         return permission
 
     def has_delete_permission(self, request, obj=None):
@@ -54,13 +59,15 @@ class ShowReminderForTranslationsMixin:
     def _add_reminder_message(self, request):
         messages.warning(request, self.reminder_message)
 
+    # Only while the form is on screen. A save redirects to the changelist, where a
+    # reminder about leaving a language tab has nothing to refer to.
     def change_view(self, request, object_id, form_url="", extra_context=None):
         obj = self.get_object(request, unquote(object_id))
-        if obj is not None and self.has_change_permission(request, obj):
+        if request.method == "GET" and obj is not None and self.has_change_permission(request, obj):
             self._add_reminder_message(request)
         return super().change_view(request, object_id, form_url, extra_context)
 
     def add_view(self, request, form_url="", extra_context=None):
-        if self.has_add_permission(request):
+        if request.method == "GET" and self.has_add_permission(request):
             self._add_reminder_message(request)
         return super().add_view(request, form_url, extra_context)
