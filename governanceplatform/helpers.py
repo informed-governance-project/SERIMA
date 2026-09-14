@@ -90,10 +90,17 @@ def set_creator(request: HttpRequest, obj: Any, change: bool) -> Any:
     return obj
 
 
-def can_change_or_delete_obj(request: HttpRequest, obj: Any, message: str | Promise = "") -> bool:
-    # Cache per (type, pk) so multiple objects in one request are each evaluated once.
+def can_change_or_delete_obj(request: HttpRequest, obj: Any, message: str | Promise = "", ignore_in_use: bool = False) -> bool:
+    """Whether the requesting regulator may still change or delete obj.
+
+    ignore_in_use drops the "still referenced by answers" half of the rule and keeps
+    the ownership half, for admins that expose fields which stay editable for the
+    lifetime of the object.
+    """
+    # Cache per (type, pk, ignore_in_use) so multiple objects in one request are each
+    # evaluated once, without a lenient answer being reused for a strict question.
     cache = getattr(request, "_can_change_or_delete_obj", {})
-    cache_key = (type(obj).__name__, getattr(obj, "pk", None))
+    cache_key = (type(obj).__name__, getattr(obj, "pk", None), ignore_in_use)
     if cache_key in cache:
         return cache[cache_key]
     request._can_change_or_delete_obj = cache
@@ -110,7 +117,7 @@ def can_change_or_delete_obj(request: HttpRequest, obj: Any, message: str | Prom
 
     # Models that can tell whether they are still referenced answer for themselves;
     # anything else is treated as in use, which is the conservative answer.
-    in_use = obj.is_in_use() if hasattr(obj, "is_in_use") else True
+    in_use = False if ignore_in_use else (obj.is_in_use() if hasattr(obj, "is_in_use") else True)
 
     regulator = request.user.regulators.first()
     if creator == regulator and not in_use:
