@@ -22,7 +22,7 @@ hide = [
   "footer .justify-content-between > .text-end",
 ]
 # Matches the red of the hand-drawn callouts already in the manual.
-annotation_color = "#2980b9"
+annotation_color = "#1a5276"
 # The manual is laid out around 1440px-wide figures.
 
 [roles.operator]
@@ -42,15 +42,16 @@ password_env = "SERIMA_SHOT_PLATFORM_PASS"
 
 # --- Login page (docs/ui_login_page.rst) ------------------------------------
 #
-# The callouts reproduce the hand-drawn arrows these three images used to
-# carry.
+# Outlines mark what the prose tells the reader to click. The header Login
+# button also gets an arrow: it is small, far from the card, and easy to skim
+# past with only an outline.
 
 [[shots]]
 name = "login/log_in"
 path = "/account/login"
 full_page = true
 annotate = [
-  { selector = "#login_button", box = true },
+  { selector = "#login_button", box = true, arrow = "bottom" },
   { selector = "#with-account", box = true },
 ]
 

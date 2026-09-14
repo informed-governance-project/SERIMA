@@ -71,7 +71,9 @@ ANNOTATION_JS = """
       const outline = document.createElement('div');
       outline.style.cssText =
         `width:${rect.width + 8}px;height:${rect.height + 8}px;border:3px solid ${color};` +
-        'border-radius:6px;box-sizing:border-box';
+        // A white rule either side of the stroke keeps the callout legible on
+        // whatever it lands on — brand-red buttons included, and in greyscale.
+        'border-radius:6px;box-sizing:border-box;box-shadow:0 0 0 1px #fff, inset 0 0 0 1px #fff';
       place(outline, box.left - 4, box.top - 4);
     }
 
@@ -94,9 +96,16 @@ ANNOTATION_JS = """
       line.setAttribute('x2', 12); line.setAttribute('y2', LEN - 12);
       head.setAttribute('points', `12,${LEN} 5,${LEN - 14} 19,${LEN - 14}`);
     }
+    const halo = line.cloneNode();
+    halo.setAttribute('stroke', '#fff');
+    halo.setAttribute('stroke-width', 7);
     line.setAttribute('stroke', color);
     line.setAttribute('stroke-width', 3);
     head.setAttribute('fill', color);
+    head.setAttribute('stroke', '#fff');
+    head.setAttribute('stroke-width', 2);
+    head.setAttribute('paint-order', 'stroke fill');
+    svg.appendChild(halo);
     svg.appendChild(line);
     svg.appendChild(head);
     if (item.arrow === 'right') svg.style.transform = 'scaleX(-1)';
@@ -114,7 +123,7 @@ ANNOTATION_JS = """
     label.textContent = item.label;
     label.style.cssText =
       `background:${color};color:#fff;font:600 13px/1.3 system-ui,sans-serif;` +
-      'padding:4px 9px;border-radius:4px;white-space:nowrap';
+      'padding:4px 9px;border-radius:4px;white-space:nowrap;box-shadow:0 0 0 1px #fff';
     place(label, 0, 0);
     const width = label.offsetWidth, height = label.offsetHeight;
     if (item.arrow === 'left') { label.style.left = `${arrowLeft - 8 - width}px`; label.style.top = `${box.cy - height / 2}px`; }
