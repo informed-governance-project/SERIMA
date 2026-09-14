@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-01 14:45+0200\n"
-"PO-Revision-Date: 2026-08-03 10:11+0000\n"
+"PO-Revision-Date: 2026-09-12 10:28+0000\n"
 "Last-Translator: Pascal Bertrand <Pascal.bertrand+RegAdmin@ilr.lu>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -93,7 +93,7 @@ msgstr "Créer cet utilisateur en tant qu'administrateur"
 #: governanceplatform/admin.py:1082
 #, python-format
 msgid "%(user)s is now linked to your company."
-msgstr ""
+msgstr "%(user)s est maintenant lié à votre entreprise ou organisation."
 
 #: governanceplatform/admin.py:1094
 #, python-format
@@ -152,6 +152,8 @@ msgid ""
 "Resetting the 2FA token of %(user)s will require the account to setup a new "
 "authenticator at the next login."
 msgstr ""
+"La réinitialisation du jeton d'authentification à deux facteurs de %(user)s "
+"nécessitera d'en configurer un nouveau lors de la prochaine connexion."
 
 #: governanceplatform/admin.py:1186
 msgid "Account actions"
@@ -159,7 +161,7 @@ msgstr ""
 
 #: governanceplatform/admin.py:1199
 msgid "Approve"
-msgstr ""
+msgstr "Approuver"
 
 #: governanceplatform/admin.py:1200
 #, python-format
@@ -170,12 +172,14 @@ msgstr ""
 
 #: governanceplatform/admin.py:1206
 msgid "Reject"
-msgstr ""
+msgstr "Refuser"
 
 #: governanceplatform/admin.py:1207
 #, python-format
 msgid "Rejecting %(user)s will remove the suggested link with your company."
 msgstr ""
+"Refuser le rattachement de %(user)s entrainera la suppression de la "
+"proposition de lien entre cet utilisateur et votre entreprise."
 
 #: governanceplatform/admin.py:1239
 msgid "Cookies acceptation has been reseted"
@@ -190,14 +194,16 @@ msgid ""
 "There is a suggestion to link a User Account to your company. Please Approve "
 "or Reject the suggestion."
 msgstr ""
+"Une proposition a été faite pour rattacher un compte utilisateur à votre "
+"entreprise. Veuillez approuver ou rejeter cette proposition."
 
 #: governanceplatform/admin.py:1267
 msgid "2FA Activated"
-msgstr ""
+msgstr "2FA activé"
 
 #: governanceplatform/admin.py:1271
 msgid "Is Administrator"
-msgstr ""
+msgstr "Est administrateur"
 
 #: governanceplatform/admin.py:1275 governanceplatform/models.py:465
 msgid "Approved"
@@ -956,7 +962,7 @@ msgstr "Type de courriel"
 
 #: incidents/admin.py:790
 msgid "Available placeholders"
-msgstr ""
+msgstr "Espaces réservés disponibles"
 
 #: incidents/admin.py:815 incidents/models.py:221
 #: securityobjectives/admin.py:1172 securityobjectives/models.py:201
@@ -1028,7 +1034,7 @@ msgstr "Référence de l'incident"
 
 #: incidents/email.py:139
 msgid "Date the incident was notified"
-msgstr ""
+msgstr "Date à laquelle l'incident a été signalé"
 
 #: incidents/email.py:142
 msgid "Date the incident was detected"
@@ -1040,15 +1046,15 @@ msgstr ""
 
 #: incidents/email.py:144
 msgid "Status of the incident"
-msgstr ""
+msgstr "Statut de l'incident"
 
 #: incidents/email.py:145
 msgid "Name of the report"
-msgstr ""
+msgstr "Nom du rapport"
 
 #: incidents/email.py:146
 msgid "Status of the report"
-msgstr ""
+msgstr "Statut du rapport"
 
 #: incidents/email.py:150
 msgid "empty when the regulator left no comment"
@@ -1556,7 +1562,7 @@ msgstr "Une question ne peut pas être à la fois obligatoire et conditionnelle.
 
 #: incidents/pdf_generation.py:142
 msgid "Details"
-msgstr ""
+msgstr "Détails"
 
 #: incidents/views.py:327
 msgid "Missing data, incident report not created."
@@ -1646,7 +1652,7 @@ msgstr "Date de détection"
 
 #: incidents/views.py:1127
 msgid "Not verified"
-msgstr ""
+msgstr "Non vérifié"
 
 #: incidents/views.py:1144
 msgid "No incident notification workflow found for the selected criteria."
