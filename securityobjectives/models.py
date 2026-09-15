@@ -5,6 +5,8 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
+from governanceplatform.globals import build_crockford_token
+
 from .globals import SO_ACTIONS_LABEL, SO_DECLARATION_COLUMNS, SO_SCORE_DISPLAY, STANDARD_ANSWER_REVIEW_STATUS
 
 
@@ -432,6 +434,13 @@ class SecurityMeasure(TranslatableModel):
 
 
 # A group of StandardAnswer to have the versionning functionnality
+def generate_standard_answer_group_id() -> str:
+    while True:
+        group_id = build_crockford_token()
+        if not StandardAnswerGroup.objects.filter(group_id=group_id).exists():
+            return group_id
+
+
 class StandardAnswerGroup(models.Model):
     notification_date = models.DateTimeField(verbose_name=_("Notification date"), default=timezone.now)
     # we save the company
@@ -443,13 +452,15 @@ class StandardAnswerGroup(models.Model):
         blank=True,
         default=None,
     )
-    # XXXXXXXXXX-FFFFFFFFFF-SSS-SSS-NNNN-YYYY
-    # XXXXXXXXXX = operator
-    # SSS-SSS = sector and subsector
-    # FFFFFFFFFF = framework limited to 10 chars
-    # YYYY = Year
-    # NNNN = Number
-    group_id = models.CharField(max_length=39, verbose_name=_("Group ID"), unique=True)
+    # Group ids issued before the switch to opaque tokens spell out an operator, a
+    # framework and its sectors, a number and a year, which is why the column is not
+    # narrowed to the 8 characters a token needs.
+    group_id = models.CharField(
+        max_length=39,
+        unique=True,
+        default=generate_standard_answer_group_id,
+        verbose_name=_("Group ID"),
+    )
 
 
 # The answers of the operator
