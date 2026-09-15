@@ -1210,33 +1210,6 @@ class FormWizardView(SessionWizardView):
                     selected_sectors = Sector.objects.filter(id__in=sectors_id).values_list("id", flat=True)
                     affected_sectors = selected_sectors & sec
                     incident.affected_sectors.set(affected_sectors)
-                    # incident reference
-
-                    company_for_ref = company.identifier if company else data.get("company_name", "")[:10]
-                    sector_for_ref = ""
-                    subsector_for_ref = ""
-
-                    for sector in sector_regulation.sectors.all():
-                        if sector.id in sectors_id:
-                            if subsector_for_ref == "":
-                                subsector_for_ref = sector.acronym[:3]
-                                if sector.parent:
-                                    sector_for_ref = sector.parent.acronym[:3]
-
-                    incidents_per_company = (
-                        company.incident_set.filter(incident_notification_date__year=date.today().year).count() if company else 1
-                    )
-                    if self.is_regulator_incident:
-                        incidents_per_company = (
-                            regulator.incident_set.filter(incident_notification_date__year=date.today().year).count() if regulator else 1
-                        )
-
-                    number_of_incident = f"{incidents_per_company:04}"
-                    incident.incident_id = (
-                        f"{company_for_ref}_{sector_for_ref}_{subsector_for_ref}_{number_of_incident}_{date.today().year}"
-                    )
-
-                    incident.save()
 
                     create_entry_log(user, incident, None, "CREATE", self.request)
 
