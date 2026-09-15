@@ -3,7 +3,6 @@ import json
 import logging
 import os
 from collections import defaultdict
-from datetime import date
 
 import openpyxl
 from django.conf import settings
@@ -189,7 +188,7 @@ def create_so_declaration(request):
                 standard = Standard.objects.get(pk=so_standard_id)
                 user = request.user
                 company = get_active_company_from_session(request)
-                sag = create_standard_answer_group(company, sectors, standard)
+                sag = StandardAnswerGroup.objects.create(company=company)
                 new_standard_answer = StandardAnswer(
                     standard=standard,
                     submitter_user=user,
@@ -545,8 +544,7 @@ def copy_declaration(request, group_id: int):
                 "creator_company_name": original_standard_answer.creator_company_name,
             }
             company = original_standard_answer_dict["submitter_company"]
-            standard = original_standard_answer_dict["standard"]
-            sag = create_standard_answer_group(company, sectors, standard)
+            sag = StandardAnswerGroup.objects.create(company=company)
 
             new_standard_answer = StandardAnswer(
                 **original_standard_answer_dict,
@@ -963,7 +961,7 @@ def import_so_declaration(request):
                 if not valid_sectors:
                     return HttpResponseRedirect(request.headers.get("referer"))
 
-                group = create_standard_answer_group(company, sectors, standard)
+                group = StandardAnswerGroup.objects.create(company=company)
 
                 new_standard_answer = StandardAnswer(
                     standard=standard,
@@ -1362,41 +1360,3 @@ def duplicate_standard_answer(original):
         new_sos.save()
     new_obj.save()
     return new_obj
-
-
-# function to create a standard_answer_group
-def create_standard_answer_group(company, sectors, standard):
-    company_for_ref = company.identifier if company else ""
-    framework_for_ref = standard.label[:10] if standard and standard.label else ""
-    sector_id = sectors[0] if sectors[0] else None
-    sector = Sector.objects.get(id=sector_id) if sector_id else None
-    sector_for_ref = sector.parent.acronym[:3] if sector and sector.parent else ""
-    subsector_for_ref = sector.acronym[:3] if sector else ""
-    # common prefix
-    group_id_prefix = f"{company_for_ref}_{framework_for_ref}_{sector_for_ref}_{subsector_for_ref}_"
-    current_year = date.today().year
-
-    existing_groups = (
-        company.standardanswergroup_set.filter(
-            group_id__startswith=group_id_prefix,
-            group_id__endswith=f"_{current_year}",
-        )
-        if company
-        else StandardAnswerGroup.objects.none()
-    )
-
-    max_number = 0
-    for group in existing_groups:
-        try:
-            # group_id format: {company}_{framework}_{sector}_{subsector}_{NNNN}_{year}
-            number_part = group.group_id.split("_")[-2]
-            max_number = max(max_number, int(number_part))
-        except IndexError, ValueError:
-            pass
-
-    number_of_group = f"{max_number + 1:04}"
-
-    return StandardAnswerGroup.objects.create(
-        company=company,
-        group_id=(f"{company_for_ref}_{framework_for_ref}_{sector_for_ref}_{subsector_for_ref}_{number_of_group}_{current_year}"),
-    )
