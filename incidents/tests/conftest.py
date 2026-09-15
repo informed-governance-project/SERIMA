@@ -116,11 +116,11 @@ def create_incident():
         sectors=None,
         impacts=None,
         is_significative_impact=False,
-        incident_id="",
+        incident_id=None,
         incident_detection_date=timezone.now,
     ):
         incident = Incident.objects.create(
-            incident_id=incident_id,
+            **({"incident_id": incident_id} if incident_id else {}),
             incident_timezone=TIME_ZONE,
             incident_detection_date=incident_detection_date,
             company=user.companies.first() if is_user_operator(user) else None,

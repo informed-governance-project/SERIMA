@@ -153,12 +153,15 @@ def test_approve_associates_the_already_notified_incidents(otp_client, operator_
 
     context = operator_admin_with_pending_link
     incident = Incident.objects.create(contact_user=context["incident_user"])
+    reference = incident.incident_id
 
     post_action(otp_client, context, "approve-company-link", context["incident_user"])
 
     incident.refresh_from_db()
     assert incident.company == context["company"]
-    assert incident.incident_id.startswith(context["company"].identifier)
+    assert incident.company_name == context["company"].name
+    # the reference an operator already received must survive the association
+    assert incident.incident_id == reference
 
 
 @pytest.mark.django_db
