@@ -1,6 +1,6 @@
 from django.db import migrations
 
-from incidents.globals import build_crockford_token
+from governanceplatform.globals import build_crockford_token
 
 
 def parse_legacy_reference(reference: str) -> tuple[str, int, int] | None:
