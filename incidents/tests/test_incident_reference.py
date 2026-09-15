@@ -4,13 +4,13 @@ import pytest
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 
-from incidents.filters import reference_matches
-from incidents.globals import (
+from governanceplatform.globals import (
     CROCKFORD_ALPHABET,
-    INCIDENT_REFERENCE_LENGTH,
+    REFERENCE_TOKEN_LENGTH,
     build_crockford_token,
     normalize_crockford,
 )
+from incidents.filters import reference_matches
 from incidents.models import Incident
 
 # the renumbering runs once and lives with the migration that applies it
@@ -23,7 +23,7 @@ plan_reference_renumbering = renumbering_migration.plan_reference_renumbering
 def test_a_new_incident_gets_a_crockford_reference():
     incident = Incident.objects.create()
 
-    assert len(incident.incident_id) == INCIDENT_REFERENCE_LENGTH
+    assert len(incident.incident_id) == REFERENCE_TOKEN_LENGTH
     assert set(incident.incident_id) <= set(CROCKFORD_ALPHABET)
 
 
@@ -191,7 +191,7 @@ def test_a_hand_edited_duplicate_is_given_an_opaque_token():
 
     renumbering = plan_reference_renumbering(references)
 
-    assert len(renumbering[2]) == INCIDENT_REFERENCE_LENGTH
+    assert len(renumbering[2]) == REFERENCE_TOKEN_LENGTH
     assert set(renumbering[2]) <= set(CROCKFORD_ALPHABET)
 
 

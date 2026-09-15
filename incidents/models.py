@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
+from governanceplatform.globals import build_crockford_token
 from governanceplatform.settings import TIME_ZONE
 
 from .globals import (
@@ -19,7 +20,6 @@ from .globals import (
     REVIEW_STATUS,
     SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT,
     WORKFLOW_REVIEW_STATUS,
-    build_crockford_token,
 )
 
 
