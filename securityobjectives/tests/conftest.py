@@ -155,12 +155,12 @@ def create_standard_answer_group():
 
     def _create_standard_answer_group(
         company,
-        group_id="XXXXXXXXXX-FFFFFFFFFF-SSS-SSS-NNNN-YYYY",
+        group_id=None,
     ):
         return StandardAnswerGroup.objects.create(
             company=company,
             notification_date=timezone.now(),
-            group_id=group_id,
+            **({"group_id": group_id} if group_id else {}),
         )
 
     return _create_standard_answer_group
