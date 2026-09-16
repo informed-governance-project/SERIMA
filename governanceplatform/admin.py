@@ -1084,7 +1084,7 @@ class UserAdmin(admin.ModelAdmin):
         if obj.is_company_admin:
             label = _("Unset Administrator")
             message = _(
-                "Removing %(user)s as Administrator will limit the account permissions to Operator User. "
+                "Removing %(user)s’s administrator privileges will restrict their account permissions to those of a standard user. "
                 "The user will be logged out of the current session."
             )
         else:
