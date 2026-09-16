@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:53+0200\n"
+"POT-Creation-Date: 2026-09-16 15:26+0200\n"
 "PO-Revision-Date: 2026-09-16 12:29+0000\n"
 "Last-Translator: Edgar Dugourd <Edd@ilr.lu>\n"
 "Language: fr\n"
@@ -132,13 +132,14 @@ msgstr "Supprimer l'option administrateur"
 
 #: governanceplatform/admin.py:1165
 #, python-format
+#| msgid ""
+#| "Removing %(user)s as Administrator will limit the account permissions to "
+#| "Operator User. The user will be logged out of the current session."
 msgid ""
-"Removing %(user)s as Administrator will limit the account permissions to "
-"Operator User. The user will be logged out of the current session."
+"Removing %(user)s’s administrator privileges will restrict their account "
+"permissions to those of a standard user. The user will be logged out of the "
+"current session."
 msgstr ""
-"La suppression de l'option administrateur de %(user)s limitera les "
-"autorisations de son compte à celles d'un utilisateur. L'utilisateur sera "
-"déconnecté de la session en cours."
 
 #: governanceplatform/admin.py:1169
 msgid "Set Administrator"

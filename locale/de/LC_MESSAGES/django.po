@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:53+0200\n"
+"POT-Creation-Date: 2026-09-16 15:26+0200\n"
 "PO-Revision-Date: 2026-09-16 12:29+0000\n"
 "Last-Translator: Pascal Bertrand <Pascal.bertrand+RegAdmin@ilr.lu>\n"
 "Language: de\n"
@@ -128,13 +128,14 @@ msgstr "Administrator deaktivieren"
 
 #: governanceplatform/admin.py:1165
 #, python-format
+#| msgid ""
+#| "Removing %(user)s as Administrator will limit the account permissions to "
+#| "Operator User. The user will be logged out of the current session."
 msgid ""
-"Removing %(user)s as Administrator will limit the account permissions to "
-"Operator User. The user will be logged out of the current session."
+"Removing %(user)s’s administrator privileges will restrict their account "
+"permissions to those of a standard user. The user will be logged out of the "
+"current session."
 msgstr ""
-"Administratorrechte vun %(user)s zu entfernen, wird die Berechtigungen des "
-"Kontos auf die Rolle „Operator Benutzer“ beschränkt. Der Benutzer wird aus "
-"der aktuellen Sitzung abgemeldet."
 
 #: governanceplatform/admin.py:1169
 msgid "Set Administrator"

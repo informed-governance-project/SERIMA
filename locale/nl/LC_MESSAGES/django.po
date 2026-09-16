@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:53+0200\n"
+"POT-Creation-Date: 2026-09-16 15:26+0200\n"
 "PO-Revision-Date: 2026-09-16 10:37+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
@@ -129,13 +129,14 @@ msgstr "Beheerder niet ingesteld"
 
 #: governanceplatform/admin.py:1165
 #, python-format
+#| msgid ""
+#| "Removing %(user)s as Administrator will limit the account permissions to "
+#| "Operator User. The user will be logged out of the current session."
 msgid ""
-"Removing %(user)s as Administrator will limit the account permissions to "
-"Operator User. The user will be logged out of the current session."
+"Removing %(user)s’s administrator privileges will restrict their account "
+"permissions to those of a standard user. The user will be logged out of the "
+"current session."
 msgstr ""
-"Als %(user)s als beheerder wordt verwijderd, worden de machtigingen voor de "
-"account beperkt tot ‘Gebruiker van de Operator’. De gebruiker wordt afgemeld "
-"bij de huidige sessie."
 
 #: governanceplatform/admin.py:1169
 msgid "Set Administrator"

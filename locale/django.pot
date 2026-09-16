@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:53+0200\n"
+"POT-Creation-Date: 2026-09-16 15:26+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -131,8 +131,9 @@ msgstr ""
 #: governanceplatform/admin.py:1165
 #, python-format
 msgid ""
-"Removing %(user)s as Administrator will limit the account permissions to "
-"Operator User. The user will be logged out of the current session."
+"Removing %(user)s’s administrator privileges will restrict their account "
+"permissions to those of a standard user. The user will be logged out of the "
+"current session."
 msgstr ""
 
 #: governanceplatform/admin.py:1169
