@@ -4,8 +4,8 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-16 09:53+0200\n"
-"PO-Revision-Date: 2026-09-16 08:05+0000\n"
-"Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
+"PO-Revision-Date: 2026-09-16 09:44+0000\n"
+"Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
 "Language: nl\n"
 "MIME-Version: 1.0\n"
@@ -95,35 +95,47 @@ msgstr "Maak de gebruiker aan als administrator"
 #, python-format
 msgid "%(user)s is now linked to your company."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"16\">%(gebruiker) is nu gelinkt aan uw "
+"onderneming.</mrk>"
 
 #: governanceplatform/admin.py:1094
 #, python-format
 msgid "The suggestion to link %(user)s has been rejected."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"17\">Het voorstel om %(gebruiker) te linken is "
+"afgewezen.</mrk>"
 
 #: governanceplatform/admin.py:1106
 #, python-format
 msgid "%(user)s is now an administrator of your company."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"18\">%(gebruiker) is nu beheerder van uw "
+"onderneming.</mrk>"
 
 #: governanceplatform/admin.py:1109
 #, python-format
 msgid "%(user)s is no longer an administrator of your company."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"19\">%(gebruiker) is niet langer beheerder van uw "
+"onderneming.</mrk>"
 
 #: governanceplatform/admin.py:1124
 #, python-format
 msgid "The 2FA token of %(user)s has been reset."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"20\">Het 2FA-token van %(gebruiker) is gereset.</"
+"mrk>"
 
 #: governanceplatform/admin.py:1132
 #, python-format
 msgid "Removing %(user)s will unlink the account from your company."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"21\">Als %(gebruiker) wordt verwijderd, wordt de "
+"account losgekoppeld van uw onderneming.</mrk>"
 
 #: governanceplatform/admin.py:1163
 msgid "Unset Administrator"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"22\">Beheerder niet ingesteld</mrk>"
 
 #: governanceplatform/admin.py:1165
 #, python-format
@@ -131,10 +143,14 @@ msgid ""
 "Removing %(user)s as Administrator will limit the account permissions to "
 "Operator User. The user will be logged out of the current session."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"23\">Als %(gebruiker) als beheerder wordt "
+"verwijderd, worden de machtigingen voor de account beperkt tot ‘Gebruiker "
+"van de Operator’.</mrk> <mrk mtype=\"seg\" mid=\"24\">De gebruiker wordt "
+"afgemeld bij de huidige sessie.</mrk>"
 
 #: governanceplatform/admin.py:1169
 msgid "Set Administrator"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"25\">Beheerder instellen</mrk>"
 
 #: governanceplatform/admin.py:1171
 #, python-format
@@ -142,10 +158,14 @@ msgid ""
 "Adding %(user)s an Administrator will let the account manage your operator, "
 "its users and settings. The user will be logged out of the current session."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"26\">Als %(gebruiker) wordt toegevoegd als "
+"Beheerder, kan de account uw operator, gebruikers en instellingen beheren.</"
+"mrk> <mrk mtype=\"seg\" mid=\"27\">De gebruiker wordt afgemeld bij de "
+"huidige sessie.</mrk>"
 
 #: governanceplatform/admin.py:1182
 msgid "Reset 2FA token"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"28\">2FA-token resetten</mrk>"
 
 #: governanceplatform/admin.py:1183
 #, python-format
@@ -153,14 +173,17 @@ msgid ""
 "Resetting the 2FA token of %(user)s will require the account to setup a new "
 "authenticator at the next login."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"29\">Als het 2FA-token van %(gebruiker) wordt "
+"gereset, moet er bij de volgende aanmelding een nieuwe authenticator voor de "
+"account worden ingesteld.</mrk>"
 
 #: governanceplatform/admin.py:1186
 msgid "Account actions"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"30\">Accountacties</mrk>"
 
 #: governanceplatform/admin.py:1199
 msgid "Approve"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"31\">Goedkeuren</mrk>"
 
 #: governanceplatform/admin.py:1200
 #, python-format
@@ -168,15 +191,20 @@ msgid ""
 "Approving %(user)s will associate the account with your company, including "
 "their notified incidents."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"32\">Als %(gebruiker) wordt goedgekeurd, wordt de "
+"account gekoppeld aan uw onderneming, inclusief zijn gemelde incidenten.</"
+"mrk>"
 
 #: governanceplatform/admin.py:1206
 msgid "Reject"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"33\">Weigeren</mrk>"
 
 #: governanceplatform/admin.py:1207
 #, python-format
 msgid "Rejecting %(user)s will remove the suggested link with your company."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"34\">Als %(gebruiker) wordt geweigerd, wordt de "
+"voorgestelde link met uw onderneming verwijderd.</mrk>"
 
 #: governanceplatform/admin.py:1239
 msgid "Cookies acceptation has been reseted"
@@ -191,14 +219,17 @@ msgid ""
 "There is a suggestion to link a User Account to your company. Please Approve "
 "or Reject the suggestion."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"37\">Er is een voorstel om een gebruikersaccount te "
+"linken aan uw onderneming.</mrk> <mrk mtype=\"seg\" mid=\"38\">Gelieve het "
+"voorstel goed te keuren of te weigeren.</mrk>"
 
 #: governanceplatform/admin.py:1267
 msgid "2FA Activated"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"39\">2FA geactiveerd</mrk>"
 
 #: governanceplatform/admin.py:1271
 msgid "Is Administrator"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"40\">Is beheerder</mrk>"
 
 #: governanceplatform/admin.py:1275 governanceplatform/models.py:465
 msgid "Approved"
@@ -949,7 +980,7 @@ msgstr "E-mailtype"
 
 #: incidents/admin.py:790
 msgid "Available placeholders"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"15\">Beschikbare placeholders</mrk>"
 
 #: incidents/admin.py:815 incidents/models.py:229
 #: securityobjectives/admin.py:1262 securityobjectives/models.py:203
@@ -1008,11 +1039,11 @@ msgstr ""
 
 #: incidents/email.py:106
 msgid "New comment added"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"209\">Nieuwe opmerking toegevoegd</mrk>"
 
 #: incidents/email.py:135
 msgid "Address of the platform"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"210\">Adres van het platform</mrk>"
 
 #: incidents/email.py:136 incidents/forms.py:702
 msgid "Incident reference"
@@ -1021,34 +1052,40 @@ msgstr "Incidentreferentie"
 #: incidents/email.py:139
 msgid "Date the incident was notified"
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"212\">Datum waarop het incident is gemeld</mrk>"
 
 #: incidents/email.py:142
 msgid "Date the incident was detected"
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"213\">Datum waarop het incident is gedetecteerd</"
+"mrk>"
 
 #: incidents/email.py:143
 msgid "Date the incident started"
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"214\">Datum waarop het incident is begonnen</mrk>"
 
 #: incidents/email.py:144
 msgid "Status of the incident"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"215\">Status van het incident</mrk>"
 
 #: incidents/email.py:145
 msgid "Name of the report"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"216\">Naam van het rapport</mrk>"
 
 #: incidents/email.py:146
 msgid "Status of the report"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"217\">Status van het rapport</mrk>"
 
 #: incidents/email.py:150
 msgid "empty when the regulator left no comment"
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"218\">leeg wanneer de regulator geen opmerkingen "
+"heeft geformuleerd</mrk>"
 
 #: incidents/email.py:153
 msgid "Deadline of the next report"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"219\">Deadline voor het volgende rapport</mrk>"
 
 #: incidents/filters.py:34 reporting/filters.py:50 reporting/filters.py:102
 #: securityobjectives/filters.py:22
@@ -1543,7 +1580,7 @@ msgstr "Datum van verwijdering"
 
 #: incidents/pdf_generation.py:142
 msgid "Details"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"335\">Details</mrk>"
 
 #: incidents/views.py:334
 msgid "Missing data, incident report not created."
@@ -1633,11 +1670,13 @@ msgstr "Datum van ontdekking"
 
 #: incidents/views.py:1134
 msgid "Not verified"
-msgstr ""
+msgstr "<mrk mtype=\"seg\" mid=\"352\">Niet geverifieerd</mrk>"
 
 #: incidents/views.py:1151
 msgid "No incident notification workflow found for the selected criteria."
 msgstr ""
+"<mrk mtype=\"seg\" mid=\"353\">Geen workflow voor incidentmelding gevonden "
+"voor de geselecteerde criteria.</mrk>"
 
 #: incidents/views.py:1451
 msgid "Incident Timeline"
@@ -2651,7 +2690,7 @@ msgstr "Verklaring niet gevonden"
 #: securityobjectives/views.py:509
 #, python-brace-format
 msgid "{label} required"
-msgstr ""
+msgstr "{label} vereist"
 
 #: securityobjectives/views.py:525
 msgid "No sectors data available"
