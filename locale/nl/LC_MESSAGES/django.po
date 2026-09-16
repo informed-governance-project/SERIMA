@@ -129,9 +129,6 @@ msgstr "Beheerder niet ingesteld"
 
 #: governanceplatform/admin.py:1165
 #, python-format
-#| msgid ""
-#| "Removing %(user)s as Administrator will limit the account permissions to "
-#| "Operator User. The user will be logged out of the current session."
 msgid ""
 "Removing %(user)s’s administrator privileges will restrict their account "
 "permissions to those of a standard user. The user will be logged out of the "
