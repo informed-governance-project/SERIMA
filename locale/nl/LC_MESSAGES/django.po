@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:43+0200\n"
+"POT-Creation-Date: 2026-09-16 09:49+0200\n"
 "PO-Revision-Date: 2026-08-03 10:12+0000\n"
 "Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
 "Language-Team: \n"
@@ -2441,30 +2441,30 @@ msgstr "Geslaagd en verzonden"
 msgid "Revision required and sent"
 msgstr "Revisie vereist en verzonden"
 
-#: securityobjectives/globals.py:66
-msgid "Maturity Level"
-msgstr ""
+#: securityobjectives/globals.py:66 securityobjectives/models.py:54
+msgid "Maturity level"
+msgstr "Maturiteitsniveau"
 
-#: securityobjectives/globals.py:67 securityobjectives/models.py:433
-#: securityobjectives/models.py:542
-msgid "Security Measure"
-msgstr "Veiligheidsmaatregel"
+#: securityobjectives/globals.py:67
+msgid "Security measure"
+msgstr ""
 
 #: securityobjectives/globals.py:68 securityobjectives/models.py:402
 msgid "Evidence"
 msgstr "Bewijs"
 
 #: securityobjectives/globals.py:69
-msgid "Measure Implemented?"
+msgid "Measure implemented?"
 msgstr ""
 
 #: securityobjectives/globals.py:70 securityobjectives/models.py:549
 msgid "Justification"
 msgstr "Toelichting"
 
-#: securityobjectives/globals.py:71
-msgid "Review Comment"
-msgstr ""
+#: securityobjectives/globals.py:71 securityobjectives/models.py:518
+#: securityobjectives/models.py:551
+msgid "Review comment"
+msgstr "Opmerking bekijken"
 
 #: securityobjectives/globals.py:76 securityobjectives/models.py:602
 msgid "Planned Measures"
@@ -2493,10 +2493,6 @@ msgstr "Kleur gebruikt in de rapporteringsmodule (hexadecimaal formaat)"
 #: securityobjectives/models.py:53
 msgid "Maturity levels"
 msgstr "Maturiteitsniveaus"
-
-#: securityobjectives/models.py:54
-msgid "Maturity level"
-msgstr "Maturiteitsniveau"
 
 #: securityobjectives/models.py:112
 msgid "Domains"
@@ -2588,6 +2584,10 @@ msgstr "Prioriteit"
 msgid "Security Measures"
 msgstr "Veiligheidsmaatregelen"
 
+#: securityobjectives/models.py:433 securityobjectives/models.py:542
+msgid "Security Measure"
+msgstr "Veiligheidsmaatregel"
+
 #: securityobjectives/models.py:445 securityobjectives/models.py:530
 msgid "Notification date"
 msgstr "Meldingsdatum"
@@ -2615,10 +2615,6 @@ msgstr "Onderneming van de maker"
 #: securityobjectives/models.py:516
 msgid "Year of submission"
 msgstr "Jaar van indiening"
-
-#: securityobjectives/models.py:518 securityobjectives/models.py:551
-msgid "Review comment"
-msgstr "Opmerking bekijken"
 
 #: securityobjectives/models.py:519
 msgid "Group"

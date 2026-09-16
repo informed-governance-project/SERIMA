@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:43+0200\n"
+"POT-Creation-Date: 2026-09-16 09:49+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2386,13 +2386,12 @@ msgstr ""
 msgid "Revision required and sent"
 msgstr ""
 
-#: securityobjectives/globals.py:66
-msgid "Maturity Level"
+#: securityobjectives/globals.py:66 securityobjectives/models.py:54
+msgid "Maturity level"
 msgstr ""
 
-#: securityobjectives/globals.py:67 securityobjectives/models.py:433
-#: securityobjectives/models.py:542
-msgid "Security Measure"
+#: securityobjectives/globals.py:67
+msgid "Security measure"
 msgstr ""
 
 #: securityobjectives/globals.py:68 securityobjectives/models.py:402
@@ -2400,15 +2399,16 @@ msgid "Evidence"
 msgstr ""
 
 #: securityobjectives/globals.py:69
-msgid "Measure Implemented?"
+msgid "Measure implemented?"
 msgstr ""
 
 #: securityobjectives/globals.py:70 securityobjectives/models.py:549
 msgid "Justification"
 msgstr ""
 
-#: securityobjectives/globals.py:71
-msgid "Review Comment"
+#: securityobjectives/globals.py:71 securityobjectives/models.py:518
+#: securityobjectives/models.py:551
+msgid "Review comment"
 msgstr ""
 
 #: securityobjectives/globals.py:76 securityobjectives/models.py:602
@@ -2437,10 +2437,6 @@ msgstr ""
 
 #: securityobjectives/models.py:53
 msgid "Maturity levels"
-msgstr ""
-
-#: securityobjectives/models.py:54
-msgid "Maturity level"
 msgstr ""
 
 #: securityobjectives/models.py:112
@@ -2533,6 +2529,10 @@ msgstr ""
 msgid "Security Measures"
 msgstr ""
 
+#: securityobjectives/models.py:433 securityobjectives/models.py:542
+msgid "Security Measure"
+msgstr ""
+
 #: securityobjectives/models.py:445 securityobjectives/models.py:530
 msgid "Notification date"
 msgstr ""
@@ -2559,10 +2559,6 @@ msgstr ""
 
 #: securityobjectives/models.py:516
 msgid "Year of submission"
-msgstr ""
-
-#: securityobjectives/models.py:518 securityobjectives/models.py:551
-msgid "Review comment"
 msgstr ""
 
 #: securityobjectives/models.py:519

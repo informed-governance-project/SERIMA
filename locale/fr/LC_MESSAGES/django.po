@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:43+0200\n"
+"POT-Creation-Date: 2026-09-16 09:49+0200\n"
 "PO-Revision-Date: 2026-09-15 06:47+0000\n"
 "Last-Translator: Jacques Kellner <Jacques.Kellner+RegAdmin@ilr.lu>\n"
 "Language: fr\n"
@@ -2471,30 +2471,30 @@ msgstr "Approuvé et envoyé"
 msgid "Revision required and sent"
 msgstr "Améliorations requises et envoyé"
 
-#: securityobjectives/globals.py:66
-msgid "Maturity Level"
-msgstr ""
+#: securityobjectives/globals.py:66 securityobjectives/models.py:54
+msgid "Maturity level"
+msgstr "Niveau de maturité"
 
-#: securityobjectives/globals.py:67 securityobjectives/models.py:433
-#: securityobjectives/models.py:542
-msgid "Security Measure"
-msgstr "Mesure de sécurité"
+#: securityobjectives/globals.py:67
+msgid "Security measure"
+msgstr ""
 
 #: securityobjectives/globals.py:68 securityobjectives/models.py:402
 msgid "Evidence"
 msgstr "Preuve"
 
 #: securityobjectives/globals.py:69
-msgid "Measure Implemented?"
+msgid "Measure implemented?"
 msgstr ""
 
 #: securityobjectives/globals.py:70 securityobjectives/models.py:549
 msgid "Justification"
 msgstr "Justification"
 
-#: securityobjectives/globals.py:71
-msgid "Review Comment"
-msgstr ""
+#: securityobjectives/globals.py:71 securityobjectives/models.py:518
+#: securityobjectives/models.py:551
+msgid "Review comment"
+msgstr "Commentaire de revue"
 
 #: securityobjectives/globals.py:76 securityobjectives/models.py:602
 msgid "Planned Measures"
@@ -2525,10 +2525,6 @@ msgstr ""
 #: securityobjectives/models.py:53
 msgid "Maturity levels"
 msgstr "Niveaux de maturité"
-
-#: securityobjectives/models.py:54
-msgid "Maturity level"
-msgstr "Niveau de maturité"
 
 #: securityobjectives/models.py:112
 msgid "Domains"
@@ -2620,6 +2616,10 @@ msgstr "Priorité"
 msgid "Security Measures"
 msgstr "Mesures de sécurité"
 
+#: securityobjectives/models.py:433 securityobjectives/models.py:542
+msgid "Security Measure"
+msgstr "Mesure de sécurité"
+
 #: securityobjectives/models.py:445 securityobjectives/models.py:530
 msgid "Notification date"
 msgstr "Date de notification"
@@ -2647,10 +2647,6 @@ msgstr "Entreprise du créateur"
 #: securityobjectives/models.py:516
 msgid "Year of submission"
 msgstr "Soumission pour l'année"
-
-#: securityobjectives/models.py:518 securityobjectives/models.py:551
-msgid "Review comment"
-msgstr "Commentaire de revue"
 
 #: securityobjectives/models.py:519
 msgid "Group"

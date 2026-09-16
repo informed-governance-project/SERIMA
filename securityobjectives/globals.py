@@ -63,12 +63,12 @@ ALLOWED_SORT_FIELDS = {
 # The widths are the Bootstrap grid columns each one spans when the whole table is
 # shown, and they total SO_COLUMN_GRID_TOTAL.
 SO_DECLARATION_COLUMNS = {
-    "maturity_level": {"label": _("Maturity Level"), "width": 1, "toggleable": True},
-    "security_measure": {"label": _("Security Measure"), "width": 3},
+    "maturity_level": {"label": _("Maturity level"), "width": 1, "toggleable": True},
+    "security_measure": {"label": _("Security measure"), "width": 3},
     "evidence": {"label": _("Evidence"), "width": 3, "toggleable": True},
-    "is_implemented": {"label": _("Measure Implemented?"), "width": 1},
+    "is_implemented": {"label": _("Measure implemented?"), "width": 1},
     "justification": {"label": _("Justification"), "width": 2, "toggleable": True},
-    "review_comment": {"label": _("Review Comment"), "width": 2, "toggleable": True},
+    "review_comment": {"label": _("Review comment"), "width": 2, "toggleable": True},
 }
 
 # The planned measures row spans the whole table rather than occupying a column,
