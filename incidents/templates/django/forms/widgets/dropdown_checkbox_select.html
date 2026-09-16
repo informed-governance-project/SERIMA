@@ -1,4 +1,4 @@
-<select id="{{ widget.name }}"  class="multiselectcheckbox" name="{{ widget.name }}" aria-hidden= "true" {% include "django/forms/widgets/attrs.html" %} multiple>
+<select id="{{ widget.name }}"  class="multiselectcheckbox" name="{{ widget.name }}" aria-hidden= "true" {% include "django/forms/widgets/attrs.html" %} multiple="multiple">
     {% for group_name, group_choices, group_index in widget.optgroups %}
         {% if group_name %}
         <optgroup label="{{ group_name }}">
