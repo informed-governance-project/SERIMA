@@ -322,7 +322,7 @@ def test_the_default_named_in_the_help_text_follows_the_active_language(answered
     help_text = form.base_fields["maturity_level_label"].help_text
 
     with override("en"):
-        assert "Maturity Level" in str(help_text)
+        assert "Maturity level" in str(help_text)
     with override("fr"):
         assert "Niveau de maturité" in str(help_text)
 
