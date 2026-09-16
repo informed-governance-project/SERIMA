@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-16 09:49+0200\n"
+"POT-Creation-Date: 2026-09-16 09:53+0200\n"
 "PO-Revision-Date: 2026-09-15 06:47+0000\n"
 "Last-Translator: Jacques Kellner <Jacques.Kellner+RegAdmin@ilr.lu>\n"
 "Language: de\n"
@@ -2477,16 +2477,18 @@ msgstr "Korrektur erforderlich und gesendet"
 msgid "Maturity level"
 msgstr "Reifegrad"
 
-#: securityobjectives/globals.py:67
-msgid "Security measure"
-msgstr ""
+#: securityobjectives/globals.py:67 securityobjectives/models.py:433
+#: securityobjectives/models.py:542
+msgid "Security Measure"
+msgstr "Sicherheitsmaßnahme"
 
 #: securityobjectives/globals.py:68 securityobjectives/models.py:402
 msgid "Evidence"
 msgstr "Beweis"
 
 #: securityobjectives/globals.py:69
-msgid "Measure implemented?"
+#| msgid "Implemented"
+msgid "Measure Implemented?"
 msgstr ""
 
 #: securityobjectives/globals.py:70 securityobjectives/models.py:549
@@ -2615,10 +2617,6 @@ msgstr "Priorität"
 #: securityobjectives/models.py:432
 msgid "Security Measures"
 msgstr "Sicherheitsmaßnahmen"
-
-#: securityobjectives/models.py:433 securityobjectives/models.py:542
-msgid "Security Measure"
-msgstr "Sicherheitsmaßnahme"
 
 #: securityobjectives/models.py:445 securityobjectives/models.py:530
 msgid "Notification date"
