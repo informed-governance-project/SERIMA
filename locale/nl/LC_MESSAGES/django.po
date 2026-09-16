@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-16 09:53+0200\n"
-"PO-Revision-Date: 2026-08-03 10:12+0000\n"
+"PO-Revision-Date: 2026-09-16 08:05+0000\n"
 "Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -2455,9 +2455,8 @@ msgid "Evidence"
 msgstr "Bewijs"
 
 #: securityobjectives/globals.py:69
-#| msgid "Implemented"
 msgid "Measure Implemented?"
-msgstr ""
+msgstr "Maatregel uitgevoerd?"
 
 #: securityobjectives/globals.py:70 securityobjectives/models.py:549
 msgid "Justification"
