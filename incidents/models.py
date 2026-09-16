@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
+from governanceplatform.globals import build_crockford_token
 from governanceplatform.settings import TIME_ZONE
 
 from .globals import (
@@ -20,6 +21,13 @@ from .globals import (
     SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT,
     WORKFLOW_REVIEW_STATUS,
 )
+
+
+def generate_incident_reference() -> str:
+    while True:
+        reference = build_crockford_token()
+        if not Incident.objects.filter(incident_id=reference).exists():
+            return reference
 
 
 # impacts of the incident, they are linked to sector
@@ -487,8 +495,15 @@ class SectorRegulationWorkflowEmail(TranslatableModel):
 
 # incident
 class Incident(models.Model):
-    # XXXXXXXXXX-SSS-SSS-NNNN-YYYY
-    incident_id = models.CharField(max_length=28, verbose_name=_("Incident Reference"))
+    # References issued before the switch to opaque tokens spell out an operator and
+    # its sectors, a number and a year, which is why the column is not narrowed to the
+    # 8 characters a token needs.
+    incident_id = models.CharField(
+        max_length=28,
+        unique=True,
+        default=generate_incident_reference,
+        verbose_name=_("Incident Reference"),
+    )
     incident_timezone = models.CharField(
         max_length=50,
         choices=[(tz, tz) for tz in pytz.all_timezones],

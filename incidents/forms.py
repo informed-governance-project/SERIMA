@@ -1174,7 +1174,7 @@ class IncidentStatusForm(forms.ModelForm):
         if "is_significative_impact" not in self.data:
             cleaned_data["is_significative_impact"] = self.instance.is_significative_impact
 
-        for field in ["incident_id", "incident_status", "is_significative_impact"]:
+        for field in ["incident_status", "is_significative_impact"]:
             if cleaned_data.get(field) in [None, ""]:
                 cleaned_data[field] = getattr(self.instance, field)
         return cleaned_data
@@ -1188,7 +1188,6 @@ class IncidentStatusForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Set fields to not required
-        self.fields["incident_id"].required = False
         self.fields["incident_status"].required = False
         self.fields["is_significative_impact"].required = False
 
@@ -1199,11 +1198,6 @@ class IncidentStatusForm(forms.ModelForm):
         self.fields["incident_status"].label = _("Set to Active")
         if self.initial.get("incident_status") == "GOING":
             self.fields["incident_status"].label = _("Set to Inactive")
-
-        self.fields["incident_id"].widget.attrs = {
-            "class": "form-control-sm incident-input-field ",
-            "data-incident-id": self.instance.pk,
-        }
 
         self.fields["is_significative_impact"].widget.attrs = {
             "class": "large-checkbox incident-input-field is_significative_impact_checkbox",
@@ -1217,7 +1211,6 @@ class IncidentStatusForm(forms.ModelForm):
     class Meta:
         model = Incident
         fields = [
-            "incident_id",
             "incident_status",
             "is_significative_impact",
         ]
