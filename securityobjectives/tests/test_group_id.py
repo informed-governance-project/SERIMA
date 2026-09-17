@@ -2,15 +2,20 @@ import pytest
 from django.db import IntegrityError, transaction
 
 from governanceplatform.globals import CROCKFORD_ALPHABET, REFERENCE_TOKEN_LENGTH
-from securityobjectives.models import StandardAnswerGroup
+from governanceplatform.helpers import normalize_reference
+from securityobjectives.filters import group_id_matches
+from securityobjectives.globals import REFERENCE_PREFIX
+from securityobjectives.models import StandardAnswer, StandardAnswerGroup
 
 
 @pytest.mark.django_db
 def test_a_new_group_gets_a_crockford_id():
     group = StandardAnswerGroup.objects.create()
 
-    assert len(group.group_id) == REFERENCE_TOKEN_LENGTH
-    assert set(group.group_id) <= set(CROCKFORD_ALPHABET)
+    assert group.group_id.startswith(REFERENCE_PREFIX)
+    token = group.group_id.removeprefix(REFERENCE_PREFIX)
+    assert len(token) == REFERENCE_TOKEN_LENGTH
+    assert set(token) <= set(CROCKFORD_ALPHABET)
 
 
 @pytest.mark.django_db
@@ -50,5 +55,21 @@ def test_a_group_id_does_not_depend_on_the_language_of_the_session():
     with override("en"):
         english = StandardAnswerGroup.objects.create()
 
-    assert set(french.group_id) <= set(CROCKFORD_ALPHABET)
-    assert set(english.group_id) <= set(CROCKFORD_ALPHABET)
+    assert set(french.group_id.removeprefix(REFERENCE_PREFIX)) <= set(CROCKFORD_ALPHABET)
+    assert set(english.group_id.removeprefix(REFERENCE_PREFIX)) <= set(CROCKFORD_ALPHABET)
+
+
+def test_the_prefix_survives_normalisation():
+    """SO_ carries an O: normalising the whole value would read it as a zero."""
+    assert normalize_reference("so_k7m2xq4o", REFERENCE_PREFIX) == "SO_K7M2XQ40"
+
+
+@pytest.mark.django_db
+def test_a_declaration_is_found_by_a_group_id_with_a_transcription_slip(populate_so_db):
+    answer = StandardAnswer.objects.first()
+    answer.group.group_id = "SO_K7M2XQ40"
+    answer.group.save()
+
+    found = StandardAnswer.objects.filter(group_id_matches("so_k7m2xq4o"))
+
+    assert list(found) == [answer]
