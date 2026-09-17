@@ -1,5 +1,3 @@
-import secrets
-
 from django.utils.translation import gettext_lazy as _
 
 
@@ -37,12 +35,3 @@ FUNCTIONALITIES = {
 CROCKFORD_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 REFERENCE_TOKEN_LENGTH = 8
 CROCKFORD_INPUT_TRANSLATION = str.maketrans({"I": "1", "L": "1", "O": "0", "U": "V"})
-
-
-def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
-    return "".join(secrets.choice(CROCKFORD_ALPHABET) for _ in range(length))
-
-
-def normalize_crockford(value: str) -> str:
-    """Map the characters Crockford excludes onto the ones they are mistaken for."""
-    return value.upper().translate(CROCKFORD_INPUT_TRANSLATION)

@@ -4,14 +4,10 @@ import pytest
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 
-from governanceplatform.globals import (
-    CROCKFORD_ALPHABET,
-    REFERENCE_TOKEN_LENGTH,
-    build_crockford_token,
-    normalize_crockford,
-)
-from incidents.filters import normalize_reference, reference_matches
-from incidents.globals import INCIDENT_REFERENCE_PREFIX
+from governanceplatform.globals import CROCKFORD_ALPHABET, REFERENCE_TOKEN_LENGTH
+from governanceplatform.helpers import build_crockford_token, normalize_crockford, normalize_reference
+from incidents.filters import reference_matches
+from incidents.globals import REFERENCE_PREFIX
 from incidents.models import Incident
 
 # the renumbering runs once and lives with the migration that applies it
@@ -24,8 +20,8 @@ plan_reference_renumbering = renumbering_migration.plan_reference_renumbering
 def test_a_new_incident_gets_a_crockford_reference():
     incident = Incident.objects.create()
 
-    assert incident.incident_id.startswith(INCIDENT_REFERENCE_PREFIX)
-    token = incident.incident_id.removeprefix(INCIDENT_REFERENCE_PREFIX)
+    assert incident.incident_id.startswith(REFERENCE_PREFIX)
+    token = incident.incident_id.removeprefix(REFERENCE_PREFIX)
     assert len(token) == REFERENCE_TOKEN_LENGTH
     assert set(token) <= set(CROCKFORD_ALPHABET)
 
@@ -194,8 +190,8 @@ def test_a_hand_edited_duplicate_is_given_an_opaque_token():
 
     renumbering = plan_reference_renumbering(references)
 
-    assert renumbering[2].startswith(INCIDENT_REFERENCE_PREFIX)
-    token = renumbering[2].removeprefix(INCIDENT_REFERENCE_PREFIX)
+    assert renumbering[2].startswith(REFERENCE_PREFIX)
+    token = renumbering[2].removeprefix(REFERENCE_PREFIX)
     assert len(token) == REFERENCE_TOKEN_LENGTH
     assert set(token) <= set(CROCKFORD_ALPHABET)
 
@@ -243,4 +239,4 @@ def test_a_prefixed_reference_is_found_after_a_transcription_slip():
 
 
 def test_the_prefix_survives_normalisation():
-    assert normalize_reference("ni_k7m2xq4o") == "NI_K7M2XQ40"
+    assert normalize_reference("ni_k7m2xq4o", REFERENCE_PREFIX) == "NI_K7M2XQ40"

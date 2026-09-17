@@ -18,6 +18,8 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 
+from .globals import CROCKFORD_ALPHABET, CROCKFORD_INPUT_TRANSLATION, REFERENCE_TOKEN_LENGTH
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -500,3 +502,21 @@ def delete_file_and_parents(file_field, label: str) -> None:
 
     except Exception:
         logger.exception("Failed to delete %s: %s", label, file_field.name)
+
+
+def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
+    return "".join(secrets.choice(CROCKFORD_ALPHABET) for _ in range(length))
+
+
+def normalize_crockford(value: str) -> str:
+    """Map the characters Crockford excludes onto the ones they are mistaken for."""
+    return value.upper().translate(CROCKFORD_INPUT_TRANSLATION)
+
+
+def normalize_reference(value: str, prefix: str) -> str:
+    """Read the value the way Crockford intends, but leave the prefix alone: NI_ carries
+    an I and SO_ an O, and normalising those would stop the reference matching."""
+    upper = value.upper()
+    if upper.startswith(prefix):
+        return prefix + normalize_crockford(upper[len(prefix) :])
+    return normalize_crockford(upper)

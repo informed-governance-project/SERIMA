@@ -1,8 +1,8 @@
 from django.db import migrations
 
-from governanceplatform.globals import build_crockford_token
+from governanceplatform.helpers import build_crockford_token
 
-from incidents.globals import INCIDENT_REFERENCE_PREFIX
+from incidents.globals import REFERENCE_PREFIX
 
 
 def parse_legacy_reference(reference: str) -> tuple[str, int, int] | None:
@@ -54,9 +54,9 @@ def plan_reference_renumbering(references: list[tuple[int, str]]) -> dict[int, s
                     new_reference = f"{prefix}_{highest_number[key] + 1:04}_{year}"
                 highest_number[key] += 1
             else:
-                new_reference = f"{INCIDENT_REFERENCE_PREFIX}{build_crockford_token()}"
+                new_reference = f"{REFERENCE_PREFIX}{build_crockford_token()}"
                 while new_reference in taken:
-                    new_reference = f"{INCIDENT_REFERENCE_PREFIX}{build_crockford_token()}"
+                    new_reference = f"{REFERENCE_PREFIX}{build_crockford_token()}"
 
             taken.add(new_reference)
             renumbering[incident_id] = new_reference

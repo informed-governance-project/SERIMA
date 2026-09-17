@@ -6,7 +6,7 @@ except ModuleNotFoundError:
     regional_area = []
 
 # Marks a reference as an incident notification
-INCIDENT_REFERENCE_PREFIX = "NI_"
+REFERENCE_PREFIX = "NI_"
 
 
 QUESTION_TYPES = [
