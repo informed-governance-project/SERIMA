@@ -10,7 +10,8 @@ from governanceplatform.globals import (
     build_crockford_token,
     normalize_crockford,
 )
-from incidents.filters import reference_matches
+from incidents.filters import normalize_reference, reference_matches
+from incidents.globals import INCIDENT_REFERENCE_PREFIX
 from incidents.models import Incident
 
 # the renumbering runs once and lives with the migration that applies it
@@ -23,8 +24,10 @@ plan_reference_renumbering = renumbering_migration.plan_reference_renumbering
 def test_a_new_incident_gets_a_crockford_reference():
     incident = Incident.objects.create()
 
-    assert len(incident.incident_id) == REFERENCE_TOKEN_LENGTH
-    assert set(incident.incident_id) <= set(CROCKFORD_ALPHABET)
+    assert incident.incident_id.startswith(INCIDENT_REFERENCE_PREFIX)
+    token = incident.incident_id.removeprefix(INCIDENT_REFERENCE_PREFIX)
+    assert len(token) == REFERENCE_TOKEN_LENGTH
+    assert set(token) <= set(CROCKFORD_ALPHABET)
 
 
 def test_a_reference_never_contains_a_character_read_as_another():
@@ -191,8 +194,10 @@ def test_a_hand_edited_duplicate_is_given_an_opaque_token():
 
     renumbering = plan_reference_renumbering(references)
 
-    assert len(renumbering[2]) == REFERENCE_TOKEN_LENGTH
-    assert set(renumbering[2]) <= set(CROCKFORD_ALPHABET)
+    assert renumbering[2].startswith(INCIDENT_REFERENCE_PREFIX)
+    token = renumbering[2].removeprefix(INCIDENT_REFERENCE_PREFIX)
+    assert len(token) == REFERENCE_TOKEN_LENGTH
+    assert set(token) <= set(CROCKFORD_ALPHABET)
 
 
 def test_renumbering_never_reuses_a_reference_already_held_by_another_incident():
@@ -224,3 +229,18 @@ def test_the_migration_frees_the_duplicates_already_in_the_database():
 
     assert historical_incident.objects.get(pk=kept.pk).incident_id == "FOO_ENE_ELE_0003_2026"
     assert historical_incident.objects.get(pk=renumbered.pk).incident_id == "FOO_ENE_ELE_0004_2026"
+
+
+@pytest.mark.django_db
+def test_a_prefixed_reference_is_found_after_a_transcription_slip():
+    """Normalising the whole value would read the I of the prefix as a 1, and the
+    reference the operator quoted would stop matching."""
+    incident = Incident.objects.create(incident_id="NI_K7M2XQ40")
+
+    found = Incident.objects.filter(reference_matches("NI_K7M2XQ4O"))
+
+    assert list(found) == [incident]
+
+
+def test_the_prefix_survives_normalisation():
+    assert normalize_reference("ni_k7m2xq4o") == "NI_K7M2XQ40"

@@ -7,6 +7,7 @@ from governanceplatform.helpers import get_sectors_grouped
 from governanceplatform.models import Sector
 
 from .forms import DropdownCheckboxSelectMultiple
+from .globals import INCIDENT_REFERENCE_PREFIX
 from .models import Incident, SectorRegulation
 
 
@@ -15,12 +16,21 @@ def sector_regulation(request):
     return SectorRegulation.objects.distinct()
 
 
+def normalize_reference(value: str) -> str:
+    """Read the value the way Crockford intends, but leave the NI_ prefix alone: it
+    carries an I, and normalising it to a 1 would stop the reference matching."""
+    upper = value.upper()
+    if upper.startswith(INCIDENT_REFERENCE_PREFIX):
+        return INCIDENT_REFERENCE_PREFIX + normalize_crockford(upper[len(INCIDENT_REFERENCE_PREFIX) :])
+    return normalize_crockford(upper)
+
+
 def reference_matches(value: str) -> Q:
     """Match the reference as typed and as Crockford reads it, so a reference
     transcribed with I for 1 or O for 0 is still found without breaking the search on
     the legacy references that contain those letters."""
     lookup = Q(incident_id__icontains=value)
-    normalized = normalize_crockford(value)
+    normalized = normalize_reference(value)
     if normalized != value.upper():
         lookup |= Q(incident_id__icontains=normalized)
     return lookup

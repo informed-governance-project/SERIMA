@@ -15,6 +15,7 @@ from governanceplatform.settings import TIME_ZONE
 from .globals import (
     CONDITIONAL_QUESTION_TYPES,
     INCIDENT_EMAIL_TRIGGER_EVENT,
+    INCIDENT_REFERENCE_PREFIX,
     INCIDENT_STATUS,
     QUESTION_TYPES,
     REVIEW_STATUS,
@@ -25,7 +26,7 @@ from .globals import (
 
 def generate_incident_reference() -> str:
     while True:
-        reference = build_crockford_token()
+        reference = f"{INCIDENT_REFERENCE_PREFIX}{build_crockford_token()}"
         if not Incident.objects.filter(incident_id=reference).exists():
             return reference
 
