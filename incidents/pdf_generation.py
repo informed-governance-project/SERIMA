@@ -1,9 +1,9 @@
 import logging
 import os
 from collections import OrderedDict
+from typing import TYPE_CHECKING
 
 from django.conf import settings
-from django.http import HttpRequest
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 from django_countries import countries
@@ -14,6 +14,9 @@ from governanceplatform.utils.weasyprint_fetcher import RestrictedURLFetcher
 
 from .globals import REGIONAL_AREA
 from .models import Answer, Incident, IncidentWorkflow
+
+if TYPE_CHECKING:
+    from django.http import HttpRequest
 
 # Increasing weasyprint log level
 for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:

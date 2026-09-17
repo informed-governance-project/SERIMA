@@ -108,28 +108,41 @@ class DropdownCheckboxSelectMultiple(ChoiceWidget):
 
 
 class ConditionalChoiceWidgetMixin:
-    """Mixin for choice widgets (radio/checkbox) that exposes the
-    conditional jump map as a ``data-conditionals`` JSON attribute on the
-    widget's wrapping element.
+    """Mixin for choice widgets (radio/checkbox) that marks every answer opening a conditional
+    question with a ``data-next-question-id`` attribute naming the question it opens, which is what
+    ``syncConditionals()`` reads to fold that question in and out.
 
     Pass ``conditional_map`` as a dict
     ``{predefined_answer_id: next_question_options_id}`` when
     instantiating the widget.
+
+    The mark belongs on the answer input rather than on the wrapping element because
+    django-bootstrap5 renders every ``CheckboxSelectMultiple`` with a template of its own, which
+    emits the id and the class of the widget and drops every other attribute it carries.
     """
 
     def __init__(self, *args, **kwargs):
-        self.conditional_map = kwargs.pop("conditional_map", {})
+        conditional_map = kwargs.pop("conditional_map", None) or {}
+        self.conditional_map = {str(predefined_answer_id): next_id for predefined_answer_id, next_id in conditional_map.items()}
         super().__init__(*args, **kwargs)
 
-    def get_context(self, name, value, attrs):
-        context = super().get_context(name, value, attrs)
-        if self.conditional_map:
-            context["widget"]["attrs"]["data_conditionals"] = json.dumps({str(k): v for k, v in self.conditional_map.items()})
-        return context
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex=subindex, attrs=attrs)
+        next_question_options_id = self.conditional_map.get(str(value))
+        if next_question_options_id is not None:
+            option["attrs"]["data-next-question-id"] = next_question_options_id
+        return option
 
 
 class ConditionalCheckboxSelectMultiple(ConditionalChoiceWidgetMixin, forms.CheckboxSelectMultiple):
-    """CheckboxSelectMultiple with conditional data attribute support."""
+    """CheckboxSelectMultiple rendered from a template held in this project."""
+
+    template_name = "django/forms/widgets/conditional_checkbox_select.html"
+
+    def render(self, name, value, attrs=None, renderer=None):
+        # the renderer of django-bootstrap5 overwrites template_name before the widget is rendered
+        self.template_name = ConditionalCheckboxSelectMultiple.template_name
+        return super().render(name, value, attrs, renderer)
 
 
 class OtherCheckboxSelectMultiple(ConditionalChoiceWidgetMixin, ChoiceWidget):
@@ -251,6 +264,17 @@ def build_previous_answer_node(question_option, incident_workflow, include_quest
     return node
 
 
+def never_use_required_attribute(initial: object) -> bool:
+    """Widget hook for conditional questions.
+
+    Their wrapper is rendered with ``d-none`` until a trigger answer is selected, and a browser
+    refuses to submit a form holding a hidden control marked with the HTML5 ``required``
+    attribute, without reporting anything since that field cannot be focused. The mandatory flag
+    of a conditional question is enforced in ``QuestionForm.clean()`` instead.
+    """
+    return False
+
+
 # create a form for each category and add fields which represent questions
 class QuestionForm(forms.Form):
     suffix_freetext = "_freetext_answer"
@@ -352,6 +376,11 @@ class QuestionForm(forms.Form):
                                 if c.timestamp > answer_queryset.first().timestamp
                             }
                         )
+
+            for predefined_answer_id, next_question_options_id in (conditional_map or {}).items():
+                self.conditional_triggers.setdefault("__question__" + str(next_question_options_id), []).append(
+                    (field_name, predefined_answer_id)
+                )
 
             if question_type not in ["MULTI", "MT"]:
                 form_attrs["class"] = "form-check-input"
@@ -483,6 +512,14 @@ class QuestionForm(forms.Form):
 
         # Conditional Questions
         self.fields[field_name].is_conditional = question_option.is_conditional
+        if question_option.is_conditional:
+            self.fields[field_name].widget.use_required_attribute = never_use_required_attribute
+
+        # The "Add details" field of an ST/MT question is displayed and dropped with the question it
+        # belongs to, so it carries the flag the template reads to fold that question away.
+        details_field = self.fields.get(field_name + self.suffix_freetext)
+        if details_field is not None:
+            details_field.is_conditional = question_option.is_conditional
 
     def clean(self):
         cleaned_data = super().clean()
@@ -500,7 +537,33 @@ class QuestionForm(forms.Form):
                     if self.has_error(main_question_field, code="required"):
                         self._errors.pop(main_question_field, None)
 
+        self._drop_untriggered_conditional_answers(cleaned_data)
+
         return cleaned_data
+
+    def _drop_untriggered_conditional_answers(self, cleaned_data: dict) -> None:
+        """Release a conditional question from its mandatory flag while its trigger answer is unselected.
+
+        The question is hidden in that state, so a "This field is required" error would be rendered
+        inside a ``d-none`` wrapper and the wizard would refuse to advance with nothing on screen to act
+        on. ``save_answers()`` discards the answers of untriggered questions as well, so they are
+        dropped from ``cleaned_data`` rather than blanked.
+        """
+        for field_name, field in self.fields.items():
+            # an "Add details" field is dropped by the question it belongs to, which owns the triggers
+            if field_name.endswith(self.suffix_freetext) or not getattr(field, "is_conditional", False):
+                continue
+
+            is_triggered = any(
+                str(predefined_answer_id) in {str(value) for value in cleaned_data.get(trigger_field_name) or []}
+                for trigger_field_name, predefined_answer_id in self.conditional_triggers.get(field_name, [])
+            )
+            if is_triggered:
+                continue
+
+            for name in (field_name, field_name + self.suffix_freetext):
+                self._errors.pop(name, None)
+                cleaned_data.pop(name, None)
 
     def __init__(self, *args, **kwargs):
         position = kwargs.pop("position", -1)
@@ -510,6 +573,9 @@ class QuestionForm(forms.Form):
         incident = kwargs.pop("incident", None)
         is_new_incident_workflow = kwargs.pop("is_new_incident_workflow", False)
         super().__init__(*args, **kwargs)
+
+        # {conditional question field name: [(trigger field name, predefined answer id), ...]}
+        self.conditional_triggers: dict[str, list[tuple[str, int]]] = {}
 
         if incident_workflow:
             workflow = incident_workflow.workflow
@@ -703,14 +769,11 @@ class RegulationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        try:
-            self.fields["regulations"].choices = [
-                (regulation.id, str(regulation))
-                for regulation in Regulation.objects.filter(regulators__isnull=False).distinct("id")
-                if regulation.sectorregulation_set.filter(sectorregulationworkflow__isnull=False, active=True).exists()
-            ]
-        except Exception:
-            self.fields["regulations"].choices = []
+        self.fields["regulations"].choices = [
+            (regulation.id, str(regulation))
+            for regulation in Regulation.objects.filter(regulators__isnull=False).distinct("id")
+            if regulation.sectorregulation_set.filter(sectorregulationworkflow__isnull=False, active=True).exists()
+        ]
 
 
 class RegulatorForm(forms.Form):
@@ -742,6 +805,7 @@ class RegulatorForm(forms.Form):
             if regulator.sectorregulation_set.filter(
                 regulation__id__in=regulations,
                 sectorregulationworkflow__isnull=False,
+                active=True,
             ).exists()
         ]
 
@@ -790,7 +854,7 @@ class SectorForm(forms.Form):
 
 
 def construct_sectors_array(regulations, regulators):
-    sector_regulations = SectorRegulation.objects.filter(regulation__id__in=regulations, regulator__id__in=regulators)
+    sector_regulations = SectorRegulation.objects.filter(regulation__id__in=regulations, regulator__id__in=regulators, active=True)
     all_sectors = Sector.objects.filter(sectorregulation__in=sector_regulations).distinct().order_by("parent")
 
     categs = {}
@@ -1110,7 +1174,7 @@ class IncidentStatusForm(forms.ModelForm):
         if "is_significative_impact" not in self.data:
             cleaned_data["is_significative_impact"] = self.instance.is_significative_impact
 
-        for field in ["incident_id", "incident_status", "is_significative_impact"]:
+        for field in ["incident_status", "is_significative_impact"]:
             if cleaned_data.get(field) in [None, ""]:
                 cleaned_data[field] = getattr(self.instance, field)
         return cleaned_data
@@ -1124,7 +1188,6 @@ class IncidentStatusForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Set fields to not required
-        self.fields["incident_id"].required = False
         self.fields["incident_status"].required = False
         self.fields["is_significative_impact"].required = False
 
@@ -1135,11 +1198,6 @@ class IncidentStatusForm(forms.ModelForm):
         self.fields["incident_status"].label = _("Set to Active")
         if self.initial.get("incident_status") == "GOING":
             self.fields["incident_status"].label = _("Set to Inactive")
-
-        self.fields["incident_id"].widget.attrs = {
-            "class": "form-control-sm incident-input-field ",
-            "data-incident-id": self.instance.pk,
-        }
 
         self.fields["is_significative_impact"].widget.attrs = {
             "class": "large-checkbox incident-input-field is_significative_impact_checkbox",
@@ -1153,7 +1211,6 @@ class IncidentStatusForm(forms.ModelForm):
     class Meta:
         model = Incident
         fields = [
-            "incident_id",
             "incident_status",
             "is_significative_impact",
         ]
@@ -1169,7 +1226,7 @@ def set_initial_datetime(form, field_name, datetime_value, timezone, previous_re
     else:
         form.fields[field_name].widget.attrs["class"] = form.fields[field_name].widget.attrs.get("class", "") + " empty_field"
 
-    if previous_report:
+    if previous_report and previous_report.report_timeline:
         previous_value = getattr(previous_report.report_timeline, field_name)
         if previous_value != datetime_value:
             form.fields[field_name].widget.attrs["class"] = form.fields[field_name].widget.attrs.get("class", "") + " answer-modified"

@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
+from governanceplatform.helpers import build_crockford_token
 from governanceplatform.settings import TIME_ZONE
 
 from .globals import (
@@ -16,10 +17,18 @@ from .globals import (
     INCIDENT_EMAIL_TRIGGER_EVENT,
     INCIDENT_STATUS,
     QUESTION_TYPES,
+    REFERENCE_PREFIX,
     REVIEW_STATUS,
     SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT,
     WORKFLOW_REVIEW_STATUS,
 )
+
+
+def generate_incident_reference() -> str:
+    while True:
+        reference = f"{REFERENCE_PREFIX}{build_crockford_token()}"
+        if not Incident.objects.filter(incident_id=reference).exists():
+            return reference
 
 
 # impacts of the incident, they are linked to sector
@@ -63,6 +72,10 @@ class Impact(TranslatableModel):
         blank=True,
         default=None,
     )
+
+    def is_in_use(self) -> bool:
+        """Impacts stay editable; incidents reference them without consuming them."""
+        return False
 
     def __str__(self):
         headline_translation = self.safe_translation_getter("headline", any_language=True)
@@ -146,6 +159,11 @@ class Question(TranslatableModel):
             return f"[{self.reference}] {str(self)}"
         return str(self)
 
+    def is_in_use(self) -> bool:
+        return (
+            Answer.objects.filter(question_options__question=self).exists() or QuestionOptionsHistory.objects.filter(question=self).exists()
+        )
+
     def __str__(self):
         return (
             self.safe_translation_getter("label", any_language=True)
@@ -186,6 +204,9 @@ class PredefinedAnswer(TranslatableModel):
         default=None,
     )
 
+    def is_in_use(self) -> bool:
+        return Answer.objects.filter(predefined_answers=self).exists()
+
     def __str__(self):
         return (
             self.safe_translation_getter("predefined_answer", any_language=True)
@@ -207,13 +228,6 @@ class Email(TranslatableModel, models.Model):
         ),
         content=models.TextField(
             verbose_name=_("Content"),
-            help_text=_(
-                """Available placeholders: #INCIDENT_NOTIFICATION_DATE#,
-                #INCIDENT_DETECTION_DATE#,
-                #INCIDENT_STARTING_DATE#,
-                #INCIDENT_ID#,
-                #DEADLINE#"""
-            ),
         ),
     )
     name = models.CharField(verbose_name=_("Name"), max_length=255)
@@ -279,6 +293,10 @@ class Workflow(TranslatableModel):
         blank=True,
         default=None,
     )
+
+    def is_in_use(self) -> bool:
+        """Workflows stay editable after use; the admin revises them in place."""
+        return False
 
     def __str__(self):
         label_translation = self.safe_translation_getter("label", any_language=True)
@@ -347,6 +365,9 @@ class SectorRegulation(TranslatableModel):
     class Meta:
         verbose_name_plural = _("Incident notification workflows")
         verbose_name = _("Incident notification workflow")
+
+    def is_in_use(self) -> bool:
+        return Incident.objects.filter(sector_regulation=self).exists()
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)
@@ -475,8 +496,15 @@ class SectorRegulationWorkflowEmail(TranslatableModel):
 
 # incident
 class Incident(models.Model):
-    # XXXXXXXXXX-SSS-SSS-NNNN-YYYY
-    incident_id = models.CharField(max_length=28, verbose_name=_("Incident Reference"))
+    # References issued before the switch to opaque tokens spell out an operator and
+    # its sectors, a number and a year, which is why the column is not narrowed to the
+    # 8 characters a token needs.
+    incident_id = models.CharField(
+        max_length=28,
+        unique=True,
+        default=generate_incident_reference,
+        verbose_name=_("Incident Reference"),
+    )
     incident_timezone = models.CharField(
         max_length=50,
         choices=[(tz, tz) for tz in pytz.all_timezones],
@@ -671,6 +699,9 @@ class Incident(models.Model):
             )
             .first()
         )
+
+        if not current:
+            return False
 
         previous = (
             SectorRegulationWorkflow.objects.all()
@@ -966,6 +997,12 @@ class QuestionCategoryOptions(models.Model):
     question_category = models.ForeignKey(QuestionCategory, on_delete=models.CASCADE)
     position = models.IntegerField(verbose_name=_("Position"))
 
+    def is_in_use(self) -> bool:
+        return (
+            Answer.objects.filter(question_options__category_option=self).exists()
+            or QuestionOptionsHistory.objects.filter(category_option=self).exists()
+        )
+
     def __str__(self):
         return self.question_category.label or ""
 
@@ -1132,10 +1169,6 @@ class QuestionOptions(models.Model):
             self.save()
         else:
             super().delete(*args, **kwargs)
-
-    def clean(self):
-        if self.is_mandatory and self.is_conditional:
-            raise ValidationError(_("A question cannot be both mandatory and conditionally displayed."))
 
     def save(self, *args, **kwargs):
         if self.pk and self.answer_set.exists() and not self.is_deleted():

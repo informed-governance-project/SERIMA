@@ -28,6 +28,56 @@ from governanceplatform.tests.data import (
 )
 
 
+# Creates the group assigned to temporary incident-reporting users.
+@pytest.fixture
+def incident_user_group(db):
+    return Group.objects.create(name="IncidentUser")
+
+
+# Returns a factory that creates a user with controlled account activity dates.
+@pytest.fixture
+def create_incident_user(incident_user_group):
+    def _create_incident_user(*, email, date_joined, last_login=None, group=None):
+        user = User.objects.create_user(email=email, password="password")
+        User.objects.filter(pk=user.pk).update(date_joined=date_joined, last_login=last_login)
+        user.refresh_from_db()
+        user.groups.add(group or incident_user_group)
+        return user
+
+    return _create_incident_user
+
+
+@pytest.fixture
+def operator_admin_with_pending_link(populate_db):
+    """
+    An OperatorAdmin of COM1, an approved member of it, and an IncidentUser whose link awaits approval.
+
+    populate_db links opadmin@com1.lu without setting is_company_administrator, so the CompanyUser
+    post_save signal leaves the account as an OperatorUser. Promoting the link here is what actually
+    puts it in the OperatorAdmin group.
+    """
+    company = Company.objects.get(identifier="COM1")
+
+    operator_admin = User.objects.get(email="opadmin@com1.lu")
+    admin_link = CompanyUser.objects.get(user=operator_admin, company=company)
+    admin_link.is_company_administrator = True
+    admin_link.save()
+    operator_admin.refresh_from_db()
+
+    member = User.objects.get(email="opuser@com1.lu")
+    incident_user = User.objects.get(email="iu1@iu.lu")
+
+    return {
+        "company": company,
+        "operator_admin": operator_admin,
+        "admin_link": admin_link,
+        "member": member,
+        "member_link": CompanyUser.objects.get(user=member, company=company),
+        "incident_user": incident_user,
+        "pending_link": CompanyUser.objects.create(user=incident_user, company=company, approved=False),
+    }
+
+
 @pytest.fixture
 def populate_db(db):
     """

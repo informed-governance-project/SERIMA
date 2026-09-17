@@ -23,7 +23,8 @@ def run(logger=logger):
     # for all unclosed incident
     actual_time = timezone.now()
     try:
-        ongoing_incidents = Incident.objects.filter(incident_status="GOING")
+        # Querysets are lazy; materialise here so a fetch failure is reported as one.
+        ongoing_incidents = list(Incident.objects.filter(incident_status="GOING"))
     except DatabaseError as e:
         logger.error("Failed to fetch ongoing incidents: %s", e, exc_info=True)
         raise
@@ -47,7 +48,7 @@ def run(logger=logger):
                     for email in emails:
                         dt = actual_time - incident.incident_detection_date
                         if math.floor(dt.total_seconds() / 60 / 60) == email.delay_in_hours:
-                            send_email(email.email, incident)
+                            send_email(email.email, incident, workflow=report)
             # Workflow with deadline from prev workflow
             for incident_workflow in incident.get_latest_incident_workflows(timestamp_order="timestamp"):
                 # chek if there is a next workflow
@@ -79,7 +80,7 @@ def run(logger=logger):
                         for email in emails:
                             dt = actual_time - incident_workflow.timestamp
                             if math.floor(dt.total_seconds() / 60 / 60) == email.delay_in_hours:
-                                send_email(email.email, incident)
+                                send_email(email.email, incident, workflow=incident_workflow.workflow, incident_workflow=incident_workflow)
                 # From notification date
                 sector_regulation_workflow = (
                     SectorRegulationWorkflow.objects.all()
@@ -97,6 +98,6 @@ def run(logger=logger):
                 for email in emails:
                     dt = actual_time - incident_workflow.timestamp
                     if math.floor(dt.total_seconds() / 60 / 60) == email.delay_in_hours:
-                        send_email(email.email, incident)
+                        send_email(email.email, incident, workflow=incident_workflow.workflow, incident_workflow=incident_workflow)
         except Exception as e:
             logger.error("Error processing incident ID %s: %s", incident.id, e, exc_info=True)

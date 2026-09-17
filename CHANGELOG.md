@@ -7,6 +7,51 @@ All notable changes to SERIMA are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Operator administrators manage the accounts of their own company from the Users list: an "Account actions" column offers Approve and Reject for an account whose link to the company is still a suggestion, and Set/Unset Administrator and Reset 2FA token for accounts already approved. Every button asks for confirmation first and states what the action implies — approving an incident-notification account, for instance, associates it with the company along with the incidents it has already notified (#861)
+- A suggestion waiting to be resolved is announced by a banner above the Users list and the row is highlighted; the account's own page carries the same Approve/Reject prompt (#861)
+- Users list columns for "2FA Activated", "Is Administrator" and "Approved" (#861)
+- The account history now records approving and rejecting a link, granting and removing the administrator role, resetting the 2FA token, and removing an account from the company (#861)
+- Unit tests for incident cleanup, log cleanup, workflow deadline notifications, and incident reminder scripts, helpers of governanceplatform
+- Email templates accept four more placeholders: `#INCIDENT_STATUS#` for the status of the incident, and `#REPORT_NAME#`, `#REPORT_REVIEW_STATUS#` and `#REPORT_COMMENT_ADDED#` for the name of the report, its review status, and a notice when the regulator left a review comment on it. The report an email describes is the one it concerns: a reminder or a deadline notice names the report it is chasing, which is generally not the latest one and often has no submission at all (#856)
+- The placeholders usable in an email template are listed in the admin: an "Available placeholders" button above the content field opens a dialog naming each one and what it is replaced by, `#PUBLIC_URL#` included, which was supported but undocumented (#856)
+- Unit tests for the substitution of email template placeholders (#505)
+- Incident dashboard columns for the detection, starting and resolution dates of an incident, hidden by default and selectable from the column settings. The starting and resolution dates are those of the latest submitted report, and all three columns sort like the other ones
+
+### Changed
+
+- An incident reference is now a short code such as `NI_K7M2XQ4P` instead of a number counted per operator, sector and year. The NI_ prefix marks it as an incident notification where one is quoted alongside another kind of reference. The alphabet omits I, L, O and U so a reference survives being read aloud or transcribed from a PDF, and the incident search accepts a reference typed with those letters in place of 1 and 0. References issued before this release keep the form they were issued under, and searching by an operator acronym or sector still finds their incidents through the operator and sector fields
+- The incident reference is read-only for regulators. It is assigned when the incident is notified and no longer needs correcting by hand
+- A question can be both mandatory and conditionally displayed. Its mandatory flag is enforced only once one of its trigger answers is selected; while the trigger is unselected the question stays hidden and the report is submitted without it
+- An account whose link to the company is still awaiting approval is read-only for operator administrators: Approve and Reject are the only actions offered, and editing or deleting it is withheld until one of them is chosen (#861)
+- Deleting a user as an operator administrator now asks for confirmation in a dialog on the page instead of on a separate confirmation page (#861)
+- The batch action selector is no longer offered to operator administrators on the Users list, which act on one account at a time from the Account actions column. Other roles keep it (#861)
+- An account left without any link to a company is deactivated (#861)
+- Operator administrator group permissions: `delete` on users added, and the unused `CompanyUser` permissions dropped. Existing deployments must run `python manage.py update_group_permissions` for the change to take effect; until then the delete action is not offered to operator administrators (#861)
+- Sector regulation configuration imports now reuse every matching workflow configuration object by default instead of duplicating it; `--create-all` creates a fully independent copy. The mode that reused a question on its reference alone, ignoring the label, type and answers carried by the file, is gone (#826)
+- An imported sector regulation is left inactive whatever the `active` value in the file, so the configuration is reviewed before it is offered to operators (#826)
+- PostgreSQL upgraded from 15 to 18 in CI and in the shipped Docker compose files. Existing deployments are unaffected and keep running on their current PostgreSQL version. Operators who bump the `postgres` image tag in their own compose file must dump and restore the database first: a major version bump invalidates the PostgreSQL data directory, so an existing volume will not start under the new image
+
+### Fixed
+
+- Two incidents could be given the same reference. The number came from a count of the operator's incidents for the year, so deleting an incident, moving a notification date to another year, or two operators notifying at the same moment all handed the same number out twice, and an incident notified for an entity not yet registered was always numbered 0001. References are now drawn at random and uniqueness is enforced by the database. Existing duplicates are freed by a migration: the earliest incident of each pair keeps the reference its operator already received and the later ones continue the series
+- A question conditioned on an answer of a multiple-choice question is displayed again when that answer is selected. django-bootstrap5 26.3 rewrote the template it renders multiple-choice widgets with and stopped emitting the attributes of the widget itself, which is where the map naming the question each answer opens was published, so the map no longer reached the page and the question stayed hidden whatever was selected. The mark now sits on the answer input, and such a widget is rendered from a template held in this project, so the markup of a later release cannot drop it again. Single-option questions were unaffected
+- A mandatory conditional question no longer blocks the notification form. The question is rendered hidden until its trigger answer is selected, and a hidden control carrying the HTML5 `required` attribute makes a browser refuse the submit without reporting anything, while the server-side "This field is required" error was rendered inside the hidden wrapper — leaving the Next button doing nothing with no message on screen. The combination was rejected in the admin but a sector regulation configuration import could still create it
+- Company selection now returns the user to the page they originally asked for instead of always landing on the home page
+- The email announcing that a report status changed is now sent after the new status is saved, so it no longer announces a change while quoting the previous status, and is not sent at all if the save fails (#856)
+- An email sent for an incident whose latest report carries no timeline no longer fails: `#INCIDENT_DETECTION_DATE#` falls back to the detection date of the incident and `#INCIDENT_STARTING_DATE#` renders empty (#856)
+- Incident export: a report shared by several incident workflows is now offered under each of them. The report list only carried one workflow id per report, so the report was hidden for every other workflow it belongs to
+- Removed the unrelated `parler` dependency (a Parler social-network API client, not part of `django-parler`). Both distributions install a `parler/__init__.py`, and the wrong one was shadowing `django-parler`'s, so every Django and Celery process started by globally suppressing urllib3 `HTTPWarning` — including the warning raised for unverified HTTPS requests
+- `requests` is now declared explicitly: `governanceplatform/rt.py` imports it directly but it was only installed as a transitive dependency of the removed `parler` package
+- Sector regulation configuration import with `--reuse` now recognises a report whose categories sit at the same position as another report's. Category options carry no link back to the report they belong to, so they were matched on category and position alone and resolved to another report's rows, which made the report look different and duplicated it along with all of its questions. A report that is created is now given its own category options instead of sharing another report's (#826)
+- Opening the timeline step of an incident report no longer fails when the previous report has no timeline. The migration that moved the timeline from the incident to the report assigned every timeline it created to the latest report, so on incidents that already existed all the earlier reports were left without one, and the comparison with the previous report raised an error instead of simply reporting no change (#871)
+- Reports left without a timeline by that migration are backfilled with a copy of their incident's latest report timeline (#871)
+- Deleting an incident report, including through the cascade from its incident and from the retention cleanup, now also deletes its timeline. The incident dates of a deleted incident were staying in the database, and the timelines already stranded that way are cleared (#871)
+- An account an operator administrator creates with "Create this user as an administrator" ticked is now given the operator administrator role. The link to the company was flagged as administrator, so the Users list showed the account as one, but the account itself was left with the permissions of a plain operator user and no access to the administration interface. The role is assigned when the link to the company is saved, and the link was being created in a way that skipped that step (#786)
+
 ## [0.5.17] - 2026-08-04
 
 ### Added

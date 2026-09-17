@@ -5,6 +5,9 @@ try:
 except ModuleNotFoundError:
     regional_area = []
 
+# Marks a reference as an incident notification
+REFERENCE_PREFIX = "NI_"
+
 
 QUESTION_TYPES = [
     ("FREETEXT", "Freetext"),
@@ -19,15 +22,6 @@ QUESTION_TYPES = [
 
 CONDITIONAL_QUESTION_TYPES = ["MULTI", "SO", "MT", "ST"]
 
-
-# The variables to use in the email template in the admin interface, and the corresponding attribute
-INCIDENT_EMAIL_VARIABLES = [
-    ("#INCIDENT_NOTIFICATION_DATE#", "incident_notification_date"),
-    ("#INCIDENT_DETECTION_DATE#", "incident_detection_date"),
-    ("#INCIDENT_STARTING_DATE#", "incident_starting_date"),
-    ("#INCIDENT_ID#", "incident_id"),
-    ("#DEADLINE#", "get_deadline"),
-]
 
 # the different trigger on when to send an email to the Incident.User
 INCIDENT_EMAIL_TRIGGER_EVENT = [
@@ -114,6 +108,18 @@ ALLOWED_SORT_FIELDS = {
     },
     "notification_date": {
         "field": "incident_notification_date",
+        "type": "datetime",
+    },
+    "detection_date": {
+        "field": "incident_detection_date",
+        "type": "datetime",
+    },
+    "starting_date": {
+        "field": "sort_latest_starting_date",
+        "type": "datetime",
+    },
+    "resolution_date": {
+        "field": "sort_latest_resolution_date",
         "type": "datetime",
     },
     "company_identifier": {

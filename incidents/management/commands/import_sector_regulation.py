@@ -26,11 +26,17 @@ class Command(BaseCommand):
             type=int,
             help="Primary key of the blank destination SectorRegulation.",
         )
-        parser.add_argument(
-            "--create",
+        mode = parser.add_mutually_exclusive_group()
+        mode.add_argument(
+            "--reuse",
+            action="store_true",
+            help=("Default. Reuse every matching configuration object and create only objects whose complete configuration differs."),
+        )
+        mode.add_argument(
+            "--create-all",
             action="store_true",
             help=(
-                "Create questions even when their references already exist. "
+                "Create every object instead of reusing the ones that match. "
                 "Unique suffixes are added when required by database constraints."
             ),
         )
@@ -61,30 +67,34 @@ class Command(BaseCommand):
                 result = SectorRegulationConfigurationImporter(
                     data,
                     target,
-                    create_all=options["create"],
+                    reuse_all=not options["create_all"],
                 ).import_configuration()
         except (ConfigurationImportError, IntegrityError) as error:
             raise CommandError(f"Import failed; no changes were saved: {error}") from error
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                "Imported configuration into SectorRegulation "
-                f"{options['sector_regulation']}: "
-                f"{result['reports']} reports, "
-                f"{result['report_links']} report links, "
-                f"{result['emails']} emails created, "
-                f"{result['categories']} categories created, "
-                f"{result['category_options']} category options created, "
-                f"{result['questions_created']} questions created, "
-                f"{result['questions_reused']} questions reused, "
-                f"{result['predefined_answers']} predefined answers created, "
-                f"{result['predefined_answers_skipped']} predefined answers skipped, "
-                f"{result['question_options']} question options created, "
-                f"{result['conditional_questions']} conditional questions created, "
-                f"{result['reminder_emails']} reminder emails created, "
-                f"{result['impacts']} impacts created, "
-                f"{result['sectors_created']} sectors created, "
-                f"{result['sectors_reused']} sectors reused, "
-                f"{result['sectors_linked']} sectors linked."
-            )
+        reminders = result["reminder_emails"]
+        rows = (
+            ("Reports", result["reports_created"], result["reports_reused"], f"{result['report_links']} linked"),
+            (
+                "Emails",
+                result["emails_created"],
+                result["emails_reused"],
+                f"{reminders} reminder{'' if reminders == 1 else 's'} created",
+            ),
+            ("Categories", result["categories_created"], result["categories_reused"], ""),
+            ("Category options", result["category_options_created"], result["category_options_reused"], ""),
+            ("Questions", result["questions_created"], result["questions_reused"], ""),
+            ("Predefined answers", result["predefined_answers_created"], result["predefined_answers_reused"], ""),
+            ("Question options", result["question_options_created"], result["question_options_reused"], ""),
+            ("Conditional questions", result["conditional_questions_created"], result["conditional_questions_reused"], ""),
+            ("Impacts", result["impacts_created"], result["impacts_reused"], ""),
+            ("Sectors", result["sectors_created"], result["sectors_reused"], f"{result['sectors_linked']} linked"),
         )
+        label_width = max(len(label) for label, *_ in rows)
+        created_width = max(len(str(created)) for _, created, _, _ in rows)
+        reused_width = max(len(str(reused)) for _, _, reused, _ in rows)
+
+        self.stdout.write(self.style.SUCCESS(f"Imported configuration into SectorRegulation {options['sector_regulation']}"))
+        for label, created, reused, extra in rows:
+            line = f"  {label:<{label_width}}  {created:>{created_width}} created, {reused:>{reused_width}} reused"
+            self.stdout.write(f"{line}, {extra}" if extra else line)
