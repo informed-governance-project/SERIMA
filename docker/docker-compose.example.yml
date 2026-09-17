@@ -33,7 +33,7 @@ services:
     environment: *env
     restart: unless-stopped
     volumes:
-      - ./volumes/postgres/data:/var/lib/postgresql/data
+      - ./volumes/postgres/data:/var/lib/postgresql
       # enable the below volume if you want to load a pg_dump at init
       #- ./volumes/postgres/initdb.d:/docker-entrypoint-initdb.d
   theme:

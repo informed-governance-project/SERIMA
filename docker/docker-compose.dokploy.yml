@@ -24,7 +24,7 @@ services:
     container_name: ${SERIMA_ENVIRONMENT}-serima-db
     env_file: .env
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
 
   theme:
