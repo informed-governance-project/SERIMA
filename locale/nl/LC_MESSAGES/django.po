@@ -483,7 +483,7 @@ msgstr "Beveiligingsdoelstelling"
 msgid "Reporting"
 msgstr "Reporting"
 
-#: governanceplatform/helpers.py:129
+#: governanceplatform/helpers.py:131
 #, python-brace-format
 msgid ""
 "<strong>Modification and deletion actions are not allowed.</strong><br>- "
