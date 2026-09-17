@@ -5,23 +5,23 @@ Once you click **Register**, you are logged into the SERIMA Platform. Since this
 the system suggests you enable two-factor authentication.
 Click the button **Enable Two-Factor Authentication**.
 
-.. figure:: _static/login/UM_SER_3m.png
+.. figure:: _static/login/enable_2FA_1.png
    :alt: Enable two-factor authentication
-   :target: _static/login/UM_SER_3m.png
+   :target: _static/login/enable_2FA_1.png
 
 Follow the steps in the wizard to enable 2FA: first, click the **Next** button.
 
-.. figure:: _static/login/UM_SER_4m.png
+.. figure:: _static/login/enable_2FA_2.png
    :alt: Enable two-factor authentication and start the wizard
-   :target: _static/login/UM_SER_4m.png
+   :target: _static/login/enable_2FA_2.png
 
 Then either use your smartphone and scan the QR code from the screen, or use the long character set called TOTP Secret
 to set up **TOTP** (Time-based One-Time Password) in your authenticator or password manager manually.
 As the last step, please enter the token (a six-digit number) into the Token field and click **Next**.
 
-.. figure:: _static/login/UM_SER_5m.png
+.. figure:: _static/login/enable_2FA_3.png
    :alt: Two-factor authentication - QR code
-   :target: _static/login/UM_SER_5m.png
+   :target: _static/login/enable_2FA_3.png
 
 In case you have successfully enabled two-factor authentication, you are greeted with the following screen:
 
