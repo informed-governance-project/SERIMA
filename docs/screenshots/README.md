@@ -57,7 +57,7 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | Key | Effect |
 |---|---|
 | `role` | which credentials to use; omit for anonymous pages |
-| `steps` | `click` / `fill` / `select` / `press` / `wait_for` / `wait_ms` actions run after navigation |
+| `steps` | `click` / `fill` / `select` / `press` / `totp` / `wait_for` / `wait_ms` actions run after navigation |
 | `selector` | capture just this element instead of the viewport |
 | `full_page` | capture the whole scroll height |
 | `hide` | extra selectors to hide, on top of the defaults |

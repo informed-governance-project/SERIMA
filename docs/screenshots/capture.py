@@ -19,6 +19,7 @@ import time
 import tomllib
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from playwright.sync_api import BrowserContext, Page, sync_playwright
 
@@ -182,7 +183,10 @@ def dismiss_cookie_banner(page: Page) -> None:
         "() => { const el = document.getElementById('cookiebanner_version'); return el ? JSON.parse(el.textContent) : 0; }"
     )
     value = json.dumps({"essential": True, "version": version})
-    page.context.add_cookies([{"name": "cookiebanner", "value": value, "url": page.url}])
+    # Set by domain/path rather than url=: Playwright would scope the cookie to
+    # the current directory, so it would stop applying once a step navigates.
+    page.context.add_cookies([{"name": "cookiebanner", "value": value, "domain": urlparse(page.url).hostname, "path": "/"}])
+    page.reload(wait_until="networkidle")
 
 
 def log_in(context: BrowserContext, base_url: str, role: str, spec: dict[str, Any], accept_terms: bool) -> None:
@@ -229,6 +233,32 @@ def totp_code(secret: str) -> str:
     return f"{code % 1_000_000:06d}"
 
 
+def secret_from_db(email: str) -> str:
+    """The account's enrolled TOTP secret, in the base32 form TOTP expects.
+
+    Imported lazily so the rest of the spec still runs against any instance
+    without a local Django install; django-otp stores the key as hex.
+    """
+    import binascii
+    from concurrent.futures import ThreadPoolExecutor
+
+    import django
+
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "governanceplatform.settings")
+    django.setup()
+    from django_otp.plugins.otp_totp.models import TOTPDevice
+
+    # Playwright's sync API drives a greenlet event loop, and Django refuses ORM
+    # calls from async context — so the query runs on a thread of its own.
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        device = pool.submit(lambda: TOTPDevice.objects.filter(user__email=email).first()).result()
+
+    if device is None:
+        raise CaptureError(f"no TOTP device enrolled for {email}")
+
+    return base64.b32encode(binascii.unhexlify(device.key)).decode()
+
+
 def run_steps(page: Page, steps: list[dict[str, Any]]) -> None:
     for step in steps:
         action = step["action"]
@@ -242,7 +272,20 @@ def run_steps(page: Page, steps: list[dict[str, Any]]) -> None:
         elif action == "press":
             page.press(step["selector"], step["key"])
         elif action == "totp":
-            page.fill(step["into"], totp_code(page.inner_text(step["selector"])))
+            # At enrolment the secret is on the page; at login it is not, so it
+            # has to come from the environment.
+            if user_var := step.get("user_env"):
+                email = os.environ.get(user_var)
+                if not email:
+                    raise CaptureError(f"step needs {user_var} in the environment")
+                secret = secret_from_db(email)
+            elif secret_var := step.get("secret_env"):
+                secret = os.environ.get(secret_var)
+                if not secret:
+                    raise CaptureError(f"step needs {secret_var} in the environment")
+            else:
+                secret = page.inner_text(step["selector"])
+            page.fill(step["into"], totp_code(secret))
         elif action == "wait_for":
             page.wait_for_selector(step["selector"])
         elif action == "wait_ms":
@@ -268,6 +311,7 @@ def capture(page: Page, shot: dict[str, Any], base_url: str, out_dir: Path, defa
         page.set_viewport_size(shot_viewport)
 
     page.goto(f"{base_url}{shot['path']}", wait_until="networkidle")
+    dismiss_cookie_banner(page)
 
     if steps := shot.get("steps"):
         run_steps(page, steps)
@@ -331,17 +375,29 @@ def main(argv: list[str] | None = None) -> int:
         try:
             for shot in shots:
                 role = shot.get("role", ANONYMOUS)
-                if role not in contexts:
+                # A shot that signs in through its own steps would leave the
+                # shared context authenticated for everything that follows.
+                throwaway = shot.get("fresh", False)
+
+                if throwaway:
+                    context = browser.new_context(viewport=viewport, locale=spec.get("locale", "en-GB"))
+                    if role != ANONYMOUS:
+                        log_in(context, base_url, role, spec, args.accept_terms)
+                elif role not in contexts:
                     context = browser.new_context(viewport=viewport, locale=spec.get("locale", "en-GB"))
                     if role != ANONYMOUS:
                         log_in(context, base_url, role, spec, args.accept_terms)
                     contexts[role] = context
+                else:
+                    context = contexts[role]
 
-                page = contexts[role].new_page()
+                page = context.new_page()
                 try:
                     target = capture(page, shot, base_url, args.out, defaults)
                 finally:
                     page.close()
+                    if throwaway:
+                        context.close()
                 print(f"captured {target.relative_to(Path.cwd())}" if target.is_relative_to(Path.cwd()) else f"captured {target}")
         finally:
             for context in contexts.values():

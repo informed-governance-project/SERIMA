@@ -40,6 +40,6 @@ As an **Operator** or **User**, this is your main page where you land whenever y
 
 Since this is your first login, there is no incident in the platform to show.
 
-.. figure:: _static/user_manual_images/UM_SER_8.png
+.. figure:: _static/login/logged_in.png
    :alt: Two-factor authentication is enabled - you logged in
-   :target: _static/user_manual_images/UM_SER_8.png
+   :target: _static/login/logged_in.png
