@@ -2,11 +2,22 @@ import django_filters
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from governanceplatform.helpers import get_sectors_grouped
+from governanceplatform.helpers import get_sectors_grouped, normalize_reference
 from governanceplatform.models import Company, Sector, User
 from incidents.forms import DropdownCheckboxSelectMultiple
 
+from .globals import REFERENCE_PREFIX
 from .models import StandardAnswer
+
+
+def group_id_matches(value: str) -> Q:
+    """Match the group id as typed and as Crockford reads it, so an id transcribed with
+    O for 0 is still found."""
+    lookup = Q(group__group_id__icontains=value)
+    normalized = normalize_reference(value, REFERENCE_PREFIX)
+    if normalized != value.upper():
+        lookup |= Q(group__group_id__icontains=normalized)
+    return lookup
 
 
 class YearChoiceFilter(django_filters.ChoiceFilter):
@@ -56,5 +67,5 @@ class StandardAnswerFilter(django_filters.FilterSet):
             | Q(submitter_company__name__icontains=value)
             | Q(year_of_submission__icontains=value)
             | Q(sectors__translations__name__icontains=value)
-            | Q(group__group_id__icontains=value)
+            | group_id_matches(value)
         ).distinct()

@@ -1,5 +1,8 @@
 from django.utils.translation import gettext_lazy as _
 
+# Marks a group id as a security objectives declaration
+REFERENCE_PREFIX = "SO_"
+
 STANDARD_ANSWER_REVIEW_STATUS = [
     ("UNDE", _("Unsubmitted")),
     ("DELIV", _("Under review")),

@@ -5,9 +5,15 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
-from governanceplatform.globals import build_crockford_token
+from governanceplatform.helpers import build_crockford_token
 
-from .globals import SO_ACTIONS_LABEL, SO_DECLARATION_COLUMNS, SO_SCORE_DISPLAY, STANDARD_ANSWER_REVIEW_STATUS
+from .globals import (
+    REFERENCE_PREFIX,
+    SO_ACTIONS_LABEL,
+    SO_DECLARATION_COLUMNS,
+    SO_SCORE_DISPLAY,
+    STANDARD_ANSWER_REVIEW_STATUS,
+)
 
 
 # Maturity level : define a matury (e.g. sophisticated)
@@ -436,7 +442,7 @@ class SecurityMeasure(TranslatableModel):
 # A group of StandardAnswer to have the versionning functionnality
 def generate_standard_answer_group_id() -> str:
     while True:
-        group_id = build_crockford_token()
+        group_id = f"{REFERENCE_PREFIX}{build_crockford_token()}"
         if not StandardAnswerGroup.objects.filter(group_id=group_id).exists():
             return group_id
 
