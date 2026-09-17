@@ -8,9 +8,14 @@ files referenced from the ``.rst`` sources, so the docs never need editing and
 from __future__ import annotations
 
 import argparse
+import base64
+import hashlib
+import hmac
 import json
 import os
+import struct
 import sys
+import time
 import tomllib
 from pathlib import Path
 from typing import Any
@@ -66,6 +71,15 @@ ANNOTATION_JS = """
     };
     box.cx = (box.left + box.right) / 2;
     box.cy = (box.top + box.bottom) / 2;
+
+    if (item.redact) {
+      // Solid block rather than `hide`, so the layout the reader sees is intact
+      // while the secret underneath never reaches the published PNG.
+      const patch = document.createElement('div');
+      patch.style.cssText =
+        `width:${rect.width}px;height:${rect.height}px;background:#9a9a9a;border:1px solid #555`;
+      place(patch, box.left, box.top);
+    }
 
     if (item.box) {
       const outline = document.createElement('div');
@@ -206,17 +220,29 @@ def log_in(context: BrowserContext, base_url: str, role: str, spec: dict[str, An
     page.close()
 
 
+def totp_code(secret: str) -> str:
+    """The six digits an authenticator app would be showing right now."""
+    key = base64.b32decode(secret.strip().replace(" ", "").upper() + "=" * (-len(secret.strip()) % 8))
+    digest = hmac.new(key, struct.pack(">Q", int(time.time()) // 30), hashlib.sha1).digest()
+    offset = digest[-1] & 0x0F
+    code = struct.unpack(">I", digest[offset : offset + 4])[0] & 0x7FFFFFFF
+    return f"{code % 1_000_000:06d}"
+
+
 def run_steps(page: Page, steps: list[dict[str, Any]]) -> None:
     for step in steps:
         action = step["action"]
         if action == "click":
             page.click(step["selector"])
         elif action == "fill":
-            page.fill(step["selector"], step["value"])
+            # ${VAR} keeps credentials in the environment rather than the spec.
+            page.fill(step["selector"], os.path.expandvars(step["value"]))
         elif action == "select":
             page.select_option(step["selector"], label=step["value"])
         elif action == "press":
             page.press(step["selector"], step["key"])
+        elif action == "totp":
+            page.fill(step["into"], totp_code(page.inner_text(step["selector"])))
         elif action == "wait_for":
             page.wait_for_selector(step["selector"])
         elif action == "wait_ms":

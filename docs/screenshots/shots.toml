@@ -25,12 +25,18 @@ hide = [
 annotation_color = "#1a5276"
 # The manual is laid out around 1440px-wide figures.
 
-[roles.operator]
-username_env = "SERIMA_SHOT_OPERATOR_USER"
-password_env = "SERIMA_SHOT_OPERATOR_PASS"
+[roles.operator_admin]
+username_env = "SERIMA_SHOT_OPERATOR_ADMIN_USER"
+password_env = "SERIMA_SHOT_OPERATOR_ADMIN_PASS"
 # Set when the account belongs to more than one company, to skip the
 # company-selection interstitial deterministically.
 # company = "Example Operator SA"
+
+[roles.operator_user]
+# An account with NO TOTP device yet — the enrolment wizard is only reachable
+# while 2FA is off. See the note under the 2FA shots below.
+username_env = "SERIMA_SHOT_OPERATOR_USER"
+password_env = "SERIMA_SHOT_OPERATOR_PASS"
 
 [roles.regulator_admin]
 username_env = "SERIMA_SHOT_REGULATOR_USER"
@@ -39,6 +45,63 @@ password_env = "SERIMA_SHOT_REGULATOR_PASS"
 [roles.platform_admin]
 username_env = "SERIMA_SHOT_PLATFORM_USER"
 password_env = "SERIMA_SHOT_PLATFORM_PASS"
+
+# --- Two-factor enrolment (docs/ui_enable_2FA.rst) --------------------------
+#
+# The wizard's "Next" is `button[type=submit]:not([name])`. A bare
+# `button[type=submit]` also matches "Back", which django-two-factor-auth
+# renders FIRST and only from the second step on — so it silently walks the
+# wizard backwards instead of forwards.
+#
+# STATEFUL. The wizard only exists while the account has no TOTP device, and
+# UM_SER_6m requires actually completing it — which creates one. Reset the
+# account between runs:
+#
+#   python manage.py shell -c "from django_otp.plugins.otp_totp.models import \
+#     TOTPDevice; TOTPDevice.objects.filter(user__email='<enroller>').delete()"
+#
+# The first three shots persist nothing, so they are safe to re-run on their
+# own; only UM_SER_6m enrols the device. UM_SER_7 shows the token prompt at
+# login, which exists only once a device is enrolled — so it has to run after
+# UM_SER_6m, in the order below.
+
+[[shots]]
+name = "login/enable_2FA_1"
+role = "operator_user"
+path = "/account/two_factor/"
+
+[[shots]]
+name = "login/enable_2FA_2"
+role = "operator_user"
+path = "/account/two_factor/setup/"
+
+[[shots]]
+name = "login/enable_2FA_3"
+role = "operator_user"
+path = "/account/two_factor/setup/"
+steps = [{ action = "click", selector = "button[type=submit]:not([name])" }]
+
+
+[[shots]]
+name = "login/enable_2FA_4"
+role = "operator_user"
+path = "/account/two_factor/setup/"
+steps = [
+  { action = "click", selector = "button[type=submit]:not([name])" },
+  { action = "totp", selector = "a[href^='otpauth:']", into = "#id_generator-token" },
+  { action = "click", selector = "button[type=submit]:not([name])" },
+]
+
+[[shots]]
+name = "login/UM_SER_7"
+path = "/account/login"
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${SERIMA_SHOT_OPERATOR_USER}" },
+  { action = "fill", selector = "#id_auth-password", value = "${SERIMA_SHOT_OPERATOR_USER}" },
+  { action = "click", selector = "button.submit_login" },
+]
+annotate = [{ selector = "#id_token-otp_token", box = true }]
 
 # --- Login page (docs/ui_login_page.rst) ------------------------------------
 #

@@ -63,7 +63,7 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | `hide` | extra selectors to hide, on top of the defaults |
 | `settle_ms` | wait longer before the capture |
 | `viewport` | `{ width, height }` just for this shot |
-| `annotate` | arrows, outlines and labels drawn over the page |
+| `annotate` | arrows, outlines, labels and redactions drawn over the page |
 
 ## Annotating a screenshot
 
@@ -81,6 +81,11 @@ annotate = [
   { selector = "a.text-muted", arrow = "top", label = "Forgotten it?" },
 ]
 ```
+
+`redact = true` covers the element with a solid block instead of marking it —
+use it for anything that must not reach a published PNG, such as the TOTP
+secret and QR code on the enrolment wizard. It keeps the layout intact, which
+`hide` would not.
 
 `selector` also accepts a list, in which case the callout covers all of the
 elements at once — that is how the two credential fields get a single outline.
