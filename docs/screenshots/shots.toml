@@ -93,15 +93,14 @@ steps = [
 ]
 
 [[shots]]
-name = "login/UM_SER_7"
+name = "login/enable_2FA_5"
 path = "/account/login"
 steps = [
   { action = "click", selector = "#with-account" },
   { action = "fill", selector = "#id_auth-username", value = "${SERIMA_SHOT_OPERATOR_USER}" },
-  { action = "fill", selector = "#id_auth-password", value = "${SERIMA_SHOT_OPERATOR_USER}" },
+  { action = "fill", selector = "#id_auth-password", value = "${SERIMA_SHOT_OPERATOR_PASS}" },
   { action = "click", selector = "button.submit_login" },
 ]
-annotate = [{ selector = "#id_token-otp_token", box = true }]
 
 # --- Login page (docs/ui_login_page.rst) ------------------------------------
 #

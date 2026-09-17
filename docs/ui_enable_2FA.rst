@@ -32,9 +32,9 @@ In case you have successfully enabled two-factor authentication, you are greeted
 Please click the grey button and log in again. Provide your email address and password and click **Log in**.
 Then, open your authenticator on your smartphone and type in the randomly generated Token and click **Log in**.
 
-.. figure:: _static/login/UM_SER_7.png
+.. figure:: _static/login/enable_2FA_5.png
    :alt: Enable two-factor authentication - token
-   :target: _static/login/UM_SER_7.png
+   :target: _static/login/enable_2FA_5.png
 
 As an **Operator** or **User**, this is your main page where you land whenever you open this application.
 
