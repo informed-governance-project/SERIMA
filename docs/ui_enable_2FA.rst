@@ -25,9 +25,9 @@ As the last step, please enter the token (a six-digit number) into the Token fie
 
 In case you have successfully enabled two-factor authentication, you are greeted with the following screen:
 
-.. figure:: _static/login/UM_SER_6m.png
+.. figure:: _static/login/enable_2FA_4.png
    :alt: Two-factor authentication has been set
-   :target: _static/login/UM_SER_6m.png
+   :target: _static/login/enable_2FA_4.png
 
 Please click the grey button and log in again. Provide your email address and password and click **Log in**.
 Then, open your authenticator on your smartphone and type in the randomly generated Token and click **Log in**.
