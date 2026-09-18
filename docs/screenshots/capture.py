@@ -164,10 +164,22 @@ def credentials(role: str, roles: dict[str, Any]) -> tuple[str, str]:
     if config is None:
         raise CaptureError(f"role {role!r} is not declared in [roles]")
 
-    user_var, password_var = config["username_env"], config["password_env"]
-    username, password = os.environ.get(user_var), os.environ.get(password_var)
+    # The environment wins, so a real account can always stand in for the
+    # throwaway one written by `manage.py screenshot_fixture --create`.
+    user_var, password_var = config.get("username_env"), config.get("password_env")
+    username = os.environ.get(user_var) if user_var else None
+    password = os.environ.get(password_var) if password_var else None
+
+    if (not username or not password) and (name := config.get("credentials_file")):
+        path = HERE / name
+        if path.exists():
+            stored = json.loads(path.read_text())
+            username, password = username or stored["username"], password or stored["password"]
+
     if not username or not password:
-        raise CaptureError(f"role {role!r} needs {user_var} and {password_var} in the environment")
+        raise CaptureError(
+            f"role {role!r} has no credentials: set {user_var} and {password_var}, or run `manage.py screenshot_fixture --create`"
+        )
 
     return username, password
 
@@ -259,14 +271,25 @@ def secret_from_db(email: str) -> str:
     return base64.b32encode(binascii.unhexlify(device.key)).decode()
 
 
-def run_steps(page: Page, steps: list[dict[str, Any]]) -> None:
+def run_steps(page: Page, steps: list[dict[str, Any]], creds: tuple[str, str] | None) -> None:
     for step in steps:
         action = step["action"]
         if action == "click":
             page.click(step["selector"])
         elif action == "fill":
-            # ${VAR} keeps credentials in the environment rather than the spec.
-            page.fill(step["selector"], os.path.expandvars(step["value"]))
+            value = step["value"]
+            # ${username}/${password} come from the shot's credentials_from role;
+            # anything else is an environment variable.
+            if creds:
+                value = value.replace("${username}", creds[0]).replace("${password}", creds[1])
+            value = os.path.expandvars(value)
+            # Typing a literal "${...}" into a form is never intended, and the
+            # resulting failure points nowhere near the missing declaration.
+            if "${" in value:
+                raise CaptureError(
+                    f"unresolved placeholder in {value!r}: the shot needs `credentials_from`, or the environment variable is unset"
+                )
+            page.fill(step["selector"], value)
         elif action == "select":
             page.select_option(step["selector"], label=step["value"])
         elif action == "press":
@@ -274,7 +297,9 @@ def run_steps(page: Page, steps: list[dict[str, Any]]) -> None:
         elif action == "totp":
             # At enrolment the secret is on the page; at login it is not, so it
             # has to come from the environment.
-            if user_var := step.get("user_env"):
+            if not step.get("user_env") and not step.get("secret_env") and not step.get("selector") and creds:
+                secret = secret_from_db(creds[0])
+            elif user_var := step.get("user_env"):
                 email = os.environ.get(user_var)
                 if not email:
                     raise CaptureError(f"step needs {user_var} in the environment")
@@ -306,7 +331,14 @@ def annotate(page: Page, items: list[dict[str, Any]], color: str) -> None:
     page.evaluate(ANNOTATION_JS, {"items": items, "color": color})
 
 
-def capture(page: Page, shot: dict[str, Any], base_url: str, out_dir: Path, defaults: dict[str, Any]) -> Path:
+def capture(
+    page: Page,
+    shot: dict[str, Any],
+    base_url: str,
+    out_dir: Path,
+    defaults: dict[str, Any],
+    creds: tuple[str, str] | None = None,
+) -> Path:
     if shot_viewport := shot.get("viewport"):
         page.set_viewport_size(shot_viewport)
 
@@ -314,7 +346,7 @@ def capture(page: Page, shot: dict[str, Any], base_url: str, out_dir: Path, defa
     dismiss_cookie_banner(page)
 
     if steps := shot.get("steps"):
-        run_steps(page, steps)
+        run_steps(page, steps, creds)
 
     hide(page, [*defaults.get("hide", []), *shot.get("hide", [])])
     page.wait_for_timeout(shot.get("settle_ms", defaults.get("settle_ms", 300)))
@@ -393,7 +425,9 @@ def main(argv: list[str] | None = None) -> int:
 
                 page = context.new_page()
                 try:
-                    target = capture(page, shot, base_url, args.out, defaults)
+                    source = shot.get("credentials_from")
+                    creds = credentials(source, spec.get("roles", {})) if source else None
+                    target = capture(page, shot, base_url, args.out, defaults, creds)
                 finally:
                     page.close()
                     if throwaway:

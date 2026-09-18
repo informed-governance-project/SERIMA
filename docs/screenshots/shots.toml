@@ -37,6 +37,9 @@ password_env = "SERIMA_SHOT_OPERATOR_ADMIN_PASS"
 # while 2FA is off. See the note under the 2FA shots below.
 username_env = "SERIMA_SHOT_OPERATOR_USER"
 password_env = "SERIMA_SHOT_OPERATOR_PASS"
+# Written by `manage.py screenshot_fixture --create`; the environment still
+# overrides it when a real account is wanted instead.
+credentials_file = ".fixture-credentials.json"
 
 [roles.regulator_admin]
 username_env = "SERIMA_SHOT_REGULATOR_USER"
@@ -95,27 +98,34 @@ steps = [
 [[shots]]
 name = "login/enable_2FA_5"
 path = "/account/login"
+# Types the credentials itself, and signs in — so it borrows them from the role
+# and needs a context it cannot leak into the other anonymous shots.
+credentials_from = "operator_user"
+fresh = true
 steps = [
   { action = "click", selector = "#with-account" },
-  { action = "fill", selector = "#id_auth-username", value = "${SERIMA_SHOT_OPERATOR_USER}" },
-  { action = "fill", selector = "#id_auth-password", value = "${SERIMA_SHOT_OPERATOR_PASS}" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
   { action = "click", selector = "button.submit_login" },
 ]
 
 [[shots]]
 name = "login/logged_in"
 path = "/account/login"
+# Types the credentials itself rather than being logged in beforehand, so it
+# borrows them from the role instead of the environment.
+credentials_from = "operator_user"
 # Signs in through its own steps, so it needs a context it cannot leak into the
 # other anonymous shots.
 fresh = true
 steps = [
   { action = "click", selector = "#with-account" },
-  { action = "fill", selector = "#id_auth-username", value = "${SERIMA_SHOT_OPERATOR_USER}" },
-  { action = "fill", selector = "#id_auth-password", value = "${SERIMA_SHOT_OPERATOR_PASS}" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
   { action = "click", selector = "button.btn-primary.submit_login" },
   # The login token step never shows the secret, so it is read from the
   # enrolled device instead — nothing to export by hand.
-  { action = "totp", user_env = "SERIMA_SHOT_OPERATOR_USER", into = "#id_token-otp_token" },
+  { action = "totp", into = "#id_token-otp_token" },
   # "Use backup token" also carries .submit_login, so name the primary one.
   { action = "click", selector = "button.btn-primary.submit_login" },
 ]
