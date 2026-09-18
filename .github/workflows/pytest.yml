@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: informed-governance-project/default-theme
-          ref: reporting
+          ref: dev
           path: default-theme
 
       - name: Set up Python
