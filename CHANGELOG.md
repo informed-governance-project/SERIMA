@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Security Objectives, a new module: an operator declares how it meets the security objectives of a framework its regulator publishes. A framework groups its objectives into domains, each objective carries the security measures that implement it, and the operator answers measure by measure — marking it implemented or not and writing the justification behind the answer. A declaration is identified by a code prefixed `SO_`, and a new one can be started empty, copied from a declaration of an earlier year, or imported from an Excel workbook
+- A security objectives declaration is reviewed by the regulator: the operator submits it, the regulator passes it or returns it for revision, and the decision is sent to the operator by email. Review comments are left on the declaration as a whole and on individual security measures, the declaration is downloadable as a PDF at any point, and every consultation is recorded in an access log
+- Reporting, a new module: a regulator builds a report project over a framework, a set of sectors and a range of years, imports the risk analyses its operators produce with MONARC as JSON, and generates one report per operator. A report sets the operator against the average and the ranking of its sector, charts how its risks and its maturity moved from the base year, and lists its risks by treatment — reduced, denied, accepted, shared or untreated — with a configurable threshold marking a risk as high and a Top 3, 5 or 10 ranking
+- A report is laid out from a DOCX template the regulator uploads with its own colour scheme, and is produced as DOCX or PDF in each of the languages chosen for the project. Observations and the recommendations attached to them are written once and reused across projects. Generation runs as a background task whose progress is followed from the project dashboard and which can be cancelled while it runs; every report produced is kept for download
+- Both modules are switched on per regulator: a platform administrator grants the Security Objective and Reporting functionalities, and until then neither the pages nor their menu entries are reachable
+
+
+## [0.5.18] - 2026-09-17
+
+### Added
+
 - Operator administrators manage the accounts of their own company from the Users list: an "Account actions" column offers Approve and Reject for an account whose link to the company is still a suggestion, and Set/Unset Administrator and Reset 2FA token for accounts already approved. Every button asks for confirmation first and states what the action implies — approving an incident-notification account, for instance, associates it with the company along with the incidents it has already notified (#861)
 - A suggestion waiting to be resolved is announced by a banner above the Users list and the row is highlighted; the account's own page carries the same Approve/Reject prompt (#861)
 - Users list columns for "2FA Activated", "Is Administrator" and "Approved" (#861)
@@ -25,7 +36,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - An incident reference is now a short code such as `NI_K7M2XQ4P` instead of a number counted per operator, sector and year. The NI_ prefix marks it as an incident notification where one is quoted alongside another kind of reference. The alphabet omits I, L, O and U so a reference survives being read aloud or transcribed from a PDF, and the incident search accepts a reference typed with those letters in place of 1 and 0. References issued before this release keep the form they were issued under, and searching by an operator acronym or sector still finds their incidents through the operator and sector fields
 - The incident reference is read-only for regulators. It is assigned when the incident is notified and no longer needs correcting by hand
-- A security objectives declaration group is identified the same way, by an eight-character code instead of a number counted per operator, framework, sector and year. Group ids issued before this release are unchanged
 - A question can be both mandatory and conditionally displayed. Its mandatory flag is enforced only once one of its trigger answers is selected; while the trigger is unselected the question stays hidden and the report is submitted without it
 - An account whose link to the company is still awaiting approval is read-only for operator administrators: Approve and Reject are the only actions offered, and editing or deleting it is withheld until one of them is chosen (#861)
 - Deleting a user as an operator administrator now asks for confirmation in a dialog on the page instead of on a separate confirmation page (#861)
@@ -39,7 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Two incidents could be given the same reference. The number came from a count of the operator's incidents for the year, so deleting an incident, moving a notification date to another year, or two operators notifying at the same moment all handed the same number out twice, and an incident notified for an entity not yet registered was always numbered 0001. References are now drawn at random and uniqueness is enforced by the database. Existing duplicates are freed by a migration: the earliest incident of each pair keeps the reference its operator already received and the later ones continue the series
-- Creating a security objectives declaration no longer fails when another declaration is created at the same moment, when the operator is not set, or when the framework label has no translation in the language of the session. The group id was built from a count of the operator's existing groups and from the translated label of the framework, so two declarations could be handed the same id and the save was then refused by the database
 - A question conditioned on an answer of a multiple-choice question is displayed again when that answer is selected. django-bootstrap5 26.3 rewrote the template it renders multiple-choice widgets with and stopped emitting the attributes of the widget itself, which is where the map naming the question each answer opens was published, so the map no longer reached the page and the question stayed hidden whatever was selected. The mark now sits on the answer input, and such a widget is rendered from a template held in this project, so the markup of a later release cannot drop it again. Single-option questions were unaffected
 - A mandatory conditional question no longer blocks the notification form. The question is rendered hidden until its trigger answer is selected, and a hidden control carrying the HTML5 `required` attribute makes a browser refuse the submit without reporting anything, while the server-side "This field is required" error was rendered inside the hidden wrapper — leaving the Next button doing nothing with no message on screen. The combination was rejected in the admin but a sector regulation configuration import could still create it
 - Company selection now returns the user to the page they originally asked for instead of always landing on the home page
@@ -733,6 +742,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
 [0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17
 [0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
 [0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15
