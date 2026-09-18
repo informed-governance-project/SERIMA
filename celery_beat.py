@@ -30,4 +30,8 @@ app.conf.beat_schedule = {
         "task": "clean_incident_user",
         "schedule": crontab(hour=23, minute=00),
     },
+    "so_declarations_cleaning": {
+        "task": "so_declarations_cleaning",
+        "schedule": crontab(hour=23, minute=30),
+    },
 }

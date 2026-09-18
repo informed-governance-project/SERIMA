@@ -8,9 +8,9 @@ from django.db.models import Count
 # remove the parent with child in the affected sectors
 def delete_parent_with_child(apps, schema_editor):
     Sector = apps.get_model("governanceplatform", "Sector")
-    sectors = Sector.objects.annotate(
-                child_count=Count('children')
-            ).filter(parent=None, child_count__gt=0)
+    sectors = Sector.objects.annotate(child_count=Count("children")).filter(
+        parent=None, child_count__gt=0
+    )
     RegulatorUser = apps.get_model("governanceplatform", "RegulatorUser")
     CompanyUser = apps.get_model("governanceplatform", "CompanyUSer")
     Impact = apps.get_model("incidents", "Impact")
@@ -42,7 +42,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ("governanceplatform", "0036_passworduserhistory"),
-        ("incidents", "0004_alter_impact_options_alter_impacttranslation_options_and_more"),
+        (
+            "incidents",
+            "0004_alter_impact_options_alter_impacttranslation_options_and_more",
+        ),
     ]
 
     operations = [
@@ -60,5 +63,4 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.RunPython(delete_parent_with_child),
-
     ]

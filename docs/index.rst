@@ -56,7 +56,6 @@ Incident Notification Module
    ui_administrator
    ui_platformadmin
 
-
 Presentation
 ------------
 

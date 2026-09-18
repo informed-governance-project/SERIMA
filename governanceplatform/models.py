@@ -190,18 +190,6 @@ class Company(models.Model):
     def __str__(self):
         return self.name
 
-    def security_objective_exists(self, year=None, sector=None):
-        if not (year and sector):
-            return False
-
-        return self.standardanswer_set.filter(year_of_submission=year, sectors__in=[sector.id], status="PASS").exists()
-
-    def risk_analysis_exists(self, year=None, sector=None):
-        if not (year and sector):
-            return False
-
-        return self.companyreporting_set.filter(year=year, sector=sector, servicestat__isnull=False).exists()
-
     class Meta:
         verbose_name = _("Operator")
         verbose_name_plural = _("Operators")

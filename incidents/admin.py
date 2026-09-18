@@ -628,7 +628,7 @@ class ImpactRegulationListFilter(SimpleListFilter):
 
 
 @admin.register(Impact, site=admin_site)
-class ImpactAdmin(CustomTranslatableAdmin):
+class ImpactAdmin(PermissionMixin, CustomTranslatableAdmin):
     list_display = [
         "get_regulations",
         "get_sector_name",
@@ -723,6 +723,10 @@ class ImpactAdmin(CustomTranslatableAdmin):
         if db_field.name == "sectors":
             # exclude parent with children from the list
             kwargs["queryset"] = Sector.objects.annotate(child_count=Count("children")).exclude(parent=None, child_count__gt=0)
+
+        if db_field.name == "regulations":
+            user = request.user
+            kwargs["queryset"] = Regulation.objects.filter(regulators__in=user.regulators.all())
 
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 

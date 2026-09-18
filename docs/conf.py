@@ -17,7 +17,7 @@ os.environ["DJANGO_SETTINGS_MODULE"] = "governanceplatform.settings"
 os.environ["READTHEDOCS"] = "True"
 django.setup()
 
-project = "NIS Incident Notification Platform"
+project = "SERIMA Governance Platform"
 copyright = "2023-2026 Luxembourg House of Cybersecurity"
 author = "NC3 Team <info@nc3.lu>"
 
@@ -80,7 +80,7 @@ latex_engine = "pdflatex"
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "SERIMA.tex", "NIS Incident Notification Platform", "NC3-LU", "howto"),
+    ("index", "serima.tex", "SERIMA Governance Platform", "NC3-LU", "howto"),
 ]
 
 latex_show_urls = True

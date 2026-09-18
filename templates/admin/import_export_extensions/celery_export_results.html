@@ -1,0 +1,23 @@
+{% extends "admin/import_export_extensions/celery_export_results.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block export_results %}
+  {% if export_job.export_status == 'EXPORT_ERROR' %}
+    <h2>{% trans "There are some errors during data exporting:" %}</h2>
+    <div class="error">
+      {{ export_job.error_message }}
+      {% if debug %}
+        <div class="traceback">{{ export_job.traceback|linebreaks }}</div>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if export_job.export_status == 'EXPORTED' %}
+    <h2>{% trans "You can download exported data with following link" %}</h2>
+    <a href="{% url 'admin:exportjob_download_and_delete' export_job.pk %}"
+        id="data_file"
+        onclick="setTimeout(function(){ window.location='{% url 'admin:index' %}'; }, 2000);">
+        {% trans "Download export data" %}
+    </a>
+    {% endif %}
+{% endblock %}

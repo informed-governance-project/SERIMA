@@ -25,7 +25,10 @@ ACTION_FLAG_CHOICES = {
 }
 
 # Functionalities list
-FUNCTIONALITIES = {"securityobjectives": _("Security objective")}
+FUNCTIONALITIES = {
+    "securityobjectives": _("Security Objective"),
+    "reporting": _("Reporting"),
+}
 
 # Crockford base32 omits I, L, O and U so a reference survives being read aloud or
 # transcribed from a PDF without being confused for 1 or 0.

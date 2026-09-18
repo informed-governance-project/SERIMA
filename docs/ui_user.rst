@@ -294,3 +294,11 @@ As you can see, security objectives can have 3 states:
 - **Blank** not filled
 
 You have to tick the "measure in place" and put a justification to go to the green, you can switch between the different SO by clicking on the number or using the blue arrow at the bottom of the page.
+
+
+Report generation
+---------------------
+
+This feature is only available to regulators authorized by the platform administrator.
+
+.. include:: report_generation.rst

@@ -100,3 +100,19 @@ If incidents should be excluded, the tag exclude can be used in the JSON
 
 
 In the case above if we link to the regulation NIS2 we receive the incident from PRIVATE only and PRIVATE which are not CRITICAL_INFRA (e.g. NIS2 AND PRIVATE AND NOT CRITICAL_INFRA).
+
+
+Definition of Functionalities
+-----------------------------------
+
+The platform administrator can define for regulators which functionalities can be accessed. For that he has to create functionalities.
+
+.. figure:: _static/ui_platform_admin_functionnalities.png
+   :alt: Functionnalities.
+   :target: _static/ui_platform_admin_functionnalities.png
+
+   Functionnalities.
+
+The type is the module developed (e.g., reporting, security objective, etc.) The name is a field which can be translated, type cannot be translated.
+
+Once the functionality is created, the regulator can be edited and the functionalities allowed can be added.

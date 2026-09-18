@@ -1,4 +1,5 @@
 import logging
+import os
 import secrets
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
@@ -29,9 +30,6 @@ if TYPE_CHECKING:
     from django.utils.functional import Promise
 
     from .models import Company, Sector, User
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -197,9 +195,11 @@ def translated_queryset(
 ) -> QuerySet:
     default_lang = default_language
     lang = language
-    annotations = {}
+
     if translated_fields is None:
         translated_fields = []
+
+    annotations = {}
 
     for f in translated_fields:
         # Annotate value with the requested lang and default one
@@ -437,6 +437,7 @@ def sort_queryset_by_field(
 
     field = config_field["field"]
     is_string = config_field["type"] == "string"
+    is_boolean = config_field["type"] == "boolean"
 
     if "__translations__" in field:
         annotated_name = f"sort_{field.replace('__', '_')}"
@@ -452,6 +453,8 @@ def sort_queryset_by_field(
     if is_string:
         expr = Lower(field)
         ordering.append(expr.desc() if sort_direction == "desc" else expr.asc())
+    elif is_boolean:
+        ordering.append(field if sort_direction == "desc" else f"-{field}")
     else:
         ordering.append(f"-{field}" if sort_direction == "desc" else field)
 
@@ -459,6 +462,46 @@ def sort_queryset_by_field(
         ordering.append(f"-{default_sort_field}")
 
     return qs.order_by(*ordering)
+
+
+def delete_file_and_parents(file_field, label: str) -> None:
+    """
+    Delete a FileField file from storage and clean up empty parent directories
+    up to (but not including) the storage root.
+    """
+    if not file_field:
+        return
+    try:
+        # Resolve the absolute path before deleting the file
+        storage = file_field.storage
+        abs_path = os.path.realpath(storage.path(file_field.name))
+
+        # Delete the file itself
+        file_field.delete(save=False)
+
+        # Walk up and remove empty directories until we hit the storage root
+        storage_root = os.path.abspath(storage.location)
+        current_dir = os.path.dirname(abs_path)
+
+        while True:
+            current_dir = os.path.realpath(current_dir)
+
+            # Guard 1: never climb above storage root
+            if not current_dir.startswith(storage_root + os.sep):
+                break
+
+            # Guard 2: universal filesystem root backstop
+            if current_dir == os.path.dirname(current_dir):
+                break
+            try:
+                os.rmdir(current_dir)  # only removes if empty
+                current_dir = os.path.dirname(current_dir)
+            except OSError:
+                # Directory not empty or already gone — stop climbing
+                break
+
+    except Exception:
+        logger.exception("Failed to delete %s: %s", label, file_field.name)
 
 
 def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
