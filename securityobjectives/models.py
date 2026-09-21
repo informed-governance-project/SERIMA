@@ -524,6 +524,10 @@ class StandardAnswer(models.Model):
     review_comment = models.TextField(blank=True, default=None, null=True, verbose_name=_("Review comment"))
     group = models.ForeignKey(StandardAnswerGroup, on_delete=models.CASCADE, verbose_name=_("Group"))
 
+    @property
+    def has_failed_objectives(self) -> bool:
+        return SecurityObjectiveStatus.objects.filter(standard_answer=self, status="FAIL").exists()
+
     def get_root_sectors(self):
         return list({sector.parent for sector in self.sectors.all()})
 
