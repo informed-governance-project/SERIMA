@@ -1120,6 +1120,7 @@ class FormWizardView(SessionWizardView):
                 Q(sectors__in=sectors_id) | Q(sectors__isnull=True),
                 regulator__in=regulators_id,
                 regulation__in=regulations_id,
+                active=True,
             )
             .order_by()
             .distinct()
