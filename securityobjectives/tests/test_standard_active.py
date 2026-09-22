@@ -155,14 +155,18 @@ def test_a_new_version_is_still_created_on_a_deactivated_framework(operator_clie
 
 
 @pytest.mark.django_db()
-def test_report_project_creation_drops_a_deactivated_framework(reporting_client, standard):
-    url = reverse("create_report_project")
-    assert str(standard) in reporting_client.get(url).content.decode()
+def test_report_project_creation_still_offers_a_deactivated_framework(reporting_client, standard):
+    """Reporting is historic analysis, so retiring a framework does not withdraw it here.
 
+    Deactivation stops new declarations being made against a framework; a report is
+    built over the declarations already made, which a retired framework has the most of.
+    """
     standard.active = False
     standard.save()
 
-    assert str(standard) not in reporting_client.get(url).content.decode()
+    content = reporting_client.get(reverse("create_report_project")).content.decode()
+
+    assert str(standard) in content
 
 
 @pytest.mark.django_db()
