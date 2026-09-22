@@ -246,9 +246,10 @@ def get_so_data(cleaned_data):
     company_so_by_year = defaultdict(dict)
     company_so_by_domain = defaultdict(dict)
     company_so_by_priority = defaultdict(dict)
-    radar_chart_data_by_domain = defaultdict()
-    radar_chart_data_by_year = defaultdict()
     sector_avg_translation = TRANSLATIONS_CONTEXT["sector_average"]
+    # Stays empty when no year in the range has answers; build_dict_scores then has no keys
+    # to fall back on and leaves company_so_by_priority empty, which is the correct result.
+    security_objective_by_priority_queryset = SecurityObjectiveStatus.objects.none()
 
     for year in years:
         last_answers = get_latest_answers(company, sector, year)
