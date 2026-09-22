@@ -22,7 +22,7 @@ copyright = "2023-2026 Luxembourg House of Cybersecurity"
 author = "NC3 Team <info@nc3.lu>"
 
 # The full version, including alpha/beta/rc tags
-release = "0.5.17"
+release = "0.5.18"
 
 
 # -- General configuration ---------------------------------------------------
@@ -90,7 +90,7 @@ latex_engine = "pdflatex"
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "SERIMA.tex", "NIS Incident Notification Platform", "NC3-LU", "howto"),
+    ("index", "serima.tex", "SERIMA Governance Platform", "NC3-LU", "howto"),
 ]
 
 latex_show_urls = "footnote"

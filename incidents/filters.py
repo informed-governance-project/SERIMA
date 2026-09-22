@@ -2,11 +2,11 @@ import django_filters
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from governanceplatform.globals import normalize_crockford
-from governanceplatform.helpers import get_sectors_grouped
+from governanceplatform.helpers import get_sectors_grouped, normalize_reference
 from governanceplatform.models import Sector
 
 from .forms import DropdownCheckboxSelectMultiple
+from .globals import REFERENCE_PREFIX
 from .models import Incident, SectorRegulation
 
 
@@ -20,7 +20,7 @@ def reference_matches(value: str) -> Q:
     transcribed with I for 1 or O for 0 is still found without breaking the search on
     the legacy references that contain those letters."""
     lookup = Q(incident_id__icontains=value)
-    normalized = normalize_crockford(value)
+    normalized = normalize_reference(value, REFERENCE_PREFIX)
     if normalized != value.upper():
         lookup |= Q(incident_id__icontains=normalized)
     return lookup

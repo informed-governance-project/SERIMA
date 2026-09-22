@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
-from governanceplatform.globals import build_crockford_token
+from governanceplatform.helpers import build_crockford_token
 from governanceplatform.settings import TIME_ZONE
 
 from .globals import (
@@ -17,6 +17,7 @@ from .globals import (
     INCIDENT_EMAIL_TRIGGER_EVENT,
     INCIDENT_STATUS,
     QUESTION_TYPES,
+    REFERENCE_PREFIX,
     REVIEW_STATUS,
     SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT,
     WORKFLOW_REVIEW_STATUS,
@@ -25,7 +26,7 @@ from .globals import (
 
 def generate_incident_reference() -> str:
     while True:
-        reference = build_crockford_token()
+        reference = f"{REFERENCE_PREFIX}{build_crockford_token()}"
         if not Incident.objects.filter(incident_id=reference).exists():
             return reference
 

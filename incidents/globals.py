@@ -5,6 +5,9 @@ try:
 except ModuleNotFoundError:
     regional_area = []
 
+# Marks a reference as an incident notification
+REFERENCE_PREFIX = "NI_"
+
 
 QUESTION_TYPES = [
     ("FREETEXT", "Freetext"),

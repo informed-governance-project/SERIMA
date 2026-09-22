@@ -22,7 +22,7 @@ companies_data = [
 ]
 
 functionalities_data = [
-    {"name": "Reporting", "type": "Reporting"},
+    {"name": "Reporting", "type": "reporting"},
     {"name": "so", "type": "securityobjectives"},
 ]
 

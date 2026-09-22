@@ -1,4 +1,5 @@
 import logging
+import os
 import secrets
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
@@ -11,11 +12,16 @@ from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
+from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
+
+from .globals import CROCKFORD_ALPHABET, CROCKFORD_INPUT_TRANSLATION, REFERENCE_TOKEN_LENGTH
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -27,9 +33,6 @@ if TYPE_CHECKING:
     from django.utils.functional import Promise
 
     from .models import Company, Sector, User
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -195,9 +198,11 @@ def translated_queryset(
 ) -> QuerySet:
     default_lang = default_language
     lang = language
-    annotations = {}
+
     if translated_fields is None:
         translated_fields = []
+
+    annotations = {}
 
     for f in translated_fields:
         # Annotate value with the requested lang and default one
@@ -435,6 +440,7 @@ def sort_queryset_by_field(
 
     field = config_field["field"]
     is_string = config_field["type"] == "string"
+    is_boolean = config_field["type"] == "boolean"
 
     if "__translations__" in field:
         annotated_name = f"sort_{field.replace('__', '_')}"
@@ -450,6 +456,8 @@ def sort_queryset_by_field(
     if is_string:
         expr = Lower(field)
         ordering.append(expr.desc() if sort_direction == "desc" else expr.asc())
+    elif is_boolean:
+        ordering.append(field if sort_direction == "desc" else f"-{field}")
     else:
         ordering.append(f"-{field}" if sort_direction == "desc" else field)
 
@@ -457,3 +465,73 @@ def sort_queryset_by_field(
         ordering.append(f"-{default_sort_field}")
 
     return qs.order_by(*ordering)
+
+
+def delete_file_and_parents(file_field, label: str) -> None:
+    """
+    Delete a FileField file from storage and clean up empty parent directories
+    up to (but not including) the storage root.
+    """
+    if not file_field:
+        return
+    try:
+        # Resolve the absolute path before deleting the file
+        storage = file_field.storage
+        abs_path = os.path.realpath(storage.path(file_field.name))
+
+        # Delete the file itself
+        file_field.delete(save=False)
+
+        # Walk up and remove empty directories until we hit the storage root
+        storage_root = os.path.abspath(storage.location)
+        current_dir = os.path.dirname(abs_path)
+
+        while True:
+            current_dir = os.path.realpath(current_dir)
+
+            # Guard 1: never climb above storage root
+            if not current_dir.startswith(storage_root + os.sep):
+                break
+
+            # Guard 2: universal filesystem root backstop
+            if current_dir == os.path.dirname(current_dir):
+                break
+            try:
+                os.rmdir(current_dir)  # only removes if empty
+                current_dir = os.path.dirname(current_dir)
+            except OSError:
+                # Directory not empty or already gone — stop climbing
+                break
+
+    except Exception:
+        logger.exception("Failed to delete %s: %s", label, file_field.name)
+
+
+def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
+    return "".join(secrets.choice(CROCKFORD_ALPHABET) for _ in range(length))
+
+
+def normalize_crockford(value: str) -> str:
+    """Map the characters Crockford excludes onto the ones they are mistaken for."""
+    return value.upper().translate(CROCKFORD_INPUT_TRANSLATION)
+
+
+def normalize_reference(value: str, prefix: str) -> str:
+    """Read the value the way Crockford intends, but leave the prefix alone: NI_ carries
+    an I and SO_ an O, and normalising those would stop the reference matching."""
+    upper = value.upper()
+    if upper.startswith(prefix):
+        return prefix + normalize_crockford(upper[len(prefix) :])
+    return normalize_crockford(upper)
+
+
+def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpResponseRedirect:
+    """Send the user back where they came from, or to the `fallback` URL name.
+
+    The Referer header is set by the client, so redirecting to it unchecked lets a crafted
+    link bounce an authenticated user onto an attacker's site with our styling and session.
+    """
+    referer = request.headers.get("referer", "")
+    if url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return HttpResponseRedirect(referer)
+    return HttpResponseRedirect(reverse(fallback))

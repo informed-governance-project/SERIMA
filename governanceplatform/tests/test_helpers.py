@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, Group
-from django.test import override_settings
+from django.test import RequestFactory, override_settings
+from django.urls import reverse
 
 from governanceplatform import helpers
 from governanceplatform.models import User
@@ -222,3 +223,57 @@ def test_sanitize_html_removes_scripts_and_unsafe_styles():
     sanitized = helpers.sanitize_html(html)
 
     assert sanitized == '<p style="color: red;">Safe</p>alert(1)'
+
+
+@pytest.fixture
+def referer_request():
+    """Build a request carrying the given Referer header, as a browser would send it."""
+    factory = RequestFactory()
+
+    def _build(referer=None):
+        headers = {"HTTP_REFERER": referer} if referer is not None else {}
+        return factory.get("/", **headers)
+
+    return _build
+
+
+def test_safe_redirect_to_referer_follows_relative_referer(referer_request):
+    """A same-site Referer sends the user back to the page they came from."""
+    response = helpers.safe_redirect_to_referer(referer_request("/securityobjectives/"), "reporting")
+
+    assert response.url == "/securityobjectives/"
+
+
+def test_safe_redirect_to_referer_follows_referer_on_the_request_host(referer_request):
+    """An absolute Referer on our own host is still our own page."""
+    response = helpers.safe_redirect_to_referer(referer_request("http://testserver/reporting/"), "reporting")
+
+    assert response.url == "http://testserver/reporting/"
+
+
+def test_safe_redirect_to_referer_rejects_external_host(referer_request):
+    """A Referer pointing off-site must not be turned into a redirect."""
+    response = helpers.safe_redirect_to_referer(referer_request("https://evil.example/phish"), "reporting")
+
+    assert response.url == reverse("reporting")
+
+
+def test_safe_redirect_to_referer_rejects_protocol_relative_url(referer_request):
+    """`//host` is an absolute URL to another host, not a path on ours."""
+    response = helpers.safe_redirect_to_referer(referer_request("//evil.example/phish"), "reporting")
+
+    assert response.url == reverse("reporting")
+
+
+def test_safe_redirect_to_referer_rejects_non_http_scheme(referer_request):
+    """A `javascript:` Referer would execute in the user's session if followed."""
+    response = helpers.safe_redirect_to_referer(referer_request("javascript:alert(1)"), "reporting")
+
+    assert response.url == reverse("reporting")
+
+
+def test_safe_redirect_to_referer_falls_back_without_referer(referer_request):
+    """Browsers may strip the Referer entirely; the view must still land somewhere."""
+    response = helpers.safe_redirect_to_referer(referer_request(), "securityobjectives")
+
+    assert response.url == reverse("securityobjectives")

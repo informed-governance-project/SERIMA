@@ -85,6 +85,12 @@ try:
     except AttributeError:
         INCIDENT_RETENTION_TIME_IN_DAY = 1825
     try:
+        SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY = config.SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY
+    except AttributeError:
+        SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY = 1825
+
+    # TERMS OF USE
+    try:
         TERMS_ACCEPTANCE_TIME_IN_DAYS = config.TERMS_ACCEPTANCE_TIME_IN_DAYS
     except AttributeError:
         TERMS_ACCEPTANCE_TIME_IN_DAYS = 365
@@ -133,6 +139,8 @@ INSTALLED_APPS = [
     "django_extensions",
     "governanceplatform",
     "incidents",
+    "securityobjectives",
+    "reporting",
     "drf_spectacular",
     "drf_spectacular_sidecar",  # required for Django collectstatic discovery
     "corsheaders",
@@ -142,12 +150,14 @@ INSTALLED_APPS = [
     "django_otp.plugins.otp_static",
     "two_factor",
     "import_export",
+    "import_export_extensions",
     "parler",
     "phonenumber_field",
     "django_filters",
     "cookiebanner",
     "health_check",
     "captcha",
+    "colorfield",
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -525,6 +535,9 @@ except AttributeError:
     EMAIL_FOR_CONTACT = ""
 
 # CELERY configuration
+CELERY_TASK_TRACK_STARTED = True
+CELERY_RESULT_EXTENDED = True
+
 try:
     CELERY_BROKER_URL = config.CELERY_BROKER_URL
     CELERY_RESULT_BACKEND = config.CELERY_RESULT_BACKEND
@@ -539,7 +552,15 @@ except AttributeError:
     CELERY_ACCEPT_CONTENT = ["json"]
     CELERY_TASK_SERIALIZER = "json"
 
+try:
+    KALEIDO_CONCURRENCY_PER_WORKER = config.KALEIDO_CONCURRENCY_PER_WORKER
+except AttributeError:
+    KALEIDO_CONCURRENCY_PER_WORKER = 1
+
 # Paths for deliveries
+# Deliberately not MEDIA_ROOT: this holds generated reports and admin exports of
+# regulated-entity data, reachable only through the permission-checked download views,
+# and must never be statically served.
 try:
     PATH_FOR_REPORTING_PDF = config.PATH_FOR_REPORTING_PDF
 except AttributeError:
@@ -707,3 +728,25 @@ try:
     REFERRER_POLICY = config.REFERRER_POLICY
 except AttributeError:
     REFERRER_POLICY = "strict-origin-when-cross-origin"
+
+# import export celery
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000000000
+
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    # import export extensions storage for export and import in admin
+    "django_import_export_extensions": {
+        "BACKEND": "django.core.files.storage.filesystem.FileSystemStorage",
+        "OPTIONS": {
+            "location": PATH_FOR_REPORTING_PDF,
+            # Without this the storage falls back to MEDIA_URL and publishes the absolute
+            # server path in the admin. Nothing routes /media/, so the link stays inert.
+            "base_url": "/media/",
+        },
+    },
+}

@@ -6,7 +6,7 @@ from .helpers import can_change_or_delete_obj, filter_languages_not_translated
 
 
 class TranslationUpdateMixin:
-    def after_save_instance(self, instance, using_transactions, dry_run):
+    def after_save_instance(self, instance, row, **kwargs):
         fields = instance._parler_meta.get_all_fields()
         defaults = {}
         for field in fields:
@@ -52,6 +52,20 @@ class PermissionMixin:
             form = filter_languages_not_translated(form)
         return form
 
+    def delete_queryset(self, request, queryset):
+        all_deleted = True
+        for obj in queryset:
+            if not can_change_or_delete_obj(request, obj):
+                queryset = queryset.exclude(id=obj.id)
+                all_deleted = False
+        if not all_deleted:
+            messages.add_message(
+                request,
+                messages.WARNING,
+                "Some objects haven't been deleted because they are in used or you are not the owner",
+            )
+        super().delete_queryset(request, queryset)
+
 
 class ShowReminderForTranslationsMixin:
     reminder_message = _("Save your changes before you leave the tab of the respective language.")
@@ -71,3 +85,16 @@ class ShowReminderForTranslationsMixin:
         if request.method == "GET" and self.has_add_permission(request):
             self._add_reminder_message(request)
         return super().add_view(request, form_url, extra_context)
+
+
+class FunctionalityMixin:
+    def has_module_permission(self, request):
+        user = request.user
+
+        if not user.regulators.exists():
+            return super().has_module_permission(request)
+
+        regulator = user.regulators.first()
+        allowed = regulator.functionalities.values_list("type", flat=True)
+
+        return self.model._meta.app_label in allowed

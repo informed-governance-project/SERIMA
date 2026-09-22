@@ -25,19 +25,6 @@ def is_exempt_from_interstitial(request, extra_url_names=()) -> bool:
     return request.path in [reverse(name) for name in names]
 
 
-def is_user_verified(user):
-    """Return True if the user has passed OTP verification.
-
-    In DEBUG mode, verification is bypassed so developers without an OTP
-    device can still access the application. In production, delegates to
-    django-otp's is_verified() which is added to the user object by
-    OTPMiddleware.
-    """
-    if settings.DEBUG:
-        return True
-    return user.is_verified()
-
-
 class SessionExpiryMiddleware:
     """Middleware to check if the session has expired."""
 
@@ -109,7 +96,7 @@ class RestrictViewsMiddleware:
                 user.is_verified = lambda: True
 
             if (
-                not is_user_verified(user)
+                not user.is_verified()
                 and not request.path == reverse("two_factor:profile")
                 and not request.path == reverse("two_factor:setup")
                 and not request.path == reverse("two_factor:qr")
@@ -118,12 +105,19 @@ class RestrictViewsMiddleware:
                 return redirect("two_factor:profile")
 
             if user_in_group(user, "PlatformAdmin"):
-                if request.path == reverse("index") or request.path.startswith("/incidents/"):
+                if (
+                    request.path == reverse("index")
+                    or request.path.startswith("/incidents/")
+                    or request.path.startswith("/securityobjectives/")
+                    or request.path.startswith("/reporting/")
+                ):
                     return redirect("admin:index")
 
             if user_in_group(user, "IncidentUser"):
                 if (
-                    request.path.startswith("/incidents/incident/")
+                    request.path.startswith("/securityobjectives/")
+                    or request.path.startswith("/reporting/")
+                    or request.path.startswith("/incidents/incident/")
                     or request.path == reverse("regulator_incidents")
                     or request.path == reverse("export_incidents")
                 ):
@@ -134,6 +128,9 @@ class RestrictViewsMiddleware:
                     request.path == reverse("declaration")
                     or request.path.startswith("/incidents/delete/")
                     or request.path == reverse("create_workflow")
+                    or request.path.startswith("/securityobjectives/submit/")
+                    or request.path.startswith("/securityobjectives/copy/")
+                    or request.path == reverse("create_so_declaration")
                 ):
                     raise Http404()
 
@@ -145,6 +142,7 @@ class RestrictViewsMiddleware:
                     or request.path.startswith("/incidents/incident/")
                     or request.path == reverse("create_workflow")
                     or request.path == reverse("edit_workflow")
+                    or request.path.startswith("/securityobjectives/")
                 ):
                     raise Http404()
 
@@ -152,6 +150,8 @@ class RestrictViewsMiddleware:
                 if (
                     request.path.startswith("/incidents/incident/")
                     or request.path == reverse("regulator_incidents")
+                    or request.path.startswith("/reporting/")
+                    or request.path == reverse("import_so_declaration")
                     or request.path == reverse("export_incidents")
                 ):
                     raise Http404()
@@ -167,7 +167,7 @@ class TermsAcceptanceMiddleware:
     def __call__(self, request):
         # Only check for authenticated users
         user = request.user
-        if user.is_authenticated and is_user_verified(user):
+        if user.is_authenticated and user.is_verified():
             # let the user logout and read terms
             if is_exempt_from_interstitial(request, ("terms",)):
                 return self.get_response(request)
@@ -191,22 +191,46 @@ class CheckFunctionalityAccessMiddleware:
 
     def __call__(self, request):
         user = request.user
-        if user.is_authenticated:
-            functionalities_types = Functionality.objects.filter(regulator__isnull=False).values_list("type", flat=True)
+        if not user.is_authenticated:
+            return self.get_response(request)
 
-            functionality_path = resolve(request.path).route.split("/")[0]
-            if not Functionality.objects.filter(type=functionality_path).exists():
+        resolver = resolve(request.path)
+
+        existing_functionalities = set(Functionality.objects.values_list("type", flat=True))
+
+        functionalities_types = Functionality.objects.filter(regulator__isnull=False).values_list("type", flat=True)
+
+        functionality_path = resolver.route.split("/")[0]
+
+        # regulator case
+        if request.user.regulators.exists():
+            regulator = request.user.regulators.first()
+            regulator_functionalities = regulator.functionalities.values_list("type", flat=True)
+
+            if functionality_path == "admin":
+                url_name = resolver.url_name
+                app_label = resolver.kwargs.get("app_label", url_name.split("_", 1)[0])
+
+                if not app_label:
+                    return self.get_response(request)
+
+                if app_label not in existing_functionalities:
+                    return self.get_response(request)
+
+                if app_label not in regulator_functionalities:
+                    raise Http404()
+
+            if functionality_path not in existing_functionalities:
                 return self.get_response(request)
 
-            if functionality_path not in functionalities_types:
+            if functionality_path not in regulator_functionalities:
                 raise Http404()
 
-            # regulator case
-            if request.user.regulators.first() is not None:
-                regulator = request.user.regulators.first()
-                regulator_functionalities = regulator.functionalities.values_list("type", flat=True)
-                if functionality_path not in regulator_functionalities:
-                    raise Http404()
+        if functionality_path not in existing_functionalities:
+            return self.get_response(request)
+
+        if functionality_path not in functionalities_types:
+            raise Http404()
 
         return self.get_response(request)
 

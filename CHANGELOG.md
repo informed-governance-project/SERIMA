@@ -11,6 +11,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Security Objectives, a new module: an operator declares how it meets the security objectives of a framework its regulator publishes. A framework groups its objectives into domains, each objective carries the security measures that implement it, and the operator answers measure by measure — marking it implemented or not and writing the justification behind the answer. A declaration is identified by a code prefixed `SO_`, and a new one can be started empty, copied from a declaration of an earlier year, or imported from an Excel workbook
+- A security objectives declaration is reviewed by the regulator: the operator submits it, the regulator passes it or returns it for revision, and the decision is sent to the operator by email. Review comments are left on the declaration as a whole and on individual security measures, the declaration is downloadable as a PDF at any point, and every consultation is recorded in an access log
+- Reporting, a new module: a regulator builds a report project over a framework, a set of sectors and a range of years, imports the risk analyses its operators produce with MONARC as JSON, and generates one report per operator. A report sets the operator against the average and the ranking of its sector, charts how its risks and its maturity moved from the base year, and lists its risks by treatment — reduced, denied, accepted, shared or untreated — with a configurable threshold marking a risk as high and a Top 3, 5 or 10 ranking
+- A report is laid out from a DOCX template the regulator uploads with its own colour scheme, and is produced as DOCX or PDF in each of the languages chosen for the project. Observations and the recommendations attached to them are written once and reused across projects. Generation runs as a background task whose progress is followed from the project dashboard and which can be cancelled while it runs; every report produced is kept for download
+- Both modules are switched on per regulator: a platform administrator grants the Security Objective and Reporting functionalities, and until then neither the pages nor their menu entries are reachable
+- An evaluation framework can be deactivated by its regulator from its configuration page, retiring it without deleting it or disturbing the declarations already made against it. A deactivated framework is no longer offered when an operator starts a declaration, when an operator duplicates one of an earlier year, or when a regulator imports a declaration from an Excel workbook. The declarations already made on it stay readable, editable, reviewable and downloadable, and an operator whose declaration was sent back for revision can still produce a new version of it. The reporting module is unaffected: a report is built over the declarations already made, so a retired framework stays available both for new report projects and for those already built on it
+
+
+### Fixed
+
+- A link back to the previous page, after importing a declaration or a risk analysis or after editing a report project, is now followed only when it points at SERIMA itself. The address was taken from the browser's Referer header and used unchecked, so a crafted link could have bounced a signed-in user onto an outside site
+- Generating a report over a range of years in which no declaration was ever submitted no longer fails; the report is produced with its security objectives by priority left empty
+
+
+## [0.5.18] - 2026-09-17
+
+### Added
+
 - Operator administrators manage the accounts of their own company from the Users list: an "Account actions" column offers Approve and Reject for an account whose link to the company is still a suggestion, and Set/Unset Administrator and Reset 2FA token for accounts already approved. Every button asks for confirmation first and states what the action implies — approving an incident-notification account, for instance, associates it with the company along with the incidents it has already notified (#861)
 - A suggestion waiting to be resolved is announced by a banner above the Users list and the row is highlighted; the account's own page carries the same Approve/Reject prompt (#861)
 - Users list columns for "2FA Activated", "Is Administrator" and "Approved" (#861)
@@ -23,7 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- An incident reference is now an eight-character code such as `K7M2XQ4P` instead of a number counted per operator, sector and year. The alphabet omits I, L, O and U so a reference survives being read aloud or transcribed from a PDF, and the incident search accepts a reference typed with those letters in place of 1 and 0. References issued before this release keep the form they were issued under, and searching by an operator acronym or sector still finds their incidents through the operator and sector fields
+- An incident reference is now a short code such as `NI_K7M2XQ4P` instead of a number counted per operator, sector and year. The NI_ prefix marks it as an incident notification where one is quoted alongside another kind of reference. The alphabet omits I, L, O and U so a reference survives being read aloud or transcribed from a PDF, and the incident search accepts a reference typed with those letters in place of 1 and 0. References issued before this release keep the form they were issued under, and searching by an operator acronym or sector still finds their incidents through the operator and sector fields
 - The incident reference is read-only for regulators. It is assigned when the incident is notified and no longer needs correcting by hand
 - A question can be both mandatory and conditionally displayed. Its mandatory flag is enforced only once one of its trigger answers is selected; while the trigger is unselected the question stays hidden and the report is submitted without it
 - An account whose link to the company is still awaiting approval is read-only for operator administrators: Approve and Reject are the only actions offered, and editing or deleting it is withheld until one of them is chosen (#861)
@@ -731,6 +749,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
 [0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17
 [0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
 [0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15

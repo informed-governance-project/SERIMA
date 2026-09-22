@@ -1,5 +1,3 @@
-import secrets
-
 from django.utils.translation import gettext_lazy as _
 
 
@@ -27,19 +25,13 @@ ACTION_FLAG_CHOICES = {
 }
 
 # Functionalities list
-FUNCTIONALITIES = {"securityobjectives": _("Security objective")}
+FUNCTIONALITIES = {
+    "securityobjectives": _("Security Objective"),
+    "reporting": _("Reporting"),
+}
 
 # Crockford base32 omits I, L, O and U so a reference survives being read aloud or
 # transcribed from a PDF without being confused for 1 or 0.
 CROCKFORD_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 REFERENCE_TOKEN_LENGTH = 8
 CROCKFORD_INPUT_TRANSLATION = str.maketrans({"I": "1", "L": "1", "O": "0", "U": "V"})
-
-
-def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
-    return "".join(secrets.choice(CROCKFORD_ALPHABET) for _ in range(length))
-
-
-def normalize_crockford(value: str) -> str:
-    """Map the characters Crockford excludes onto the ones they are mistaken for."""
-    return value.upper().translate(CROCKFORD_INPUT_TRANSLATION)

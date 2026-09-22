@@ -3,7 +3,12 @@ from django.utils.translation import gettext_lazy as _
 
 from governanceplatform import __version__
 
-from .helpers import is_observer_user, is_user_regulator, user_in_group
+from .helpers import (
+    is_observer_user,
+    is_user_operator,
+    is_user_regulator,
+    user_in_group,
+)
 from .models import ApplicationConfig, Functionality
 from .settings import COOKIEBANNER, REGULATOR_CONTACT, SITE_NAME
 
@@ -54,13 +59,12 @@ def user_modules(request):
 
     if request.user.is_authenticated:
         user_module_permissions = []
-        # TODO: Uncomment next lines when merging with reporting branch
-        # user = request.user
+        user = request.user
 
-        # if is_user_regulator(user) or is_observer_user(user):
-        #     user_module_permissions = user.get_module_permissions()
-        # if is_user_operator(user):
-        #     user_module_permissions = ["securityobjectives"]
+        if is_user_regulator(user) or is_observer_user(user):
+            user_module_permissions = user.get_module_permissions()
+        if is_user_operator(user):
+            user_module_permissions = ["securityobjectives"]
 
         app_module_availables = Functionality.objects.filter(regulator__isnull=False).distinct().order_by("id")
         for module in app_module_availables:

@@ -2,9 +2,13 @@
 
 ## Project Overview
 
-NIS2 incident notification and governance platform for NC3-LU. Django monolith with two main apps:
+NIS2 incident notification and governance platform for NC3-LU. Django monolith with four apps:
 - `governanceplatform/` — core: users, auth, regulated entities, sectors, regulations
 - `incidents/` — incident workflow, notifications, PDF reports
+- `securityobjectives/` — operator declarations against a regulator's framework, and the review cycle
+- `reporting/` — report projects, MONARC risk-analysis import, DOCX/PDF report generation
+
+`securityobjectives/` and `reporting/` are gated per regulator by the `Functionality` model, enforced in `governanceplatform/middleware.py`. A platform administrator must grant a regulator the functionality before its pages and menu entries become reachable — having the app installed is not enough.
 
 ## Tech Stack
 
@@ -18,12 +22,18 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | Auth | django-otp + two-factor-auth | >=1.1.6,<2 / >=1.15.5,<2 |
 | API | Django REST Framework + drf-spectacular | 3.17 (transitive) / >=0.30.0,<0.31 |
 | Async tasks | Celery + Redis | >=5.5.1,<6 / >=8.0.0,<9 |
-| PDF generation | WeasyPrint | >=69.0,<70 |
+| PDF generation | WeasyPrint | >=70.0,<71 |
+| Charts | Plotly + Kaleido | >=7.0.0,<8 / >=1.2.0,<2 |
+| DOCX generation | docxtpl + python-docx | >=0.20.2,<0.21 / >=1.2.0,<2 |
+| Admin import/export | django-import-export-extensions | >=1.10.0,<2 |
+| Colour fields | django-colorfield | >=0.14.0,<0.15 |
 | Frontend | Bootstrap 5 + bootstrap-icons | ^5.3.8 / ^1.13.1 |
 | JS build | Node.js + npm | 24.x / 11.x |
 | Lint & format | ruff | ^0.16.1 |
 | Type checking | mypy | <2.4 |
 | Testing | pytest-django | ^4.11.1 |
+
+Kaleido renders Plotly charts to static images for the generated reports and bundles its own Chromium. It is the heaviest runtime dependency, and the reason `KALEIDO_CONCURRENCY_PER_WORKER` exists to cap how many renders a Celery worker runs at once.
 
 ## Build & Run
 
@@ -51,6 +61,8 @@ In CI and dev, `governanceplatform/config_dev.py` is used as fallback.
 
 Also set `PARLER_LANGUAGES` and `PARLER_DEFAULT_LANGUAGE_CODE` for translation config.
 
+**Optional values.** `settings.py` catches `AttributeError` for each of these and applies a default, so an older `config.py` still boots: `PATH_FOR_REPORTING_PDF` (where generated reports and admin import/export files are written), `SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY` (1825), `KALEIDO_CONCURRENCY_PER_WORKER` (1), `INCIDENT_RETENTION_TIME_IN_DAY` (1825), `TERMS_ACCEPTANCE_TIME_IN_DAYS` (365).
+
 ## Testing
 
 ```bash
@@ -63,6 +75,8 @@ poetry run pytest -v
 # Run specific app
 poetry run pytest governanceplatform/tests/
 poetry run pytest incidents/tests/
+poetry run pytest securityobjectives/tests/
+poetry run pytest reporting/tests/
 
 # Run with HTML report
 poetry run pytest --html=../report.html --self-contained-html
@@ -71,14 +85,14 @@ poetry run pytest --html=../report.html --self-contained-html
 Test configuration lives in `pytest.ini` (not `pyproject.toml`). Its `addopts` are always applied:
 
 ```ini
-addopts = --create-db --cov=governanceplatform --cov=incidents --cov-report=term-missing
+addopts = --create-db --cov=governanceplatform --cov=incidents --cov=securityobjectives --cov=reporting --cov-report=term-missing
 ```
 
 So every run recreates the test database and writes a `.coverage` file into the repo root. Set `COVERAGE_FILE` to a path outside the repo, or delete `.coverage` afterwards, to keep the working tree clean.
 
 Tests require a running PostgreSQL instance matching the config. In CI, `DJANGO_CI=True` env var triggers `config_dev.py` automatically.
 
-Test files: `governanceplatform/tests/test_*.py`, `incidents/tests/test_*.py`
+Test files: `<app>/tests/test_*.py` in each of the four apps.
 Root `conftest.py` provides: `client`, `otp_client` fixtures, and `import_from_json` / `get_or_create_related` helpers used across tests.
 
 ### Testing philosophy
@@ -100,7 +114,7 @@ governanceplatform/   Core app — users, auth, settings, admin site
   admin.py            Custom admin site registration
   views.py            Auth + account views
   middleware.py       OTP enforcement, terms acceptance
-  migrations/         60+ database migrations
+  migrations/         65 database migrations
 
 incidents/            Incident app — forms, workflow, PDF, email
   models.py           TranslatableModel subclasses (Impact, Question, Workflow…)
@@ -108,21 +122,35 @@ incidents/            Incident app — forms, workflow, PDF, email
   admin.py            Admin configuration for incident models
   migrations/
 
+securityobjectives/   Security objectives app — declarations and regulator review
+  models.py           Standard, Domain, SecurityObjective, SecurityMeasure, StandardAnswer…
+  views.py            Declaration workflow, submit/review, Excel import, PDF download
+  globals.py          Review statuses, `SO_` reference prefix, sortable fields
+  tasks.py            Celery tasks
+  migrations/         43 migrations
+
+reporting/            Reporting app — report projects and document generation
+  models.py           Project, RiskData, Observation, Template, GeneratedReport…
+  views.py            Project CRUD, dashboard, generation status, recommendations
+  import_risk_analysis.py  MONARC JSON validation and import
+  tasks.py            Celery report generation
+  migrations/         23 migrations
+
 docker/               Docker + docker-compose files
 docs/                 Sphinx documentation
-locale/               .po translation files (en, fr, nl, de)
+locale/               .po translation files (fr, nl, de — en is the source language)
 templates/            HTML templates (base, registration, incidents…)
 theme/                Separate git clone, gitignored from this repo — see below
 ```
 
-### Modules not yet on `dev`
+### Modules not on `dev`
 
-`reporting/` and `securityobjectives/` are new features under active development on the `reporting` branch, scheduled to merge into `dev`. `governanceplatform/connectors/` lives on `feat/observer-connectors`. Their commit tags (`[RG]`, `[SO]`) are listed under Conventions below.
+`reporting/` and `securityobjectives/` merged into `dev` on 2026-09-18 (PR #880) and are ordinary apps now — see Project Structure above.
 
-On `dev` these directories may still appear on disk holding only `__pycache__` — bytecode left by switching branches. They carry no source files there, are tracked by neither git nor `.gitignore`, and are absent from `INSTALLED_APPS`, so they do nothing on `dev`. The leftover bytecode is safe to drop at any time; it is regenerated on the branch that owns the source:
+`governanceplatform/connectors/` still lives only on `feat/observer-connectors`, where its commits are tagged `[Observer]`. On `dev` the directory may appear on disk holding only `__pycache__` — bytecode left by switching branches. It carries no source files there, is tracked by neither git nor `.gitignore`, and is absent from `INSTALLED_APPS`, so it does nothing on `dev`. The leftover bytecode is safe to drop at any time; it is regenerated on the branch that owns the source:
 
 ```bash
-find reporting securityobjectives governanceplatform/connectors -name __pycache__ -type d -exec rm -rf {} +
+find governanceplatform/connectors -name __pycache__ -type d -exec rm -rf {} +
 ```
 
 ## Frontend (theme repo)
@@ -132,6 +160,7 @@ find reporting securityobjectives governanceplatform/connectors -name __pycache_
 - Remotes: `origin` → `informed-governance-project/default-theme` (upstream default theme), `serimabe-theme` → `informed-governance-project/serimabe-theme` (NC3/SERIMA-specific fork)
 - Working branch there is typically `dev`
 - Contains its own `templates/`, `static/`, `locale/`, `docker/`, and `globals.py`
+- **CI pins a theme branch.** `.github/workflows/pytest.yml` checks out `default-theme` at a fixed `ref:`, and each serima branch points at its counterpart — `dev` → theme `dev`, `reporting` → theme `reporting`. A frontend change lands in two repos, and merging a serima branch without fixing that `ref:` silently leaves CI building against the wrong theme.
 
 When a task touches UI/frontend (templates, CSS, JS, static assets), check `theme/` first — it likely overrides or supplies the actual rendered templates rather than `serima/templates/`.
 
@@ -157,7 +186,7 @@ python manage.py compilemessages
 
 ## API
 
-**There is no API on this branch.** DRF and drf-spectacular are installed and configured in `settings.py`, but `rest_framework` is imported nowhere else: there are no serializers, no viewsets, no routers, and no API paths in either `urls.py`. The `API_ENABLED` config value is read nowhere in the codebase.
+**There is no API.** DRF and drf-spectacular are installed and configured in `settings.py`, but `rest_framework` is imported nowhere else: there are no serializers, no viewsets, no routers, and no API paths in any `urls.py`. `API_ENABLED` is copied from `config.py` into settings and then consumed nowhere.
 
 ```bash
 make openapi   # writes docs/_static/openapi.yml
@@ -170,8 +199,9 @@ The generated schema is therefore empty (`paths: {}`), and so is the committed `
 - **Commit style**: `type: description` (feat, fix, refactor, docs, test, chore) or `[APP]Message`, optionally with a sub-level tag: `[APP][sub-area]Message` (e.g. `[NI][views]`, `[NI][forms]`)
   - `[NI]` — incident notification changes (`incidents/` folder)
   - `[GOV]` — governance changes (`governanceplatform/` folder)
-  - `[SO]` — security objectives changes (`securityobjectives/` folder) — on the `reporting` branch until it merges into `dev`
-  - `[RG]` — reporting changes (`reporting/` folder) — on the `reporting` branch until it merges into `dev`
+  - `[SO]` — security objectives changes (`securityobjectives/` folder)
+  - `[RG]` — reporting changes (`reporting/` folder)
+  - `[Observer]` — observer connector changes (`governanceplatform/connectors/`) — on `feat/observer-connectors`, not merged
 - **Branch naming**: `feat/`, `fix/`, `test/`, `review/`, descriptive kebab-case
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
@@ -247,12 +277,14 @@ Templates use Bootstrap 5. When adding or modifying UI components:
 | I want to… | Look at… |
 |------------|---------|
 | Add a translatable model | `governanceplatform/models.py` — mirror existing `TranslatableModel` pattern |
-| Add an admin view | `governanceplatform/admin.py` or `incidents/admin.py` |
+| Add an admin view | the `admin.py` of the app concerned |
 | Add an API endpoint | No API exists yet — see the API section before starting |
-| Add a test | Mirror files in `governanceplatform/tests/` or `incidents/tests/` |
+| Add a test | Mirror the files in `<app>/tests/` |
 | Update config defaults | `governanceplatform/config_dev.py` |
 | Change middleware order | `governanceplatform/settings.py` → `MIDDLEWARE` list |
-| Add a Celery task | `governanceplatform/tasks.py` or `incidents/tasks.py` |
+| Add a Celery task | the `tasks.py` of the app concerned |
+| Gate a feature per regulator | `governanceplatform/globals.py` → `FUNCTIONALITIES`, enforced in `middleware.py` |
+| Change group permissions | `governanceplatform/permissions.py` → `GROUP_PERMISSIONS`, then run `manage.py update_group_permissions` |
 | Generate model diagram | `make models` |
 
 ## Changelog
