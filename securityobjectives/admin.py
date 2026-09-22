@@ -332,6 +332,7 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
                 user = User.objects.get(pk=self.user_id)
                 creator = user.regulators.first()
             except User.DoesNotExist:
+                # The importing user was deleted mid-import; callers already handle a missing creator.
                 pass
         return creator
 
@@ -501,6 +502,7 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
                 user = User.objects.get(pk=self.user_id)
                 regulator = user.regulators.first()
             except User.DoesNotExist:
+                # The importing user was deleted mid-import; the instance is left without a regulator.
                 pass
         if instance and regulator:
             instance.regulator = regulator
@@ -1076,6 +1078,7 @@ class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
                 user = User.objects.get(pk=self.user_id)
                 creator = user.regulators.first()
             except User.DoesNotExist:
+                # The importing user was deleted mid-import; callers already handle a missing creator.
                 pass
         if instance and creator:
             instance.creator = creator
@@ -1199,6 +1202,7 @@ class SecurityMeasureAdmin(
                         qs = qs.filter(standard=standard)
 
                     except SecurityMeasure.DoesNotExist:
+                        # Add form, not an edit: there is no standard yet to narrow the levels by.
                         pass
 
                 kwargs["queryset"] = qs
