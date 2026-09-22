@@ -253,6 +253,10 @@ class Standard(TranslatableModel):
         review_comment_label=models.CharField(verbose_name=_("Review Comment label"), max_length=255, blank=True, default=""),
         actions_label=models.CharField(verbose_name=_("Planned Measures label"), max_length=255, blank=True, default=""),
     )
+    active = models.BooleanField(
+        verbose_name=_("Active"),
+        default=True,
+    )
     show_maturity_level_column = models.BooleanField(verbose_name=_("Show"), default=True)
     show_evidence_column = models.BooleanField(verbose_name=_("Show"), default=True)
     show_review_comment_column = models.BooleanField(verbose_name=_("Show"), default=True)
