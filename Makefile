@@ -49,4 +49,4 @@ clean:
 	find . -type d -name "__pycache__" -delete
 
 image:
-	docker build -f docker/Dockerfile --build-arg APP_VERSION=$(shell git describe --tags) -t $(IMAGE):$(VERSION) .
+	docker build -f docker/Dockerfile -t $(IMAGE):$(VERSION) .
