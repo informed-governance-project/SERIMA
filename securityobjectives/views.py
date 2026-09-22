@@ -171,7 +171,9 @@ def get_security_objectives(request):
 @login_required
 @otp_required
 def create_so_declaration(request):
-    standard_list = [(standard.id, str(standard)) for standard in Standard.objects.filter(security_objectives_set__isnull=False).distinct()]
+    standard_list = [
+        (standard.id, str(standard)) for standard in Standard.objects.filter(active=True, security_objectives_set__isnull=False).distinct()
+    ]
 
     sector_list = get_sectors_grouped(Sector.objects.all())
     if not standard_list or not sector_list:
@@ -875,7 +877,7 @@ def download_declaration_pdf(request, standard_answer_id: int):
 def import_so_declaration(request):
     user = request.user
     regulator = user.regulators.first()
-    standard_list = [(standard.id, str(standard)) for standard in Standard.objects.filter(regulator=regulator)]
+    standard_list = [(standard.id, str(standard)) for standard in Standard.objects.filter(regulator=regulator, active=True)]
 
     if not standard_list:
         messages.error(request, _("No data available"))
@@ -1105,7 +1107,7 @@ def has_change_permission(request, standard_answer, action):
                     is_standard_answer_in_user_company and standard_answer.status == "UNDE" and standard_answer.answered_percentage == 100
                 )
             case "copy":
-                return is_standard_answer_in_user_company
+                return is_standard_answer_in_user_company and standard_answer.standard is not None and standard_answer.standard.active
             case "delete":
                 return (is_standard_answer_in_user_company and standard_answer.status == "UNDE") or (is_user_regulator_sector)
             case "review_comment":
