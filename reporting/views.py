@@ -32,6 +32,7 @@ from django_otp.decorators import otp_required
 from governanceplatform.helpers import (
     get_sectors_grouped,
     is_user_regulator,
+    safe_redirect_to_referer,
     sort_queryset_by_field,
     user_in_group,
 )
@@ -359,7 +360,7 @@ def edit_report_project(request, report_project_id: int):
         if form.is_valid():
             form.save()
             create_entry_log(user, project, "EDIT PROJECT")
-            return HttpResponseRedirect(request.headers.get("referer"))
+            return safe_redirect_to_referer(request, "reporting")
     else:
         form = CreateProjectForm(instance=project, choices=choices)
 
@@ -674,6 +675,7 @@ def report_generation_status(request, report_project_id: int):
         generated_report = GeneratedReport.objects.get(project=project)
         reponse["download_uuid"] = generated_report.file_uuid
     except GeneratedReport.DoesNotExist:
+        # Polled while generation is still running, so there is no file to offer yet.
         pass
 
     if messages.get_messages(request):
@@ -936,14 +938,14 @@ def import_risk_analysis(request):
             company_id = int(request.GET.get("company_id"))
             if not companies_queryset.filter(id=company_id).exists():
                 messages.error(request, _("Forbidden"))
-                return HttpResponseRedirect(request.headers.get("referer"))
+                return safe_redirect_to_referer(request, "reporting")
             initial["company"] = company_id
 
         if "sector_id" in request.GET:
             sector_id = int(request.GET.get("sector_id"))
             if not sectors_queryset.filter(id=sector_id).exists():
                 messages.error(request, _("Forbidden"))
-                return HttpResponseRedirect(request.headers.get("referer"))
+                return safe_redirect_to_referer(request, "reporting")
             initial["sectors"] = sector_id
 
         if "year" in request.GET:
@@ -951,7 +953,7 @@ def import_risk_analysis(request):
 
     except ValueError, TypeError:
         messages.error(request, _("Invalid request"))
-        return HttpResponseRedirect(request.headers.get("referer"))
+        return safe_redirect_to_referer(request, "reporting")
 
     choices = {
         "company": company_list,

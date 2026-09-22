@@ -12,9 +12,12 @@ from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
+from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 
@@ -520,3 +523,15 @@ def normalize_reference(value: str, prefix: str) -> str:
     if upper.startswith(prefix):
         return prefix + normalize_crockford(upper[len(prefix) :])
     return normalize_crockford(upper)
+
+
+def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpResponseRedirect:
+    """Send the user back where they came from, or to the `fallback` URL name.
+
+    The Referer header is set by the client, so redirecting to it unchecked lets a crafted
+    link bounce an authenticated user onto an attacker's site with our styling and session.
+    """
+    referer = request.headers.get("referer", "")
+    if url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return HttpResponseRedirect(referer)
+    return HttpResponseRedirect(reverse(fallback))

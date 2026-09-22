@@ -26,7 +26,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -44,6 +44,7 @@ from governanceplatform.helpers import (
     get_sectors_grouped,
     is_user_operator,
     is_user_regulator,
+    safe_redirect_to_referer,
     sort_queryset_by_field,
     user_in_group,
 )
@@ -936,7 +937,7 @@ def import_so_declaration(request):
                 ws = wb.active
             except Exception as e:
                 messages.error(request, _("Error opening the file: {}").format(str(e)))
-                return HttpResponseRedirect(request.headers.get("referer"))
+                return safe_redirect_to_referer(request, "securityobjectives")
 
             measure_answers_imported = []
             default_text = "Free text field"
@@ -956,12 +957,12 @@ def import_so_declaration(request):
                         request,
                         _("No users for this company"),
                     )
-                    return HttpResponseRedirect(request.headers.get("referer"))
+                    return safe_redirect_to_referer(request, "securityobjectives")
 
                 valid_sectors = [sector for sector in Sector.objects.filter(id__in=sectors)]
 
                 if not valid_sectors:
-                    return HttpResponseRedirect(request.headers.get("referer"))
+                    return safe_redirect_to_referer(request, "securityobjectives")
 
                 group = StandardAnswerGroup.objects.create(company=company)
 
@@ -984,7 +985,7 @@ def import_so_declaration(request):
                     request,
                     _("An error occurred while importing the declaration file."),
                 )
-                return HttpResponseRedirect(request.headers.get("referer"))
+                return safe_redirect_to_referer(request, "securityobjectives")
 
             security_objectives = {obj.unique_code: obj for obj in standard.security_objectives.all()}
 
@@ -1044,7 +1045,7 @@ def import_so_declaration(request):
 
             create_entry_log(user, new_standard_answer, "IMPORT", request)
             messages.success(request, ("The security objectives declaration has been imported."))
-            return HttpResponseRedirect(request.headers.get("referer"))
+            return safe_redirect_to_referer(request, "securityobjectives")
 
     form = ImportSOForm(initial=initial or {}, choices=choices)
     context = {"form": form}
