@@ -681,7 +681,8 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         "security_objective_status_changed_email",
         "security_objective_closure_email",
     )
-    list_display = ["label_display", "description_display", "regulator"]
+    list_display = ["active", "label_display", "description_display", "regulator"]
+    list_display_links = ["active", "label_display"]
     search_fields = [
         "translations__label",
         "translations__description",
@@ -696,7 +697,7 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
             _("General"),
             {
                 "classes": ["wide", "extrapretty"],
-                "fields": ["regulation", "label", "description"],
+                "fields": ["active", "regulation", "label", "description"],
             },
         ),
         (
@@ -790,7 +791,7 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
                 request,
                 _(
                     "This standard is in use: declarations already reference it. "
-                    "Its name and the configuration of the declaration table columns stay editable; "
+                    "Its name, its active status and the configuration of the declaration table columns stay editable; "
                     "the regulation, the notification e-mails and the list of security objectives do not."
                 ),
             )
