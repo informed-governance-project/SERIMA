@@ -166,7 +166,7 @@ class SelectSOStandardForm(forms.Form):
     )
     sectors = forms.MultipleChoiceField(
         required=True,
-        widget=DropdownCheckboxSelectMultiple(attrs={"data-selected-text-format": "count > 3"}),
+        widget=DropdownCheckboxSelectMultiple(),
         label=_("Sectors"),
     )
 
@@ -209,7 +209,7 @@ class ImportSOForm(forms.Form):
 
     sectors = forms.MultipleChoiceField(
         required=True,
-        widget=DropdownCheckboxSelectMultiple(attrs={"data-selected-text-format": "count > 3"}),
+        widget=DropdownCheckboxSelectMultiple(),
         label=_("Sectors"),
     )
 
@@ -237,7 +237,7 @@ class CopySOForm(forms.Form):
 
     sectors = forms.MultipleChoiceField(
         required=True,
-        widget=DropdownCheckboxSelectMultiple(attrs={"data-selected-text-format": "count > 3"}),
+        widget=DropdownCheckboxSelectMultiple(),
         label=_("Sectors"),
     )
 

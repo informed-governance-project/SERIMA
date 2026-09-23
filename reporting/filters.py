@@ -26,7 +26,7 @@ class RecommendationFilter(django_filters.FilterSet):
         queryset=Sector.objects.filter(
             ~Q(id__in=Sector.objects.exclude(parent=None).values_list("parent_id", flat=True)) | Q(id=F("parent_id"))
         ).order_by("parent"),
-        widget=DropdownCheckboxSelectMultiple(attrs={"data-selected-text-format": "count > 2"}),
+        widget=DropdownCheckboxSelectMultiple(),
         method="filter_by_sector",
         label=_("Sectors"),
     )
