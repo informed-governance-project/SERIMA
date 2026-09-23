@@ -1,4 +1,8 @@
+import os
+import uuid
+
 from colorfield.fields import ColorField
+from django.conf import settings
 from django.db import models, transaction
 from django.db.models import Deferrable
 from django.utils import timezone
@@ -11,6 +15,8 @@ from .globals import (
     REFERENCE_PREFIX,
     SO_ACTIONS_LABEL,
     SO_DECLARATION_COLUMNS,
+    SO_EXPORT_DIRECTORY,
+    SO_EXPORT_STATUS,
     SO_SCORE_DISPLAY,
     STANDARD_ANSWER_REVIEW_STATUS,
 )
@@ -538,6 +544,9 @@ class StandardAnswer(models.Model):
     def get_no_childrens_sectors(self):
         return list(self.sectors.filter(parent__isnull=True))
 
+    def __str__(self):
+        return str(self.group.group_id) if self.group else str(self.id)
+
 
 # the answer of the operator by SM
 class SecurityMeasureAnswer(models.Model):
@@ -653,3 +662,40 @@ class LogStandardAnswer(models.Model):
     def save(self, *args, **kwargs):
         self.user_full_name = self.user.get_full_name()
         super().save(*args, **kwargs)
+
+
+class SecurityObjectiveExport(models.Model):
+    user = models.ForeignKey(
+        "governanceplatform.User",
+        on_delete=models.SET_NULL,
+        verbose_name=_("User"),
+        null=True,
+    )
+    regulation = models.ForeignKey(
+        "governanceplatform.regulation",
+        on_delete=models.SET_NULL,
+        verbose_name=_("Regulation"),
+        null=True,
+    )
+    # The download is addressed by this rather than by the primary key, so the URL says
+    # nothing about how many exports the platform has produced.
+    file_uuid = models.UUIDField(default=uuid.uuid4, unique=True, verbose_name=_("uuid"))
+    filename = models.CharField(max_length=255, verbose_name=_("Filename"))
+    task_id = models.CharField(max_length=255, blank=True, default="", verbose_name=_("Task id"))
+    task_status = models.CharField(
+        max_length=10,
+        choices=SO_EXPORT_STATUS,
+        default=SO_EXPORT_STATUS[0][0],
+        verbose_name=_("Status"),
+    )
+    timestamp = models.DateTimeField(verbose_name=_("Timestamp"), default=timezone.now)
+
+    class Meta:
+        verbose_name = _("Security objective export")
+        verbose_name_plural = _("Security objective exports")
+
+    def __str__(self):
+        return self.filename
+
+    def get_file_path(self) -> str:
+        return os.path.join(settings.PATH_FOR_REPORTING_PDF, SO_EXPORT_DIRECTORY, str(self.file_uuid))
