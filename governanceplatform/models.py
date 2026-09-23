@@ -503,6 +503,7 @@ class RegulatorUser(models.Model):
     )
     is_regulator_administrator = models.BooleanField(default=False, verbose_name=_("Is administrator"))
     can_export_incidents = models.BooleanField(default=False, verbose_name=_("Can export incidents"))
+    can_export_security_objectives = models.BooleanField(default=False, verbose_name=_("Can export security objectives"))
     sectors = models.ManyToManyField(Sector, blank=True)
 
     class Meta:
