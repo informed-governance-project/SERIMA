@@ -308,3 +308,48 @@ class ReviewForm(forms.ModelForm):
         if status not in ["PASS", "FAIL"] and not self.is_only_review_comment:
             raise forms.ValidationError("Status must be either PASS or FAIL.")
         return status
+
+
+class ExportSecurityObjectivesForm(forms.Form):
+    regulation = forms.ChoiceField(
+        widget=forms.Select(),
+        required=True,
+        label=_("Regulation"),
+    )
+
+    standards = forms.MultipleChoiceField(
+        required=True,
+        widget=DropdownCheckboxSelectMultiple(),
+        label=_("Evaluation Framework"),
+    )
+
+    years = forms.MultipleChoiceField(
+        required=True,
+        widget=DropdownCheckboxSelectMultiple(),
+        label=_("Year"),
+    )
+
+    sectors = forms.MultipleChoiceField(
+        required=True,
+        widget=DropdownCheckboxSelectMultiple(),
+        label=_("Sectors"),
+    )
+
+    statuses = forms.MultipleChoiceField(
+        required=True,
+        widget=DropdownCheckboxSelectMultiple(),
+        label=_("Status"),
+    )
+
+    file_format = forms.ChoiceField(
+        choices=[("xlsx", "Excel (.xlsx)"), ("csv", "CSV (.csv)")],
+        required=True,
+        label=_("File format"),
+        initial="xlsx",
+    )
+
+    def __init__(self, *args, **kwargs):
+        choices = kwargs.pop("choices", {})
+        super().__init__(*args, **kwargs)
+        for field_name in ["regulation", "standards", "years", "sectors", "statuses"]:
+            self.fields[field_name].choices = choices.get(field_name, [])
