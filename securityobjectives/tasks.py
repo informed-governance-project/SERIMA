@@ -73,7 +73,6 @@ def get_export_metadata(user, filters, sector_ids, row_count) -> list[list[str]]
     regulation = Regulation.objects.filter(id=filters["regulation"]).first()
     statuses = dict(STANDARD_ANSWER_REVIEW_STATUS)
     sectors = Sector.objects.filter(id__in=sector_ids)
-    scope_sectors = user.get_sectors().all()
     standards = Standard.objects.filter(id__in=filters["standards"])
 
     return [
@@ -87,10 +86,6 @@ def get_export_metadata(user, filters, sector_ids, row_count) -> list[list[str]]
         [str(_("Year")), ", ".join(str(year) for year in filters["years"])],
         [str(_("Sectors")), ", ".join(sector.get_safe_translation() for sector in sectors)],
         [str(_("Status")), ", ".join(str(statuses.get(status, status)) for status in filters["statuses"])],
-        [
-            str(_("Operator scope")),
-            ", ".join(sector.get_safe_translation() for sector in scope_sectors),
-        ],
         [str(_("File format")), filters["file_format"]],
         [str(_("Number of rows")), str(row_count)],
     ]
