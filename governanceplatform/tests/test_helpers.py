@@ -216,6 +216,18 @@ def test_render_to_string_multi_languages_skips_identical_translation(monkeypatc
     assert helpers.render_to_string_multi_languages("email.html", {}) == "<h3>English (en)</h3>\n                same content"
 
 
+@override_settings(LANGUAGE_CODE="en-us", LANGUAGES=[("en", "English"), ("fr", "French"), ("de", "German")])
+def test_render_to_string_multi_languages_keeps_default_language_when_language_code_is_regional(monkeypatch):
+    """Render English first and keep only the translations that differ from it, with LANGUAGE_CODE set to en-us."""
+    monkeypatch.setattr(helpers.translation, "gettext", lambda name: name)
+    rendered_by_language = {"en": "hello", "fr": "bonjour", "de": "hello"}
+    monkeypatch.setattr(helpers, "render_to_string", lambda template, context: rendered_by_language[helpers.translation.get_language()])
+
+    result = helpers.render_to_string_multi_languages("email.html", {})
+
+    assert result == "<h3>English (en)</h3>\n                hello<hr><h3>French (fr)</h3>\n                bonjour"
+
+
 def test_sanitize_html_removes_scripts_and_unsafe_styles():
     """Strip disallowed tags and CSS properties while retaining safe content."""
     html = '<p style="color: red; position: fixed">Safe</p><script>alert(1)</script>'
