@@ -216,10 +216,9 @@ def send_email(
         context,
     )
     html_content = render_to_string_multi_languages(
-        "incidents/email.html",
+        "emails/notification.html",
         {
             "content": None,
-            "url_site": settings.PUBLIC_URL,
             "company_name": incident.company_name,
             "incident_contact_title": incident.contact_title,
             "incident_contact_firstname": incident.contact_firstname,

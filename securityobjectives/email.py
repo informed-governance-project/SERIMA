@@ -1,18 +1,12 @@
 from datetime import date
 
 from django.conf import settings
-from django.core.mail import EmailMessage
 from django.db.models import Q
 
+from governanceplatform.email import send_html_email
 from governanceplatform.helpers import render_to_string_multi_languages
 from governanceplatform.models import CompanyUser, RegulatorUser
 from securityobjectives.globals import SO_EMAIL_VARIABLES
-
-
-def send_html_email(subject, content, recipient_list):
-    email = EmailMessage(subject, content, settings.EMAIL_SENDER, bcc=recipient_list)
-    email.content_subtype = "html"
-    email.send(fail_silently=True)
 
 
 def send_email(email, standard_answer):
@@ -22,10 +16,9 @@ def send_email(email, standard_answer):
             standard_answer,
         )
         html_content = render_to_string_multi_languages(
-            "security_objectives/email.html",
+            "emails/notification.html",
             {
                 "content": None,
-                "url_site": settings.PUBLIC_URL,
             },
             replace_email_variables,
             content=email,

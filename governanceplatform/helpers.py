@@ -330,17 +330,8 @@ def render_to_string_multi_languages(
     replace_email_variables is a function to be given depending of the module sending email,
     object is an object (incident, standard_answer) to be given depending of the module,
     """
-    parts = []
 
-    with translation.override(settings.LANGUAGE_CODE):
-        if content and object and replace_email_variables:
-            context["content"] = replace_email_variables(
-                content.safe_translation_getter("content", language_code=settings.LANGUAGE_CODE),
-                object,
-            )
-        baseline = render_to_string(template_name, context)
-
-    for lang_code, lang_name in settings.LANGUAGES:
+    def render(lang_code: str) -> str:
         with translation.override(lang_code):
             if content and object and replace_email_variables:
                 context["content"] = replace_email_variables(
@@ -349,19 +340,27 @@ def render_to_string_multi_languages(
                 )
                 context["content"] = markdown(text=context["content"], output_format="html")
                 context["content"] = sanitize_html(context["content"])
-            rendered = render_to_string(template_name, context)
+            return render_to_string(template_name, context)
 
-            if rendered == baseline and lang_code != settings.LANGUAGE_CODE:
+    default_lang = settings.PARLER_DEFAULT_LANGUAGE_CODE
+    baseline = render(default_lang)
+
+    parts = []
+    for lang_code, lang_name in settings.LANGUAGES:
+        if lang_code == default_lang:
+            rendered = baseline
+        else:
+            rendered = render(lang_code)
+            if rendered == baseline:
                 continue
 
+        with translation.override(lang_code):
             parts.append(
                 f"""
                 <h3>{translation.gettext(lang_name)} ({lang_code})</h3>
                 {rendered}
                 """.strip()
             )
-    if not parts:
-        return baseline
     return "<hr>".join(parts)
 
 
