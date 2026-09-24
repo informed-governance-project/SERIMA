@@ -13,8 +13,6 @@ from django.db.models import (
     BooleanField,
     Case,
     Count,
-    ExpressionWrapper,
-    F,
     FloatField,
     Max,
     Min,
@@ -26,11 +24,11 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import redirect, render
+from django.http import FileResponse, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
@@ -48,13 +46,14 @@ from governanceplatform.helpers import (
     sort_queryset_by_field,
     user_in_group,
 )
-from governanceplatform.models import Company, Sector
+from governanceplatform.models import Company, Regulation, Sector
 from reporting.models import CompanyProject
 
 from .email import send_email
 from .filters import StandardAnswerFilter
 from .forms import (
     CopySOForm,
+    ExportSecurityObjectivesForm,
     ImportSOForm,
     ReviewForm,
     SecurityObjectiveAnswerForm,
@@ -62,18 +61,27 @@ from .forms import (
     SelectSOStandardForm,
 )
 from .globals import ALLOWED_SORT_FIELDS, STANDARD_ANSWER_REVIEW_STATUS
-from .helpers import security_objective_exists, set_declaration_column_widths
+from .helpers import (
+    can_export_security_objectives,
+    get_exportable_standard_answers,
+    get_scoped_standard_answers,
+    get_standard_answers_with_progress,
+    security_objective_exists,
+    set_declaration_column_widths,
+)
 from .models import (
     LogStandardAnswer,
     MaturityLevel,
     SecurityMeasure,
     SecurityMeasureAnswer,
     SecurityObjective,
+    SecurityObjectiveExport,
     SecurityObjectiveStatus,
     Standard,
     StandardAnswer,
     StandardAnswerGroup,
 )
+from .tasks import generate_so_export_task
 
 # Increasing weasyprint log level
 for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
@@ -164,6 +172,7 @@ def get_security_objectives(request):
         "sort_field": sort_field,
         "sort_direction": sort_direction,
         "is_filtered": bool(is_filtered),
+        "can_export_security_objectives": can_export_security_objectives(user),
     }
 
     return render(request, template, context=context)
@@ -513,6 +522,7 @@ def declaration(request):
             if column_config["justification"]["visible"]
             else ""
         ),
+        "can_export_security_objectives": can_export_security_objectives(user),
     }
 
     return render(request, "security_objectives/declaration.html", context=context)
@@ -1052,39 +1062,6 @@ def import_so_declaration(request):
     return render(request, "modals/import_so_declaration.html", context=context)
 
 
-def get_standard_answers_with_progress(standard_answer_queryset):
-    return standard_answer_queryset.annotate(
-        total_security_objectives=Count(
-            "standard__security_objectives",
-            distinct=True,
-        ),
-        total_security_objectives_answered=Count(
-            "securityobjectivestatus",
-            filter=Q(securityobjectivestatus__is_completely_filled_out=True),
-            distinct=True,
-        ),
-        total_security_objectives_reviewed=Count(
-            "securityobjectivestatus",
-            filter=~Q(securityobjectivestatus__status="NOT_REVIEWED"),
-            distinct=True,
-        ),
-        reviewed_percentage=Case(
-            When(total_security_objectives=0, then=Value(0.0)),
-            default=ExpressionWrapper(
-                F("total_security_objectives_reviewed") * 100.0 / F("total_security_objectives"),
-                output_field=FloatField(),
-            ),
-        ),
-        answered_percentage=Case(
-            When(total_security_objectives=0, then=Value(0.0)),
-            default=ExpressionWrapper(
-                F("total_security_objectives_answered") * 100.0 / F("total_security_objectives"),
-                output_field=FloatField(),
-            ),
-        ),
-    )
-
-
 def has_change_permission(request, standard_answer, action):
     def check_conditions():
         user = request.user
@@ -1287,6 +1264,116 @@ def render_error_messages(request):
         {"messages": messages.get_messages(request)},
         request=request,
     )
+
+
+def get_export_choices(user, base_queryset):
+    """Offer only what the user could already export, so the form cannot suggest otherwise."""
+    standards = Standard.objects.filter(id__in=base_queryset.values_list("standard", flat=True)).distinct()
+    regulations = Regulation.objects.filter(id__in=standards.values_list("regulation", flat=True)).distinct()
+    years = sorted(set(base_queryset.values_list("year_of_submission", flat=True)), reverse=True)
+    sectors = Sector.objects.filter(id__in=user.get_sectors().all().values_list("id", flat=True)).distinct()
+
+    return {
+        "regulation": [(regulation.id, str(regulation)) for regulation in regulations],
+        "standards": [(standard.id, standard.label) for standard in standards],
+        "years": [(year, year) for year in years],
+        "sectors": get_sectors_grouped(sectors),
+        "statuses": [(status, label) for status, label in STANDARD_ANSWER_REVIEW_STATUS if status != "UNDE"],
+    }
+
+
+@login_required
+@otp_required
+@require_http_methods(["GET", "POST"])
+def export_security_objectives(request):
+    user = request.user
+
+    if not can_export_security_objectives(user):
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    base_queryset = get_scoped_standard_answers(user)
+    choices = get_export_choices(user, base_queryset)
+
+    if request.method == "POST":
+        form = ExportSecurityObjectivesForm(request.POST, choices=choices)
+        if form.is_valid():
+            filters = {
+                "regulation": form.cleaned_data["regulation"],
+                "standards": form.cleaned_data["standards"],
+                "years": form.cleaned_data["years"],
+                "sectors": form.cleaned_data["sectors"],
+                "statuses": form.cleaned_data["statuses"],
+                "file_format": form.cleaned_data["file_format"],
+            }
+
+            if not get_exportable_standard_answers(user, filters).exists():
+                messages.error(request, _("No security objective declarations available for export."))
+                return JsonResponse({"messages": render_error_messages(request)}, status=400)
+
+            regulation = Regulation.objects.filter(id=filters["regulation"]).first()
+            extension = "xlsx" if filters["file_format"] == "xlsx" else "zip"
+            export = SecurityObjectiveExport.objects.create(
+                user=user,
+                regulation=regulation,
+                filename=f"SO_export_{timezone.localtime().strftime('%Y%m%d-%H%M')}.{extension}",
+            )
+
+            task = generate_so_export_task.delay(export.id, user.id, filters, translation.get_language())
+            SecurityObjectiveExport.objects.filter(id=export.id).update(task_id=task.id)
+
+            return JsonResponse({"export_id": export.id})
+
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, error)
+        return JsonResponse({"messages": render_error_messages(request)}, status=400)
+
+    form = ExportSecurityObjectivesForm(choices=choices)
+
+    # Lets the modal narrow the framework list to the chosen regulation without a round trip.
+    standards_by_regulation = defaultdict(list)
+    standard_ids = base_queryset.values_list("standard", flat=True)
+    for standard_id, regulation_id in Standard.objects.filter(id__in=standard_ids).distinct().values_list("id", "regulation"):
+        standards_by_regulation[str(regulation_id)].append(standard_id)
+
+    return render(
+        request,
+        "modals/export_security_objectives.html",
+        {"form": form, "standards_by_regulation": dict(standards_by_regulation)},
+    )
+
+
+@login_required
+@otp_required
+@require_http_methods(["GET"])
+def security_objectives_export_status(request, export_id: int):
+    export = get_object_or_404(SecurityObjectiveExport, id=export_id, user=request.user)
+    response = {"status": export.task_status}
+
+    if export.task_status == "DONE":
+        response["download_uuid"] = export.file_uuid
+
+    if export.task_status == "FAIL":
+        messages.error(request, _("The export failed."))
+        response["messages"] = render_error_messages(request)
+
+    return JsonResponse(response)
+
+
+@login_required
+@otp_required
+@require_http_methods(["GET"])
+def download_security_objectives_export(request, file_uuid):
+    user = request.user
+
+    # The right can be revoked between the export and its download, so it is checked again
+    # rather than trusted from the moment the file was produced.
+    if not can_export_security_objectives(user):
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    export = get_object_or_404(SecurityObjectiveExport, file_uuid=file_uuid, user=user)
+
+    return FileResponse(open(export.get_file_path(), "rb"), as_attachment=True, filename=export.filename)
 
 
 def get_standard_answer_status(standard_answer):
