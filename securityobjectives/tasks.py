@@ -7,7 +7,6 @@ import zipfile
 from pathlib import Path
 
 from celery import shared_task
-from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.template.defaultfilters import floatformat
 from django.utils import timezone, translation
@@ -128,28 +127,21 @@ def write_export_zip(file_path, headers, rows, metadata):
         archive.writestr("metadata.csv", write_csv(metadata))
 
 
-def log_so_export(user, declarations, regulation, filters, sector_ids, row_count):
+def log_so_export(user, declarations, regulation, filters, row_count):
     """One entry per exported declaration, each holding the parameters of the export.
 
     Anchoring on the declarations rather than on the regulation is what makes the admin log
     say which declarations left the platform, at the cost of one row per exported line.
     """
-    statuses = dict(STANDARD_ANSWER_REVIEW_STATUS)
-
-    with translation.override(settings.LANGUAGE_CODE):
-        change_message = _(
-            "A total of {count} security objective declarations were exported from regulation {regulation} "
-            "[frameworks: {frameworks}] for year(s) {years}, sector(s) {sectors}, status(es) {statuses}, "
-            "in {file_format} format."
-        ).format(
-            count=row_count,
-            regulation=regulation,
-            frameworks=", ".join(standard.label for standard in Standard.objects.filter(id__in=filters["standards"])),
-            years=", ".join(str(year) for year in filters["years"]),
-            sectors=", ".join(sector.get_safe_translation() for sector in Sector.objects.filter(id__in=sector_ids)),
-            statuses=", ".join(str(statuses.get(status, status)) for status in filters["statuses"]),
-            file_format=filters["file_format"],
-        )
+    change_message = (
+        "A total of {count} security objective declarations were exported from regulation {regulation} "
+        "[frameworks: {frameworks} for year(s) {years}]"
+    ).format(
+        count=row_count,
+        regulation=regulation,
+        frameworks=", ".join(standard.label for standard in Standard.objects.filter(id__in=filters["standards"])),
+        years=", ".join(str(year) for year in filters["years"]),
+    )
 
     LogEntry.objects.log_actions(
         user_id=user.id,
@@ -192,7 +184,7 @@ def generate_so_export_task(export_id: int, user_id: int, filters: dict, languag
     export.task_status = "DONE"
     export.save()
 
-    log_so_export(user, queryset, export.regulation, filters, sector_ids, len(rows))
+    log_so_export(user, queryset, export.regulation, filters, len(rows))
 
     send_export_notification(
         regulator=user.regulators.first(),
