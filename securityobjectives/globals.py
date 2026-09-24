@@ -16,6 +16,28 @@ SO_EMAIL_VARIABLES = [
     ("#SO_REFERENCE#", "group_id"),
 ]
 
+# Internal state of the export job, polled by the browser and never shown to a user.
+SO_EXPORT_STATUS = [
+    ("RUNNING", "Running"),
+    ("DONE", "Successful"),
+    ("FAIL", "Failed"),
+]
+
+SO_EXPORT_DIRECTORY = "security_objectives_exports"
+
+# Columns of the export, in the order and with the labels the dashboard uses.
+SO_EXPORT_COLUMNS = [
+    _("Status"),
+    _("Last update"),
+    _("Submission date"),
+    _("Identifier"),
+    _("Evaluation Framework"),
+    _("Company"),
+    _("Sectors"),
+    _("Year"),
+    _("Progress"),
+]
+
 ALLOWED_SORT_FIELDS = {
     "status": {
         "field": "status",
