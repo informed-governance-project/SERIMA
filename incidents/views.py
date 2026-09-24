@@ -947,21 +947,23 @@ def export_incidents(request):
                     row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     writer.writerow(row)
 
+            change_message = (  # noqa: UP032
+                "A total of {count} incidents were exported from regulation "
+                "{regulation} [{sectorregulation} - ({workflow})] within date range ({from_date} - {to_date}.)"
+            ).format(
+                count=len(data),
+                regulation=regulation,
+                sectorregulation=sectorregulation,
+                workflow=workflow,
+                from_date=from_date,
+                to_date=to_date,
+            )
+
             LogEntry.objects.log_actions(
                 user_id=user.id,
                 queryset=incidents,
                 action_flag=7,
-                change_message=_(
-                    "A total of {count} incidents were exported from regulation "
-                    "{regulation} [{sectorregulation} - ({workflow})] within date range ({from_date} - {to_date}.)"
-                ).format(
-                    count=len(data),
-                    regulation=regulation,
-                    sectorregulation=sectorregulation,
-                    workflow=workflow,
-                    from_date=from_date,
-                    to_date=to_date,
-                ),
+                change_message=change_message,
             )
 
             try:
