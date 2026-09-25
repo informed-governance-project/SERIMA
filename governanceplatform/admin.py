@@ -1763,7 +1763,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
     list_display = [
         "name_display",
         "full_name_display",
-        "is_receiving_all_incident",
         "description_display",
     ]
     search_fields = [
@@ -1793,7 +1792,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
                         "country",
                         "address",
                         "email_for_notification",
-                        "is_receiving_all_incident",
                         "functionalities",
                     ],
                 },
@@ -1833,9 +1831,9 @@ class ObserverAdmin(CustomTranslatableAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
         user = request.user
-        # only the platform admin can change the is_receive_all_incident
+        # only the platform admin can change the functionalities
         if not user_in_group(user, "PlatformAdmin"):
-            readonly_fields += ("is_receiving_all_incident", "functionalities")
+            readonly_fields += ("functionalities",)
 
         if obj and obj.pk and is_observer_user(user):
             readonly_fields += ("rt_test_button",)
