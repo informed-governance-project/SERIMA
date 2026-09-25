@@ -5,6 +5,7 @@ import os
 from collections import defaultdict
 
 import openpyxl
+from celery.exceptions import CeleryError
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -34,10 +35,12 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 from django.views.decorators.http import require_http_methods
 from django_otp.decorators import otp_required
+from kombu.exceptions import OperationalError
 from weasyprint import CSS, HTML
 from weasyprint.text.fonts import FontConfiguration
 
 from governanceplatform.helpers import (
+    celery_health_check,
     get_active_company_from_session,
     get_sectors_grouped,
     is_user_operator,
@@ -1318,7 +1321,15 @@ def export_security_objectives(request):
                 filename=f"SO_export_{timezone.localtime().strftime('%Y%m%d-%H%M')}.{extension}",
             )
 
-            task = generate_so_export_task.delay(export.id, user.id, filters, translation.get_language())
+            try:
+                task = generate_so_export_task.delay(export.id, user.id, filters, translation.get_language())
+            except OperationalError, CeleryError, ConnectionError:
+                # Nothing was produced, so the job row would only ever sit at RUNNING.
+                export.delete()
+                logger.exception("Failed to queue the security objectives export", extra={"user_id": user.id})
+                messages.error(request, _("The export could not be started. Please try again later."))
+                return JsonResponse({"messages": render_error_messages(request)}, status=400)
+
             SecurityObjectiveExport.objects.filter(id=export.id).update(task_id=task.id)
 
             return JsonResponse({"export_id": export.id})
@@ -1348,6 +1359,13 @@ def export_security_objectives(request):
 @require_http_methods(["GET"])
 def security_objectives_export_status(request, export_id: int):
     export = get_object_or_404(SecurityObjectiveExport, id=export_id, user=request.user)
+
+    # A queued job whose worker or broker is gone would never change status, leaving the
+    # browser polling for it forever.
+    if export.task_status == "RUNNING" and not celery_health_check():
+        export.task_status = "FAIL"
+        export.save()
+
     response = {"status": export.task_status}
 
     if export.task_status == "DONE":

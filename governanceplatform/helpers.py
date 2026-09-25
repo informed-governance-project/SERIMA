@@ -5,7 +5,9 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
 import bleach
+import redis
 from bleach.css_sanitizer import CSSSanitizer
+from celery import current_app
 from django.conf import settings
 from django.contrib import messages
 from django.db import connection
@@ -534,3 +536,26 @@ def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpRespons
     if url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         return HttpResponseRedirect(referer)
     return HttpResponseRedirect(reverse(fallback))
+
+
+def is_celery_worker_alive() -> bool:
+    try:
+        inspect = current_app.control.inspect()
+        response = inspect.ping()
+        return bool(response)
+    except Exception:
+        return False
+
+
+def is_redis_available() -> bool:
+    try:
+        r = redis.Redis.from_url(settings.CELERY_BROKER_URL)
+        r.ping()
+        return True
+    except redis.exceptions.RedisError:
+        return False
+
+
+def celery_health_check() -> bool:
+    """Whether a task queued now would actually be picked up by a worker."""
+    return is_celery_worker_alive() and is_redis_available()
