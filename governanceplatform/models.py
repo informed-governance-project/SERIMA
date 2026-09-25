@@ -250,7 +250,6 @@ class Observer(TranslatableModel):
         blank=True,
         null=True,
     )
-    is_receiving_all_incident = models.BooleanField(default=False, verbose_name=_("Receives all incident notifications"))
     functionalities = models.ManyToManyField(
         Functionality,
         verbose_name=_("Functionalities"),
