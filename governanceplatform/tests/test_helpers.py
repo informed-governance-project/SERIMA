@@ -68,19 +68,6 @@ def test_role_helpers_accept_one_of_their_groups(helper, matching_group, foreign
     assert helper(_user_in_groups(f"{foreign_group}@example.org", foreign_group)) is False
 
 
-@pytest.mark.parametrize(
-    ("is_observer", "is_receiving_all_incident", "expected"),
-    [(False, None, False), (True, None, False), (True, True, True)],
-)
-def test_is_observer_user_viewing_all_incident(monkeypatch, is_observer, is_receiving_all_incident, expected):
-    """Allow global incident access only to observers configured for it."""
-    monkeypatch.setattr(helpers, "is_observer_user", lambda user: is_observer)
-    observer_instance = None if is_receiving_all_incident is None else SimpleNamespace(is_receiving_all_incident=is_receiving_all_incident)
-    user = SimpleNamespace(observers=SimpleNamespace(first=lambda: observer_instance))
-
-    assert helpers.is_observer_user_viewing_all_incident(user) is expected
-
-
 def test_get_active_company_from_session():
     """Return the user's company selected in the current session."""
     company = object()

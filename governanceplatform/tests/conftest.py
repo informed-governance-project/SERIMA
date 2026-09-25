@@ -10,6 +10,7 @@ from governanceplatform.models import (
     EntityCategory,
     Functionality,
     Observer,
+    ObserverRegulation,
     Regulation,
     Regulator,
     Sector,
@@ -110,6 +111,9 @@ def populate_db(db):
 
     # Create regulations
     created_regulations = import_from_json(Regulation, regulations)
+    # Rules without sectors span every sector, asectorial incidents included
+    for regulation in created_regulations:
+        ObserverRegulation.objects.create(observer=created_observers[0], regulation=regulation)
 
     # Create users
     created_users = import_from_json(User, users)

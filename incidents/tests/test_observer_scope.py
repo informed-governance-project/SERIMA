@@ -1,8 +1,8 @@
 """Which incidents an observer is entitled to see.
 
 These two used to be Observer methods, which forced governanceplatform.models to import
-Incident. The seeded observer receives every incident, so the rule-driven path below is
-not reachable through the existing access-control tests.
+Incident. The seeded observer holds a sector-less rule for every regulation, so the
+existing access-control tests only exercise that broadest rule.
 """
 
 import pytest
@@ -13,10 +13,9 @@ from incidents.access_control import get_observer_incidents, observer_can_access
 
 @pytest.fixture
 def observer(populate_incident_db):
-    """The seeded observer, narrowed so its regulation rules actually decide access."""
+    """The seeded observer, stripped of its rules so each test sets the ones deciding access."""
     observer = populate_incident_db["observers"][0]
-    observer.is_receiving_all_incident = False
-    observer.save()
+    observer.observerregulation_set.all().delete()
     return observer
 
 
@@ -43,17 +42,41 @@ def _scope_to(observer, incident, sectors=None):
 
 
 @pytest.mark.django_db()
-def test_an_observer_receiving_everything_gets_every_regulated_incident(populate_incident_db, incident):
-    observer = populate_incident_db["observers"][0]
-    assert observer.is_receiving_all_incident is True
+def test_a_rule_without_sectors_covers_every_sector_of_its_regulation(observer, incident):
+    _scope_to(observer, incident, sectors=[])
 
-    assert incident in get_observer_incidents(observer)
+    assert observer_can_access_incident(observer, incident) is True
 
 
 @pytest.mark.django_db()
-def test_incidents_without_a_sector_regulation_are_never_included(populate_incident_db, incident):
+def test_a_rule_without_sectors_covers_asectorial_incidents(observer, populate_incident_db):
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    assert not incident.affected_sectors.exists()
+    _scope_to(observer, incident, sectors=[])
+
+    assert observer_can_access_incident(observer, incident) is True
+
+
+@pytest.mark.django_db()
+def test_a_rule_with_sectors_excludes_asectorial_incidents(observer, populate_incident_db):
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    _scope_to(observer, incident, sectors=populate_incident_db["sectors"])
+
+    assert observer_can_access_incident(observer, incident) is False
+
+
+@pytest.mark.django_db()
+def test_a_rule_without_sectors_is_limited_to_its_regulation(observer, incident, populate_incident_db):
+    other = next(r for r in populate_incident_db["regulations"] if r != incident.sector_regulation.regulation)
+    ObserverRegulation.objects.create(observer=observer, regulation=other)
+
+    assert observer_can_access_incident(observer, incident) is False
+
+
+@pytest.mark.django_db()
+def test_incidents_without_a_sector_regulation_are_never_included(observer, incident):
     """sector_regulation is SET_NULL, and an orphaned incident has no regulation to match."""
-    observer = populate_incident_db["observers"][0]
+    _scope_to(observer, incident, sectors=[])
     incident.sector_regulation = None
     incident.save()
 

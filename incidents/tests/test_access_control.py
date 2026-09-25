@@ -17,7 +17,6 @@ def test_can_access_incident_for_incident_owner(monkeypatch):
     monkeypatch.setattr(access_control, "is_user_regulator", lambda user: False)
     monkeypatch.setattr(access_control, "is_user_operator", lambda user: False)
     monkeypatch.setattr(access_control, "is_observer_user", lambda user: False)
-    monkeypatch.setattr(access_control, "is_observer_user_viewing_all_incident", lambda user: False)
     monkeypatch.setattr(access_control, "user_in_group", lambda user, group: group == "IncidentUser")
     incident_filter = MagicMock()
     incident_filter.exists.return_value = True
@@ -33,7 +32,6 @@ def test_can_access_incident_rejects_non_owner(monkeypatch):
     monkeypatch.setattr(access_control, "is_user_regulator", lambda user: False)
     monkeypatch.setattr(access_control, "is_user_operator", lambda user: False)
     monkeypatch.setattr(access_control, "is_observer_user", lambda user: False)
-    monkeypatch.setattr(access_control, "is_observer_user_viewing_all_incident", lambda user: False)
     monkeypatch.setattr(access_control, "user_in_group", lambda user, group: group == "IncidentUser")
     incident_filter = MagicMock()
     incident_filter.exists.return_value = False

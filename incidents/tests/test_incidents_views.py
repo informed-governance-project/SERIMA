@@ -69,7 +69,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
         u
         for u in users
         if u.email == "opadmin@com1.lu"
-        or u.email == "obsadm@cert1.lu"  # receive all incident
+        or u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "opuser@com1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -105,7 +105,7 @@ def test_can_access_incident_function(populate_incident_db):
         u
         for u in users
         if u.email == "opadmin@com1.lu"
-        or u.email == "obsadm@cert1.lu"  # receive all incident
+        or u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "opuser@com1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -147,7 +147,7 @@ def test_can_access_incident_function(populate_incident_db):
     authorized_users = [
         u
         for u in users
-        if u.email == "obsadm@cert1.lu"  # receive all incident
+        if u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "reguser@reg1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -274,7 +274,7 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
         u
         for u in users
         if u.email == "opadmin@com1.lu"
-        or u.email == "obsadm@cert1.lu"  # receive all incident
+        or u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "opuser@com1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -286,7 +286,7 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
     authorized_users = [
         u
         for u in users
-        if u.email == "obsadm@cert1.lu"  # receive all incident
+        if u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "reguser@reg1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
