@@ -6,7 +6,6 @@ from django.db.models import Q
 
 from governanceplatform.helpers import (
     is_observer_user,
-    is_observer_user_viewing_all_incident,
     is_user_operator,
     is_user_regulator,
     user_in_group,
@@ -24,9 +23,6 @@ def get_observer_incidents(observer: Observer) -> QuerySet[Incident]:
     """The incidents an observer is entitled to see, per its regulation rules."""
     base_qs = Incident.objects.exclude(sector_regulation__isnull=True)
 
-    if observer.is_receiving_all_incident:
-        return base_qs
-
     observer_regulations = observer.observerregulation_set.all()
     if not observer_regulations:
         return Incident.objects.none()
@@ -40,7 +36,8 @@ def get_observer_incidents(observer: Observer) -> QuerySet[Incident]:
         conditions = filter_conditions.get("conditions", [])
 
         regulation_q = Q(sector_regulation__regulation=regulation)
-        sectors_q = Q(affected_sectors__in=sectors)
+        # A rule without sectors spans the whole regulation, asectorial incidents included
+        sectors_q = Q(affected_sectors__in=sectors) if sectors else Q()
 
         if conditions:
             for condition in conditions:
@@ -99,9 +96,6 @@ def can_access_incident(user: User, incident: Incident, company_id: int | None =
         return True
     # IncidentUser can access their reports.
     if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
-        return True
-    # ObserverUser access all incident if he is in a observer who can access all incident.
-    if is_observer_user_viewing_all_incident(user):
         return True
     if is_observer_user(user) and observer_can_access_incident(user.observers.first(), incident):
         return True
