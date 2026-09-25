@@ -793,7 +793,7 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
                 request,
                 _(
                     "This standard is in use: declarations already reference it. "
-                    "Its name, its active status and the configuration of the declaration table columns stay editable; "
+                    "Its name and the configuration of the declaration table columns stay editable; "
                     "the regulation, the notification e-mails and the list of security objectives do not."
                 ),
             )
