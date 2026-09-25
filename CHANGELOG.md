@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An evaluation framework can be deactivated by its regulator from its configuration page, retiring it without deleting it or disturbing the declarations already made against it. A deactivated framework is no longer offered when an operator starts a declaration, when an operator duplicates one of an earlier year, or when a regulator imports a declaration from an Excel workbook. The declarations already made on it stay readable, editable, reviewable and downloadable, and an operator whose declaration was sent back for revision can still produce a new version of it. The reporting module is unaffected: a report is built over the declarations already made, so a retired framework stays available both for new report projects and for those already built on it
 
 
+### Changed
+
+- The "Receives all incident notifications" option of an observer is removed (#886). The incidents an observer sees and is notified of are now set only by its observer regulations, and an observer regulation with no sector selected covers every sector of its regulation, incidents declared without a sector included. An observer that relied on the option receives no incident until a platform administrator gives it observer regulations: one per regulation, with no sector and empty incident rules, restores what it received before
+
 ### Fixed
 
 - A link back to the previous page, after importing a declaration or a risk analysis or after editing a report project, is now followed only when it points at SERIMA itself. The address was taken from the browser's Referer header and used unchecked, so a crafted link could have bounced a signed-in user onto an outside site
