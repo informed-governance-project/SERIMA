@@ -69,13 +69,6 @@ def is_observer_user(user: User | AnonymousUser) -> bool:
     return user.is_authenticated and user.is_observer()
 
 
-def is_observer_user_viewing_all_incident(user: User | AnonymousUser) -> bool:
-    if not is_observer_user(user):
-        return False
-    observer = user.observers.first()
-    return observer is not None and observer.is_receiving_all_incident
-
-
 def get_active_company_from_session(request: HttpRequest) -> Company | None:
     company_in_use = request.session.get("company_in_use")
     return request.user.companies.filter(id=company_in_use).first() if company_in_use else None
