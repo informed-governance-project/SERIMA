@@ -7,6 +7,7 @@ import pytest
 from django.contrib.admin.models import LogEntry
 from django.core import mail
 from django.urls import reverse
+from kombu.exceptions import OperationalError
 
 from governanceplatform.globals import EXPORT
 from governanceplatform.models import RegulatorUser, Sector
@@ -151,6 +152,59 @@ def test_export_view_dispatches_the_task(otp_client, populate_so_db):
     assert export.user == regulator_admin
     assert export.task_status == "RUNNING"
     delay.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_export_view_reports_a_dead_broker(otp_client, populate_so_db):
+    regulator_admin = get_user(populate_so_db, "regadmin@reg1.lu")
+    grant_export_right(regulator_admin)
+    client = otp_client(regulator_admin)
+
+    with patch(
+        "securityobjectives.views.generate_so_export_task.delay",
+        side_effect=OperationalError("broker is down"),
+    ):
+        response = client.post(reverse("export_security_objectives"), build_filters(populate_so_db))
+
+    assert response.status_code == 400
+    # The job never ran, so it must not be left behind at RUNNING.
+    assert not SecurityObjectiveExport.objects.exists()
+
+
+@pytest.mark.django_db
+def test_status_fails_a_running_job_when_the_stack_is_down(otp_client, populate_so_db):
+    regulator_admin = get_user(populate_so_db, "regadmin@reg1.lu")
+    grant_export_right(regulator_admin)
+    export = SecurityObjectiveExport.objects.create(
+        user=regulator_admin,
+        regulation_id=populate_so_db["so_standard"][0].regulation_id,
+        filename="SO_export.xlsx",
+    )
+    client = otp_client(regulator_admin)
+
+    with patch("securityobjectives.views.celery_health_check", return_value=False):
+        response = client.get(reverse("security_objectives_export_status", args=[export.id]))
+
+    assert response.json()["status"] == "FAIL"
+    export.refresh_from_db()
+    assert export.task_status == "FAIL"
+
+
+@pytest.mark.django_db
+def test_status_leaves_a_running_job_alone_when_the_stack_is_healthy(otp_client, populate_so_db):
+    regulator_admin = get_user(populate_so_db, "regadmin@reg1.lu")
+    grant_export_right(regulator_admin)
+    export = SecurityObjectiveExport.objects.create(
+        user=regulator_admin,
+        regulation_id=populate_so_db["so_standard"][0].regulation_id,
+        filename="SO_export.xlsx",
+    )
+    client = otp_client(regulator_admin)
+
+    with patch("securityobjectives.views.celery_health_check", return_value=True):
+        response = client.get(reverse("security_objectives_export_status", args=[export.id]))
+
+    assert response.json()["status"] == "RUNNING"
 
 
 @pytest.mark.django_db
