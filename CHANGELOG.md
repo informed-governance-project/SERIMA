@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The "Receives all incident notifications" option of an observer is removed (#886). The incidents an observer sees and is notified of are now set only by its observer regulations, and an observer regulation with no sector selected covers every sector of its regulation, incidents declared without a sector included. An observer that relied on the option receives no incident until a platform administrator gives it observer regulations: one per regulation, with no sector and empty incident rules, restores what it received before
+- Resetting the accepted terms of service or the accepted cookies from the user list now asks the platform administrator to confirm first, and the reset can no longer be triggered by simply opening its address (#889)
 
 ### Fixed
 
