@@ -2,6 +2,7 @@ import pytest
 
 from governanceplatform.helpers import user_in_group
 from governanceplatform.models import (
+    ApplicationConfig,
     User,
 )
 
@@ -46,3 +47,61 @@ def test_add_user_via_admin(otp_client, populate_db):
         assert response.status_code == 200
         created_user = User.objects.get(email=email)
         assert user_in_group(created_user, expected_group), f"{creator_group} → {expected_group} expected, but got something else"
+
+
+def platform_admin(users):
+    return next(user for user in users if user_in_group(user, "PlatformAdmin"))
+
+
+@pytest.mark.django_db
+def test_reset_accepted_terms_on_post(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    response = client.post("/admin/governanceplatform/user/reset-accepted-terms/")
+
+    assert response.status_code == 302
+    assert not User.objects.filter(accepted_terms=True).exists()
+
+
+@pytest.mark.django_db
+def test_reset_accepted_terms_refuses_get(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    response = client.get("/admin/governanceplatform/user/reset-accepted-terms/")
+
+    assert response.status_code == 404
+    assert User.objects.filter(accepted_terms=True).exists()
+
+
+@pytest.mark.django_db
+def test_reset_cookie_acceptation_on_post(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+    version = ApplicationConfig.objects.get(key="cookiebanner").value
+
+    response = client.post("/admin/governanceplatform/user/reset-cookie-acceptation/")
+
+    assert response.status_code == 302
+    assert ApplicationConfig.objects.get(key="cookiebanner").value != version
+
+
+@pytest.mark.django_db
+def test_reset_cookie_acceptation_refuses_get(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+    version = ApplicationConfig.objects.get(key="cookiebanner").value
+
+    response = client.get("/admin/governanceplatform/user/reset-cookie-acceptation/")
+
+    assert response.status_code == 404
+    assert ApplicationConfig.objects.get(key="cookiebanner").value == version
+
+
+@pytest.mark.django_db
+def test_reset_buttons_ask_for_confirmation(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    body = client.get("/admin/governanceplatform/user/").content.decode()
+
+    for url in ("reset-accepted-terms/", "reset-cookie-acceptation/"):
+        assert f'formaction="{url}"' in body
+    assert body.count("data-confirm-message=") >= 2
+    assert 'id="account-action-confirm"' in body
