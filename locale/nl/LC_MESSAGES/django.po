@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 16:48+0200\n"
+"POT-Creation-Date: 2026-09-28 16:54+0200\n"
 "PO-Revision-Date: 2026-09-25 07:42+0000\n"
 "Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
 "Language-Team: \n"
@@ -2434,8 +2434,8 @@ msgstr ""
 "moeten gelijk zijn"
 
 #: securityobjectives/email.py:88
-#, python-brace-format
-msgid "[{site}] New security objectives export"
+#| msgid "Security objective priority"
+msgid "New security objectives export"
 msgstr ""
 
 #: securityobjectives/forms.py:28
