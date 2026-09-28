@@ -1230,7 +1230,7 @@ class UserAdmin(admin.ModelAdmin):
         return format_html('<span class="account-actions">{}</span>', self.administrator_button(obj))
 
     def reset_cookie_acceptation(self, request):
-        if not user_in_group(request.user, "PlatformAdmin"):
+        if request.method != "POST" or not user_in_group(request.user, "PlatformAdmin"):
             raise Http404()
 
         cfg = ApplicationConfig.objects.get(key="cookiebanner")
@@ -1240,7 +1240,7 @@ class UserAdmin(admin.ModelAdmin):
         return redirect("..")
 
     def reset_accepted_terms(self, request):
-        if not user_in_group(request.user, "PlatformAdmin"):
+        if request.method != "POST" or not user_in_group(request.user, "PlatformAdmin"):
             raise Http404()
 
         User.objects.update(accepted_terms=False)
