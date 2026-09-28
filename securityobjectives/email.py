@@ -85,7 +85,7 @@ def send_export_notification(regulator, regulation, sector_ids):
     )
 
     with translation.override(settings.LANGUAGE_CODE):
-        subject = _("[{site}] New security objectives export").format(site=settings.SITE_NAME)
+        subject = f"[{settings.SITE_NAME}] {_('New security objectives export')}"
 
     send_html_email(subject, html_content, sorted(recipient_list))
 
