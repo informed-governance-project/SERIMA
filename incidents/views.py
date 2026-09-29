@@ -1081,16 +1081,25 @@ class FormWizardView(SessionWizardView):
             current_data = form.cleaned_data
             storaged_data = self.get_cleaned_data_for_step(self.steps.current) or None
 
+            # Cleared with None, not {}: empty data would bind the form and hide its initial values (e.g. TIME_ZONE)
             if storaged_data and self.steps.current in ["1", "2"] and current_data != storaged_data:
-                self.storage.set_step_data(goto_step, {})
-                self.storage.set_step_data("3", {})
+                self.storage.set_step_data(goto_step, None)
+                self.storage.set_step_data("3", None)
 
             self.storage.set_step_data(self.steps.current, self.process_step(form))
 
         elif int(self.steps.current) < int(goto_step):
             return self.render_revalidation_failure(self.steps.current, form)
         else:
-            self.storage.set_step_data(self.steps.current, {})
+            self.storage.set_step_data(self.steps.current, None)
+
+        # Both the Next button's target and the form list formtools caches per request were resolved before
+        # this answer was stored, yet steps "3"/"4" exist only if the chosen regulations and regulators call for them.
+        del self._resolved_form_list
+        if int(goto_step) > int(self.steps.current):
+            if self.steps.current == self.steps.last:
+                return self.render_done(form, **kwargs)
+            goto_step = self.steps.next
 
         return super().render_goto_step(goto_step, **kwargs)
 
