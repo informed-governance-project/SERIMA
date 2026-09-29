@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 16:54+0200\n"
+"POT-Creation-Date: 2026-09-29 11:34+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,38 +17,38 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: governanceplatform/admin.py:81 governanceplatform/context_processors.py:30
+#: governanceplatform/admin.py:80 governanceplatform/context_processors.py:30
 #: governanceplatform/views.py:98
 msgid "Settings"
 msgstr ""
 
-#: governanceplatform/admin.py:254 governanceplatform/admin.py:255
+#: governanceplatform/admin.py:253 governanceplatform/admin.py:254
 msgid "Django Settings"
 msgstr ""
 
-#: governanceplatform/admin.py:332
+#: governanceplatform/admin.py:331
 msgid "Contact for company"
 msgstr ""
 
-#: governanceplatform/admin.py:333
+#: governanceplatform/admin.py:332
 msgid "Contacts for company"
 msgstr ""
 
-#: governanceplatform/admin.py:477 governanceplatform/admin.py:945
-#: governanceplatform/admin.py:958
+#: governanceplatform/admin.py:476 governanceplatform/admin.py:940
+#: governanceplatform/admin.py:953
 msgid "Contact information"
 msgstr ""
 
-#: governanceplatform/admin.py:488
+#: governanceplatform/admin.py:487
 msgid "Configuration information"
 msgstr ""
 
-#: governanceplatform/admin.py:497 governanceplatform/models.py:181
+#: governanceplatform/admin.py:496 governanceplatform/models.py:181
 #: governanceplatform/models.py:594
 msgid "Entity categories"
 msgstr ""
 
-#: governanceplatform/admin.py:506 governanceplatform/models.py:82
+#: governanceplatform/admin.py:505 governanceplatform/models.py:82
 #: governanceplatform/models.py:606 incidents/admin.py:597
 #: incidents/admin.py:665 incidents/admin.py:1013 incidents/filters.py:31
 #: incidents/forms.py:841 incidents/models.py:57 incidents/models.py:334
@@ -62,75 +62,75 @@ msgstr ""
 msgid "Sectors"
 msgstr ""
 
-#: governanceplatform/admin.py:578
+#: governanceplatform/admin.py:577
 msgid "Suggestion to Link a User Account with Your Company"
 msgstr ""
 
-#: governanceplatform/admin.py:769
+#: governanceplatform/admin.py:773
 msgid "Reset 2FA"
 msgstr ""
 
-#: governanceplatform/admin.py:788 governanceplatform/models.py:230
+#: governanceplatform/admin.py:783 governanceplatform/models.py:230
 #: governanceplatform/models.py:338 governanceplatform/models.py:557
 #: governanceplatform/models.py:560 incidents/models.py:580
 #: incidents/views.py:1069
 msgid "Regulators"
 msgstr ""
 
-#: governanceplatform/admin.py:807 governanceplatform/models.py:309
+#: governanceplatform/admin.py:802 governanceplatform/models.py:309
 #: governanceplatform/models.py:381 governanceplatform/models.py:529
 #: governanceplatform/models.py:610
 msgid "Observer"
 msgstr ""
 
-#: governanceplatform/admin.py:826 governanceplatform/models.py:195
+#: governanceplatform/admin.py:821 governanceplatform/models.py:195
 #: governanceplatform/models.py:333
 msgid "Operators"
 msgstr ""
 
-#: governanceplatform/admin.py:846 governanceplatform/models.py:388
+#: governanceplatform/admin.py:841 governanceplatform/models.py:388
 msgid "Roles"
 msgstr ""
 
-#: governanceplatform/admin.py:978
+#: governanceplatform/admin.py:974
 msgid "Create this user as an administrator"
 msgstr ""
 
-#: governanceplatform/admin.py:1082
+#: governanceplatform/admin.py:1078
 #, python-format
 msgid "%(user)s is now linked to your company."
 msgstr ""
 
-#: governanceplatform/admin.py:1094
+#: governanceplatform/admin.py:1090
 #, python-format
 msgid "The suggestion to link %(user)s has been rejected."
 msgstr ""
 
-#: governanceplatform/admin.py:1106
+#: governanceplatform/admin.py:1102
 #, python-format
 msgid "%(user)s is now an administrator of your company."
 msgstr ""
 
-#: governanceplatform/admin.py:1109
+#: governanceplatform/admin.py:1105
 #, python-format
 msgid "%(user)s is no longer an administrator of your company."
 msgstr ""
 
-#: governanceplatform/admin.py:1124
+#: governanceplatform/admin.py:1125
 #, python-format
 msgid "The 2FA token of %(user)s has been reset."
 msgstr ""
 
-#: governanceplatform/admin.py:1132
+#: governanceplatform/admin.py:1173
 #, python-format
 msgid "Removing %(user)s will unlink the account from your company."
 msgstr ""
 
-#: governanceplatform/admin.py:1163
+#: governanceplatform/admin.py:1199
 msgid "Unset Administrator"
 msgstr ""
 
-#: governanceplatform/admin.py:1165
+#: governanceplatform/admin.py:1201
 #, python-format
 msgid ""
 "Removing %(user)s’s administrator privileges will restrict their account "
@@ -138,123 +138,123 @@ msgid ""
 "current session."
 msgstr ""
 
-#: governanceplatform/admin.py:1169
+#: governanceplatform/admin.py:1205
 msgid "Set Administrator"
 msgstr ""
 
-#: governanceplatform/admin.py:1171
+#: governanceplatform/admin.py:1207
 #, python-format
 msgid ""
 "Adding %(user)s an Administrator will let the account manage your operator, "
 "its users and settings. The user will be logged out of the current session."
 msgstr ""
 
-#: governanceplatform/admin.py:1182
+#: governanceplatform/admin.py:1218
 msgid "Reset 2FA token"
 msgstr ""
 
-#: governanceplatform/admin.py:1183
+#: governanceplatform/admin.py:1219
 #, python-format
 msgid ""
 "Resetting the 2FA token of %(user)s will require the account to setup a new "
 "authenticator at the next login."
 msgstr ""
 
-#: governanceplatform/admin.py:1186
+#: governanceplatform/admin.py:1222 governanceplatform/admin.py:1261
 msgid "Account actions"
 msgstr ""
 
-#: governanceplatform/admin.py:1199
+#: governanceplatform/admin.py:1235
 msgid "Approve"
 msgstr ""
 
-#: governanceplatform/admin.py:1200
+#: governanceplatform/admin.py:1236
 #, python-format
 msgid ""
 "Approving %(user)s will associate the account with your company, including "
 "their notified incidents."
 msgstr ""
 
-#: governanceplatform/admin.py:1206
+#: governanceplatform/admin.py:1242
 msgid "Reject"
 msgstr ""
 
-#: governanceplatform/admin.py:1207
+#: governanceplatform/admin.py:1243
 #, python-format
 msgid "Rejecting %(user)s will remove the suggested link with your company."
 msgstr ""
 
-#: governanceplatform/admin.py:1239
+#: governanceplatform/admin.py:1281
 msgid "Cookies acceptation has been reseted"
 msgstr ""
 
-#: governanceplatform/admin.py:1247
+#: governanceplatform/admin.py:1289
 msgid "Terms acceptation has been reset"
 msgstr ""
 
-#: governanceplatform/admin.py:1262
+#: governanceplatform/admin.py:1304
 msgid ""
 "There is a suggestion to link a User Account to your company. Please Approve "
 "or Reject the suggestion."
 msgstr ""
 
-#: governanceplatform/admin.py:1267
+#: governanceplatform/admin.py:1309
 msgid "2FA Activated"
 msgstr ""
 
-#: governanceplatform/admin.py:1271
+#: governanceplatform/admin.py:1313
 msgid "Is Administrator"
 msgstr ""
 
-#: governanceplatform/admin.py:1275 governanceplatform/models.py:464
+#: governanceplatform/admin.py:1317 governanceplatform/models.py:464
 msgid "Approved"
 msgstr ""
 
-#: governanceplatform/admin.py:1345 governanceplatform/models.py:641
+#: governanceplatform/admin.py:1389 governanceplatform/models.py:641
 msgid "Additional information"
 msgstr ""
 
-#: governanceplatform/admin.py:1673 governanceplatform/models.py:628
+#: governanceplatform/admin.py:1720 governanceplatform/models.py:628
 msgid "Observer regulation"
 msgstr ""
 
-#: governanceplatform/admin.py:1675 governanceplatform/models.py:629
+#: governanceplatform/admin.py:1722 governanceplatform/models.py:629
 msgid "Observer regulations"
 msgstr ""
 
-#: governanceplatform/admin.py:1689 governanceplatform/models.py:538
+#: governanceplatform/admin.py:1736 governanceplatform/models.py:538
 msgid "Observer user"
 msgstr ""
 
-#: governanceplatform/admin.py:1690 governanceplatform/models.py:539
+#: governanceplatform/admin.py:1737 governanceplatform/models.py:539
 msgid "Observer users"
 msgstr ""
 
-#: governanceplatform/admin.py:1855
+#: governanceplatform/admin.py:1902
 msgid "Test RT Connection"
 msgstr ""
 
-#: governanceplatform/admin.py:1856
+#: governanceplatform/admin.py:1903
 msgid "Before testing the connection, make sure to save the RT configuration."
 msgstr ""
 
-#: governanceplatform/admin.py:1874 governanceplatform/admin.py:1885
+#: governanceplatform/admin.py:1921 governanceplatform/admin.py:1932
 msgid "Observer not found."
 msgstr ""
 
-#: governanceplatform/admin.py:1880
+#: governanceplatform/admin.py:1927
 msgid "Method not allowed."
 msgstr ""
 
-#: governanceplatform/admin.py:1890
+#: governanceplatform/admin.py:1937
 msgid "Permission denied."
 msgstr ""
 
-#: governanceplatform/admin.py:1912
+#: governanceplatform/admin.py:1959
 msgid "RT connection successful."
 msgstr ""
 
-#: governanceplatform/admin.py:1914
+#: governanceplatform/admin.py:1961
 msgid "RT connection failed. Check URL, queue and token."
 msgstr ""
 
