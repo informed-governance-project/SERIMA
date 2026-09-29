@@ -13,7 +13,6 @@ from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
-from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
@@ -959,6 +958,7 @@ class UserAdmin(admin.ModelAdmin):
     ]
     actions = [reset_2FA]
     change_list_template = "admin/custom_change_user_list.html"
+    change_form_template = "admin/custom_change_user_form.html"
 
     # manage the administrator field for operatorAdmin
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -1172,12 +1172,7 @@ class UserAdmin(admin.ModelAdmin):
                 context["pending_link_company"] = get_active_company_from_session(request)
                 context["pending_link_actions"] = self.account_actions(obj)
 
-        response = super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
-
-        if is_operator_admin and isinstance(response, TemplateResponse):
-            response.template_name = "admin/custom_change_user_form.html"
-
-        return response
+        return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
     def action_button(self, url_name, obj, label, message, css_class="button"):
         """
@@ -1329,6 +1324,8 @@ class UserAdmin(admin.ModelAdmin):
         if obj is None:
             return readonly_fields
 
+        readonly_fields += ("reset_2FA_action",)
+
         if user_in_group(obj, "PlatformAdmin"):
             return readonly_fields
         if is_user_regulator(obj):
@@ -1336,7 +1333,7 @@ class UserAdmin(admin.ModelAdmin):
         if is_observer_user(obj):
             return ("get_observers",) + readonly_fields
         if user_in_group(request.user, "OperatorAdmin"):
-            return readonly_fields + ("email", "get_is_administrator", "get_is_approved", "reset_2FA_action", "administrator_action")
+            return readonly_fields + ("email", "get_is_administrator", "get_is_approved", "administrator_action")
 
         return readonly_fields
 
