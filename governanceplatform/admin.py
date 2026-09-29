@@ -768,16 +768,7 @@ class userRegulatorMultipleInline(userRegulatorInline):
 # reset the 2FA we delete the TOTP devices
 @admin.action(description=_("Reset 2FA"))
 def reset_2FA(modeladmin, request, queryset):
-    request_user = request.user
-    for user in queryset:
-        # conditions for regulatoradmin issue #550
-        if user_in_group(request_user, "RegulatorAdmin") and not (
-            user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser")
-        ):
-            continue
-        # conditions for RegulatorUser issue #577
-        if user_in_group(request_user, "RegulatorUser") and (user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser")):
-            continue
+    for user in queryset.filter(can_reset_2FA=True):
         devices = devices_for_user(user)
         for device in devices:
             device.delete()
@@ -1114,16 +1105,61 @@ class UserAdmin(admin.ModelAdmin):
         return self.redirect_to_changelist(request)
 
     def reset_2FA_token(self, request, user_id):
-        company_user = self.get_company_link(request, user_id, approved=True)
-        for device in devices_for_user(company_user.user):
+        # Filtered rather than fetched with get(): the role querysets join groups and regulators,
+        # so one account can come back on several rows.
+        user = self.get_queryset(request).filter(pk=user_id, can_reset_2FA=True).first() if request.method == "POST" else None
+        if user is None:
+            raise Http404()
+
+        for device in devices_for_user(user):
             device.delete()
 
-        self.log_change(request, company_user.user, "Reset the 2FA token.")
+        self.log_change(request, user, "Reset the 2FA token.")
         messages.success(
             request,
-            _("The 2FA token of %(user)s has been reset.") % {"user": company_user.user.email},
+            _("The 2FA token of %(user)s has been reset.") % {"user": user.email},
         )
         return self.redirect_to_changelist(request)
+
+    def reset_2FA_rule(self, request) -> Q:
+        """
+        The accounts the caller may reset the 2FA of, among those its role lists. The buttons, the
+        endpoint and the bulk action all read it, so they cannot disagree. Checked in the order
+        get_queryset checks the roles, so an account in several groups gets one consistent answer.
+        """
+        user = request.user
+        regulator_account = Exists(
+            User.groups.through.objects.filter(user=OuterRef("pk"), group__name__in=["RegulatorAdmin", "RegulatorUser"])
+        )
+
+        if user_in_group(user, "PlatformAdmin"):
+            # PlatformAdmin can reset any account they can see.
+            rule = Q()
+        elif user_in_group(user, "RegulatorAdmin"):
+            # RegulatorAdmin can reset same regulator accounts only (#550).
+            rule = Q(regulator_account)
+        elif user_in_group(user, "RegulatorUser"):
+            # RegulatorUser can reset anything except regulator accounts (#577).
+            rule = ~Q(regulator_account)
+        elif user_in_group(user, "ObserverAdmin"):
+            # ObserverAdmin can reset any account they can see.
+            rule = Q()
+        elif user_in_group(user, "OperatorAdmin"):
+            # OperatorAdmin can reset accounts with an approved link to the active company.
+            rule = Q(
+                Exists(
+                    CompanyUser.objects.filter(
+                        user=OuterRef("pk"),
+                        company=get_active_company_from_session(request),
+                        approved=True,
+                    )
+                )
+            )
+        else:
+            rule = Q(pk__in=[])
+
+        # The caller resets their own token from their profile, not from here.
+        return rule & ~Q(pk=user.pk)
 
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
         is_operator_admin = user_in_group(request.user, "OperatorAdmin")
@@ -1217,10 +1253,16 @@ class UserAdmin(admin.ModelAdmin):
 
     @admin.display(description="")
     def reset_2FA_action(self, obj):
-        if obj.is_current_user or not obj.is_approved:
+        if not obj.can_reset_2FA:
             return ""
 
         return format_html('<span class="account-actions">{}</span>', self.reset_2FA_button(obj))
+
+    @admin.display(description=_("Account actions"))
+    def reset_2FA_column(self, obj):
+        # The detail view shows the button beside the field it resets, which labels it; a changelist
+        # column has no such neighbour and needs a header of its own.
+        return self.reset_2FA_action(obj)
 
     @admin.display(description="")
     def administrator_action(self, obj):
@@ -1406,6 +1448,8 @@ class UserAdmin(admin.ModelAdmin):
             ]
             list_display = [field for field in list_display if field not in fields_to_exclude]
             list_display = [*list_display, "account_actions"]
+        else:
+            list_display = [*list_display, "reset_2FA_column"]
 
         return list_display
 
@@ -1418,6 +1462,8 @@ class UserAdmin(admin.ModelAdmin):
                 # and the has_2fa ordering agrees with the value shown.
                 has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True))
                 | Exists(StaticDevice.objects.filter(user=OuterRef("pk"), confirmed=True)),
+                is_current_user=Q(pk=request.user.pk),
+                can_reset_2FA=self.reset_2FA_rule(request),
             )
         )
         user = request.user
@@ -1487,7 +1533,6 @@ class UserAdmin(admin.ModelAdmin):
                             approved=True,
                         )
                     ),
-                    is_current_user=Q(pk=user.pk),
                     has_pending_company_link=Exists(
                         CompanyUser.objects.filter(
                             user=OuterRef("pk"),
