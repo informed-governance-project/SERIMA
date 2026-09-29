@@ -759,6 +759,11 @@ class userRegulatorInline(admin.TabularInline):
 
         return readonly_fields
 
+    def get_fields(self, request, obj=None):
+        # Django appends readonly fields after the editable ones, which splits the export flags apart.
+        order = ["user", "regulator", "is_regulator_administrator", "can_export_incidents", "can_export_security_objectives", "sectors"]
+        return sorted(super().get_fields(request, obj), key=order.index)
+
 
 class userRegulatorMultipleInline(userRegulatorInline):
     max_num = None
