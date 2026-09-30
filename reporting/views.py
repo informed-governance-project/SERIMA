@@ -20,7 +20,6 @@ from django.http import (
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -32,6 +31,7 @@ from governanceplatform.helpers import (
     celery_health_check,
     get_sectors_grouped,
     is_user_regulator,
+    render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
     user_in_group,
@@ -1277,11 +1277,3 @@ def add_new_report_recommendations(company, sector, year, report_recommendations
         ObservationRecommendationThrough.objects.bulk_create(new_report_recommendations)
 
     create_entry_log(user, company_reporting_obj, f"{action} RECOMMENDATIONS")
-
-
-def render_error_messages(request):
-    return render_to_string(
-        "django_bootstrap5/messages.html",
-        {"messages": messages.get_messages(request)},
-        request=request,
-    )

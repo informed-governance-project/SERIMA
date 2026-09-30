@@ -45,6 +45,7 @@ from governanceplatform.helpers import (
     get_sectors_grouped,
     is_user_operator,
     is_user_regulator,
+    render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
     user_in_group,
@@ -1259,14 +1260,6 @@ def get_completion_objective(security_objective, standard_answer):
         "is_partially": any_partially,
         "is_not_started": total_count == 0,
     }
-
-
-def render_error_messages(request):
-    return render_to_string(
-        "django_bootstrap5/messages.html",
-        {"messages": messages.get_messages(request)},
-        request=request,
-    )
 
 
 def get_export_choices(user, base_queryset):

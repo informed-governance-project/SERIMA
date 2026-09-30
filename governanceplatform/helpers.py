@@ -531,6 +531,14 @@ def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpRespons
     return HttpResponseRedirect(reverse(fallback))
 
 
+def render_error_messages(request: HttpRequest) -> str:
+    return render_to_string(
+        "django_bootstrap5/messages.html",
+        {"messages": messages.get_messages(request)},
+        request=request,
+    )
+
+
 def is_celery_worker_alive() -> bool:
     try:
         inspect = current_app.control.inspect()

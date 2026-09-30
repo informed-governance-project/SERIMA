@@ -19,7 +19,6 @@ from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
@@ -38,6 +37,7 @@ from governanceplatform.helpers import (
     is_observer_user,
     is_user_operator,
     is_user_regulator,
+    render_error_messages,
     render_to_string_multi_languages,
     sort_queryset_by_field,
     translated_queryset,
@@ -1727,11 +1727,3 @@ def can_export_incidents(user):
             can_export_incidents=True,
         ).exists()
     ) or (observer and user.observeruser_set.filter(observer=observer, can_export_incidents=True).exists())
-
-
-def render_error_messages(request):
-    return render_to_string(
-        "django_bootstrap5/messages.html",
-        {"messages": messages.get_messages(request)},
-        request=request,
-    )
