@@ -172,8 +172,7 @@ def credentials(role: str, roles: dict[str, Any]) -> tuple[str, str]:
 
     if (not username or not password) and (name := config.get("credentials_file")):
         path = HERE / name
-        if path.exists():
-            stored = json.loads(path.read_text())
+        if path.exists() and (stored := json.loads(path.read_text()).get(role)):
             username, password = username or stored["username"], password or stored["password"]
 
     if not username or not password:

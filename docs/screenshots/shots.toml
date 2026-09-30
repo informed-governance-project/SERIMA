@@ -25,9 +25,14 @@ hide = [
 annotation_color = "#1a5276"
 # The manual is laid out around 1440px-wide figures.
 
+# Every role has a throwaway account, written to `credentials_file` under the
+# role's name by `manage.py screenshot_fixture --create`. The environment still
+# overrides it when a real account is wanted instead.
+
 [roles.operator_admin]
 username_env = "SERIMA_SHOT_OPERATOR_ADMIN_USER"
 password_env = "SERIMA_SHOT_OPERATOR_ADMIN_PASS"
+credentials_file = ".fixture-credentials.json"
 # Set when the account belongs to more than one company, to skip the
 # company-selection interstitial deterministically.
 # company = "Example Operator SA"
@@ -37,17 +42,22 @@ password_env = "SERIMA_SHOT_OPERATOR_ADMIN_PASS"
 # while 2FA is off. See the note under the 2FA shots below.
 username_env = "SERIMA_SHOT_OPERATOR_USER"
 password_env = "SERIMA_SHOT_OPERATOR_PASS"
-# Written by `manage.py screenshot_fixture --create`; the environment still
-# overrides it when a real account is wanted instead.
 credentials_file = ".fixture-credentials.json"
 
 [roles.regulator_admin]
+username_env = "SERIMA_SHOT_REGULATOR_ADMIN_USER"
+password_env = "SERIMA_SHOT_REGULATOR_ADMIN_PASS"
+credentials_file = ".fixture-credentials.json"
+
+[roles.regulator_user]
 username_env = "SERIMA_SHOT_REGULATOR_USER"
 password_env = "SERIMA_SHOT_REGULATOR_PASS"
+credentials_file = ".fixture-credentials.json"
 
 [roles.platform_admin]
 username_env = "SERIMA_SHOT_PLATFORM_USER"
 password_env = "SERIMA_SHOT_PLATFORM_PASS"
+credentials_file = ".fixture-credentials.json"
 
 # --- Two-factor enrolment (docs/ui_enable_2FA.rst) --------------------------
 #
