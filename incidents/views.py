@@ -59,6 +59,7 @@ from .access_control import (
     can_access_incident,
     can_create_incident_report,
     can_edit_incident_report,
+    can_export_incidents,
     get_observer_incidents,
 )
 from .email import send_email, send_html_email
@@ -1705,16 +1706,3 @@ def create_entry_log(user, incident, incident_report, action, request=None):
         role=role,
         entity_name=entity_name,
     )
-
-
-def can_export_incidents(user):
-    regulator = user.regulators.first()
-    observer = user.observers.first()
-    return (
-        regulator
-        and user.regulatoruser_set.filter(
-            regulator=regulator,
-            is_regulator_administrator=True,
-            can_export_incidents=True,
-        ).exists()
-    ) or (observer and user.observeruser_set.filter(observer=observer, can_export_incidents=True).exists())

@@ -157,3 +157,19 @@ def can_edit_incident_report(user: User, incident: Incident, company_id: int | N
         return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
 
     return False
+
+
+def can_export_incidents(user: User) -> bool:
+    regulator = user.regulators.first()
+    observer = user.observers.first()
+    return bool(
+        (
+            regulator
+            and user.regulatoruser_set.filter(
+                regulator=regulator,
+                is_regulator_administrator=True,
+                can_export_incidents=True,
+            ).exists()
+        )
+        or (observer and user.observeruser_set.filter(observer=observer, can_export_incidents=True).exists())
+    )
