@@ -1,7 +1,10 @@
 import math
+import re
 from collections import OrderedDict
 from itertools import chain
+from typing import TYPE_CHECKING
 
+import pytz
 from django.utils import timezone
 
 from .models import (
@@ -12,6 +15,11 @@ from .models import (
     SectorRegulationWorkflow,
     Workflow,
 )
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from pytz.tzinfo import BaseTzInfo
 
 SPREADSHEET_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
 
@@ -143,3 +151,38 @@ def get_workflow_categories(
     else:
         categories = []
     return categories
+
+
+def group_keys_by_index(keys: list[str], length_fixed_values: int) -> list[str]:
+    fixed_keys = keys[:length_fixed_values]
+    dynamic_keys = keys[length_fixed_values:]
+    groups: OrderedDict[str, list[tuple[int, str]]] = OrderedDict()
+    for key in dynamic_keys:
+        match = re.match(r"^(.*\D)\s*:?\s*(\d+)$", key)
+        if match:
+            prefix = match.group(1).strip()
+            index = int(match.group(2))
+            if prefix not in groups:
+                groups[prefix] = []
+            groups[prefix].append((index, key))
+        else:
+            if key not in groups:
+                groups[key] = []
+            groups[key].append((0, key))
+
+    grouped_keys = []
+    for _prefix, items in groups.items():
+        items.sort(key=lambda x: x[0])
+        grouped_keys.extend([key for _, key in items])
+    return fixed_keys + grouped_keys
+
+
+def extract_ids(data: list[str]) -> list[int]:
+    return [int(item) for item in data if item.isdigit()]
+
+
+def convert_to_utc(date: datetime | None, local_tz: BaseTzInfo) -> datetime | None:
+    if date:
+        local_dt = local_tz.localize(date.replace(tzinfo=None))
+        return local_dt.astimezone(pytz.utc)
+    return None

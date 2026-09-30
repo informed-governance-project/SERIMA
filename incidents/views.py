@@ -1,7 +1,5 @@
 import csv
 import logging
-import re
-from collections import OrderedDict
 from datetime import date
 from urllib.parse import urlencode
 
@@ -71,7 +69,14 @@ from .globals import (
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
 )
-from .helpers import get_workflow_categories, is_deadline_exceeded, sanitize_spreadsheet_cell
+from .helpers import (
+    convert_to_utc,
+    extract_ids,
+    get_workflow_categories,
+    group_keys_by_index,
+    is_deadline_exceeded,
+    sanitize_spreadsheet_cell,
+)
 from .models import (
     Answer,
     Impact,
@@ -996,30 +1001,6 @@ def export_incidents(request):
     return render(request, "modals/export_incidents.html", {"form": form})
 
 
-def group_keys_by_index(keys, length_fixed_values):
-    fixed_keys = keys[:length_fixed_values]
-    dynamic_keys = keys[length_fixed_values:]
-    groups = OrderedDict()
-    for key in dynamic_keys:
-        match = re.match(r"^(.*\D)\s*:?\s*(\d+)$", key)
-        if match:
-            prefix = match.group(1).strip()
-            index = int(match.group(2))
-            if prefix not in groups:
-                groups[prefix] = []
-            groups[prefix].append((index, key))
-        else:
-            if key not in groups:
-                groups[key] = []
-            groups[key].append((0, key))
-
-    grouped_keys = []
-    for _prefix, items in groups.items():
-        items.sort(key=lambda x: x[0])
-        grouped_keys.extend([key for _, key in items])
-    return fixed_keys + grouped_keys
-
-
 def is_incidents_report_limit_reached(request):
     if request.user.is_authenticated:
         # if a user make too many declaration we prevent to save
@@ -1671,17 +1652,6 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
             answer_object.predefined_answers.set(predefined_answers)
 
     return incident_workflow
-
-
-def extract_ids(data: list) -> list:
-    return [int(item) for item in data if item.isdigit()]
-
-
-def convert_to_utc(date, local_tz):
-    if date:
-        local_dt = local_tz.localize(date.replace(tzinfo=None))
-        return local_dt.astimezone(pytz.utc)
-    return None
 
 
 def create_entry_log(user, incident, incident_report, action, request=None):
