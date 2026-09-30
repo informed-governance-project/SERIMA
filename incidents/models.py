@@ -825,6 +825,9 @@ class Incident(models.Model):
             return self.regulator
         return ""
 
+    def __str__(self):
+        return str(self.incident_id)
+
     class meta:
         verbose_name_plural = _("Incident")
         verbose_name = _("Incidents")

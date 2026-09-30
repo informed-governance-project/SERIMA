@@ -39,7 +39,7 @@ To define the rules of incident reception for observer, you need firt to create 
    Definition of an observer.
 
 
-- The checkbox ``Receives all incidents``, if it's checked the observer will receive all incidents, **no matter of the regulation**. If you need specific rules you have to define ``observer regulations``
+- The incidents an observer receives are defined only by its ``observer regulations``. An observer without any observer regulation receives no incident.
 
 .. figure:: _static/ui_observer_regulation.png
    :alt: Observer regulation.
@@ -74,6 +74,8 @@ In the case above the regulation receive the incident which are ``PUBLIC`` **OR*
 PRIVATE, CRITICAL_INFRA and PUBLIC are ``code`` from ``Entity Category``.
 
 If the observer should receive all incidents of a regulation the ``incident rules`` should be {}.
+
+If no sector is selected, the observer regulation covers every sector of the regulation, including the incidents declared without a sector. To have an observer receive all incidents, add one observer regulation per regulation with no sector and ``incident rules`` set to {}.
 
 .. figure:: _static/ui_observer_regulation_CER.png
    :alt: Observer regulation.

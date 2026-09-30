@@ -68,19 +68,6 @@ def test_role_helpers_accept_one_of_their_groups(helper, matching_group, foreign
     assert helper(_user_in_groups(f"{foreign_group}@example.org", foreign_group)) is False
 
 
-@pytest.mark.parametrize(
-    ("is_observer", "is_receiving_all_incident", "expected"),
-    [(False, None, False), (True, None, False), (True, True, True)],
-)
-def test_is_observer_user_viewing_all_incident(monkeypatch, is_observer, is_receiving_all_incident, expected):
-    """Allow global incident access only to observers configured for it."""
-    monkeypatch.setattr(helpers, "is_observer_user", lambda user: is_observer)
-    observer_instance = None if is_receiving_all_incident is None else SimpleNamespace(is_receiving_all_incident=is_receiving_all_incident)
-    user = SimpleNamespace(observers=SimpleNamespace(first=lambda: observer_instance))
-
-    assert helpers.is_observer_user_viewing_all_incident(user) is expected
-
-
 def test_get_active_company_from_session():
     """Return the user's company selected in the current session."""
     company = object()
@@ -214,6 +201,18 @@ def test_render_to_string_multi_languages_skips_identical_translation(monkeypatc
     monkeypatch.setattr(helpers, "render_to_string", lambda template, context: "same content")
 
     assert helpers.render_to_string_multi_languages("email.html", {}) == "<h3>English (en)</h3>\n                same content"
+
+
+@override_settings(LANGUAGE_CODE="en-us", LANGUAGES=[("en", "English"), ("fr", "French"), ("de", "German")])
+def test_render_to_string_multi_languages_keeps_default_language_when_language_code_is_regional(monkeypatch):
+    """Render English first and keep only the translations that differ from it, with LANGUAGE_CODE set to en-us."""
+    monkeypatch.setattr(helpers.translation, "gettext", lambda name: name)
+    rendered_by_language = {"en": "hello", "fr": "bonjour", "de": "hello"}
+    monkeypatch.setattr(helpers, "render_to_string", lambda template, context: rendered_by_language[helpers.translation.get_language()])
+
+    result = helpers.render_to_string_multi_languages("email.html", {})
+
+    assert result == "<h3>English (en)</h3>\n                hello<hr><h3>French (fr)</h3>\n                bonjour"
 
 
 def test_sanitize_html_removes_scripts_and_unsafe_styles():

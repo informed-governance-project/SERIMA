@@ -5,7 +5,9 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
 import bleach
+import redis
 from bleach.css_sanitizer import CSSSanitizer
+from celery import current_app
 from django.conf import settings
 from django.contrib import messages
 from django.db import connection
@@ -65,13 +67,6 @@ def is_user_operator(user: User | AnonymousUser) -> bool:
 
 def is_observer_user(user: User | AnonymousUser) -> bool:
     return user.is_authenticated and user.is_observer()
-
-
-def is_observer_user_viewing_all_incident(user: User | AnonymousUser) -> bool:
-    if not is_observer_user(user):
-        return False
-    observer = user.observers.first()
-    return observer is not None and observer.is_receiving_all_incident
 
 
 def get_active_company_from_session(request: HttpRequest) -> Company | None:
@@ -330,17 +325,8 @@ def render_to_string_multi_languages(
     replace_email_variables is a function to be given depending of the module sending email,
     object is an object (incident, standard_answer) to be given depending of the module,
     """
-    parts = []
 
-    with translation.override(settings.LANGUAGE_CODE):
-        if content and object and replace_email_variables:
-            context["content"] = replace_email_variables(
-                content.safe_translation_getter("content", language_code=settings.LANGUAGE_CODE),
-                object,
-            )
-        baseline = render_to_string(template_name, context)
-
-    for lang_code, lang_name in settings.LANGUAGES:
+    def render(lang_code: str) -> str:
         with translation.override(lang_code):
             if content and object and replace_email_variables:
                 context["content"] = replace_email_variables(
@@ -349,19 +335,27 @@ def render_to_string_multi_languages(
                 )
                 context["content"] = markdown(text=context["content"], output_format="html")
                 context["content"] = sanitize_html(context["content"])
-            rendered = render_to_string(template_name, context)
+            return render_to_string(template_name, context)
 
-            if rendered == baseline and lang_code != settings.LANGUAGE_CODE:
+    default_lang = settings.PARLER_DEFAULT_LANGUAGE_CODE
+    baseline = render(default_lang)
+
+    parts = []
+    for lang_code, lang_name in settings.LANGUAGES:
+        if lang_code == default_lang:
+            rendered = baseline
+        else:
+            rendered = render(lang_code)
+            if rendered == baseline:
                 continue
 
+        with translation.override(lang_code):
             parts.append(
                 f"""
                 <h3>{translation.gettext(lang_name)} ({lang_code})</h3>
                 {rendered}
                 """.strip()
             )
-    if not parts:
-        return baseline
     return "<hr>".join(parts)
 
 
@@ -535,3 +529,34 @@ def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpRespons
     if url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         return HttpResponseRedirect(referer)
     return HttpResponseRedirect(reverse(fallback))
+
+
+def render_error_messages(request: HttpRequest) -> str:
+    return render_to_string(
+        "django_bootstrap5/messages.html",
+        {"messages": messages.get_messages(request)},
+        request=request,
+    )
+
+
+def is_celery_worker_alive() -> bool:
+    try:
+        inspect = current_app.control.inspect()
+        response = inspect.ping()
+        return bool(response)
+    except Exception:
+        return False
+
+
+def is_redis_available() -> bool:
+    try:
+        r = redis.Redis.from_url(settings.CELERY_BROKER_URL)
+        r.ping()
+        return True
+    except redis.exceptions.RedisError:
+        return False
+
+
+def celery_health_check() -> bool:
+    """Whether a task queued now would actually be picked up by a worker."""
+    return is_celery_worker_alive() and is_redis_available()

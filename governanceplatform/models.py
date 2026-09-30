@@ -250,7 +250,6 @@ class Observer(TranslatableModel):
         blank=True,
         null=True,
     )
-    is_receiving_all_incident = models.BooleanField(default=False, verbose_name=_("Receives all incident notifications"))
     functionalities = models.ManyToManyField(
         Functionality,
         verbose_name=_("Functionalities"),
@@ -503,6 +502,7 @@ class RegulatorUser(models.Model):
     )
     is_regulator_administrator = models.BooleanField(default=False, verbose_name=_("Is administrator"))
     can_export_incidents = models.BooleanField(default=False, verbose_name=_("Can export incidents"))
+    can_export_security_objectives = models.BooleanField(default=False, verbose_name=_("Can export security objectives"))
     sectors = models.ManyToManyField(Sector, blank=True)
 
     class Meta:

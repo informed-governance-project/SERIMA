@@ -532,23 +532,25 @@ def test_operator_admins_get_the_custom_change_form(otp_client, operator_admin_w
 
 
 @pytest.mark.django_db
-def test_other_roles_keep_the_default_change_form(otp_client, operator_admin_with_pending_link):
+def test_other_roles_get_the_custom_change_form(otp_client, operator_admin_with_pending_link):
+    """It carries the form and the confirmation dialog the 2FA reset button posts through."""
     context = operator_admin_with_pending_link
 
     response = otp_client(User.objects.get(email="regadmin@reg1.lu")).get(f"{CHANGELIST_URL}{context['incident_user'].pk}/change/")
 
-    assert "admin/custom_change_user_form.html" not in [template.name for template in response.templates if template.name]
+    assert "admin/custom_change_user_form.html" in [template.name for template in response.templates if template.name]
 
 
 @pytest.mark.django_db
-def test_the_template_choice_does_not_leak_between_requests(otp_client, operator_admin_with_pending_link):
-    """Assigning self.change_form_template would persist on the shared ModelAdmin instance."""
+def test_other_roles_are_not_shown_the_operator_prompts(otp_client, operator_admin_with_pending_link):
     context = operator_admin_with_pending_link
-    operator_client(otp_client, context["operator_admin"], context["company"]).get(f"{CHANGELIST_URL}{context['member'].pk}/change/")
 
-    response = otp_client(User.objects.get(email="regadmin@reg1.lu")).get(f"{CHANGELIST_URL}{context['incident_user'].pk}/change/")
+    client = otp_client(User.objects.get(email="regadmin@reg1.lu"))
 
-    assert "admin/custom_change_user_form.html" not in [template.name for template in response.templates if template.name]
+    body = client.get(f"{CHANGELIST_URL}{context['incident_user'].pk}/change/").content.decode()
+
+    assert "account-delete-confirm" not in body
+    assert "Add this user to Company" not in body
 
 
 @pytest.mark.django_db
@@ -924,3 +926,149 @@ def test_an_account_created_by_an_operator_administrator_is_a_member_straight_aw
     created = add_account(otp_client, context, "newmember@com1.lu")
 
     assert CompanyUser.objects.get(user=created, company=context["company"]).approved is True
+
+
+# --- reset_2FA_token for the other roles ------------------------------------------------------
+
+
+def reset_2fa_url(target):
+    return f"{CHANGELIST_URL}{target.pk}/reset-2fa-token/"
+
+
+@pytest.mark.django_db
+def test_a_regulator_admin_resets_the_2fa_of_its_regulator_users(otp_client, populate_db):
+    target = User.objects.get(email="reguser@reg1.lu")
+    TOTPDevice.objects.create(user=target, name="device", confirmed=True)
+
+    otp_client(User.objects.get(email="regadmin@reg1.lu")).post(reset_2fa_url(target))
+
+    assert not TOTPDevice.objects.filter(user=target).exists()
+    assert history_of(target).get().get_change_message() == "Reset the 2FA token."
+
+
+@pytest.mark.django_db
+def test_a_regulator_admin_cannot_reset_an_operator_2fa(otp_client, populate_db):
+    """#550"""
+    target = User.objects.get(email="opuser@com1.lu")
+    TOTPDevice.objects.create(user=target, name="device", confirmed=True)
+
+    response = otp_client(User.objects.get(email="regadmin@reg1.lu")).post(reset_2fa_url(target))
+
+    assert response.status_code == 404
+    assert TOTPDevice.objects.filter(user=target).exists()
+
+
+@pytest.mark.django_db
+def test_a_regulator_user_resets_the_2fa_of_an_operator(otp_client, populate_db):
+    target = User.objects.get(email="opuser@com1.lu")
+    TOTPDevice.objects.create(user=target, name="device", confirmed=True)
+
+    otp_client(User.objects.get(email="reguser@reg1.lu")).post(reset_2fa_url(target))
+
+    assert not TOTPDevice.objects.filter(user=target).exists()
+
+
+@pytest.mark.django_db
+def test_a_regulator_user_cannot_reset_another_regulator_account(otp_client, populate_db):
+    """#577"""
+    target = User.objects.get(email="regadmin@reg1.lu")
+    TOTPDevice.objects.create(user=target, name="device", confirmed=True)
+
+    response = otp_client(User.objects.get(email="reguser@reg1.lu")).post(reset_2fa_url(target))
+
+    assert response.status_code == 404
+    assert TOTPDevice.objects.filter(user=target).exists()
+
+
+@pytest.mark.django_db
+def test_a_platform_admin_resets_the_2fa_of_a_regulator_admin(otp_client, populate_db):
+    target = User.objects.get(email="regadmin@reg1.lu")
+    TOTPDevice.objects.create(user=target, name="device", confirmed=True)
+
+    otp_client(User.objects.get(email="pa@pa.lu")).post(reset_2fa_url(target))
+
+    assert not TOTPDevice.objects.filter(user=target).exists()
+
+
+@pytest.mark.django_db
+def test_nobody_resets_their_own_2fa_here(otp_client, populate_db):
+    actor = User.objects.get(email="pa@pa.lu")
+    TOTPDevice.objects.create(user=actor, name="device", confirmed=True)
+
+    response = otp_client(actor).post(reset_2fa_url(actor))
+
+    assert response.status_code == 404
+    assert TOTPDevice.objects.filter(user=actor).exists()
+
+
+@pytest.mark.django_db
+def test_the_2fa_reset_refuses_a_get(otp_client, populate_db):
+    target = User.objects.get(email="reguser@reg1.lu")
+    TOTPDevice.objects.create(user=target, name="device", confirmed=True)
+
+    response = otp_client(User.objects.get(email="regadmin@reg1.lu")).get(reset_2fa_url(target))
+
+    assert response.status_code == 404
+    assert TOTPDevice.objects.filter(user=target).exists()
+
+
+@pytest.mark.django_db
+def test_other_roles_get_the_2fa_column(otp_client, populate_db):
+    response = otp_client(User.objects.get(email="regadmin@reg1.lu")).get(CHANGELIST_URL)
+
+    assert "reset_2FA_column" in response.context["cl"].list_display
+
+
+@pytest.mark.django_db
+def test_the_2fa_column_follows_the_role_rule(otp_client, populate_db):
+    body = otp_client(User.objects.get(email="regadmin@reg1.lu")).get(CHANGELIST_URL).content.decode()
+
+    assert reset_2fa_url(User.objects.get(email="reguser@reg1.lu")) in body
+    assert reset_2fa_url(User.objects.get(email="opuser@com1.lu")) not in body
+    assert reset_2fa_url(User.objects.get(email="regadmin@reg1.lu")) not in body
+
+
+@pytest.mark.django_db
+def test_the_bulk_action_follows_the_role_rule(otp_client, populate_db):
+    allowed = User.objects.get(email="opuser@com1.lu")
+    refused = User.objects.get(email="regadmin@reg1.lu")
+    for user in (allowed, refused):
+        TOTPDevice.objects.create(user=user, name="device", confirmed=True)
+
+    otp_client(User.objects.get(email="reguser@reg1.lu")).post(
+        CHANGELIST_URL,
+        {"action": "reset_2FA", "_selected_action": [allowed.pk, refused.pk]},
+    )
+
+    assert not TOTPDevice.objects.filter(user=allowed).exists()
+    assert TOTPDevice.objects.filter(user=refused).exists()
+
+
+@pytest.mark.django_db
+def test_other_roles_see_the_2fa_reset_beside_the_2fa_field(otp_client, populate_db):
+    target = User.objects.get(email="reguser@reg1.lu")
+
+    response = otp_client(User.objects.get(email="regadmin@reg1.lu")).get(f"{CHANGELIST_URL}{target.pk}/change/")
+    rows = [row for _, options in response.context["adminform"].fieldsets for row in options["fields"]]
+
+    assert ("get_2FA_activation", "reset_2FA_action") in rows
+    assert reset_2fa_url(target) in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_the_detail_view_2fa_reset_follows_the_role_rule(otp_client, populate_db):
+    """#577: a RegulatorUser opens a fellow regulator account but may not reset it."""
+    target = User.objects.get(email="regadmin@reg1.lu")
+
+    response = otp_client(User.objects.get(email="reguser@reg1.lu")).get(f"{CHANGELIST_URL}{target.pk}/change/")
+
+    assert reset_2fa_url(target) not in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_the_own_profile_offers_no_2fa_reset(otp_client, populate_db):
+    actor = User.objects.get(email="pa@pa.lu")
+
+    body = otp_client(actor).get(f"{CHANGELIST_URL}{actor.pk}/change/").content.decode()
+
+    assert reset_2fa_url(actor) not in body

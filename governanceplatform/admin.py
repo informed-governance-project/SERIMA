@@ -13,7 +13,6 @@ from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
-from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone, translation
 from django.utils.html import format_html
@@ -760,6 +759,11 @@ class userRegulatorInline(admin.TabularInline):
 
         return readonly_fields
 
+    def get_fields(self, request, obj=None):
+        # Django appends readonly fields after the editable ones, which splits the export flags apart.
+        order = ["user", "regulator", "is_regulator_administrator", "can_export_incidents", "can_export_security_objectives", "sectors"]
+        return sorted(super().get_fields(request, obj), key=order.index)
+
 
 class userRegulatorMultipleInline(userRegulatorInline):
     max_num = None
@@ -768,16 +772,7 @@ class userRegulatorMultipleInline(userRegulatorInline):
 # reset the 2FA we delete the TOTP devices
 @admin.action(description=_("Reset 2FA"))
 def reset_2FA(modeladmin, request, queryset):
-    request_user = request.user
-    for user in queryset:
-        # conditions for regulatoradmin issue #550
-        if user_in_group(request_user, "RegulatorAdmin") and not (
-            user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser")
-        ):
-            continue
-        # conditions for RegulatorUser issue #577
-        if user_in_group(request_user, "RegulatorUser") and (user_in_group(user, "RegulatorAdmin") or user_in_group(user, "RegulatorUser")):
-            continue
+    for user in queryset.filter(can_reset_2FA=True):
         devices = devices_for_user(user)
         for device in devices:
             device.delete()
@@ -968,6 +963,7 @@ class UserAdmin(admin.ModelAdmin):
     ]
     actions = [reset_2FA]
     change_list_template = "admin/custom_change_user_list.html"
+    change_form_template = "admin/custom_change_user_form.html"
 
     # manage the administrator field for operatorAdmin
     def get_form(self, request, obj=None, change=False, **kwargs):
@@ -1114,16 +1110,61 @@ class UserAdmin(admin.ModelAdmin):
         return self.redirect_to_changelist(request)
 
     def reset_2FA_token(self, request, user_id):
-        company_user = self.get_company_link(request, user_id, approved=True)
-        for device in devices_for_user(company_user.user):
+        # Filtered rather than fetched with get(): the role querysets join groups and regulators,
+        # so one account can come back on several rows.
+        user = self.get_queryset(request).filter(pk=user_id, can_reset_2FA=True).first() if request.method == "POST" else None
+        if user is None:
+            raise Http404()
+
+        for device in devices_for_user(user):
             device.delete()
 
-        self.log_change(request, company_user.user, "Reset the 2FA token.")
+        self.log_change(request, user, "Reset the 2FA token.")
         messages.success(
             request,
-            _("The 2FA token of %(user)s has been reset.") % {"user": company_user.user.email},
+            _("The 2FA token of %(user)s has been reset.") % {"user": user.email},
         )
         return self.redirect_to_changelist(request)
+
+    def reset_2FA_rule(self, request) -> Q:
+        """
+        The accounts the caller may reset the 2FA of, among those its role lists. The buttons, the
+        endpoint and the bulk action all read it, so they cannot disagree. Checked in the order
+        get_queryset checks the roles, so an account in several groups gets one consistent answer.
+        """
+        user = request.user
+        regulator_account = Exists(
+            User.groups.through.objects.filter(user=OuterRef("pk"), group__name__in=["RegulatorAdmin", "RegulatorUser"])
+        )
+
+        if user_in_group(user, "PlatformAdmin"):
+            # PlatformAdmin can reset any account they can see.
+            rule = Q()
+        elif user_in_group(user, "RegulatorAdmin"):
+            # RegulatorAdmin can reset same regulator accounts only (#550).
+            rule = Q(regulator_account)
+        elif user_in_group(user, "RegulatorUser"):
+            # RegulatorUser can reset anything except regulator accounts (#577).
+            rule = ~Q(regulator_account)
+        elif user_in_group(user, "ObserverAdmin"):
+            # ObserverAdmin can reset any account they can see.
+            rule = Q()
+        elif user_in_group(user, "OperatorAdmin"):
+            # OperatorAdmin can reset accounts with an approved link to the active company.
+            rule = Q(
+                Exists(
+                    CompanyUser.objects.filter(
+                        user=OuterRef("pk"),
+                        company=get_active_company_from_session(request),
+                        approved=True,
+                    )
+                )
+            )
+        else:
+            rule = Q(pk__in=[])
+
+        # The caller resets their own token from their profile, not from here.
+        return rule & ~Q(pk=user.pk)
 
     def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
         is_operator_admin = user_in_group(request.user, "OperatorAdmin")
@@ -1136,12 +1177,7 @@ class UserAdmin(admin.ModelAdmin):
                 context["pending_link_company"] = get_active_company_from_session(request)
                 context["pending_link_actions"] = self.account_actions(obj)
 
-        response = super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
-
-        if is_operator_admin and isinstance(response, TemplateResponse):
-            response.template_name = "admin/custom_change_user_form.html"
-
-        return response
+        return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
     def action_button(self, url_name, obj, label, message, css_class="button"):
         """
@@ -1217,10 +1253,16 @@ class UserAdmin(admin.ModelAdmin):
 
     @admin.display(description="")
     def reset_2FA_action(self, obj):
-        if obj.is_current_user or not obj.is_approved:
+        if not obj.can_reset_2FA:
             return ""
 
         return format_html('<span class="account-actions">{}</span>', self.reset_2FA_button(obj))
+
+    @admin.display(description=_("Account actions"))
+    def reset_2FA_column(self, obj):
+        # The detail view shows the button beside the field it resets, which labels it; a changelist
+        # column has no such neighbour and needs a header of its own.
+        return self.reset_2FA_action(obj)
 
     @admin.display(description="")
     def administrator_action(self, obj):
@@ -1230,7 +1272,7 @@ class UserAdmin(admin.ModelAdmin):
         return format_html('<span class="account-actions">{}</span>', self.administrator_button(obj))
 
     def reset_cookie_acceptation(self, request):
-        if not user_in_group(request.user, "PlatformAdmin"):
+        if request.method != "POST" or not user_in_group(request.user, "PlatformAdmin"):
             raise Http404()
 
         cfg = ApplicationConfig.objects.get(key="cookiebanner")
@@ -1240,7 +1282,7 @@ class UserAdmin(admin.ModelAdmin):
         return redirect("..")
 
     def reset_accepted_terms(self, request):
-        if not user_in_group(request.user, "PlatformAdmin"):
+        if request.method != "POST" or not user_in_group(request.user, "PlatformAdmin"):
             raise Http404()
 
         User.objects.update(accepted_terms=False)
@@ -1287,6 +1329,8 @@ class UserAdmin(admin.ModelAdmin):
         if obj is None:
             return readonly_fields
 
+        readonly_fields += ("reset_2FA_action",)
+
         if user_in_group(obj, "PlatformAdmin"):
             return readonly_fields
         if is_user_regulator(obj):
@@ -1294,7 +1338,7 @@ class UserAdmin(admin.ModelAdmin):
         if is_observer_user(obj):
             return ("get_observers",) + readonly_fields
         if user_in_group(request.user, "OperatorAdmin"):
-            return readonly_fields + ("email", "get_is_administrator", "get_is_approved", "reset_2FA_action", "administrator_action")
+            return readonly_fields + ("email", "get_is_administrator", "get_is_approved", "administrator_action")
 
         return readonly_fields
 
@@ -1406,6 +1450,8 @@ class UserAdmin(admin.ModelAdmin):
             ]
             list_display = [field for field in list_display if field not in fields_to_exclude]
             list_display = [*list_display, "account_actions"]
+        else:
+            list_display = [*list_display, "reset_2FA_column"]
 
         return list_display
 
@@ -1418,6 +1464,8 @@ class UserAdmin(admin.ModelAdmin):
                 # and the has_2fa ordering agrees with the value shown.
                 has_2fa=Exists(TOTPDevice.objects.filter(user=OuterRef("pk"), confirmed=True))
                 | Exists(StaticDevice.objects.filter(user=OuterRef("pk"), confirmed=True)),
+                is_current_user=Q(pk=request.user.pk),
+                can_reset_2FA=self.reset_2FA_rule(request),
             )
         )
         user = request.user
@@ -1487,7 +1535,6 @@ class UserAdmin(admin.ModelAdmin):
                             approved=True,
                         )
                     ),
-                    is_current_user=Q(pk=user.pk),
                     has_pending_company_link=Exists(
                         CompanyUser.objects.filter(
                             user=OuterRef("pk"),
@@ -1763,7 +1810,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
     list_display = [
         "name_display",
         "full_name_display",
-        "is_receiving_all_incident",
         "description_display",
     ]
     search_fields = [
@@ -1793,7 +1839,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
                         "country",
                         "address",
                         "email_for_notification",
-                        "is_receiving_all_incident",
                         "functionalities",
                     ],
                 },
@@ -1833,9 +1878,9 @@ class ObserverAdmin(CustomTranslatableAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
         user = request.user
-        # only the platform admin can change the is_receive_all_incident
+        # only the platform admin can change the functionalities
         if not user_in_group(user, "PlatformAdmin"):
-            readonly_fields += ("is_receiving_all_incident", "functionalities")
+            readonly_fields += ("functionalities",)
 
         if obj and obj.pk and is_observer_user(user):
             readonly_fields += ("rt_test_button",)

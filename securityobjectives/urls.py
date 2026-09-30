@@ -24,9 +24,12 @@ from .views import (
     declaration,
     delete_declaration,
     download_declaration_pdf,
+    download_security_objectives_export,
+    export_security_objectives,
     get_security_objectives,
     import_so_declaration,
     review_comment_declaration,
+    security_objectives_export_status,
     submit_declaration,
 )
 
@@ -69,6 +72,18 @@ urlpatterns = [
     ),
     # Import SO declaction
     path("import", import_so_declaration, name="import_so_declaration"),
+    # Export SO declarations
+    path("export", export_security_objectives, name="export_security_objectives"),
+    path(
+        "export/<int:export_id>/status",
+        security_objectives_export_status,
+        name="security_objectives_export_status",
+    ),
+    path(
+        "export/<uuid:file_uuid>/download",
+        download_security_objectives_export,
+        name="download_security_objectives_export",
+    ),
     # Logs SO declaction
     path(
         "access_log/<int:standard_answer_id>",

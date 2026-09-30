@@ -1,9 +1,7 @@
 import csv
 import logging
-import re
-from collections import OrderedDict
 from datetime import date
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 
 import pytz
 from django import forms
@@ -17,9 +15,8 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
@@ -38,6 +35,7 @@ from governanceplatform.helpers import (
     is_observer_user,
     is_user_operator,
     is_user_regulator,
+    render_error_messages,
     render_to_string_multi_languages,
     sort_queryset_by_field,
     translated_queryset,
@@ -51,7 +49,6 @@ from governanceplatform.models import (
 from governanceplatform.settings import (
     MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER,
     PARLER_DEFAULT_LANGUAGE_CODE,
-    PUBLIC_URL,
     SITE_NAME,
     TIME_ZONE,
 )
@@ -60,6 +57,7 @@ from .access_control import (
     can_access_incident,
     can_create_incident_report,
     can_edit_incident_report,
+    can_export_incidents,
     get_observer_incidents,
 )
 from .email import send_email, send_html_email
@@ -71,15 +69,21 @@ from .globals import (
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
 )
-from .helpers import get_workflow_categories, is_deadline_exceeded, sanitize_spreadsheet_cell
+from .helpers import (
+    convert_to_utc,
+    create_entry_log,
+    extract_ids,
+    get_workflow_categories,
+    group_keys_by_index,
+    is_deadline_exceeded,
+    sanitize_spreadsheet_cell,
+    save_answers,
+)
 from .models import (
-    Answer,
     Impact,
     Incident,
     IncidentWorkflow,
     LogReportRead,
-    PredefinedAnswer,
-    QuestionOptions,
     ReportTimeline,
     SectorRegulation,
     SectorRegulationWorkflow,
@@ -310,7 +314,7 @@ def get_incidents(request):
 def get_form_list(request, form_list=None):
     """Initialize data for the preliminary notification."""
     if is_incidents_report_limit_reached(request):
-        return HttpResponseRedirect("/incidents")
+        return redirect("incidents")
     if form_list is None:
         form_list = get_forms_list()
     contact_form = ContactForm()
@@ -602,7 +606,7 @@ def download_incident_pdf(request, incident_id: int):
             exc_info=True,
         )
         messages.error(request, _("An error occurred while generating the report."))
-        return HttpResponseRedirect("/incidents")
+        return redirect("incidents")
 
     response = HttpResponse(pdf_report, content_type="application/pdf")
 
@@ -646,7 +650,7 @@ def download_incident_report_pdf(request, incident_workflow_id: int):
             exc_info=True,
         )
         messages.error(request, _("An error occurred while generating the report."))
-        return HttpResponseRedirect("/incidents")
+        return redirect("incidents")
 
     response = HttpResponse(pdf_report, content_type="application/pdf")
 
@@ -947,21 +951,23 @@ def export_incidents(request):
                     row = [sanitize_spreadsheet_cell(entry.get(key, "")) for key in keys]
                     writer.writerow(row)
 
+            change_message = (  # noqa: UP032
+                "A total of {count} incidents were exported from regulation "
+                "{regulation} [{sectorregulation} - ({workflow})] within date range ({from_date} - {to_date}.)"
+            ).format(
+                count=len(data),
+                regulation=regulation,
+                sectorregulation=sectorregulation,
+                workflow=workflow,
+                from_date=from_date,
+                to_date=to_date,
+            )
+
             LogEntry.objects.log_actions(
                 user_id=user.id,
                 queryset=incidents,
                 action_flag=7,
-                change_message=_(
-                    "A total of {count} incidents were exported from regulation "
-                    "{regulation} [{sectorregulation} - ({workflow})] within date range ({from_date} - {to_date}.)"
-                ).format(
-                    count=len(data),
-                    regulation=regulation,
-                    sectorregulation=sectorregulation,
-                    workflow=workflow,
-                    from_date=from_date,
-                    to_date=to_date,
-                ),
+                change_message=change_message,
             )
 
             try:
@@ -994,40 +1000,14 @@ def export_incidents(request):
     return render(request, "modals/export_incidents.html", {"form": form})
 
 
-def group_keys_by_index(keys, length_fixed_values):
-    fixed_keys = keys[:length_fixed_values]
-    dynamic_keys = keys[length_fixed_values:]
-    groups = OrderedDict()
-    for key in dynamic_keys:
-        match = re.match(r"^(.*\D)\s*:?\s*(\d+)$", key)
-        if match:
-            prefix = match.group(1).strip()
-            index = int(match.group(2))
-            if prefix not in groups:
-                groups[prefix] = []
-            groups[prefix].append((index, key))
-        else:
-            if key not in groups:
-                groups[key] = []
-            groups[key].append((0, key))
-
-    grouped_keys = []
-    for _prefix, items in groups.items():
-        items.sort(key=lambda x: x[0])
-        grouped_keys.extend([key for _, key in items])
-    return fixed_keys + grouped_keys
-
-
 def is_incidents_report_limit_reached(request):
-    if request.user.is_authenticated:
-        # if a user make too many declaration we prevent to save
-        number_preliminary_today = Incident.objects.filter(contact_user=request.user, incident_notification_date__date=date.today()).count()
-        if number_preliminary_today >= MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER:
-            messages.error(
-                request,
-                _("The daily limit of incident reports has been reached. Please try again tomorrow."),
-            )
-            return True
+    number_preliminary_today = Incident.objects.filter(contact_user=request.user, incident_notification_date__date=date.today()).count()
+    if number_preliminary_today >= MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER:
+        messages.error(
+            request,
+            _("The daily limit of incident reports has been reached. Please try again tomorrow."),
+        )
+        return True
     return False
 
 
@@ -1079,16 +1059,25 @@ class FormWizardView(SessionWizardView):
             current_data = form.cleaned_data
             storaged_data = self.get_cleaned_data_for_step(self.steps.current) or None
 
+            # Cleared with None, not {}: empty data would bind the form and hide its initial values (e.g. TIME_ZONE)
             if storaged_data and self.steps.current in ["1", "2"] and current_data != storaged_data:
-                self.storage.set_step_data(goto_step, {})
-                self.storage.set_step_data("3", {})
+                self.storage.set_step_data(goto_step, None)
+                self.storage.set_step_data("3", None)
 
             self.storage.set_step_data(self.steps.current, self.process_step(form))
 
         elif int(self.steps.current) < int(goto_step):
             return self.render_revalidation_failure(self.steps.current, form)
         else:
-            self.storage.set_step_data(self.steps.current, {})
+            self.storage.set_step_data(self.steps.current, None)
+
+        # Both the Next button's target and the form list formtools caches per request were resolved before
+        # this answer was stored, yet steps "3"/"4" exist only if the chosen regulations and regulators call for them.
+        del self._resolved_form_list
+        if int(goto_step) > int(self.steps.current):
+            if self.steps.current == self.steps.last:
+                return self.render_done(form, **kwargs)
+            goto_step = self.steps.next
 
         return super().render_goto_step(goto_step, **kwargs)
 
@@ -1122,7 +1111,7 @@ class FormWizardView(SessionWizardView):
 
     def done(self, form_list, **kwargs):
         if is_incidents_report_limit_reached(self.request):
-            return HttpResponseRedirect("/incidents")
+            return redirect("incidents")
 
         user = self.request.user
         data = self.get_all_cleaned_data()
@@ -1534,18 +1523,25 @@ class WorkflowWizardView(SessionWizardView):
             if incident_resolution_date:
                 incident_resolution_date = convert_to_utc(incident_resolution_date, local_tz)
 
-            self.incident.save()
-            # create the report timeline
-            report_timeline = ReportTimeline.objects.create(
-                report_timeline_timezone=incident_timezone,
-                incident_starting_date=incident_starting_date,
-                incident_detection_date=self.incident.incident_detection_date,
-                incident_resolution_date=incident_resolution_date,
-            )
-            # manage question
-            incident_workflow = save_answers(data, self.incident, self.workflow, report_timeline)
-            create_entry_log(user, self.incident, incident_workflow, "CREATE", self.request)
+            with transaction.atomic():
+                self.incident.save()
+                # create the report timeline
+                report_timeline = ReportTimeline.objects.create(
+                    report_timeline_timezone=incident_timezone,
+                    incident_starting_date=incident_starting_date,
+                    incident_detection_date=self.incident.incident_detection_date,
+                    incident_resolution_date=incident_resolution_date,
+                )
+                # We create a new incident workflow in all the case (history)
+                incident_workflow = IncidentWorkflow.objects.create(
+                    incident=self.incident,
+                    workflow=self.workflow,
+                    report_timeline=report_timeline,
+                )
+                save_answers(incident_workflow, self.workflow, data)
+                create_entry_log(user, self.incident, incident_workflow, "CREATE", self.request)
 
+            # send the submission email outside the atomic block
             if email and not self.incident.incident_status == "CLOSE":
                 send_email(
                     email,
@@ -1597,130 +1593,3 @@ class WorkflowWizardView(SessionWizardView):
                 )
 
         return redirect("regulator_incidents") if self.is_regulator_incident else redirect("incidents")
-
-
-def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
-    """Save the answers."""
-    prefix = "__question__"
-    questions_data = {key[slice(len(prefix), None)]: value for key, value in data.items() if key.startswith(prefix)}
-
-    # We create a new incident workflow in all the case (history)
-    incident_workflow = IncidentWorkflow.objects.create(incident=incident, workflow=workflow, report_timeline=report_timeline)
-    # TO DO manage impact
-    if workflow.is_impact_needed:
-        impacts = data.get("impacts", [])
-        incident_workflow.impacts.set(impacts)
-        incident = incident_workflow.incident
-        incident.is_significative_impact = False
-
-        if len(impacts) > 0:
-            incident.is_significative_impact = True
-
-        incident.save()
-
-    question_options_map = (
-        QuestionOptions.objects.filter(report=workflow).select_related("question").prefetch_related("conditional_targets").in_bulk()
-    )
-
-    all_predefined_answer_ids = {int(val) for v in questions_data.values() if isinstance(v, list) for val in v if str(val).isdigit()}
-
-    for key, value in questions_data.items():
-        question_id = None
-        try:
-            question_id = int(key)
-        except ValueError, TypeError:
-            continue
-        if question_id:
-            question_option = question_options_map.get(question_id)
-            question = question_option.question
-            question_type = question.question_type
-
-            # Check if predefined answer was selected for conditional questions
-            if question_option.is_conditional:
-                required_predefined_answers_list = {c.predefined_answer_id for c in question_option.conditional_targets.all()}
-                if not required_predefined_answers_list.intersection(all_predefined_answer_ids):
-                    continue
-
-            predefined_answers = []
-
-            if question_type == "FREETEXT":
-                answer = value
-            elif question_type == "DATE":
-                answer = value.strftime("%Y-%m-%d %H:%M") if value else None
-            elif question_type == "CL" or question_type == "RL":
-                answer = ",".join(map(str, value))
-            else:  # MULTI
-                predefined_answers = list(PredefinedAnswer.objects.filter(pk__in=value))
-                answer = questions_data.get(f"{key}_freetext_answer", None)
-            answer_object = Answer.objects.create(
-                incident_workflow=incident_workflow,
-                question_options=question_option,
-                answer=answer,
-            )
-            answer_object.predefined_answers.set(predefined_answers)
-
-    return incident_workflow
-
-
-def can_redirect(url: str) -> bool:
-    """
-    Check if a redirect is authorised.
-    """
-    o = urlparse(url)
-    return o.netloc in PUBLIC_URL
-
-
-def extract_ids(data: list) -> list:
-    return [int(item) for item in data if item.isdigit()]
-
-
-def convert_to_utc(date, local_tz):
-    if date:
-        local_dt = local_tz.localize(date.replace(tzinfo=None))
-        return local_dt.astimezone(pytz.utc)
-    return None
-
-
-def create_entry_log(user, incident, incident_report, action, request=None):
-    role = user.groups.first().name if user.groups.exists() else ""
-    entity_name = ""
-
-    if is_user_operator(user) and request:
-        active_company = get_active_company_from_session(request)
-        entity_name = active_company.name if active_company else ""
-    elif is_user_regulator(user):
-        regulator = user.regulators.first()
-        entity_name = regulator.name if regulator else ""
-    elif is_observer_user(user):
-        observer = user.observers.first()
-        entity_name = observer.name if observer else ""
-
-    LogReportRead.objects.create(
-        user=user,
-        incident=incident,
-        incident_report=incident_report,
-        action=action,
-        role=role,
-        entity_name=entity_name,
-    )
-
-
-def can_export_incidents(user):
-    regulator = user.regulators.first()
-    observer = user.observers.first()
-    return (
-        regulator
-        and user.regulatoruser_set.filter(
-            regulator=regulator,
-            is_regulator_administrator=True,
-            can_export_incidents=True,
-        ).exists()
-    ) or (observer and user.observeruser_set.filter(observer=observer, can_export_incidents=True).exists())
-
-
-def render_error_messages(request):
-    return render_to_string(
-        "django_bootstrap5/messages.html",
-        {"messages": messages.get_messages(request)},
-        request=request,
-    )

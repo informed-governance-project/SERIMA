@@ -1,18 +1,14 @@
 from datetime import date
 
 from django.conf import settings
-from django.core.mail import EmailMessage
 from django.db.models import Q
+from django.utils import translation
+from django.utils.translation import gettext_lazy as _
 
+from governanceplatform.email import send_html_email
 from governanceplatform.helpers import render_to_string_multi_languages
 from governanceplatform.models import CompanyUser, RegulatorUser
 from securityobjectives.globals import SO_EMAIL_VARIABLES
-
-
-def send_html_email(subject, content, recipient_list):
-    email = EmailMessage(subject, content, settings.EMAIL_SENDER, bcc=recipient_list)
-    email.content_subtype = "html"
-    email.send(fail_silently=True)
 
 
 def send_email(email, standard_answer):
@@ -22,10 +18,9 @@ def send_email(email, standard_answer):
             standard_answer,
         )
         html_content = render_to_string_multi_languages(
-            "security_objectives/email.html",
+            "emails/notification.html",
             {
                 "content": None,
-                "url_site": settings.PUBLIC_URL,
             },
             replace_email_variables,
             content=email,
@@ -63,6 +58,36 @@ def send_email(email, standard_answer):
         recipient_list.extend(regulator_users_sectored_emails)
 
         send_html_email(subject, html_content, recipient_list)
+
+
+def send_export_notification(regulator, regulation, sector_ids):
+    """Warn the regulator's contacts that a declaration export was produced.
+
+    The mail carries no exported data on purpose: a recipient who needs to know what left
+    the platform reads the log entry the export wrote.
+    """
+    recipient_list = set()
+
+    if regulator.email_for_notification:
+        recipient_list.add(regulator.email_for_notification)
+
+    regulator_users = RegulatorUser.objects.filter(
+        Q(regulator=regulator, sectors__in=sector_ids) | Q(regulator=regulator, is_regulator_administrator=True)
+    ).distinct()
+    recipient_list.update(regulator_users.values_list("user__email", flat=True))
+
+    html_content = render_to_string_multi_languages(
+        "emails/security_objective_mass_export.html",
+        {
+            "regulation": str(regulation),
+            "site_name": settings.SITE_NAME,
+        },
+    )
+
+    with translation.override(settings.LANGUAGE_CODE):
+        subject = f"[{settings.SITE_NAME}] {_('New security objectives export')}"
+
+    send_html_email(subject, html_content, sorted(recipient_list))
 
 
 # replace the variables in globals.py by the right value

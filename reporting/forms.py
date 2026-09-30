@@ -43,7 +43,7 @@ class ImportRiskAnalysisForm(forms.Form):
 
     sectors = forms.MultipleChoiceField(
         required=True,
-        widget=DropdownCheckboxSelectMultiple(attrs={"data-selected-text-format": "count > 3"}),
+        widget=DropdownCheckboxSelectMultiple(),
         label=_("Sectors"),
     )
 
