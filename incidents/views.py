@@ -71,6 +71,7 @@ from .globals import (
 )
 from .helpers import (
     convert_to_utc,
+    create_entry_log,
     extract_ids,
     get_workflow_categories,
     group_keys_by_index,
@@ -1652,27 +1653,3 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
             answer_object.predefined_answers.set(predefined_answers)
 
     return incident_workflow
-
-
-def create_entry_log(user, incident, incident_report, action, request=None):
-    role = user.groups.first().name if user.groups.exists() else ""
-    entity_name = ""
-
-    if is_user_operator(user) and request:
-        active_company = get_active_company_from_session(request)
-        entity_name = active_company.name if active_company else ""
-    elif is_user_regulator(user):
-        regulator = user.regulators.first()
-        entity_name = regulator.name if regulator else ""
-    elif is_observer_user(user):
-        observer = user.observers.first()
-        entity_name = observer.name if observer else ""
-
-    LogReportRead.objects.create(
-        user=user,
-        incident=incident,
-        incident_report=incident_report,
-        action=action,
-        role=role,
-        entity_name=entity_name,
-    )

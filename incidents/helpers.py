@@ -7,9 +7,12 @@ from typing import TYPE_CHECKING
 import pytz
 from django.utils import timezone
 
+from governanceplatform.helpers import get_active_company_from_session, is_observer_user, is_user_operator, is_user_regulator
+
 from .models import (
     Incident,
     IncidentWorkflow,
+    LogReportRead,
     QuestionCategory,
     QuestionCategoryOptions,
     SectorRegulationWorkflow,
@@ -19,7 +22,10 @@ from .models import (
 if TYPE_CHECKING:
     from datetime import datetime
 
+    from django.http import HttpRequest
     from pytz.tzinfo import BaseTzInfo
+
+    from governanceplatform.models import User
 
 SPREADSHEET_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
 
@@ -186,3 +192,30 @@ def convert_to_utc(date: datetime | None, local_tz: BaseTzInfo) -> datetime | No
         local_dt = local_tz.localize(date.replace(tzinfo=None))
         return local_dt.astimezone(pytz.utc)
     return None
+
+
+def create_entry_log(
+    user: User, incident: Incident, incident_report: IncidentWorkflow | None, action: str, request: HttpRequest | None = None
+) -> None:
+    group = user.groups.first()
+    role = group.name if group else ""
+    entity_name = ""
+
+    if is_user_operator(user) and request:
+        active_company = get_active_company_from_session(request)
+        entity_name = active_company.name if active_company else ""
+    elif is_user_regulator(user):
+        regulator = user.regulators.first()
+        entity_name = regulator.name if regulator else ""
+    elif is_observer_user(user):
+        observer = user.observers.first()
+        entity_name = observer.name if observer else ""
+
+    LogReportRead.objects.create(
+        user=user,
+        incident=incident,
+        incident_report=incident_report,
+        action=action,
+        role=role,
+        entity_name=entity_name,
+    )
