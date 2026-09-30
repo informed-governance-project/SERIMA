@@ -40,11 +40,11 @@ account per role in `shots.toml`, each with the terms already accepted:
 
 | Role | Account | Group | Linked to | Environment override |
 | --- | --- | --- | --- | --- |
-| `operator_admin` | `screenshots-operator-admin@example.org` | `OperatorAdmin` | "Example Operator", as administrator | `SERIMA_SHOT_OPERATOR_ADMIN_USER` / `_PASS` |
-| `operator_user` | `screenshots@example.org` | `OperatorUser` | "Example Operator" | `SERIMA_SHOT_OPERATOR_USER` / `_PASS` |
-| `regulator_admin` | `screenshots-regulator-admin@example.org` | `RegulatorAdmin` | "Example Regulator", as administrator | `SERIMA_SHOT_REGULATOR_ADMIN_USER` / `_PASS` |
-| `regulator_user` | `screenshots-regulator-user@example.org` | `RegulatorUser` | "Example Regulator" | `SERIMA_SHOT_REGULATOR_USER` / `_PASS` |
-| `platform_admin` | `screenshots-platform-admin@example.org` | `PlatformAdmin` | — | `SERIMA_SHOT_PLATFORM_USER` / `_PASS` |
+| `operator_admin` | `operator-admin@example.org` | `OperatorAdmin` | "Example Operator", as administrator | `SERIMA_SHOT_OPERATOR_ADMIN_USER` / `_PASS` |
+| `operator_user` | `operator-user@example.org` | `OperatorUser` | "Example Operator" | `SERIMA_SHOT_OPERATOR_USER` / `_PASS` |
+| `regulator_admin` | `regulator-admin@example.org` | `RegulatorAdmin` | "Example Regulator", as administrator | `SERIMA_SHOT_REGULATOR_ADMIN_USER` / `_PASS` |
+| `regulator_user` | `regulator-user@example.org` | `RegulatorUser` | "Example Regulator" | `SERIMA_SHOT_REGULATOR_USER` / `_PASS` |
+| `platform_admin` | `platform-admin@example.org` | `PlatformAdmin` | — | `SERIMA_SHOT_PLATFORM_USER` / `_PASS` |
 
 The command writes every login to `docs/screenshots/.fixture-credentials.json`,
 keyed by role. The file is gitignored and readable only by its owner.

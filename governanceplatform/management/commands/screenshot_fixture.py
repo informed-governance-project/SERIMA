@@ -30,11 +30,11 @@ class Account(NamedTuple):
 # comes before operator_user because the first user of an operator must be its
 # administrator.
 ACCOUNTS = {
-    "operator_admin": Account("screenshots-operator-admin@example.org", "Operator Admin", "SERIMA_SHOT_OPERATOR_ADMIN_PASS"),
-    "operator_user": Account("screenshots@example.org", "User", "SERIMA_SHOT_OPERATOR_PASS"),
-    "regulator_admin": Account("screenshots-regulator-admin@example.org", "Regulator Admin", "SERIMA_SHOT_REGULATOR_ADMIN_PASS"),
-    "regulator_user": Account("screenshots-regulator-user@example.org", "Regulator User", "SERIMA_SHOT_REGULATOR_PASS"),
-    "platform_admin": Account("screenshots-platform-admin@example.org", "Platform Admin", "SERIMA_SHOT_PLATFORM_PASS"),
+    "operator_admin": Account("operator-admin@example.org", "Operator Admin", "SERIMA_SHOT_OPERATOR_ADMIN_PASS"),
+    "operator_user": Account("operator-user@example.org", "User", "SERIMA_SHOT_OPERATOR_PASS"),
+    "regulator_admin": Account("regulator-admin@example.org", "Regulator Admin", "SERIMA_SHOT_REGULATOR_ADMIN_PASS"),
+    "regulator_user": Account("regulator-user@example.org", "Regulator User", "SERIMA_SHOT_REGULATOR_PASS"),
+    "platform_admin": Account("platform-admin@example.org", "Platform Admin", "SERIMA_SHOT_PLATFORM_PASS"),
 }
 
 
