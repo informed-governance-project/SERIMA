@@ -138,7 +138,7 @@ def sitemap(request):
     return render(request, "home/sitemap.html", context)
 
 
-def registration_view(request, *args, **kwargs):
+def registration_view(request):
     context = {}
     user = request.user
     if user.is_authenticated:
