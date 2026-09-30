@@ -19,17 +19,15 @@ whole platform reachable without enrolling a TOTP device for every screenshot
 account (see `RestrictViewsMiddleware`).
 
 ```bash
-export SERIMA_SHOT_OPERATOR_USER=... SERIMA_SHOT_OPERATOR_PASS=...
-export SERIMA_SHOT_REGULATOR_USER=... SERIMA_SHOT_REGULATOR_PASS=...
-export SERIMA_SHOT_PLATFORM_USER=... SERIMA_SHOT_PLATFORM_PASS=...
+python manage.py screenshot_fixture --create        # one account per role
 
 make screenshots                                    # everything in shots.toml
 poetry run python docs/screenshots/capture.py --list # what is defined
-poetry run python docs/screenshots/capture.py --only SER_1 ui_admin_overview
+poetry run python docs/screenshots/capture.py --only login/enable_2FA_1 ui_admin_overview
 poetry run python docs/screenshots/capture.py --headed   # watch it run
 ```
 
-Useful flags: `--base-url` to point at another instance, `--out` to write
+Useful flags: `--spec` to use another shot list, `--base-url` to point at another instance, `--out` to write
 somewhere other than `docs/_static` (handy for eyeballing before overwriting),
 `--accept-terms` when a screenshot account has not accepted the terms yet.
 
@@ -37,10 +35,43 @@ Set `SERIMA_SHOT_CHROMIUM` to use a system Chromium instead of Playwright's.
 
 ## Screenshot accounts
 
-Accounts come from the environment, never from the repository. Any non-superuser
-account in the right group works — `RestrictViewsMiddleware` raises 404 for
-superusers, so a superuser account will fail. To set a password on an existing
-dev account:
+No real accounts are needed. `screenshot_fixture --create` makes one throwaway
+account per role in `shots.toml`, each with the terms already accepted:
+
+| Role | Account | Group | Linked to | Environment override |
+| --- | --- | --- | --- | --- |
+| `operator_admin` | `screenshots-operator-admin@example.org` | `OperatorAdmin` | "Example Operator", as administrator | `SERIMA_SHOT_OPERATOR_ADMIN_USER` / `_PASS` |
+| `operator_user` | `screenshots@example.org` | `OperatorUser` | "Example Operator" | `SERIMA_SHOT_OPERATOR_USER` / `_PASS` |
+| `regulator_admin` | `screenshots-regulator-admin@example.org` | `RegulatorAdmin` | "Example Regulator", as administrator | `SERIMA_SHOT_REGULATOR_ADMIN_USER` / `_PASS` |
+| `regulator_user` | `screenshots-regulator-user@example.org` | `RegulatorUser` | "Example Regulator" | `SERIMA_SHOT_REGULATOR_USER` / `_PASS` |
+| `platform_admin` | `screenshots-platform-admin@example.org` | `PlatformAdmin` | — | `SERIMA_SHOT_PLATFORM_USER` / `_PASS` |
+
+The command writes every login to `docs/screenshots/.fixture-credentials.json`,
+keyed by role. The file is gitignored and readable only by its owner.
+
+```bash
+python manage.py screenshot_fixture --create               # generated passwords
+python manage.py screenshot_fixture --create --password …  # one password for all
+python manage.py screenshot_fixture --delete               # remove them again
+```
+
+Each account's password comes from `--password`, then the role's `_PASS`
+variable, and is otherwise generated. Running `--create` again resets the
+passwords. `--delete` removes the accounts, their TOTP devices, and the
+credentials file. It also removes "Example Operator" and "Example Regulator",
+unless other users are still linked to them. The command refuses to run when
+`DEBUG` is off.
+
+The fixture regulator has no functionalities and no sectors, so screens gated
+by either stay empty for the regulator roles. Grant them in the admin when a
+shot needs them.
+
+### Using real accounts instead
+
+Environment variables take precedence over the credentials file, so a real
+account can stand in for any role. Any non-superuser account in the right group
+works — `RestrictViewsMiddleware` raises 404 for superusers, so a superuser
+account will fail. To set a password on an existing dev account:
 
 ```bash
 python manage.py changepassword <email>
@@ -55,8 +86,10 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 `path`. Optional keys:
 
 | Key | Effect |
-|---|---|
-| `role` | which credentials to use; omit for anonymous pages |
+| --- | --- |
+| `role` | which credentials to log in with beforehand; omit for anonymous pages |
+| `credentials_from` | a role whose credentials `fill` steps can type as `${username}` / `${password}` |
+| `fresh` | use a new browser context for this shot alone, and close it afterwards |
 | `steps` | `click` / `fill` / `select` / `press` / `totp` / `wait_for` / `wait_ms` actions run after navigation |
 | `selector` | capture just this element instead of the viewport |
 | `full_page` | capture the whole scroll height |
@@ -64,6 +97,35 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | `settle_ms` | wait longer before the capture |
 | `viewport` | `{ width, height }` just for this shot |
 | `annotate` | arrows, outlines, labels and redactions drawn over the page |
+
+Shots with the same `role` share one logged-in browser context. A shot that
+signs in through its own steps must set `fresh = true`, or it would leave that
+session behind for every shot that follows. A `fill` value can also expand any
+other `${VAR}` from the environment. The run stops on any placeholder that is
+still unresolved, so it never types a literal `${...}` into a form.
+
+## Two-factor steps
+
+A `totp` step computes the current six-digit code and fills it into `into`. The
+secret comes from the first of these that applies:
+
+| Step keys | Secret read from |
+| --- | --- |
+| `selector` | the page itself — the `otpauth:` link on the enrolment wizard |
+| `user_env` | the enrolled device of the account whose email is in that variable |
+| `secret_env` | a base32 secret held in that variable |
+| none, with `credentials_from` | the enrolled device of that role's account |
+
+Reading an enrolled device queries the database through Django, so those forms
+only work from a checkout configured against the same database as the target
+instance.
+
+The enrolment shots are stateful. The wizard exists only while the account has
+no TOTP device, and `login/enable_2FA_4` creates one by completing it. Before
+re-running them, run `screenshot_fixture --delete` then `--create`, or delete the
+device with the command noted in `shots.toml`. `--create` on its own does not
+remove it. The order in `shots.toml` matters, because the login token prompt only
+appears once a device exists.
 
 ## Annotating a screenshot
 
