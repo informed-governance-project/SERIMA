@@ -3,7 +3,7 @@ import logging
 import re
 from collections import OrderedDict
 from datetime import date
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode
 
 import pytz
 from django import forms
@@ -51,7 +51,6 @@ from governanceplatform.models import (
 from governanceplatform.settings import (
     MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER,
     PARLER_DEFAULT_LANGUAGE_CODE,
-    PUBLIC_URL,
     SITE_NAME,
     TIME_ZONE,
 )
@@ -1671,14 +1670,6 @@ def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
             answer_object.predefined_answers.set(predefined_answers)
 
     return incident_workflow
-
-
-def can_redirect(url: str) -> bool:
-    """
-    Check if a redirect is authorised.
-    """
-    o = urlparse(url)
-    return o.netloc in PUBLIC_URL
 
 
 def extract_ids(data: list) -> list:
