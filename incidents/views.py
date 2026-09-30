@@ -15,7 +15,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -316,7 +316,7 @@ def get_incidents(request):
 def get_form_list(request, form_list=None):
     """Initialize data for the preliminary notification."""
     if is_incidents_report_limit_reached(request):
-        return HttpResponseRedirect("/incidents")
+        return redirect("incidents")
     if form_list is None:
         form_list = get_forms_list()
     contact_form = ContactForm()
@@ -608,7 +608,7 @@ def download_incident_pdf(request, incident_id: int):
             exc_info=True,
         )
         messages.error(request, _("An error occurred while generating the report."))
-        return HttpResponseRedirect("/incidents")
+        return redirect("incidents")
 
     response = HttpResponse(pdf_report, content_type="application/pdf")
 
@@ -652,7 +652,7 @@ def download_incident_report_pdf(request, incident_workflow_id: int):
             exc_info=True,
         )
         messages.error(request, _("An error occurred while generating the report."))
-        return HttpResponseRedirect("/incidents")
+        return redirect("incidents")
 
     response = HttpResponse(pdf_report, content_type="application/pdf")
 
@@ -1003,15 +1003,13 @@ def export_incidents(request):
 
 
 def is_incidents_report_limit_reached(request):
-    if request.user.is_authenticated:
-        # if a user make too many declaration we prevent to save
-        number_preliminary_today = Incident.objects.filter(contact_user=request.user, incident_notification_date__date=date.today()).count()
-        if number_preliminary_today >= MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER:
-            messages.error(
-                request,
-                _("The daily limit of incident reports has been reached. Please try again tomorrow."),
-            )
-            return True
+    number_preliminary_today = Incident.objects.filter(contact_user=request.user, incident_notification_date__date=date.today()).count()
+    if number_preliminary_today >= MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER:
+        messages.error(
+            request,
+            _("The daily limit of incident reports has been reached. Please try again tomorrow."),
+        )
+        return True
     return False
 
 
@@ -1115,7 +1113,7 @@ class FormWizardView(SessionWizardView):
 
     def done(self, form_list, **kwargs):
         if is_incidents_report_limit_reached(self.request):
-            return HttpResponseRedirect("/incidents")
+            return redirect("incidents")
 
         user = self.request.user
         data = self.get_all_cleaned_data()
