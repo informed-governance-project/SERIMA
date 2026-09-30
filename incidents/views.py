@@ -77,15 +77,13 @@ from .helpers import (
     group_keys_by_index,
     is_deadline_exceeded,
     sanitize_spreadsheet_cell,
+    save_answers,
 )
 from .models import (
-    Answer,
     Impact,
     Incident,
     IncidentWorkflow,
     LogReportRead,
-    PredefinedAnswer,
-    QuestionOptions,
     ReportTimeline,
     SectorRegulation,
     SectorRegulationWorkflow,
@@ -1525,18 +1523,25 @@ class WorkflowWizardView(SessionWizardView):
             if incident_resolution_date:
                 incident_resolution_date = convert_to_utc(incident_resolution_date, local_tz)
 
-            self.incident.save()
-            # create the report timeline
-            report_timeline = ReportTimeline.objects.create(
-                report_timeline_timezone=incident_timezone,
-                incident_starting_date=incident_starting_date,
-                incident_detection_date=self.incident.incident_detection_date,
-                incident_resolution_date=incident_resolution_date,
-            )
-            # manage question
-            incident_workflow = save_answers(data, self.incident, self.workflow, report_timeline)
-            create_entry_log(user, self.incident, incident_workflow, "CREATE", self.request)
+            with transaction.atomic():
+                self.incident.save()
+                # create the report timeline
+                report_timeline = ReportTimeline.objects.create(
+                    report_timeline_timezone=incident_timezone,
+                    incident_starting_date=incident_starting_date,
+                    incident_detection_date=self.incident.incident_detection_date,
+                    incident_resolution_date=incident_resolution_date,
+                )
+                # We create a new incident workflow in all the case (history)
+                incident_workflow = IncidentWorkflow.objects.create(
+                    incident=self.incident,
+                    workflow=self.workflow,
+                    report_timeline=report_timeline,
+                )
+                save_answers(incident_workflow, self.workflow, data)
+                create_entry_log(user, self.incident, incident_workflow, "CREATE", self.request)
 
+            # send the submission email outside the atomic block
             if email and not self.incident.incident_status == "CLOSE":
                 send_email(
                     email,
@@ -1588,66 +1593,3 @@ class WorkflowWizardView(SessionWizardView):
                 )
 
         return redirect("regulator_incidents") if self.is_regulator_incident else redirect("incidents")
-
-
-def save_answers(data=None, incident=None, workflow=None, report_timeline=None):
-    """Save the answers."""
-    prefix = "__question__"
-    questions_data = {key[slice(len(prefix), None)]: value for key, value in data.items() if key.startswith(prefix)}
-
-    # We create a new incident workflow in all the case (history)
-    incident_workflow = IncidentWorkflow.objects.create(incident=incident, workflow=workflow, report_timeline=report_timeline)
-    # TO DO manage impact
-    if workflow.is_impact_needed:
-        impacts = data.get("impacts", [])
-        incident_workflow.impacts.set(impacts)
-        incident = incident_workflow.incident
-        incident.is_significative_impact = False
-
-        if len(impacts) > 0:
-            incident.is_significative_impact = True
-
-        incident.save()
-
-    question_options_map = (
-        QuestionOptions.objects.filter(report=workflow).select_related("question").prefetch_related("conditional_targets").in_bulk()
-    )
-
-    all_predefined_answer_ids = {int(val) for v in questions_data.values() if isinstance(v, list) for val in v if str(val).isdigit()}
-
-    for key, value in questions_data.items():
-        question_id = None
-        try:
-            question_id = int(key)
-        except ValueError, TypeError:
-            continue
-        if question_id:
-            question_option = question_options_map.get(question_id)
-            question = question_option.question
-            question_type = question.question_type
-
-            # Check if predefined answer was selected for conditional questions
-            if question_option.is_conditional:
-                required_predefined_answers_list = {c.predefined_answer_id for c in question_option.conditional_targets.all()}
-                if not required_predefined_answers_list.intersection(all_predefined_answer_ids):
-                    continue
-
-            predefined_answers = []
-
-            if question_type == "FREETEXT":
-                answer = value
-            elif question_type == "DATE":
-                answer = value.strftime("%Y-%m-%d %H:%M") if value else None
-            elif question_type == "CL" or question_type == "RL":
-                answer = ",".join(map(str, value))
-            else:  # MULTI
-                predefined_answers = list(PredefinedAnswer.objects.filter(pk__in=value))
-                answer = questions_data.get(f"{key}_freetext_answer", None)
-            answer_object = Answer.objects.create(
-                incident_workflow=incident_workflow,
-                question_options=question_option,
-                answer=answer,
-            )
-            answer_object.predefined_answers.set(predefined_answers)
-
-    return incident_workflow

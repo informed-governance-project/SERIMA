@@ -2,7 +2,7 @@ import math
 import re
 from collections import OrderedDict
 from itertools import chain
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytz
 from django.utils import timezone
@@ -10,11 +10,14 @@ from django.utils import timezone
 from governanceplatform.helpers import get_active_company_from_session, is_observer_user, is_user_operator, is_user_regulator
 
 from .models import (
+    Answer,
     Incident,
     IncidentWorkflow,
     LogReportRead,
+    PredefinedAnswer,
     QuestionCategory,
     QuestionCategoryOptions,
+    QuestionOptions,
     SectorRegulationWorkflow,
     Workflow,
 )
@@ -219,3 +222,62 @@ def create_entry_log(
         role=role,
         entity_name=entity_name,
     )
+
+
+def save_answers(incident_workflow: IncidentWorkflow, workflow: Workflow, data: dict[str, Any]) -> None:
+    """Save the answers."""
+    prefix = "__question__"
+    questions_data = {key[slice(len(prefix), None)]: value for key, value in data.items() if key.startswith(prefix)}
+
+    # TO DO manage impact
+    if workflow.is_impact_needed:
+        impacts = data.get("impacts", [])
+        incident_workflow.impacts.set(impacts)
+        incident = incident_workflow.incident
+        incident.is_significative_impact = False
+
+        if len(impacts) > 0:
+            incident.is_significative_impact = True
+
+        incident.save()
+
+    question_options_map = (
+        QuestionOptions.objects.filter(report=workflow).select_related("question").prefetch_related("conditional_targets").in_bulk()
+    )
+
+    all_predefined_answer_ids = {int(val) for v in questions_data.values() if isinstance(v, list) for val in v if str(val).isdigit()}
+
+    for key, value in questions_data.items():
+        question_id = None
+        try:
+            question_id = int(key)
+        except ValueError, TypeError:
+            continue
+        if question_id:
+            question_option = question_options_map[question_id]
+            question = question_option.question
+            question_type = question.question_type
+
+            # Check if predefined answer was selected for conditional questions
+            if question_option.is_conditional:
+                required_predefined_answers_list = {c.predefined_answer_id for c in question_option.conditional_targets.all()}
+                if not required_predefined_answers_list.intersection(all_predefined_answer_ids):
+                    continue
+
+            predefined_answers = []
+
+            if question_type == "FREETEXT":
+                answer = value
+            elif question_type == "DATE":
+                answer = value.strftime("%Y-%m-%d %H:%M") if value else None
+            elif question_type == "CL" or question_type == "RL":
+                answer = ",".join(map(str, value))
+            else:  # MULTI
+                predefined_answers = list(PredefinedAnswer.objects.filter(pk__in=value))
+                answer = questions_data.get(f"{key}_freetext_answer", None)
+            answer_object = Answer.objects.create(
+                incident_workflow=incident_workflow,
+                question_options=question_option,
+                answer=answer,
+            )
+            answer_object.predefined_answers.set(predefined_answers)
