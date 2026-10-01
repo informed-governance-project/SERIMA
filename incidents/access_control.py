@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 
 from governanceplatform.helpers import (
     is_observer_user,
@@ -10,6 +10,7 @@ from governanceplatform.helpers import (
     is_user_regulator,
     user_in_group,
 )
+from governanceplatform.models import Company
 
 from .models import Incident
 
@@ -44,7 +45,14 @@ def get_observer_incidents(observer: Observer) -> QuerySet[Incident]:
                 condition_q = Q()
 
                 for code in condition.get("include", []):
-                    condition_q &= Q(company__entity_categories__code=code)
+                    condition_q &= Q(
+                        Exists(
+                            Company.entity_categories.through.objects.filter(
+                                company=OuterRef("company"),
+                                entitycategory__code=code,
+                            )
+                        )
+                    )
 
                 for code in condition.get("exclude", []):
                     condition_q &= ~Q(company__entity_categories__code=code)

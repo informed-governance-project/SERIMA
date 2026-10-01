@@ -7,7 +7,7 @@ existing access-control tests only exercise that broadest rule.
 
 import pytest
 
-from governanceplatform.models import ObserverRegulation
+from governanceplatform.models import EntityCategory, ObserverRegulation
 from incidents.access_control import get_observer_incidents, observer_can_access_incident
 
 
@@ -120,3 +120,41 @@ def test_an_exclude_condition_removes_the_incidents_company(observer, incident, 
     rule.save()
 
     assert observer_can_access_incident(observer, incident) is True
+
+
+@pytest.fixture
+def private_and_critical():
+    private = EntityCategory.objects.create(code="PRIVATE", label="Private")
+    critical = EntityCategory.objects.create(code="CRITICAL_INFRA", label="Critical infrastructure")
+    return private, critical
+
+
+@pytest.mark.django_db()
+def test_an_include_condition_with_several_codes_matches_a_company_holding_them_all(observer, incident, private_and_critical):
+    incident.company.entity_categories.add(*private_and_critical)
+    rule = _scope_to(observer, incident)
+    rule.incident_rule = {"conditions": [{"include": ["PRIVATE", "CRITICAL_INFRA"]}]}
+    rule.save()
+
+    assert observer_can_access_incident(observer, incident) is True
+
+
+@pytest.mark.django_db()
+def test_an_include_condition_with_several_codes_rejects_a_company_missing_one(observer, incident, private_and_critical):
+    private, _ = private_and_critical
+    incident.company.entity_categories.add(private)
+    rule = _scope_to(observer, incident)
+    rule.incident_rule = {"conditions": [{"include": ["PRIVATE", "CRITICAL_INFRA"]}]}
+    rule.save()
+
+    assert observer_can_access_incident(observer, incident) is False
+
+
+@pytest.mark.django_db()
+def test_an_exclude_beside_an_include_rejects_a_company_holding_the_excluded_code(observer, incident, private_and_critical):
+    incident.company.entity_categories.add(*private_and_critical)
+    rule = _scope_to(observer, incident)
+    rule.incident_rule = {"conditions": [{"include": ["PRIVATE"], "exclude": ["CRITICAL_INFRA"]}]}
+    rule.save()
+
+    assert observer_can_access_incident(observer, incident) is False
