@@ -35,6 +35,8 @@ openapi:
 	python manage.py spectacular --format openapi > docs/_static/openapi.yml
 
 screenshots:
+	python manage.py screenshot_fixture --delete
+	python manage.py screenshot_fixture --create
 	python docs/screenshots/capture.py
 
 generatepot:
