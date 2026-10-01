@@ -1,5 +1,5 @@
-Incident Notification Module
-==================================
+SERIMA
+======
 
 
 .. only:: html
@@ -26,100 +26,56 @@ Incident Notification Module
 
 
 .. toctree::
-   :caption: Technical considerations
-   :maxdepth: 3
+   :caption: User guide
+   :maxdepth: 2
    :hidden:
 
-   prerequisites
-   installation
-   update
-   modules
-   architecture
-
+   getting-started/index
+   incident-notification/index
+   security-objectives/index
+   reporting/index
+   administration/index
 
 .. toctree::
-   :caption: Conceptual considerations
-   :maxdepth: 3
+   :caption: Technical guide
+   :maxdepth: 2
    :hidden:
 
-   security
-   permissions
-
-
-.. toctree::
-   :caption: User Manual
-   :maxdepth: 3
-   :hidden:
-
-   ui_introduction
-   ui_login_page
-   ui_create_an_account
-   ui_enable_2FA
-   ui_parts_of_the_homepage
-   ui_incident_notification_dashboard
-   ui_how_to_report_an_incident
-   ui_reported_incidents_view
-   ui_incident_reporting_workflow_operator_admin
-   ui_incident_reporting_workflow_regulator_admin
-   ui_security_objectives_dashboard
-   ui_how_to_submit_a_security_objective
-   ui_security_objectives_workflow_score_system
-   ui_security_objectives_workflow_operator_admin
-   ui_security_objectives_workflow_regulator_admin
-
-.. toctree::
-   :caption: Administration interface
-   :maxdepth: 3
-   :hidden:
-
-   ui_admin_introduction
-   ui_operator_admin
-   ui_regulator_user
-   ui_regulator_admin/index
-   ui_platform_admin/index
-
-.. toctree::
-   :caption: Reporting module
-   :maxdepth: 3
-   :hidden:
-
-   ui_reporting_module/ui_introduction
-   ui_reporting_module/ui_homepage
-   ui_reporting_module/ui_reporting_dashboard
-   ui_reporting_module/ui_managing_dashboard
-   ui_reporting_module/ui_create_project
-   ui_reporting_module/ui_open_project
-   ui_reporting_module/ui_edit_project
-   ui_reporting_module/ui_duplicate_project
-   ui_reporting_module/ui_delete_project
-   ui_reporting_module/ui_import
-   ui_reporting_module/ui_generate_and download_report
-   ui_reporting_module/ui_report_back_end
-   ui_reporting_module/ui_bulk_report_and_error_log
+   technical/index
 
 Presentation
 ------------
 
-The Incident Notification Module is developed and maintained by the
+SERIMA (SEcurity RIsk MAnagement) is developed and maintained by the
 `NC3-LU <https://github.com/NC3-LU>`_ team in the framework of the
 `Informed Governance Project <https://github.com/informed-governance-project>`_.
 
-The incident notification module is designed to serve as a national incident reporting tool.
-It is multi-regulator, meaning that any regulator or competent authority in the country can use it and receive incident notifications.
+It is a national governance platform shared by several regulators (competent authorities)
+and the operators they supervise. Each regulator configures the regulations it is accountable for,
+and the platform offers one module per activity:
 
-It is also multi-regulation, meaning that it is fully configurable, and each regulator is responsible for configuring the regulations for which they are accountable.
-Operators under supervision can use the module to submit their incident notifications.
+- :doc:`incident-notification/index` — operators report incidents to their regulator.
+- :doc:`security-objectives/index` — operators declare how they meet their regulator's security objectives.
+- :doc:`reporting/index` — regulators build and distribute reports to operators.
 
 This project is lead by `NC3-LU <https://www.nc3.lu>`__ and developed in partnership with `ILR.lu <https://web.ilr.lu>`_ and
 `IBPT.be <https://www.ibpt.be>`_.
 
-.. figure:: _static/incident_notification/overview.png
+.. figure:: /_static/incident_notification/overview.png
    :alt: Screenshot of the list of incidents from the regulator view.
    :target: _static/incident_notification/overview.png
 
    Screenshot of the list of incidents from the regulator view.
 
-This document is intended to be a documentation for operators and users of the module.
+Which section do I read?
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **New to SERIMA:** :doc:`getting-started/index`.
+- **Operators and regulators:** the section of the module you work in.
+- **Admins:** :doc:`administration/index`, plus the *Configuration* page of each module you configure.
+- **Installing or maintaining an instance:** :doc:`technical/index`.
+
+This document is intended for the operators and users of the platform.
 If you find errors or omission, please don't hesitate to submit
 `an issue <https://github.com/informed-governance-project/SERIMA/issues/new?labels=documentation&template=bug_report.md>`_
 or open a pull request with a fix.
