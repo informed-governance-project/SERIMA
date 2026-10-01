@@ -257,7 +257,7 @@ This application handles sensitive incident data subject to NIS2 regulations. Se
 
 ## Performance
 
-- Measure before optimising. Use Django Debug Toolbar in dev (`debug_toolbar` is already in installed apps when `DEBUG=True`).
+- Measure before optimising.
 - Prefer database-level aggregation (`annotate`, `aggregate`) over Python-level loops on large querysets.
 - Celery tasks exist for anything slow: PDF generation (WeasyPrint), email dispatch, heavy report queries. Don't do these synchronously in a request/response cycle.
 - Cache translated strings and expensive lookups at the view layer; `django-parler` translations hit the DB per language per object if not batched.
