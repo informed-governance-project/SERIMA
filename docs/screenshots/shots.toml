@@ -13,10 +13,6 @@ height = 900
 [defaults]
 settle_ms = 400
 hide = [
-  # django-debug-toolbar rides along whenever DEBUG is on, which every local
-  # instance needs for the screenshots to be reachable at all.
-  "#djDebug",
-  "#djDebugToolbarHandle",
   # The footer version string would otherwise re-diff every screenshot on each
   # release, for a number the docs never refer to.
   "footer .justify-content-between > .text-end",

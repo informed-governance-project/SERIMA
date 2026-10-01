@@ -193,8 +193,8 @@ mostly wizard steps and crops.
 Any page showing a captcha regenerates it on every request, so those files
 always diff even when nothing changed.
 
-Two things are hidden from every capture by `[defaults].hide` in `shots.toml`:
-the django-debug-toolbar handle, and the footer version string — otherwise a
-release would re-diff every screenshot over a number the docs never refer to.
+The footer version string is hidden from every capture by `[defaults].hide` in
+`shots.toml` — otherwise a release would re-diff every screenshot over a number
+the docs never refer to.
 
 Capture only what the built documentation actually uses.
