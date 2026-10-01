@@ -23,7 +23,7 @@ python manage.py screenshot_fixture --create        # one account per role
 
 make screenshots                                    # everything in shots.toml
 poetry run python docs/screenshots/capture.py --list # what is defined
-poetry run python docs/screenshots/capture.py --only login/enable_2FA_1 ui_admin_overview
+poetry run python docs/screenshots/capture.py --only login/enable_2FA_1 login/log_in
 poetry run python docs/screenshots/capture.py --headed   # watch it run
 ```
 

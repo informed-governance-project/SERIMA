@@ -191,22 +191,6 @@ steps = [{ action = "click", selector = "#with-account" }]
 # --- Regulator administrator ------------------------------------------------
 
 [[shots]]
-name = "ui_admin_overview"
-role = "regulator_admin"
-path = "/admin/"
-full_page = true
-
-[[shots]]
-name = "ui_standard_list"
-role = "regulator_admin"
-path = "/admin/incidents/impact/"
-
-[[shots]]
-name = "ui_standard_add_edit"
-role = "regulator_admin"
-path = "/admin/incidents/impact/add/"
-
-[[shots]]
 name = "ui_admin_export"
 role = "regulator_admin"
 path = "/admin/governanceplatform/exportjob/add/"
