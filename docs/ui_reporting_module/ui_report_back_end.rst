@@ -1,7 +1,7 @@
 Back-end Reporting Configuration
 ---------------------------------
 
-Each regulation requires a single configuration that is linked to the corresponding regulator. 
+Each regulation requires a single configuration that is linked to the corresponding regulator.
 
   **As a Regulator Admin, you can set up the configuration of the reports in the administration interface (back-end) of the SERIMA platform.**
 
@@ -18,9 +18,9 @@ In SERIMA, a Security Objective statement must be created for each operator.
 Add configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can create a new configuration either by clicking the **Add** link next to Configurations, or from the **Select Configuration to change** screen, selecting the **Add Configuration** button. 
+You can create a new configuration either by clicking the **Add** link next to Configurations, or from the **Select Configuration to change** screen, selecting the **Add Configuration** button.
 
- **Configure reporting settings for each Security Standard. First, choose the standard you want to use. Next, upload a DOCX template to the platform, and finally add colors to the reporting configuration.** 
+ **Configure reporting settings for each Security Standard. First, choose the standard you want to use. Next, upload a DOCX template to the platform, and finally add colors to the reporting configuration.**
 
 When generating the report, you can also define the order of the colors used.
 
@@ -39,16 +39,16 @@ From the **Standard** dropdown menu, select a standard. Once you have selected a
 
 •	**Change the selected standard** 	– Click the pencil icon to choose a different standard.
 •	**Add another standard** – Click the green plus (+) icon to add an additional standard.
-•	**View the selected standard** 	– Click the eye icon to open the selected standard. 
+•	**View the selected standard** 	– Click the eye icon to open the selected standard.
 
 You will be redirected to the **View Standard** page for that standard.
 
 **Templates docx**
 ^^^^^^^^^^^^^^^^^^^^^
 
-Templates are DOCX files. The application supports four languages, allowing you to create templates in **English (EN), French (FR), Dutch (NL)**, and **German (DE)**. 
+Templates are DOCX files. The application supports four languages, allowing you to create templates in **English (EN), French (FR), Dutch (NL)**, and **German (DE)**.
 
- **A DOCX Template must be provided for each supported language.**
+ **A DOCX Template must be provided for each supported language.** See `Writing a DOCX template`_ for the placeholders a template can use.
 
 In the **Templates (DOCX)** section, you can manage your DOCX templates. Select the language for your template, click **Choose File**, and upload your DOCX template.
 
@@ -61,11 +61,11 @@ You can add multiple templates to your configuration, for example by uploading t
 **Colors**
 ^^^^^^^^^^^^^^^^^^^^^
 
-Finally, you can configure the colors used in your report to represent different maturity levels. 
+Finally, you can configure the colors used in your report to represent different maturity levels.
 
-When you set up a maturity level, the **Color** field is mandatory. Although this field is not used in the **Security Objectives** module, it is required for the **Reporting** module. On the **Select Maturity Level to change** screen, you can view the color and the label for the color used in the **Reporting** module.
+Each maturity level has a **Color** field, in hexadecimal format, which defaults to white (``#FFFFFF``). Although this field is not used in the **Security Objectives** module, the **Reporting** module uses it, so set a distinct color for each level, for example ``#ed2939``, ``#ffc000``, ``#dde96d`` and ``#00b050``. On the **Select Maturity Level to change** screen, you can view the color and the label for the color used in the **Reporting** module.
 
-Define a **color palette** used in chart series. By default, the following palette is applied:
+Define a **color palette** used in chart series. The colors you define are used first, in their order. They are followed by the Plotly qualitative palettes **Set1** and **Set2**, which are used on their own when no color is defined, and fill in when a chart has more series than defined colors:
 
 .. figure:: ../_static/reporting_module_images/Rep_60.png
    :alt: color palette
@@ -131,3 +131,56 @@ These colors are important because they are used when creating and downloading a
 .. figure:: ../_static/reporting_module_images/Rep_59.png
    :alt: printed report
    :target: ../_static/reporting_module_images/Rep_59.png
+
+Writing a DOCX template
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A DOCX template is a Word document containing placeholders, which are replaced with the operator's data when a report is generated. To start from a working example, download the sample template and the report generated from it:
+
+- :download:`Sample DOCX template <../_static/docx_test_template.docx>`
+- :download:`Report generated from the sample template <../_static/docx_test_template_rendered.docx>`
+
+**Text placeholders**
+
+These placeholders are replaced with text, and can be used anywhere in a paragraph:
+
+- ``{{ operator_name }}``: the name of the operator
+- ``{{ sector }}``: the sector of the operator
+- ``{{ year }}``: the reference year of the report
+- ``{{ publication_date }}``: the date the report is generated
+- ``{{ threshold_for_high_risk }}``: the threshold above which a risk is considered high, as set in the report project
+- ``{{ top_ranking }}``: the number of entries shown in the rankings, as set in the report project
+- ``{{ report_observations }}``: the observations written for the operator
+
+The recommendations selected for the operator are inserted as a bulleted list with ``{{p report_recommendations }}``. Note the ``p`` after the opening braces, and place this placeholder alone in its paragraph.
+
+**Chart placeholders**
+
+These placeholders are replaced with a chart image:
+
+- ``{{ chart_security_objectives_by_level }}``
+- ``{{ chart_evolution_security_objectives_by_domain }}``
+- ``{{ chart_evolution_security_objectives_by_domain_with_sector_avg }}``
+- ``{{ chart_evolution_security_objectives }}``
+- ``{{ chart_average_risk_level }}``
+- ``{{ chart_high_risk_rate }}``
+- ``{{ chart_average_high_risk_level }}``
+- ``{{ chart_evolution_highest_risks }}``
+
+**Table placeholders**
+
+These placeholders are replaced with a table. **Each one must be alone in its own paragraph, in the body of the document**: the whole paragraph is replaced by the table, and a placeholder sharing its paragraph with other text, or placed inside a table, a header or a footer, is left as it is.
+
+- ``{{ table_of_evolution_security_objectives }}``
+- ``{{ table_of_evolution_security_objectives_by_domain }}``
+- ``{{ table_of_highest_security_objectives_in_the_sector }}``
+- ``{{ table_of_lowest_security_objectives_in_the_sector }}``
+- ``{{ table_of_evolution_of_the_weakest_security_objectives }}``
+- ``{{ table_of_security_objectives_by_maturity_level }}``
+- ``{{ maturity_level_legend }}``
+- ``{{ table_of_evolution_of_the_highest_risks }}``
+- ``{{ table_of_treatment_of_the_highest_risks }}``
+- ``{{ table_of_risk_summary }}``
+- ``{{ table_of_top_threats_by_occurrence }}``
+- ``{{ table_of_top_vulnerabilities_by_occurrence }}``
+- ``{{ table_of_recommendations }}``

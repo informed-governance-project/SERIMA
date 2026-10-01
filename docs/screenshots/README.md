@@ -172,6 +172,4 @@ Two things are hidden from every capture by `[defaults].hide` in `shots.toml`:
 the django-debug-toolbar handle, and the footer version string — otherwise a
 release would re-diff every screenshot over a number the docs never refer to.
 
-Capture only what the built documentation actually uses. Several `.rst` files
-sit outside every toctree, so their images are never published; `shots.toml`
-notes which entries are in that position.
+Capture only what the built documentation actually uses.
