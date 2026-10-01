@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A link back to the previous page, after importing a declaration or a risk analysis or after editing a report project, is now followed only when it points at SERIMA itself. The address was taken from the browser's Referer header and used unchecked, so a crafted link could have bounced a signed-in user onto an outside site
 - Generating a report over a range of years in which no declaration was ever submitted no longer fails; the report is produced with its security objectives by priority left empty
+- Observer incident rules combining several entity categories in one condition now behave as documented. A condition listing several categories in `include` matched no incident at all, so an observer silently missed, and was never notified of, every incident it should have received through it. A condition pairing an `include` with an `exclude` ignored the `exclude`, so an observer saw and was notified of incidents from operators it should have been kept from
 
 
 ## [0.5.18] - 2026-09-17
