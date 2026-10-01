@@ -29,7 +29,7 @@ superuser:
 	python manage.py createsuperuser
 
 models:
-	python manage.py graph_models governanceplatform incidents --pydot -g -o docs/_static/app-models.png
+	python manage.py graph_models governanceplatform incidents --pydot -g -o docs/_static/images/technical/app-models.png
 
 openapi:
 	python manage.py spectacular --format openapi > docs/_static/openapi.yml

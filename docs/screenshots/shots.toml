@@ -60,7 +60,7 @@ username_env = "SERIMA_SHOT_PLATFORM_USER"
 password_env = "SERIMA_SHOT_PLATFORM_PASS"
 credentials_file = ".fixture-credentials.json"
 
-# --- Two-factor enrolment (docs/ui_enable_2FA.rst) --------------------------
+# --- Two-factor enrolment (docs/getting-started/enable-2fa.rst) -------------
 #
 # The wizard's "Next" is `button[type=submit]:not([name])`. A bare
 # `button[type=submit]` also matches "Back", which django-two-factor-auth
@@ -68,33 +68,33 @@ credentials_file = ".fixture-credentials.json"
 # wizard backwards instead of forwards.
 #
 # STATEFUL. The wizard only exists while the account has no TOTP device, and
-# UM_SER_6m requires actually completing it — which creates one.
+# enable-2fa-04 requires actually completing it — which creates one.
 # `manage.py screenshot_fixture --create` removes it again before each run.
 #
 # The first three shots persist nothing, so they are safe to re-run on their
-# own; only UM_SER_6m enrols the device. UM_SER_7 shows the token prompt at
-# login, which exists only once a device is enrolled — so it has to run after
-# UM_SER_6m, in the order below.
+# own; only enable-2fa-04 enrols the device. enable-2fa-05 shows the token
+# prompt at login, which exists only once a device is enrolled — so it has to
+# run after enable-2fa-04, in the order below.
 
 [[shots]]
-name = "login/enable_2FA_1"
+name = "images/getting-started/enable-2fa-01"
 role = "operator_user"
 path = "/account/two_factor/"
 
 [[shots]]
-name = "login/enable_2FA_2"
+name = "images/getting-started/enable-2fa-02"
 role = "operator_user"
 path = "/account/two_factor/setup/"
 
 [[shots]]
-name = "login/enable_2FA_3"
+name = "images/getting-started/enable-2fa-03"
 role = "operator_user"
 path = "/account/two_factor/setup/"
 steps = [{ action = "click", selector = "button[type=submit]:not([name])" }]
 
 
 [[shots]]
-name = "login/enable_2FA_4"
+name = "images/getting-started/enable-2fa-04"
 role = "operator_user"
 path = "/account/two_factor/setup/"
 steps = [
@@ -104,7 +104,7 @@ steps = [
 ]
 
 [[shots]]
-name = "login/enable_2FA_5"
+name = "images/getting-started/enable-2fa-05"
 path = "/account/login"
 # Types the credentials itself, and signs in — so it borrows them from the role
 # and needs a context it cannot leak into the other anonymous shots.
@@ -118,7 +118,7 @@ steps = [
 ]
 
 [[shots]]
-name = "login/logged_in"
+name = "images/getting-started/enable-2fa-06"
 path = "/account/login"
 # Types the credentials itself rather than being logged in beforehand, so it
 # borrows them from the role instead of the environment.
@@ -138,14 +138,14 @@ steps = [
   { action = "click", selector = "button.btn-primary.submit_login" },
 ]
 
-# --- Login page (docs/ui_login_page.rst) ------------------------------------
+# --- Login page (docs/getting-started/login.rst) -----------------------------
 #
 # Outlines mark what the prose tells the reader to click. The header Login
 # button also gets an arrow: it is small, far from the card, and easy to skim
 # past with only an outline.
 
 [[shots]]
-name = "login/log_in"
+name = "images/getting-started/login-01"
 path = "/account/login"
 full_page = true
 annotate = [
@@ -154,14 +154,14 @@ annotate = [
 ]
 
 [[shots]]
-name = "login/sign_in"
+name = "images/getting-started/login-02"
 path = "/account/login"
 full_page = true
 steps = [{ action = "click", selector = "#with-account" }]
 annotate = [{ selector = ["#id_auth-username", "#id_auth-password"], box = true }]
 
 [[shots]]
-name = "login/create_account_button"
+name = "images/getting-started/login-03"
 path = "/account/login"
 full_page = true
 annotate = [
@@ -172,16 +172,12 @@ annotate = [
 ]
 
 [[shots]]
-name = "login/sign_up"
+name = "images/getting-started/create-account-01"
 path = "/account/signup"
 full_page = true
 
 # --- Not covered yet --------------------------------------------------------
 #
-# The published User Manual, administration and reporting chapters own the bulk
-# of the screenshots and none of them are scripted here yet:
-#
-#   user_manual_images/UM_SER_*        the split User Manual pages
-#   platform_admin_images/PLAT_ADM_*   ui_platform_admin/
-#   regulator_admin_images/Reg_Admin_* ui_regulator_admin/
-#   reporting_module_images/Rep_*      ui_reporting_module/
+# Only the getting-started pages above are scripted. Every other page owns the
+# images under docs/_static/images/<section>/<page>-NN.png, and none of them
+# are scripted here yet.

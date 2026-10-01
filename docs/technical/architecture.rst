@@ -5,9 +5,9 @@ Architecture
 High-level architecture
 -----------------------
 
-.. figure:: /_static/global-architecture.png
+.. figure:: /_static/images/technical/global-architecture.png
    :alt: High level architecture
-   :target: ../_static/app-models.png
+   :target: ../_static/images/technical/global-architecture.png
 
    High-level architecture of a Django application.
 
@@ -15,8 +15,8 @@ High-level architecture
 Models
 ------
 
-.. figure:: /_static/app-models.png
+.. figure:: /_static/images/technical/app-models.png
    :alt: Apllication models
-   :target: ../_static/app-models.png
+   :target: ../_static/images/technical/app-models.png
 
    Business-related models for the *incidents* and *governance* modules.

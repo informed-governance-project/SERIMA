@@ -61,9 +61,9 @@ and the platform offers one module per activity:
 This project is lead by `NC3-LU <https://www.nc3.lu>`__ and developed in partnership with `ILR.lu <https://web.ilr.lu>`_ and
 `IBPT.be <https://www.ibpt.be>`_.
 
-.. figure:: /_static/incident_notification/overview.png
+.. figure:: /_static/images/home-01.png
    :alt: Screenshot of the list of incidents from the regulator view.
-   :target: _static/incident_notification/overview.png
+   :target: _static/images/home-01.png
 
    Screenshot of the list of incidents from the regulator view.
 

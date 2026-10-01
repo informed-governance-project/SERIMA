@@ -145,9 +145,9 @@ The first PlatformAdmin user will also have to configure the ``domain name``
 and the ``display name`` of the application:
 
 
-.. figure:: /_static/sites-configuration.png
+.. figure:: /_static/images/technical/installation-01.png
    :alt: Django application - Sites configuration.
-   :target: ../_static/sites-configuration.png
+   :target: ../_static/images/technical/installation-01.png
 
    Django application - Sites configuration.
 

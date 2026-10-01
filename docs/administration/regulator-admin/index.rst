@@ -8,9 +8,9 @@ In Luxembourg, the regulator is **ILR**. `ILR <https://www.ilr.lu/>`_ can have t
 In the user interface, click the **Settings** link to go to the **Site Administration** screen (the Administration Console).
 To return to the user interface, click the **Return to user interface** link in the upper right-hand corner (circled in red in the screenshot below).
 
-.. figure:: /_static/regulator_admin_images/Reg_Admin_01.png
+.. figure:: /_static/images/administration/regulator-admin/overview-01.png
    :alt: Regulator Admin - Site administration
-   :target: ../../_static/regulator_admin_images/Reg_Admin_01.png
+   :target: ../../_static/images/administration/regulator-admin/overview-01.png
 
 The **Site Administration screen** (the Administration Interface) offers the most extensive set of features compared with the **Operator Admin**,
 **Regulator User**, and **Platform Admin** user types.
@@ -28,9 +28,9 @@ In the rest of this chapter, **Administration**, **Governance** and **Recent Act
 The module sections are described with their module: :doc:`/incident-notification/configuration`,
 :doc:`/reporting/configuration` and :doc:`/security-objectives/configuration`.
 
-.. figure:: /_static/regulator_admin_images/Reg_Admin_02.png
+.. figure:: /_static/images/administration/regulator-admin/overview-02.png
    :alt: Regulator Admin - Site administration
-   :target: ../../_static/regulator_admin_images/Reg_Admin_02.png
+   :target: ../../_static/images/administration/regulator-admin/overview-02.png
 
 
 

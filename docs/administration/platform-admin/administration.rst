@@ -17,12 +17,12 @@ The table includes four columns:
 
 You can sort the columns in descending or ascending order. Also, you can use the search field at the top or use the **Filter** section on the right to narrow down the number of entries and find the log you are looking for.
 
-.. figure:: /_static/platform_admin_images/PLAT_ADM_02.png
+.. figure:: /_static/images/administration/platform-admin/administration-01.png
    :alt: Select Log Entry to view
-   :target: ../../_static/platform_admin_images/PLAT_ADM_02.png
+   :target: ../../_static/images/administration/platform-admin/administration-01.png
 
 If you need further information about a log entry, click its link in the **Action Time** column. You will be directed to the **View Log Entry** screen, where you can find additional details about the selected log entry.
 
-.. figure:: /_static/platform_admin_images/PLAT_ADM_03.png
+.. figure:: /_static/images/administration/platform-admin/administration-02.png
    :alt: View Log Entry
-   :target: ../../_static/platform_admin_images/PLAT_ADM_03.png
+   :target: ../../_static/images/administration/platform-admin/administration-02.png

@@ -22,9 +22,9 @@ Enter a name for the project, then select the applicable **Regulation** and **St
 Project name, Regulation, Standard
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. figure:: /_static/reporting_module_images/Rep_15.png
+.. figure:: /_static/images/reporting/projects/create-01.png
    :alt: New project
-   :target: ../../_static/reporting_module_images/Rep_15.png
+   :target: ../../_static/images/reporting/projects/create-01.png
 
 Base year, Comparison years
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,9 +45,9 @@ To display the sectors within a category, click the downward-pointing arrow next
 The category will expand, allowing you to select specific sectors.
 If you select more than one sector, they will be shown in the **Sectors** dropdown separated by a comma (highlighted in green in the screenshot below).
 
-.. figure:: /_static/reporting_module_images/Rep_16.png
+.. figure:: /_static/images/reporting/projects/create-02.png
    :alt: Sectors
-   :target: ../../_static/reporting_module_images/Rep_16.png
+   :target: ../../_static/images/reporting/projects/create-02.png
 
 Languages
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,9 +56,9 @@ The report can be generated in **English, French, Dutch**, or **German**. Any re
 
 You may select one or multiple languages by checking the corresponding boxes. To generate the report in all available languages, select the **Select all** checkbox. If you select more than one language, the selected languages will be displayed in the **Languages** drop-down menu, separated by a comma (highlighted in green in the screenshot below).
 
-.. figure:: /_static/reporting_module_images/Rep_17.png
+.. figure:: /_static/images/reporting/projects/create-03.png
    :alt: Languages
-   :target: ../../_static/reporting_module_images/Rep_17.png
+   :target: ../../_static/images/reporting/projects/create-03.png
 
 **Export format**
 
@@ -68,16 +68,16 @@ To export report data, select one of the available file formats: **PDF** or **DO
 
 Specify a threshold above which risk values received from **MONARC** are considered high and are treated accordingly in the report.
 
-.. figure:: /_static/reporting_module_images/Rep_18.png
+.. figure:: /_static/images/reporting/projects/create-04.png
    :alt: High risk rate threshold
-   :target: ../../_static/reporting_module_images/Rep_18.png
+   :target: ../../_static/images/reporting/projects/create-04.png
 
 **Ranking**
 
 The ranking is used in several charts and tables in the report. Specify the maximum number of top elements to display in these visualizations.
 
-.. figure:: /_static/reporting_module_images/Rep_19.png
+.. figure:: /_static/images/reporting/projects/create-05.png
    :alt: Ranking
-   :target: ../../_static/reporting_module_images/Rep_19.png
+   :target: ../../_static/images/reporting/projects/create-05.png
 
 Once you set up the fields, click the **Create** button in the lower right-hand corner, so the new project will be generated and shown on the **Dashboard**.

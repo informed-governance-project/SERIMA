@@ -22,7 +22,7 @@ account (see `RestrictViewsMiddleware`).
 make screenshots-fixture                            # wipe the database, load the fixture, set passwords
 make screenshots                                    # everything in shots.toml
 poetry run python docs/screenshots/capture.py --list # what is defined
-poetry run python docs/screenshots/capture.py --only login/enable_2FA_1 login/log_in
+poetry run python docs/screenshots/capture.py --only images/getting-started/enable-2fa-01 images/getting-started/login-01
 poetry run python docs/screenshots/capture.py --headed   # watch it run
 ```
 
@@ -147,7 +147,7 @@ only work from a checkout configured against the same database as the target
 instance.
 
 The enrolment shots are stateful. The wizard exists only while the account has
-no TOTP device, and `login/enable_2FA_4` creates one by completing it.
+no TOTP device, and `images/getting-started/enable-2fa-04` creates one by completing it.
 Run `python manage.py screenshot_fixture --create` before shooting them again:
 it removes the device (and sets new passwords). The order in `shots.toml` matters, because the login token prompt only
 appears once a device exists.
@@ -159,7 +159,7 @@ the interface when it moves instead of drifting like pixel coordinates would:
 
 ```toml
 [[shots]]
-name = "login/sign_in"
+name = "images/getting-started/login-02"
 path = "/account/login"
 steps = [{ action = "click", selector = "#with-account" }]
 annotate = [
