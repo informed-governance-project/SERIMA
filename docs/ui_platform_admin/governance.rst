@@ -15,7 +15,7 @@ You can use the **Django Settings** to check the configuration of your **SERIMA*
 Entity categories
 ^^^^^^^^^^^^^^^^^^^^^
 
-The Platform Admin creates the categories for the Operators. Entity categories are used for the classification of operators (depending on the terminology used in different regulations, operators, companies, and entities may be used to refer to the same thing). 
+The Platform Admin creates the categories for the Operators. Entity categories are used for the classification of operators (depending on the terminology used in different regulations, operators, companies, and entities may be used to refer to the same thing).
 
 Click the **Entity categories** link in the **Governance** section to go to the **Select entity category to change** screen. Here, you can see a list of categories (if any have been set up). You can create new categories by clicking the **Add Entity Category** button in the top right corner.
 
@@ -31,7 +31,7 @@ There are two columns on the **Change Entity category** screen. The **Code** col
    :alt: Change entity category
    :target: ../_static/platform_admin_images/PLAT_ADM_10.png
 
-Functionalities 
+Functionalities
 ^^^^^^^^^^^^^^^^^^^^^
 
 The **Functionalities** section shows which modules are enabled in the platform. As per the screenshot below, there are two modules set up in the system: **Reporting** and **Security Objective**.
@@ -42,10 +42,10 @@ You can create new Functionalities by clicking the **Add Functionality** button 
    :alt: Select Functionality to change
    :target: ../_static/platform_admin_images/PLAT_ADM_06.png
 
-Observers 
+Observers
 ^^^^^^^^^^^^^^^^^^^^^
 
-An observer is a type of regulator with limited permissions. Observers cannot edit incidents on the platform; they have read-only access and can only view incidents. 
+An observer is a type of regulator with limited permissions. Observers cannot edit incidents on the platform; they have read-only access and can only view incidents.
 
 As a Platform Admin, you can create an Observer either by clicking the **Add Observer** button in the top-right corner or by selecting the **Add** link in the **Governance** section. The **Change Observer** screen appears, where you can set up a new Observer.
 
@@ -55,7 +55,7 @@ When creating a new Observer, provide its name, description, country, and addres
    :alt: Chosen Functionalities list
    :target: ../_static/platform_admin_images/PLAT_ADM_11.png
 
-Finally, add observer users and observer regulations (legal basis) to the Observer. Use the down-pointing arrows to open the dropdown menus and select a different user or regulation. 
+Finally, add observer users and observer regulations (legal basis) to the Observer. Use the down-pointing arrows to open the dropdown menus and select a different user or regulation.
 
 If you cannot find the item you are looking for, use the **Add another Observer user** and **Add another Observer regulation** links to create new entries.
 
@@ -63,13 +63,49 @@ If you cannot find the item you are looking for, use the **Add another Observer 
    :alt: Add another Observer user
    :target: ../_static/platform_admin_images/PLAT_ADM_12.png
 
+Observer regulations
+""""""""""""""""""""""""
+
+An observer receives only the incidents covered by its **observer regulations**. **An observer without any observer regulation receives no incidents.**
+
+Each observer regulation has three fields:
+
+- **Legal basis**: the regulation the observer regulation applies to. An observer can have only one observer regulation per legal basis.
+- **Sectors**: the sectors the observer regulation applies to. If no sector is selected, it covers every sector of the regulation, including the incidents declared without a sector.
+- **Incident rules**: a filter, written in JSON, on the entity categories of the operator that reported the incident. Set it to ``{}`` to receive every incident of the legal basis and sectors.
+
+   **To have an observer receive all incidents, add one observer regulation per legal basis, with no sector selected and the Incident rules set to** ``{}``.
+
+The incident rules list one or more **conditions**, which refer to entity categories by their **Code** (see `Entity categories`_). An incident is received when it matches at least one condition. To match a condition, the operator must belong to the entity category in ``include`` and must not belong to any entity category in ``exclude``.
+
+In the example below, the observer receives the incidents reported by operators categorised as ``PUBLIC`` **or** as ``CRITICAL_INFRA``:
+
+.. code-block:: json
+
+    {
+        "conditions": [
+            {"include": ["PUBLIC"]},
+            {"include": ["CRITICAL_INFRA"]}
+        ]
+    }
+
+In the example below, the observer receives the incidents reported by operators categorised as ``PRIVATE``, except those also categorised as ``CRITICAL_INFRA``:
+
+.. code-block:: json
+
+    {
+        "conditions": [
+            {"include": ["PRIVATE"], "exclude": ["CRITICAL_INFRA"]}
+        ]
+    }
+
 To delete an Observer, first select it by checking the box next to the observer entry. Then, open the **Action** drop-down menu and choose the **Delete selected Observers** option, and click **Go**.
 
 .. figure:: ../_static/platform_admin_images/PLAT_ADM_09.png
    :alt: Delete selected Observers
    :target: ../_static/platform_admin_images/PLAT_ADM_09.png
 
-Regulations 
+Regulations
 ^^^^^^^^^^^^^^^^^^^^^
 
 **SERIMA** is a multi-regulation platform, allowing you to create different workflows for different regulations.
@@ -88,11 +124,11 @@ To delete a regulation, first select it by checking the box next to the regulati
    :alt: Delete selected Regulations
    :target: ../_static/platform_admin_images/PLAT_ADM_08.png
 
-Regulators 
+Regulators
 ^^^^^^^^^^^^^^^^^^^^^
 
 By following the **Regulators** link in the **Governance** section, you can check the list of Regulators set up in the system.
-As a Platform Admin, you can set up new regulators either by clicking the **Add Regulator** button in the top-right corner or by selecting the **Add** link in the Governance section. 
+As a Platform Admin, you can set up new regulators either by clicking the **Add Regulator** button in the top-right corner or by selecting the **Add** link in the Governance section.
 
 The **Add Regulator** screen appears, where you can set up a new **Regulator**. When creating a new Regulator, provide its name, description, country, address, and email address (for incident notification). Then configure the regulator’s functionalities by selecting and adding them to the **Chosen Functionalities list**:
 

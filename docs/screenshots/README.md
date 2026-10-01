@@ -134,7 +134,7 @@ the interface when it moves instead of drifting like pixel coordinates would:
 
 ```toml
 [[shots]]
-name = "ui_user_login_page"
+name = "login/sign_in"
 path = "/account/login"
 steps = [{ action = "click", selector = "#with-account" }]
 annotate = [

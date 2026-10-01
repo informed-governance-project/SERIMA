@@ -178,34 +178,6 @@ name = "login/sign_up"
 path = "/account/signup"
 full_page = true
 
-
-# --- Anonymous pages -------------------------------------------------------
-
-# The theme hides the credentials form behind the landing card, so reveal it
-# before capturing — the docs describe the form, not the card.
-[[shots]]
-name = "ui_user_login_page"
-path = "/account/login"
-steps = [{ action = "click", selector = "#with-account" }]
-
-# --- Platform administrator -------------------------------------------------
-
-[[shots]]
-name = "ui_platform_admin"
-role = "platform_admin"
-path = "/admin/"
-full_page = true
-
-[[shots]]
-name = "ui_platform_admin_observer"
-role = "platform_admin"
-path = "/admin/governanceplatform/entitycategory/"
-
-[[shots]]
-name = "ui_observer_regulation"
-role = "platform_admin"
-path = "/admin/governanceplatform/observer/"
-
 # --- Not covered yet --------------------------------------------------------
 #
 # The published User Manual, administration and reporting chapters own the bulk
