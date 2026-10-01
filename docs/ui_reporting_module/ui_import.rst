@@ -1,19 +1,23 @@
 Import Risk Analysis
 ---------------------
 
-If an operator does not have a **Risk assessment** (there is a red cross in the relevant column for a certain year), the regulator can import a risk assessment either by clicking the red cross icon (1) or choosing the **Import risk analysis** link above the project table (2). 
+If an operator does not have a **Risk assessment** (there is a red cross in the relevant column for a certain year), the regulator can import a risk assessment either by clicking the red cross icon (1) or choosing the **Import risk analysis** link above the project table (2).
 
 .. figure:: ../_static/reporting_module_images/Rep_26.png
    :alt: Import Risk Analysis
    :target: ../_static/reporting_module_images/Rep_26.png
 
-Either way, the **Import risk analysis** popup appears, where the regulator can choose a JSON file for the risk analysis. 
+Either way, the **Import risk analysis** popup appears, where the regulator can choose a JSON file for the risk analysis.
 
 .. figure:: ../_static/reporting_module_images/Rep_27.png
    :alt: Import Risk Analysis
    :target: ../_static/reporting_module_images/Rep_27.png
 
 If the import is successful, the red cross will be replaced in the project table with a green checkmark (indicating that for that year the chosen operator has a risk assessment attached to the report).
+
+.. figure:: ../_static/reporting_module_images/Rep_33.png
+   :alt: Risk Assessment column
+   :target: ../_static/reporting_module_images/Rep_33.png
 
 Import Security Objectives
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,9 +38,4 @@ To import a security objective, select an Excel file (not a JSON file). Only sec
    :alt: Security Objectives module
    :target: ../_static/reporting_module_images/Rep_29.png
 
-All other statuses will not be included in the reporting module because, for statistics and analysis, the regulator can be considered only validated data. 
-
-
-
-
-
+All other statuses will not be included in the reporting module because, for statistics and analysis, the regulator can be considered only validated data.

@@ -14,7 +14,7 @@ The email templates are shown as a list in a table with the columns Name, **Subj
    :alt: Select Email to Change
    :target: /_static/regulator_admin_images/Reg_Admin_23.png
 
-Click the name of the template to see its content. The screenshot below shows an example of the **New Incident Notification** template. 
+Click the name of the template to see its content. The screenshot below shows an example of the **New Incident Notification** template.
 
 You can see the **Name**, the **Subject**, and the **Content** of the email:
 
@@ -28,11 +28,11 @@ Beneath the Content area, you can see the usable placeholders you can use to rep
    :alt: New Incident Notification
    :target: /_static/regulator_admin_images/Reg_Admin_64.png
 
-These placeholders are automatically populated and replace the relevant information whenever the email is sent. You can set up your template emails in four languages: English, French, Dutch, and German. 
+These placeholders are automatically populated and replace the relevant information whenever the email is sent. You can set up your template emails in four languages: English, French, Dutch, and German.
 
    **English is the platform’s default language, so email templates are typically created in English and translated into other languages when needed.**
 
-You can switch between these four languages on the platform using the **language selector dropdown** in the top-right corner of the application. The default language is English. 
+You can switch between these four languages on the platform using the **language selector dropdown** in the top-right corner of the application. The default language is English.
 
    **If you switch to another language, but the email template has not been translated into that language, the platform will fall back to English and display the English version of the email.**
 
@@ -126,7 +126,7 @@ Next to the dropdown menus, you can see the following icons:
    :alt: Notification email icons
    :target: /_static/regulator_admin_images/Reg_Admin_65.png
 
-The fifth section is called **Incident Reports**. Here you can view the incident reports set up in the system. 
+The fifth section is called **Incident Reports**. Here you can view the incident reports set up in the system.
 
    **Please note that you must set up incident reports first (using Incident Notification -> Incident Reports) before selecting       the ones you want to use in the workflows.**
 
@@ -140,7 +140,7 @@ In the **Position** field, a smaller number indicates that the step occurs befor
 
 The **Deadline in Hours** field specifies, in hours, the latest time by which the report should be sent after the Event Triggering Deadline. This is the timeframe within which the Operator User must fill out the preliminary notification.
 
-The **Event Triggering Deadline** can have different values: None, Notification Date, Detection Date, or Previous Workflow. It defines the reference point from which the workflow element should be triggered. 
+The **Event Triggering Deadline** can have different values: None, Notification Date, Detection Date, or Previous Workflow. It defines the reference point from which the workflow element should be triggered.
 
 For example, as shown in the screenshot above, the **Preliminary Incident Report** should be activated no later than 24 hours after the **Detection Date**. As also shown in the screenshot above, once the **Preliminary Incident Report** has been created, the **Final Incident Report** must be completed no later than 360 hours afterward.
 
@@ -167,7 +167,7 @@ Select the incident report or reports you want to delete by checking the box nex
 
 **How to check the details of a report?**
 
-Click the name of a report to view its details. You will then be directed to the **Change Incident Report** screen. At the top of this screen is the **General** section, which displays the name, label, and description of the report. The second section is the **Notification email**, where you can set which email template you want to use for the selected report. 
+Click the name of a report to view its details. You will then be directed to the **Change Incident Report** screen. At the top of this screen is the **General** section, which displays the name, label, and description of the report. The second section is the **Notification email**, where you can set which email template you want to use for the selected report.
 
 .. figure:: ../_static/regulator_admin_images/Reg_Admin_35.png
    :alt: Change Incident reports
@@ -191,7 +191,7 @@ The screenshot below shows the columns described above. Please note that this sc
 
 In front of each question title, you can see a number in square brackets. This number represents the reference of the selected question in the database. The next chapter explains the questions in more detail.
 
-First, you need to create your questions under **Incident Notification -> Questions**. You can then select the questions you need to build the questionnaire for your report. 
+First, you need to create your questions under **Incident Notification -> Questions**. You can then select the questions you need to build the questionnaire for your report.
 
 In this example, the first question in the questionnaire is **Affected telecommunication services** with the reference number [**23**], but you can select a different question by using the dropdown menu.
 
@@ -212,7 +212,7 @@ The questions are in a table format with the following columns: **Reference, Lab
    :alt: Select Question to change
    :target: /_static/regulator_admin_images/Reg_Admin_38.png
 
-Click either the **Reference** number or the **Label** of the question to view it. Once you click, you will be directed to the **Select Questions to change** screen. At the top, you can see the **Question Type**, the **Reference**, and the **Label**. 
+Click either the **Reference** number or the **Label** of the question to view it. Once you click, you will be directed to the **Select Questions to change** screen. At the top, you can see the **Question Type**, the **Reference**, and the **Label**.
 
 If you click the **Question Type** dropdown menu, you will see several options, such as **Freetext, Multiple Choice**, and **Single Option Choice**.
 
@@ -240,3 +240,7 @@ You can link the selected reminder email to a specific report by choosing the ap
    :target: /_static/regulator_admin_images/Reg_Admin_42.png
 
 You can also use the **Email** dropdown to choose the appropriate email template and the **Trigger event** dropdown to choose the trigger event you want to use.
+
+.. figure:: ../_static/regulator_admin_images/Reg_Admin_41.png
+   :alt: Change Reminder email
+   :target: /_static/regulator_admin_images/Reg_Admin_41.png
