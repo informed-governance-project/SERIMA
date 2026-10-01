@@ -33,9 +33,9 @@ annotation_color = "#1a5276"
 username_env = "SERIMA_SHOT_OPERATOR_ADMIN_USER"
 password_env = "SERIMA_SHOT_OPERATOR_ADMIN_PASS"
 credentials_file = ".fixture-credentials.json"
-# Set when the account belongs to more than one company, to skip the
-# company-selection interstitial deterministically.
-# company = "Example Operator SA"
+# The fixture makes this account administrator of both operators, so the
+# company-selection interstitial is answered the same way every run.
+company = "Operator A"
 
 [roles.operator_user]
 # An account with NO TOTP device yet — the enrolment wizard is only reachable
@@ -54,6 +54,11 @@ username_env = "SERIMA_SHOT_REGULATOR_USER"
 password_env = "SERIMA_SHOT_REGULATOR_PASS"
 credentials_file = ".fixture-credentials.json"
 
+[roles.observer_admin]
+username_env = "SERIMA_SHOT_OBSERVER_ADMIN_USER"
+password_env = "SERIMA_SHOT_OBSERVER_ADMIN_PASS"
+credentials_file = ".fixture-credentials.json"
+
 [roles.platform_admin]
 username_env = "SERIMA_SHOT_PLATFORM_USER"
 password_env = "SERIMA_SHOT_PLATFORM_PASS"
@@ -67,11 +72,8 @@ credentials_file = ".fixture-credentials.json"
 # wizard backwards instead of forwards.
 #
 # STATEFUL. The wizard only exists while the account has no TOTP device, and
-# UM_SER_6m requires actually completing it — which creates one. Reset the
-# account between runs:
-#
-#   python manage.py shell -c "from django_otp.plugins.otp_totp.models import \
-#     TOTPDevice; TOTPDevice.objects.filter(user__email='<enroller>').delete()"
+# UM_SER_6m requires actually completing it — which creates one.
+# `manage.py screenshot_fixture --create` removes it again before each run.
 #
 # The first three shots persist nothing, so they are safe to re-run on their
 # own; only UM_SER_6m enrols the device. UM_SER_7 shows the token prompt at

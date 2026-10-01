@@ -35,9 +35,16 @@ openapi:
 	python manage.py spectacular --format openapi > docs/_static/openapi.yml
 
 screenshots:
-	python manage.py screenshot_fixture --delete
-	python manage.py screenshot_fixture --create
 	python docs/screenshots/capture.py
+
+# ATTENTION: This target will flush the database and load the screenshots fixture. Use with caution.
+screenshots-fixture:
+	@printf "\033[31mATTENTION: This deletes ALL data in the database. Type 'yes' to continue:\033[0m "; read answer; [ "$$answer" = yes ]
+	python manage.py flush --no-input
+	python manage.py migrate
+	python manage.py update_group_permissions
+	python manage.py loaddata docs/screenshots/fixture.json
+	python manage.py screenshot_fixture --create
 
 generatepot:
 	python manage.py makemessages -a --keep-pot

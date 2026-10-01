@@ -19,8 +19,7 @@ whole platform reachable without enrolling a TOTP device for every screenshot
 account (see `RestrictViewsMiddleware`).
 
 ```bash
-python manage.py screenshot_fixture --create        # one account per role
-
+make screenshots-fixture                            # wipe the database, load the fixture, set passwords
 make screenshots                                    # everything in shots.toml
 poetry run python docs/screenshots/capture.py --list # what is defined
 poetry run python docs/screenshots/capture.py --only login/enable_2FA_1 login/log_in
@@ -33,18 +32,50 @@ somewhere other than `docs/_static` (handy for eyeballing before overwriting),
 
 Set `SERIMA_SHOT_CHROMIUM` to use a system Chromium instead of Playwright's.
 
+## Screenshot data
+
+`fixture.json` holds everything the screens show: the incident, security
+objectives and reporting configuration, sample incidents and declarations in
+every status, two report projects, and the accounts below.
+
+| Entity | Who |
+| --- | --- |
+| Regulator A | `regulator-admin@example.org`, `regulator-user@example.org` |
+| Regulator B | `regulator-b-admin@example.org`, `regulator-b-user@example.org` |
+| Operator A | `operator-admin@example.org` (also administrator of Operator B) |
+| Operator B | `operator-user@example.org` |
+| Observer A | `observer-admin@example.org` |
+| — | `platform-admin@example.org` |
+
+All text is in English only. Risk-analysis data (risks, assets, threats,
+vulnerabilities, recommendations, service statistics) is not part of it; import
+a MONARC file through the reporting module when a shot needs it. Nor are the
+companies and years of a report project: loading rebuilds them, all unselected,
+so tick them in the project before shooting its screens.
+
+### Loading it
+
+`make screenshots-fixture` replaces the whole content of the configured
+database. It asks first — the prompt is red — and stops on any answer but
+`yes`. Then it flushes the database, runs the migrations, creates the groups
+(`update_group_permissions`; the fixture refers to them by name), loads the
+fixture and runs `screenshot_fixture --create`. Back up the database first if it
+holds anything you want to keep.
+
 ## Screenshot accounts
 
-No real accounts are needed. `screenshot_fixture --create` makes one throwaway
-account per role in `shots.toml`, each with the terms already accepted:
+The accounts come from the fixture with no usable password.
+`screenshot_fixture --create` gives one to each role in `shots.toml`, accepts
+the terms for it, and removes its TOTP device:
 
-| Role | Account | Group | Linked to | Environment override |
-| --- | --- | --- | --- | --- |
-| `operator_admin` | `operator-admin@example.org` | `OperatorAdmin` | "Example Operator", as administrator | `SERIMA_SHOT_OPERATOR_ADMIN_USER` / `_PASS` |
-| `operator_user` | `operator-user@example.org` | `OperatorUser` | "Example Operator" | `SERIMA_SHOT_OPERATOR_USER` / `_PASS` |
-| `regulator_admin` | `regulator-admin@example.org` | `RegulatorAdmin` | "Example Regulator", as administrator | `SERIMA_SHOT_REGULATOR_ADMIN_USER` / `_PASS` |
-| `regulator_user` | `regulator-user@example.org` | `RegulatorUser` | "Example Regulator" | `SERIMA_SHOT_REGULATOR_USER` / `_PASS` |
-| `platform_admin` | `platform-admin@example.org` | `PlatformAdmin` | — | `SERIMA_SHOT_PLATFORM_USER` / `_PASS` |
+| Role | Account | Environment override |
+| --- | --- | --- |
+| `operator_admin` | `operator-admin@example.org` | `SERIMA_SHOT_OPERATOR_ADMIN_USER` / `_PASS` |
+| `operator_user` | `operator-user@example.org` | `SERIMA_SHOT_OPERATOR_USER` / `_PASS` |
+| `regulator_admin` | `regulator-admin@example.org` | `SERIMA_SHOT_REGULATOR_ADMIN_USER` / `_PASS` |
+| `regulator_user` | `regulator-user@example.org` | `SERIMA_SHOT_REGULATOR_USER` / `_PASS` |
+| `observer_admin` | `observer-admin@example.org` | `SERIMA_SHOT_OBSERVER_ADMIN_USER` / `_PASS` |
+| `platform_admin` | `platform-admin@example.org` | `SERIMA_SHOT_PLATFORM_USER` / `_PASS` |
 
 The command writes every login to `docs/screenshots/.fixture-credentials.json`,
 keyed by role. The file is gitignored and readable only by its owner.
@@ -52,19 +83,14 @@ keyed by role. The file is gitignored and readable only by its owner.
 ```bash
 python manage.py screenshot_fixture --create               # generated passwords
 python manage.py screenshot_fixture --create --password …  # one password for all
-python manage.py screenshot_fixture --delete               # remove them again
+python manage.py screenshot_fixture --delete               # no more logins
 ```
 
 Each account's password comes from `--password`, then the role's `_PASS`
-variable, and is otherwise generated. Running `--create` again resets the
-passwords. `--delete` removes the accounts, their TOTP devices, and the
-credentials file. It also removes "Example Operator" and "Example Regulator",
-unless other users are still linked to them. The command refuses to run when
-`DEBUG` is off.
-
-The fixture regulator has no functionalities and no sectors, so screens gated
-by either stay empty for the regulator roles. Grant them in the admin when a
-shot needs them.
+variable, and is otherwise generated. `--delete` makes the passwords unusable
+again, removes the TOTP devices and the credentials file, and keeps the
+accounts, because the fixture's incidents, declarations and logs point at them.
+The command refuses to run when `DEBUG` is off, or before the fixture is loaded.
 
 ### Using real accounts instead
 
@@ -121,10 +147,9 @@ only work from a checkout configured against the same database as the target
 instance.
 
 The enrolment shots are stateful. The wizard exists only while the account has
-no TOTP device, and `login/enable_2FA_4` creates one by completing it. Before
-re-running them, run `screenshot_fixture --delete` then `--create`, or delete the
-device with the command noted in `shots.toml`. `--create` on its own does not
-remove it. The order in `shots.toml` matters, because the login token prompt only
+no TOTP device, and `login/enable_2FA_4` creates one by completing it.
+Run `python manage.py screenshot_fixture --create` before shooting them again:
+it removes the device (and sets new passwords). The order in `shots.toml` matters, because the login token prompt only
 appears once a device exists.
 
 ## Annotating a screenshot
