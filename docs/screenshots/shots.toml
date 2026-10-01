@@ -188,18 +188,6 @@ name = "ui_user_login_page"
 path = "/account/login"
 steps = [{ action = "click", selector = "#with-account" }]
 
-# --- Regulator administrator ------------------------------------------------
-
-[[shots]]
-name = "ui_admin_export"
-role = "regulator_admin"
-path = "/admin/governanceplatform/exportjob/add/"
-
-[[shots]]
-name = "ui_admin_import"
-role = "regulator_admin"
-path = "/admin/governanceplatform/importjob/add/"
-
 # --- Platform administrator -------------------------------------------------
 
 [[shots]]
@@ -227,6 +215,3 @@ path = "/admin/governanceplatform/observer/"
 #   platform_admin_images/PLAT_ADM_*   ui_platform_admin/
 #   regulator_admin_images/Reg_Admin_* ui_regulator_admin/
 #   reporting_module_images/Rep_*      ui_reporting_module/
-#
-# ui_admin_export / ui_admin_import above belong to ui_import-export.rst, which
-# is not in any toctree — capture them only if that page comes back.
