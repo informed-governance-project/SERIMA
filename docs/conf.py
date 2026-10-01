@@ -78,8 +78,15 @@ html_title = "SERIMA"
 html_theme_options = {
     "style_nav_header_background": "#e40521",
     "prev_next_buttons_location": "both",
-    "github_url": "https://github.com/informed-governance-project/SERIMA",
     "version_selector": False,
+}
+# sphinx_rtd_theme takes the GitHub link from the context, not from a theme option.
+html_context = {
+    "display_github": True,
+    "github_user": "informed-governance-project",
+    "github_repo": "SERIMA",
+    "github_version": "dev",
+    "conf_py_path": "/docs/",
 }
 
 

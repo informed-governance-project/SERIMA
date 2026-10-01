@@ -46,7 +46,7 @@ In the **Change Email template** screen, you can see the details of the email te
    :alt: Change Email template
    :target: ../_static/images/security-objectives/configuration-04.png
 
-When creating a new email template, you can **Save, Save and add another, Delete**, and **review*/ the template’s history, if available.
+When creating a new email template, you can **Save, Save and add another, Delete**, and **review** the template’s history, if available.
 
 Maturity levels
 ^^^^^^^^^^^^^^^^^^^^^

@@ -68,7 +68,6 @@ Then, open the **Action** dropdown menu, choose **Export Selected Impact**, and 
 .. figure:: /_static/images/incident-notification/configuration-07.png
    :alt: Export Selected Impact
    :target: ../_static/images/incident-notification/configuration-07.png
-.
 
    **How to delete selected impacts?**
 
