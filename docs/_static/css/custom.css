@@ -1,0 +1,5 @@
+/* sphinx_rtd_theme centres only figures marked :align: center; centre the
+   unaligned ones too, so captions sit under their screenshot. */
+.rst-content figure.align-default {
+  text-align: center;
+}
