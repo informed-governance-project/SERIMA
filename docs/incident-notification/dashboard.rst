@@ -1,4 +1,4 @@
-Incident notification dashboard
+Dashboard
 ----------------------------------
 One of the main functions of this platform is to allow you to report incidents.
 You can begin the process by either clicking the **Modules** drop-down menu and selecting

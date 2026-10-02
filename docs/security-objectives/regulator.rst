@@ -1,4 +1,4 @@
-Security Objectives Workflow - Regulator Admin
+Regulator View
 ------------------------------------------------
 When a regulator receives a **Security Objectives** submission, its status is **Under review**, and its progress is **0%**.
 These indicators show that a new entry has arrived and should be reviewed.

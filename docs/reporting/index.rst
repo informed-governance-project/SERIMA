@@ -38,4 +38,3 @@ Once you are on the Dashboard, you can switch between modules by clicking the **
    import-risk-analysis
    generate-report
    bulk-generation
-   configuration

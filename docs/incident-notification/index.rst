@@ -14,6 +14,5 @@ regulators follow each report through its notification workflow.
    dashboard
    report-an-incident
    reported-incidents
-   workflow-operator
-   workflow-regulator
-   configuration
+   operator
+   regulator

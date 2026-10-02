@@ -1,4 +1,4 @@
-Security Objectives Workflow - Operator Admin
+Operator View
 ------------------------------------------------
 
 The Operator Admin starts the process. The Security Objectives Dashboard opens, showing 29 forms.

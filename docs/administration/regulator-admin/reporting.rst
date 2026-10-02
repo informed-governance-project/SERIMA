@@ -1,4 +1,4 @@
-Back-end Reporting Configuration
+Reporting
 ---------------------------------
 
 Each regulation requires a single configuration that is linked to the corresponding regulator.

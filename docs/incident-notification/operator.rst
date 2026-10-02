@@ -1,4 +1,4 @@
-Incident Reporting Workflow - Operator
+Operator view
 ----------------------------------------
 
 This chapter explains how the incident reporting workflow functions in the SERIMA system.

@@ -24,10 +24,6 @@ The Site administration screen has the following parts:
 - **Security Objectives (5)**
 - **Recent Actions (6)**
 
-In the rest of this chapter, **Administration**, **Governance** and **Recent Actions** are discussed in detail.
-The module sections are described with their module: :doc:`/incident-notification/configuration`,
-:doc:`/reporting/configuration` and :doc:`/security-objectives/configuration`.
-
 .. figure:: /_static/images/administration/regulator-admin/overview-02.png
    :alt: Regulator Admin - Site administration
    :target: ../../_static/images/administration/regulator-admin/overview-02.png
@@ -40,4 +36,7 @@ The module sections are described with their module: :doc:`/incident-notificatio
 
    administration
    governance
+   incident-notification
+   security-objectives
+   reporting
    recent-actions

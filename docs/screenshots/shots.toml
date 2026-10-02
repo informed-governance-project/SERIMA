@@ -235,13 +235,6 @@ annotate = [
 
 [[shots]]
 name = "images/getting-started/homepage-02"
-# The Settings link of the header: the administration of an Operator Admin.
-path = "/admin/"
-role = "operator_admin"
-full_page = true
-
-[[shots]]
-name = "images/getting-started/homepage-03"
 path = "/"
 role = "operator_admin"
 steps = [
@@ -251,7 +244,7 @@ steps = [
 annotate = [{ selector = "[aria-labelledby='navbarDropdown']", box = true }]
 
 [[shots]]
-name = "images/getting-started/homepage-04"
+name = "images/getting-started/homepage-03"
 path = "/account/edit/"
 role = "operator_admin"
 credentials_from = "operator_admin"
@@ -269,7 +262,7 @@ steps = [
 ]
 
 [[shots]]
-name = "images/getting-started/homepage-05"
+name = "images/getting-started/homepage-04"
 path = "/account/password_change/"
 role = "operator_admin"
 credentials_from = "operator_admin"
@@ -287,10 +280,15 @@ steps = [
 ]
 
 [[shots]]
+name = "images/getting-started/homepage-05"
+path = "/contact/"
+role = "operator_admin"
+full_page = true
+
+
+[[shots]]
 name = "images/getting-started/homepage-06"
-# The header hides the module selector on the homepage itself, so it is opened
-# on a module page instead.
-path = "/incidents/"
+path = "/contact/"
 role = "operator_admin"
 steps = [
   { action = "click", selector = "#module_selector" },

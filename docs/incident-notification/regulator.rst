@@ -1,4 +1,4 @@
-Regulator Admin’s Workflow - Regulator
+Regulator view
 ----------------------------------------
 
 The incident report submitted by the Operator Admin appears on the Regulator Admin’s dashboard (**Overview of Reported Incidents**).

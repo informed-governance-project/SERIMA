@@ -15,6 +15,5 @@ regulators review and score those declarations.
    dashboard
    submit-a-declaration
    scoring
-   workflow-operator
-   workflow-regulator
-   configuration
+   operator
+   regulator
