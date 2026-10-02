@@ -424,19 +424,14 @@ class User(AbstractUser, PermissionsMixin):
             sectors = Sector.objects.all()
         return sectors
 
-    def get_module_permissions(self):
-        user_entity = None
+    def get_module_permissions(self) -> list[str]:
+        """A module needs the user's role enabled on it first; regulators then also need it
+        enabled on their regulator. Operators have no entity switch."""
+        # Listing the groups reuses the prefetch done at authentication instead of a subquery
+        functionalities = Functionality.objects.filter(roles__in=list(self.groups.all()))
         if self.is_regulator():
-            regulator_user = self.regulatoruser_set.first()
-            if regulator_user:
-                user_entity = regulator_user.regulator
-        elif self.is_observer():
-            observer_user = self.observeruser_set.first()
-            if observer_user:
-                user_entity = observer_user.observer
-        if user_entity:
-            return list(user_entity.functionalities.values_list("type", flat=True))
-        return []
+            functionalities = functionalities.filter(regulator__in=self.regulators.all())
+        return list(functionalities.values_list("type", flat=True).distinct())
 
     class Meta:
         verbose_name_plural = _("Users")
