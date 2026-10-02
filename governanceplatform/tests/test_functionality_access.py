@@ -4,7 +4,9 @@ from django.test import RequestFactory
 from django.urls import reverse
 
 from governanceplatform.context_processors import user_modules
-from governanceplatform.models import Functionality, Observer, User
+from governanceplatform.globals import FUNCTIONALITIES, FUNCTIONALITY_ELIGIBLE_ROLES
+from governanceplatform.models import CompanyUser, Functionality, Observer, ObserverUser, User
+from governanceplatform.permissions import GROUP_PERMISSIONS
 
 # The shared fixture enables every eligible role on both functionalities, and only REG1 has SO.
 
@@ -211,3 +213,43 @@ def test_admin_form_renders_only_eligible_roles(otp_client, populate_db):
     assert "selectfilter" in rendered
     assert ">RegulatorUser</option>" in rendered
     assert ">OperatorAdmin</option>" not in rendered
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("email", ["opadmin@com1.lu", "opuser@com1.lu", "obsadm@cert1.lu", "iu1@iu.lu"])
+def test_reporting_is_refused_to_roles_without_access(otp_client, populate_db, email):
+    client = otp_client(get_user(email))
+
+    assert client.get(reverse("reporting")).status_code == 404
+
+
+def get_user_with_role(role: str) -> User:
+    """Roles follow the entity links, so the two the dataset lacks are made by flipping an admin flag."""
+    if role == "OperatorAdmin":
+        CompanyUser.objects.filter(user__email="opadmin@com1.lu").update(is_company_administrator=True)
+        CompanyUser.objects.get(user__email="opadmin@com1.lu").save()
+    if role == "ObserverUser":
+        ObserverUser.objects.filter(user__email="obsadm@cert1.lu").update(is_observer_administrator=False)
+        ObserverUser.objects.get(user__email="obsadm@cert1.lu").save()
+    return User.objects.filter(groups__name=role).first()
+
+
+# PlatformAdmin is redirected to the admin before any role check, so it has no pair to test.
+NOT_ELIGIBLE_PAIRS = [
+    (functionality_type, role)
+    for functionality_type in FUNCTIONALITIES
+    for role in GROUP_PERMISSIONS
+    if role != "PlatformAdmin" and role not in FUNCTIONALITY_ELIGIBLE_ROLES[functionality_type]
+]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("functionality_type", "role"), NOT_ELIGIBLE_PAIRS)
+def test_restrict_views_blocks_every_role_not_eligible(otp_client, populate_db, functionality_type, role):
+    """A role row the admin form would refuse must still not open the module, so
+    RestrictViewsMiddleware has to stay in step with FUNCTIONALITY_ELIGIBLE_ROLES."""
+    user = get_user_with_role(role)
+    Functionality.objects.get(type=functionality_type).roles.add(Group.objects.get(name=role))
+    client = otp_client(user)
+
+    assert client.get(reverse(functionality_type)).status_code == 404
