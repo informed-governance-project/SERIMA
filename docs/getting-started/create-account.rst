@@ -8,23 +8,24 @@ the incidents it reported move to that operator.
 
 If you do not have an account yet, create one by using the **Report an incident without account** button in the centre
 or by clicking the **Create account** link in the top right corner.
-Populate the required fields and provide a password you would like to use.
+Fill in your first name, last name and email address, and answer the captcha.
 
 .. figure:: /_static/images/getting-started/create-account-01.png
    :alt: Create an account
    :target: ../_static/images/getting-started/create-account-01.png
 
-After you complete the required fields and accept the terms of service,
-you will receive an email, and the following message will appear on the **SERIMA** platform.
+Accept the terms of service and submit the form. The platform takes you back to the login page
+and confirms that your account was created.
 
 .. figure:: /_static/images/getting-started/create-account-02.png
    :alt: Account created
    :target: ../_static/images/getting-started/create-account-02.png
 
-Open your email received from the SERIMA platform and click the activation link:
+You then receive an email from the platform. Open the link it contains and choose your password;
+you can then log in with your email address and that password.
 
 .. figure:: /_static/images/getting-started/create-account-03.png
-   :alt: Activation link in the confirmation email
+   :alt: Email with the link to set your password
    :target: ../_static/images/getting-started/create-account-03.png
 
 **Please note that the following password restrictions apply:**
