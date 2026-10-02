@@ -63,9 +63,9 @@ and the platform offers one module per activity:
 
 This project is developed in partnership with the Institut Luxembourgeois de Régulation (`ILR <https://web.ilr.lu>`_) and the Institut Belge des services Postaux et des Télécommunications (`IBPT <https://www.ibpt.be>`_).
 
-.. figure:: /_static/images/home-01.png
+.. figure:: /_static/images/index/home-page.png
    :alt: Screenshot of the list of incidents from the regulator view.
-   :target: _static/images/home-01.png
+   :target: _static/images/index/home-page.png
 
    Screenshot of the list of incidents from the regulator view.
 
