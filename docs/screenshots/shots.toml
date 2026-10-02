@@ -183,6 +183,41 @@ annotate = [
 ]
 
 [[shots]]
+name = "images/getting-started/login-04"
+path = "/account/login"
+# operator_admin belongs to two operators, so its login stops on the company
+# selection. The steps log in themselves: the role's automatic login would
+# answer that page before the shot could capture it.
+credentials_from = "operator_admin"
+fresh = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#id_select_company" },
+]
+
+[[shots]]
+name = "images/getting-started/login-05"
+path = "/account/password_reset/"
+full_page = true
+
+[[shots]]
+name = "images/getting-started/login-06"
+path = "/account/password_reset/"
+# Submitting sends a reset email to the screenshot account; harmless, as
+# screenshot_fixture --create sets a new password on every run anyway.
+fresh = true
+full_page = true
+steps = [
+  { action = "fill", selector = "#id_email", value = "operator-user@example.org" },
+  { action = "captcha", into = "#id_captcha_1" },
+  { action = "click", selector = "button[type=submit].btn-primary" },
+  { action = "wait_for", selector = "text=Email sent" },
+]
+
+[[shots]]
 name = "images/getting-started/create-account-01"
 path = "/account/signup"
 full_page = true

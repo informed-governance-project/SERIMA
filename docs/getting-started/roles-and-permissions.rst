@@ -1,85 +1,67 @@
 Permissions and roles
 =====================
 
-Summary
-----------
+Every account has one role. The role decides what you can do, whether the **Settings** link of the header
+gives you access to the administration console, and which modules you see.
 
-The available roles are as follows:
+.. list-table::
+   :header-rows: 1
+   :widths: 14 22 40 8 16
 
-- PlatformAdmin (Django super admin)
-- RegulatorAdmin
-- RegulatorUser
-- ObserverAdmin
-- ObserverUser
-- OperatorAdmin
-- OperatorUser
+   * - Role
+     - Who has it
+     - What they can do
+     - Settings
+     - Modules
+   * - PlatformAdmin
+     - The team running the platform
+     - Sets up the regulators, observers, regulations, operator categories and modules,
+       and manages the other platform administrators. Uses only the administration console.
+     - Yes
+     - None
+   * - RegulatorAdmin
+     - Administrators of a regulator
+     - Configures the regulations of their regulator (workflows, reports, questions),
+       creates regulator administrators and users, and sees everything of their regulator.
+     - Yes
+     - Incident notification, security objectives, reporting
+   * - RegulatorUser
+     - Staff of a regulator
+     - Reviews what operators send, for the sectors assigned to them (all sectors if none are assigned),
+       and creates operators with their first operator administrator.
+     - Yes
+     - Incident notification, security objectives, reporting
+   * - ObserverAdmin
+     - Administrators of an observer
+     - Reads the incidents forwarded to their organisation, and creates observer administrators and users.
+     - Yes
+     - Incident notification (read-only)
+   * - ObserverUser
+     - Staff of an observer
+     - Reads the incidents forwarded to their organisation.
+     - No
+     - Incident notification (read-only)
+   * - OperatorAdmin
+     - Administrators of an operator
+     - Creates operator administrators and users, and approves the incident users who ask to join the operator.
+     - Yes
+     - Incident notification, security objectives
+   * - OperatorUser
+     - Staff of an operator
+     - Notifies incidents and submits security objectives declarations to the regulators supervising the operator.
+     - No
+     - Incident notification, security objectives
+   * - IncidentUser
+     - Anyone who creates an account (see :doc:`create-account`)
+     - Notifies incidents and sees only the incidents they reported. Once an operator administrator approves
+       the account as a member of their operator, those incidents move to that operator.
+     - No
+     - Incident notification
 
+A **regulator**, also known as competent authority, is a public organisation that supervises one or more regulations.
+An **observer** is an organisation that, by law, receives information about incidents to carry out its missions,
+read-only; which incidents it receives follows rules set by the platform administrator.
 
-
-Permissions
---------------------
-
-PlatformAdmin (Django super admin)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The first platform administrator must be created with the Django command:
-
-.. code-block:: bash
-
-    $ python manage.py createsuperuser
-
-
-The platform administrator is able to configure the ``Site`` section of the Django application.
-The platform administrator is able to create and manage other platform administrators.
-The platform administrator grants access to the governance platform to regulators and observers.
-A regulator, also known as competent authority, is a public organisation responsible as per the law for the supervision of a or multiple regulations.
-An observer is an organisation having a role defined by the law. He gets information to conduct his missions on a read only modus. The platform administrator defines the rules used by the automatic information forward to the observers.
-The platform administrator creates the regulations on the platform and assign them to the regulators.
-The platform administrator defines the operator categories. These are characteristics of the operators e.g. public/private. These categories are made available to the regulators, who can use them to sort the operators.
-
-Each regulator, who wants to use the incident notification module, should ask the platform administrator to configure:
-- the regulator (as organization)
-- the first regulator administrator
-- the regulations he is responsible for.
-- the modules from the platform to be made available.
-
-Each observer, who wants to use the incident notification module, should ask the platform administrator to configure:
-- the observer (as organization)
-- the first observer administrator
-- the logic for the automatic information forward.
-
-
-RegulatorAdmin
-~~~~~~~~~~~~~~~~
-The regulator administrator can create other regulator administrator but also regulator users for his organization.
-The regulator administrator has the responsibility to configure the regulations he is responsible for. A regulation is configured using a workflow containing various reports. Each report is a collection of questions structured using the question categories.
-The regulator administrator has access to any item of his organization. (Unlimited view).
-
-
-RegulatorUser
-~~~~~~~~~~~~~~~~
-The regulator administrator, when creating a regulator user, can limit his field of responsibilities to a or various sectors. (Limited view)
-The regulator user can create company and create an operator administrator who is the administrator of the company (operator).
-The regulator user is responsible to review the deliverables sent by the operators of his sectors.
-
-
-ObserverAdmin
-~~~~~~~~~~~~~~~~
-The observer administrator can create other observer administrators but also observer users for his entity.
-The observer administrator has a read only access to the items sent to his organization.
-
-
-ObserverUser
-~~~~~~~~~~~~~~~~
-The observer user has a read only access to the items sent to his organization.
-
-
-OperatorAdmin
-~~~~~~~~~~~~~~~~
-When creating a company, the regulator has to associate it to an operator administrator.
-An operator administrator can create other operator administrators but also operator users for his organization.
-
-
-OperatorUser
-~~~~~~~~~~~~~~~~
-An operator user is responsible to deliver the required documents and information to the regulators, who are supervising him.
+The security objectives and reporting modules appear only once the platform administrator has enabled them
+for your role and, for regulator accounts, for your regulator (see :ref:`functionalities`).
+How the platform itself is set up is described in :doc:`/administration/platform-admin/index`.

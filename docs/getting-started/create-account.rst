@@ -2,7 +2,7 @@ Create an account
 -------------------------
 
 Anyone can create an account, including organisations that want to report an incident voluntarily.
-A self-created account has the *incident user* role: it can notify incidents and see only its own reports.
+A self-created account has the *incident user* role (see :doc:`roles-and-permissions`): it can notify incidents and see only its own reports.
 Once an operator administrator approves the account as a member of their operator,
 the incidents it reported move to that operator.
 
@@ -22,16 +22,18 @@ and confirms that your account was created.
    :target: ../_static/images/getting-started/create-account-02.png
 
 You then receive an email from the platform. Open the link it contains and choose your password;
-you can then log in with your email address and that password.
+you can then log in with your email address and that password (see :doc:`login`).
 
 .. figure:: /_static/images/getting-started/create-account-03.png
    :alt: Email with the link to set your password
    :target: ../_static/images/getting-started/create-account-03.png
 
+.. _password-requirements:
+
 **Please note that the following password restrictions apply:**
 
--	Your password can't be too similar to your other personal information.
--	Your password must contain at least 8 characters.
--	Your password can't be commonly used.
--	Your password can't be entirely numeric.
--	Your password must not match any previously used passwords.
+- Your password can't be too similar to your other personal information.
+- Your password must contain at least 12 characters.
+- Your password can't be a commonly used password.
+- Your password can't be entirely numeric.
+- Your password must differ from your current password and from your last 24 passwords.
