@@ -325,14 +325,36 @@
   "model": "governanceplatform.functionality",
   "pk": 1,
   "fields": {
-   "type": "securityobjectives"
+   "type": "securityobjectives",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ],
+    [
+     "OperatorAdmin"
+    ],
+    [
+     "OperatorUser"
+    ]
+   ]
   }
  },
  {
   "model": "governanceplatform.functionality",
   "pk": 2,
   "fields": {
-   "type": "reporting"
+   "type": "reporting",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ]
+   ]
   }
  },
  {
