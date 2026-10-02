@@ -30,6 +30,13 @@ FUNCTIONALITIES = {
     "reporting": _("Reporting"),
 }
 
+# Roles a platform admin may enable on each functionality. A role left out here can
+# never reach the module, so offering it in the admin would be a switch that does nothing.
+FUNCTIONALITY_ELIGIBLE_ROLES = {
+    "securityobjectives": ["RegulatorAdmin", "RegulatorUser", "OperatorAdmin", "OperatorUser"],
+    "reporting": ["RegulatorAdmin", "RegulatorUser"],
+}
+
 # Crockford base32 omits I, L, O and U so a reference survives being read aloud or
 # transcribed from a PDF without being confused for 1 or 0.
 CROCKFORD_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"

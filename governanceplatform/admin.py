@@ -31,7 +31,7 @@ from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
 from .decorators import check_user_is_correct
 from .email import send_html_email
-from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
+from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     delete_file_and_parents,
@@ -1654,10 +1654,24 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Functionality, site=admin_site)
 class FunctionalityAdmin(CustomTranslatableAdmin):
-    list_display = ["type", "name_display"]
+    form = FunctionalityAdminForm
+    list_display = ["type", "name_display", "get_roles"]
+    fields = (
+        "type",
+        "name",
+        "roles",
+    )
+    filter_horizontal = ["roles"]
     search_fields = ["translations__name"]
     order_list = ["type"]
     translated_fields = ["name"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("roles")
+
+    @admin.display(description=_("Roles"))
+    def get_roles(self, obj):
+        return ", ".join(role.name for role in obj.roles.all())
 
 
 for name, method in generate_display_methods(["name"]).items():
