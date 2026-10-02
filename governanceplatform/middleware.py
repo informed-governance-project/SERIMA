@@ -143,6 +143,7 @@ class RestrictViewsMiddleware:
                     or request.path == reverse("create_workflow")
                     or request.path == reverse("edit_workflow")
                     or request.path.startswith("/securityobjectives/")
+                    or request.path.startswith("/reporting/")
                 ):
                     raise Http404()
 
