@@ -1831,9 +1831,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
         "translations__full_name",
         "translations__description",
     ]
-    filter_horizontal = [
-        "functionalities",
-    ]
     translated_fields = ["name", "description", "full_name"]
 
     inlines = (
@@ -1853,7 +1850,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
                         "country",
                         "address",
                         "email_for_notification",
-                        "functionalities",
                     ],
                 },
             ),
@@ -1892,10 +1888,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
         user = request.user
-        # only the platform admin can change the functionalities
-        if not user_in_group(user, "PlatformAdmin"):
-            readonly_fields += ("functionalities",)
-
         if obj and obj.pk and is_observer_user(user):
             readonly_fields += ("rt_test_button",)
 
