@@ -116,7 +116,8 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | `role` | which credentials to log in with beforehand; omit for anonymous pages |
 | `credentials_from` | a role whose credentials `fill` steps can type as `${username}` / `${password}` |
 | `fresh` | use a new browser context for this shot alone, and close it afterwards |
-| `steps` | `click` / `fill` / `select` / `press` / `totp` / `wait_for` / `wait_ms` actions run after navigation |
+| `steps` | `click` / `fill` / `select` / `press` / `totp` / `captcha` / `wait_for` / `wait_ms` actions run after navigation |
+| `email` | `true` to capture the last email the instance sent instead of a page; `path` is then not needed |
 | `selector` | capture just this element instead of the viewport |
 | `full_page` | capture the whole scroll height |
 | `hide` | extra selectors to hide, on top of the defaults |
@@ -129,6 +130,24 @@ signs in through its own steps must set `fresh = true`, or it would leave that
 session behind for every shot that follows. A `fill` value can also expand any
 other `${VAR}` from the environment. The run stops on any placeholder that is
 still unresolved, so it never types a literal `${...}` into a form.
+
+## Captcha and email shots
+
+A `captcha` step fills `into` with the answer to the captcha on the page. It
+reads the challenge key from the hidden `#id_captcha_0` input (override with
+`key`) and looks the answer up in the database, so — like a `totp` step that
+reads an enrolled device — it needs a checkout configured against the same
+database as the target instance.
+
+A shot with `email = true` opens no page. It renders the last message the
+instance wrote to `EMAIL_FILE_PATH` — the file-based backend Django uses when
+`DEBUG` is on — with its From, To and Subject lines above the body. It shows
+whatever the shot before it made the platform send, so keep the two together:
+`create-account-03` captures the set-password email `create-account-02` triggers
+by signing up.
+
+That sign-up creates `new-account@example.org`. `screenshot_fixture --create`
+deletes it again, so run it before shooting the sign-up shots a second time.
 
 ## Two-factor steps
 
@@ -190,8 +209,9 @@ mostly wizard steps and crops.
 
 ## Known noise
 
-Any page showing a captcha regenerates it on every request, so those files
-always diff even when nothing changed.
+Any page showing a captcha regenerates it on every request, and the
+set-password email carries a fresh token every run, so those files always diff
+even when nothing changed.
 
 The footer version string is hidden from every capture by `[defaults].hide` in
 `shots.toml` — otherwise a release would re-diff every screenshot over a number

@@ -16,6 +16,9 @@ from governanceplatform.permissions import set_platform_admin_permissions
 SCREENSHOTS_DIR = Path(settings.BASE_DIR) / "docs" / "screenshots"
 FIXTURE = SCREENSHOTS_DIR / "fixture.json"
 CREDENTIALS_FILE = SCREENSHOTS_DIR / ".fixture-credentials.json"
+# Created by the sign-up shot in shots.toml; the form refuses an email that
+# already exists, so every run has to start without it.
+SIGNUP_EMAIL = "new-account@example.org"
 
 
 class Account(NamedTuple):
@@ -81,6 +84,8 @@ class Command(BaseCommand):
 
             stored[role] = {"username": user.email, "password": account_password}
             self.stdout.write(self.style.SUCCESS(f"set a password on {user.email} ({role})"))
+
+        User.objects.filter(email=SIGNUP_EMAIL).delete()
 
         # Handed to the capture script through a file so nothing has to be
         # exported by hand; readable only by the owner, and gitignored.

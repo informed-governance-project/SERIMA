@@ -185,6 +185,32 @@ name = "images/getting-started/create-account-01"
 path = "/account/signup"
 full_page = true
 
+[[shots]]
+name = "images/getting-started/create-account-02"
+path = "/account/signup"
+# Submitting creates new-account@example.org, which `screenshot_fixture
+# --create` deletes again so the next run can sign up the same way.
+fresh = true
+full_page = true
+steps = [
+  { action = "fill", selector = "#id_first_name", value = "New" },
+  { action = "fill", selector = "#id_last_name", value = "Account" },
+  { action = "fill", selector = "#id_email", value = "new-account@example.org" },
+  { action = "captcha", into = "#id_captcha_1" },
+  { action = "click", selector = "#id_accept_terms" },
+  { action = "click", selector = "button[type=submit].btn-primary" },
+  # Lands on the login page with the "Account created" message.
+  { action = "wait_for", selector = ".alert-success" },
+]
+
+[[shots]]
+name = "images/getting-started/create-account-03"
+# The set-password email the sign-up above sent; it must stay right after it.
+email = true
+full_page = true
+# Narrow and short, so the image is the message rather than empty page.
+viewport = { width = 900, height = 200 }
+
 # --- Not covered yet --------------------------------------------------------
 #
 # Only the getting-started pages above are scripted. Every other page owns the

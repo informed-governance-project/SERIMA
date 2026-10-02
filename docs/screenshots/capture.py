@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import argparse
 import base64
+import email
+import email.policy
 import hashlib
 import hmac
 import json
@@ -17,6 +19,7 @@ import struct
 import sys
 import time
 import tomllib
+from html import escape
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -244,30 +247,80 @@ def totp_code(secret: str) -> str:
     return f"{code % 1_000_000:06d}"
 
 
-def secret_from_db(email: str) -> str:
-    """The account's enrolled TOTP secret, in the base32 form TOTP expects.
-
-    Imported lazily so the rest of the spec still runs against any instance
-    without a local Django install; django-otp stores the key as hex.
-    """
-    import binascii
-    from concurrent.futures import ThreadPoolExecutor
-
+def setup_django() -> None:
+    """Imported lazily so the rest of the spec still runs against any instance
+    without a local Django install."""
     import django
 
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "governanceplatform.settings")
     django.setup()
-    from django_otp.plugins.otp_totp.models import TOTPDevice
 
+
+def run_query(query: Any) -> Any:
+    from concurrent.futures import ThreadPoolExecutor
+
+    setup_django()
     # Playwright's sync API drives a greenlet event loop, and Django refuses ORM
     # calls from async context — so the query runs on a thread of its own.
     with ThreadPoolExecutor(max_workers=1) as pool:
-        device = pool.submit(lambda: TOTPDevice.objects.filter(user__email=email).first()).result()
+        return pool.submit(query).result()
 
+
+def secret_from_db(user_email: str) -> str:
+    """The account's enrolled TOTP secret, in the base32 form TOTP expects;
+    django-otp stores the key as hex."""
+    import binascii
+
+    def query():
+        from django_otp.plugins.otp_totp.models import TOTPDevice
+
+        return TOTPDevice.objects.filter(user__email=user_email).first()
+
+    device = run_query(query)
     if device is None:
-        raise CaptureError(f"no TOTP device enrolled for {email}")
+        raise CaptureError(f"no TOTP device enrolled for {user_email}")
 
     return base64.b32encode(binascii.unhexlify(device.key)).decode()
+
+
+def captcha_answer(hashkey: str) -> str:
+    def query():
+        from captcha.models import CaptchaStore
+
+        return CaptchaStore.objects.filter(hashkey=hashkey).values_list("response", flat=True).first()
+
+    answer = run_query(query)
+    if answer is None:
+        raise CaptureError(f"no captcha challenge {hashkey!r} in the database")
+    return answer
+
+
+def latest_email_html() -> str:
+    """The last message the file-based email backend wrote, as HTML.
+
+    Each file can hold several messages, separated by a line of 79 dashes.
+    """
+    setup_django()
+    from django.conf import settings
+
+    files = sorted(Path(settings.EMAIL_FILE_PATH).glob("*.log"), key=lambda path: path.stat().st_mtime)
+    if not files:
+        raise CaptureError(f"no email in {settings.EMAIL_FILE_PATH}: the instance must run with DEBUG on")
+    raw = [chunk for chunk in files[-1].read_text().split("\n" + "-" * 79 + "\n") if chunk.strip()][-1]
+    message = email.message_from_string(raw.lstrip(), policy=email.policy.default)
+    body = message.get_body(preferencelist=("html", "plain"))
+    if body is None:
+        raise CaptureError(f"the last email in {files[-1]} has no text part")
+    content = body.get_content()
+    if body.get_content_subtype() == "plain":
+        content = f"<pre style='font:inherit;white-space:pre-wrap;margin:0'>{escape(content)}</pre>"
+    # The headers a mail client would show, so the reader can tell it is an email.
+    headers = "".join(f"<div><b>{name}:</b> {escape(str(message[name] or ''))}</div>" for name in ("From", "To", "Subject"))
+    return (
+        "<body style='font:15px/1.5 system-ui,sans-serif;margin:24px'>"
+        f"<div style='padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #ccc'>{headers}</div>"
+        f"{content}</body>"
+    )
 
 
 def run_steps(page: Page, steps: list[dict[str, Any]], creds: tuple[str, str] | None) -> None:
@@ -310,6 +363,10 @@ def run_steps(page: Page, steps: list[dict[str, Any]], creds: tuple[str, str] | 
             else:
                 secret = page.inner_text(step["selector"])
             page.fill(step["into"], totp_code(secret))
+        elif action == "captcha":
+            # The challenge key travels in a hidden input; its answer is read
+            # back from the database, like the TOTP secret at login.
+            page.fill(step["into"], captcha_answer(page.input_value(step.get("key", "#id_captcha_0"))))
         elif action == "wait_for":
             page.wait_for_selector(step["selector"])
         elif action == "wait_ms":
@@ -341,8 +398,12 @@ def capture(
     if shot_viewport := shot.get("viewport"):
         page.set_viewport_size(shot_viewport)
 
-    page.goto(f"{base_url}{shot['path']}", wait_until="networkidle")
-    dismiss_cookie_banner(page)
+    if shot.get("email"):
+        # Not a page of the platform: the email the previous shot made it send.
+        page.set_content(latest_email_html(), wait_until="networkidle")
+    else:
+        page.goto(f"{base_url}{shot['path']}", wait_until="networkidle")
+        dismiss_cookie_banner(page)
 
     if steps := shot.get("steps"):
         run_steps(page, steps, creds)
@@ -388,7 +449,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.list:
         for shot in spec["shots"]:
-            print(f"{shot['name']:<40} {shot.get('role', ANONYMOUS):<16} {shot['path']}")
+            print(f"{shot['name']:<40} {shot.get('role', ANONYMOUS):<16} {'(last email)' if shot.get('email') else shot['path']}")
         return 0
 
     base_url = (args.base_url or spec.get("base_url", "http://127.0.0.1:8000")).rstrip("/")
