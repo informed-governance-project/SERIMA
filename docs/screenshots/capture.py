@@ -19,6 +19,7 @@ import struct
 import sys
 import time
 import tomllib
+from fnmatch import fnmatchcase
 from html import escape
 from pathlib import Path
 from typing import Any
@@ -448,7 +449,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--spec", type=Path, default=DEFAULT_SPEC, help="shot list (default: shots.toml)")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT, help="output directory (default: docs/_static)")
     parser.add_argument("--base-url", help="override the base_url from the spec")
-    parser.add_argument("--only", nargs="*", help="capture only these shot names")
+    parser.add_argument("--only", nargs="*", help="capture only these shot names; shell-style wildcards allowed, quoted")
     parser.add_argument("--headed", action="store_true", help="show the browser while capturing")
     parser.add_argument("--accept-terms", action="store_true", help="accept the terms of service when prompted")
     parser.add_argument("--list", action="store_true", help="list the shots in the spec and exit")
@@ -461,10 +462,12 @@ def main(argv: list[str] | None = None) -> int:
     shots = spec["shots"]
 
     if args.only:
-        shots = [shot for shot in shots if shot["name"] in args.only]
-        missing = set(args.only) - {shot["name"] for shot in shots}
+        # Kept in file order: the stateful shots (2FA, sign-up then its email)
+        # depend on running in the order shots.toml lists them.
+        shots = [shot for shot in shots if any(fnmatchcase(shot["name"], pattern) for pattern in args.only)]
+        missing = [pattern for pattern in args.only if not any(fnmatchcase(shot["name"], pattern) for shot in shots)]
         if missing:
-            raise CaptureError(f"no such shot(s): {', '.join(sorted(missing))}")
+            raise CaptureError(f"no shot matches: {', '.join(missing)}")
 
     if args.list:
         for shot in spec["shots"]:

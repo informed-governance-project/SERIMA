@@ -23,6 +23,7 @@ make screenshots-fixture                            # wipe the database, load th
 make screenshots                                    # everything in shots.toml
 poetry run python docs/screenshots/capture.py --list # what is defined
 poetry run python docs/screenshots/capture.py --only images/getting-started/enable-2fa-01 images/getting-started/login-01
+poetry run python docs/screenshots/capture.py --only 'images/getting-started/*'   # wildcards: quote them
 poetry run python docs/screenshots/capture.py --headed   # watch it run
 ```
 
