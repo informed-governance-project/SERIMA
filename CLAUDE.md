@@ -8,7 +8,12 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 - `securityobjectives/` — operator declarations against a regulator's framework, and the review cycle
 - `reporting/` — report projects, MONARC risk-analysis import, DOCX/PDF report generation
 
-`securityobjectives/` and `reporting/` are gated per regulator by the `Functionality` model, enforced in `governanceplatform/middleware.py`. A platform administrator must grant a regulator the functionality before its pages and menu entries become reachable — having the app installed is not enough.
+`securityobjectives/` and `reporting/` are gated by the `Functionality` model in two steps, and having the app installed is not enough:
+
+1. **By role.** `Functionality.roles` lists the groups that may use the module, chosen by the platform administrator from `FUNCTIONALITY_ELIGIBLE_ROLES` in `governanceplatform/globals.py`. A new functionality has no roles.
+2. **By regulator.** Regulator users also need the functionality on their regulator (`Regulator.functionalities`). Operators need only their role. Observers can use neither module.
+
+`User.get_module_permissions()` implements both steps, and the middleware (`CheckFunctionalityAccessMiddleware`), the admin (`FunctionalityMixin`) and the menu (`context_processors.user_modules`) all call it. `RestrictViewsMiddleware` also blocks each role-module pair left out of `FUNCTIONALITY_ELIGIBLE_ROLES`, so the two must change together.
 
 ## Tech Stack
 
@@ -283,7 +288,7 @@ Templates use Bootstrap 5. When adding or modifying UI components:
 | Update config defaults | `governanceplatform/config_dev.py` |
 | Change middleware order | `governanceplatform/settings.py` → `MIDDLEWARE` list |
 | Add a Celery task | the `tasks.py` of the app concerned |
-| Gate a feature per regulator | `governanceplatform/globals.py` → `FUNCTIONALITIES`, enforced in `middleware.py` |
+| Gate a feature per role and regulator | `governanceplatform/globals.py` → `FUNCTIONALITIES` and `FUNCTIONALITY_ELIGIBLE_ROLES`, checked by `User.get_module_permissions()`; keep `RestrictViewsMiddleware` in step |
 | Change group permissions | `governanceplatform/permissions.py` → `GROUP_PERMISSIONS`, then run `manage.py update_group_permissions` |
 | Generate model diagram | `make models` |
 
