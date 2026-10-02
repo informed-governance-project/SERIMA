@@ -149,93 +149,6 @@ path = "/"
 role = "regulator_admin"
 full_page = true
 
-
-# --- Homepage page (docs/getting-started/homepage.rst) ----------------------------------
-
-[[shots]]
-name = "images/getting-started/homepage-01"
-# The homepage once logged in; the role's login already answers the
-# company selection, so the shot needs no steps. The numbers match the list
-# in docs/getting-started/homepage.rst.
-path = "/"
-role = "operator_admin"
-full_page = true
-annotate = [
-  { selector = "a.navbar-brand", box = true, arrow = "bottom", label = "1" },
-  { selector = "#admin-link", box = true, arrow = "bottom", label = "2" },
-  { selector = "#navbarDropdown", box = true, arrow = "bottom", label = "3" },
-  { selector = "a.nav-link[href='/contact/']", box = true, arrow = "bottom", label = "4" },
-  { selector = "#language_selector", box = true, arrow = "bottom", label = "5" },
-  { selector = ".card:has(a[href='/incidents/'])", box = true, arrow = "bottom", label = "6" },
-  { selector = ".card:has(a[href='/securityobjectives/'])", box = true, arrow = "bottom", label = "7" },
-]
-
-[[shots]]
-name = "images/getting-started/homepage-02"
-# The header hides the module selector on the homepage itself, so it is opened
-# on a module page instead.
-path = "/incidents/"
-role = "operator_admin"
-steps = [
-  { action = "click", selector = "#module_selector" },
-  { action = "wait_for", selector = "ul[aria-labelledby='module_selector'].show" },
-]
-annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
-
-[[shots]]
-name = "images/getting-started/homepage-03"
-# The Settings link of the header: the administration of an Operator Admin.
-path = "/admin/"
-role = "operator_admin"
-full_page = true
-
-[[shots]]
-name = "images/getting-started/homepage-04"
-path = "/"
-role = "operator_admin"
-steps = [
-  { action = "click", selector = "#navbarDropdown" },
-  { action = "wait_for", selector = "[aria-labelledby='navbarDropdown'].show" },
-]
-annotate = [{ selector = "[aria-labelledby='navbarDropdown']", box = true }]
-
-[[shots]]
-name = "images/getting-started/homepage-05"
-path = "/account/edit/"
-role = "operator_admin"
-credentials_from = "operator_admin"
-fresh = true
-full_page = true
-steps = [
-  { action = "click", selector = "#with-account" },
-  { action = "fill", selector = "#id_auth-username", value = "${username}" },
-  { action = "fill", selector = "#id_auth-password", value = "${password}" },
-  { action = "click", selector = "button.btn-primary.submit_login" },
-  # The forced logout cleared the company in use, and this account belongs to two.
-  { action = "select", selector = "#id_select_company", value = "Operator A" },
-  { action = "click", selector = "button[type=submit]" },
-  { action = "wait_for", selector = "#id_first_name" },
-]
-
-[[shots]]
-name = "images/getting-started/homepage-06"
-path = "/account/password_change/"
-role = "operator_admin"
-credentials_from = "operator_admin"
-fresh = true
-full_page = true
-steps = [
-  { action = "click", selector = "#with-account" },
-  { action = "fill", selector = "#id_auth-username", value = "${username}" },
-  { action = "fill", selector = "#id_auth-password", value = "${password}" },
-  { action = "click", selector = "button.btn-primary.submit_login" },
-  # The forced logout cleared the company in use, and this account belongs to two.
-  { action = "select", selector = "#id_select_company", value = "Operator A" },
-  { action = "click", selector = "button[type=submit]" },
-  { action = "wait_for", selector = "#id_old_password" },
-]
-
-
 # --- Login page (docs/getting-started/login.rst) -----------------------------
 #
 # Outlines mark what the prose tells the reader to click. The header Login
@@ -299,6 +212,91 @@ email = true
 full_page = true
 # Narrow and short, so the image is the message rather than empty page.
 viewport = { width = 900, height = 200 }
+
+# --- Homepage page (docs/getting-started/homepage.rst) ----------------------------------
+
+[[shots]]
+name = "images/getting-started/homepage-01"
+# The homepage once logged in; the role's login already answers the
+# company selection, so the shot needs no steps. The numbers match the list
+# in docs/getting-started/homepage.rst.
+path = "/"
+role = "operator_admin"
+full_page = true
+annotate = [
+  { selector = "a.navbar-brand", box = true, arrow = "bottom", label = "1" },
+  { selector = "#admin-link", box = true, arrow = "bottom", label = "2" },
+  { selector = "#navbarDropdown", box = true, arrow = "bottom", label = "3" },
+  { selector = "a.nav-link[href='/contact/']", box = true, arrow = "bottom", label = "4" },
+  { selector = "#language_selector", box = true, arrow = "bottom", label = "5" },
+  { selector = ".card:has(a[href='/incidents/'])", box = true, arrow = "bottom", label = "6" },
+  { selector = ".card:has(a[href='/securityobjectives/'])", box = true, arrow = "bottom", label = "7" },
+]
+
+[[shots]]
+name = "images/getting-started/homepage-02"
+# The Settings link of the header: the administration of an Operator Admin.
+path = "/admin/"
+role = "operator_admin"
+full_page = true
+
+[[shots]]
+name = "images/getting-started/homepage-03"
+path = "/"
+role = "operator_admin"
+steps = [
+  { action = "click", selector = "#navbarDropdown" },
+  { action = "wait_for", selector = "[aria-labelledby='navbarDropdown'].show" },
+]
+annotate = [{ selector = "[aria-labelledby='navbarDropdown']", box = true }]
+
+[[shots]]
+name = "images/getting-started/homepage-04"
+path = "/account/edit/"
+role = "operator_admin"
+credentials_from = "operator_admin"
+fresh = true
+full_page = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  # The forced logout cleared the company in use, and this account belongs to two.
+  { action = "select", selector = "#id_select_company", value = "Operator A" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#id_first_name" },
+]
+
+[[shots]]
+name = "images/getting-started/homepage-05"
+path = "/account/password_change/"
+role = "operator_admin"
+credentials_from = "operator_admin"
+fresh = true
+full_page = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  # The forced logout cleared the company in use, and this account belongs to two.
+  { action = "select", selector = "#id_select_company", value = "Operator A" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#id_old_password" },
+]
+
+[[shots]]
+name = "images/getting-started/homepage-06"
+# The header hides the module selector on the homepage itself, so it is opened
+# on a module page instead.
+path = "/incidents/"
+role = "operator_admin"
+steps = [
+  { action = "click", selector = "#module_selector" },
+  { action = "wait_for", selector = "ul[aria-labelledby='module_selector'].show" },
+]
+annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
 
 # --- Not covered yet --------------------------------------------------------
 #
