@@ -116,7 +116,7 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | `role` | which credentials to log in with beforehand; omit for anonymous pages |
 | `credentials_from` | a role whose credentials `fill` steps can type as `${username}` / `${password}` |
 | `fresh` | use a new browser context for this shot alone, and close it afterwards |
-| `steps` | `click` / `fill` / `select` / `press` / `totp` / `captcha` / `wait_for` / `wait_ms` actions run after navigation |
+| `steps` | `click` / `fill` / `select` / `press` / `totp` / `delete_totp` / `captcha` / `wait_for` / `wait_ms` actions run after navigation |
 | `email` | `true` to capture the last email the instance sent instead of a page; `path` is then not needed |
 | `selector` | capture just this element instead of the viewport |
 | `full_page` | capture the whole scroll height |
@@ -167,9 +167,11 @@ instance.
 
 The enrolment shots are stateful. The wizard exists only while the account has
 no TOTP device, and `images/getting-started/enable-2fa-04` creates one by completing it.
-Run `python manage.py screenshot_fixture --create` before shooting them again:
-it removes the device (and sets new passwords). The order in `shots.toml` matters, because the login token prompt only
-appears once a device exists.
+The last enrolment shot ends with a `delete_totp` step, which removes the
+device again — so every shot after it logs in without a token prompt, and the
+wizard is back for the next run. `delete_totp` removes the TOTP devices of the
+shot's `credentials_from` account. The order within the enrolment shots still
+matters, because the login token prompt only appears once a device exists.
 
 ## Annotating a screenshot
 

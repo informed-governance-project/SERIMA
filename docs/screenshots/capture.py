@@ -283,6 +283,15 @@ def secret_from_db(user_email: str) -> str:
     return base64.b32encode(binascii.unhexlify(device.key)).decode()
 
 
+def delete_totp_devices(user_email: str) -> None:
+    def query():
+        from django_otp.plugins.otp_totp.models import TOTPDevice
+
+        TOTPDevice.objects.filter(user__email=user_email).delete()
+
+    run_query(query)
+
+
 def captcha_answer(hashkey: str) -> str:
     def query():
         from captcha.models import CaptchaStore
@@ -363,6 +372,12 @@ def run_steps(page: Page, steps: list[dict[str, Any]], creds: tuple[str, str] | 
             else:
                 secret = page.inner_text(step["selector"])
             page.fill(step["into"], totp_code(secret))
+        elif action == "delete_totp":
+            # Undoes the enrolment the 2FA shots perform, so later shots of the
+            # same role log in without a token prompt.
+            if not creds:
+                raise CaptureError("a delete_totp step needs the shot's `credentials_from`")
+            delete_totp_devices(creds[0])
         elif action == "captcha":
             # The challenge key travels in a hidden input; its answer is read
             # back from the database, like the TOTP secret at login.
@@ -408,6 +423,10 @@ def capture(
     if steps := shot.get("steps"):
         run_steps(page, steps, creds)
 
+    # A full-page capture grows the viewport to the page height, which drops the
+    # scrollbar and re-lays the page out 15px wider; overlays measured before
+    # that would land beside their targets. Without a scrollbar both layouts match.
+    page.add_style_tag(content="html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; }")
     hide(page, [*defaults.get("hide", []), *shot.get("hide", [])])
     page.wait_for_timeout(shot.get("settle_ms", defaults.get("settle_ms", 300)))
 

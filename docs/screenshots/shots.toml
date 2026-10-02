@@ -136,6 +136,9 @@ steps = [
   { action = "totp", into = "#id_token-otp_token" },
   # "Use backup token" also carries .submit_login, so name the primary one.
   { action = "click", selector = "button.btn-primary.submit_login" },
+  # Last 2FA shot: drop the device it enrolled, so the operator_user shots
+  # below log in without a token prompt.
+  { action = "delete_totp" },
 ]
 
 # --- Index page (docs/index.rst) ----------------------------------
@@ -145,6 +148,28 @@ name = "images/index/home-page"
 path = "/"
 role = "regulator_admin"
 full_page = true
+
+
+# --- Homepage page (docs/getting-started/homepage.rst) ----------------------------------
+
+[[shots]]
+name = "images/getting-started/homepage-06"
+path = "/account/password_change/"
+role = "operator_user"
+# ForceReloginMiddleware logs the user out on this page and asks them to log in
+# again, so the steps sign back in with the role's own credentials — in a
+# context of its own, so the logout cannot reach the other operator_user shots.
+# No token step: the last 2FA shot removed the device it enrolled.
+credentials_from = "operator_user"
+fresh = true
+full_page = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#id_old_password" },
+]
 
 
 # --- Login page (docs/getting-started/login.rst) -----------------------------
