@@ -138,6 +138,15 @@ steps = [
   { action = "click", selector = "button.btn-primary.submit_login" },
 ]
 
+# --- Index page (docs/index.rst) ----------------------------------
+
+[[shots]]
+name = "images/index/home-page"
+path = "/"
+role = "regulator_admin"
+full_page = true
+
+
 # --- Login page (docs/getting-started/login.rst) -----------------------------
 #
 # Outlines mark what the prose tells the reader to click. The header Login
