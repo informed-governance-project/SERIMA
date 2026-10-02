@@ -7,6 +7,7 @@ from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm, UserChangeForm
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.template import loader
 from django.utils.translation import get_language_info
@@ -14,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from parler.forms import TranslatableModelForm
 
 from .email import Base64EmailMultiAlternatives
+from .globals import FUNCTIONALITY_ELIGIBLE_ROLES
 
 User = get_user_model()
 logger = logging.getLogger("django.contrib.auth")
@@ -361,3 +363,30 @@ class CustomObserverAdminForm(CustomTranslatableAdminForm):
         if commit:
             obj.save()
         return obj
+
+
+class FunctionalityAdminForm(CustomTranslatableAdminForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Users with view-only permission get a form whose fields are all read-only, so roles is absent.
+        if "roles" not in self.fields:
+            return
+        # On the add form the type is not chosen yet, so offer every role eligible for some functionality.
+        eligible_roles = FUNCTIONALITY_ELIGIBLE_ROLES.get(self.instance.type) or {
+            role for roles in FUNCTIONALITY_ELIGIBLE_ROLES.values() for role in roles
+        }
+        self.fields["roles"].queryset = Group.objects.filter(name__in=eligible_roles).order_by("name")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        eligible_roles = FUNCTIONALITY_ELIGIBLE_ROLES.get(cleaned_data.get("type"), [])
+        not_eligible = [role.name for role in cleaned_data.get("roles", []) if role.name not in eligible_roles]
+        if not_eligible:
+            self.add_error(
+                "roles",
+                ValidationError(
+                    _("These roles cannot access this functionality: %(roles)s"),
+                    params={"roles": ", ".join(not_eligible)},
+                ),
+            )
+        return cleaned_data

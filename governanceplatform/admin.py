@@ -31,7 +31,7 @@ from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
 from .decorators import check_user_is_correct
 from .email import send_html_email
-from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm
+from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     delete_file_and_parents,
@@ -1654,10 +1654,24 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Functionality, site=admin_site)
 class FunctionalityAdmin(CustomTranslatableAdmin):
-    list_display = ["type", "name_display"]
+    form = FunctionalityAdminForm
+    list_display = ["type", "name_display", "get_roles"]
+    fields = (
+        "type",
+        "name",
+        "roles",
+    )
+    filter_horizontal = ["roles"]
     search_fields = ["translations__name"]
     order_list = ["type"]
     translated_fields = ["name"]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("roles")
+
+    @admin.display(description=_("Roles"))
+    def get_roles(self, obj):
+        return ", ".join(role.name for role in obj.roles.all())
 
 
 for name, method in generate_display_methods(["name"]).items():
@@ -1817,9 +1831,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
         "translations__full_name",
         "translations__description",
     ]
-    filter_horizontal = [
-        "functionalities",
-    ]
     translated_fields = ["name", "description", "full_name"]
 
     inlines = (
@@ -1839,7 +1850,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
                         "country",
                         "address",
                         "email_for_notification",
-                        "functionalities",
                     ],
                 },
             ),
@@ -1878,10 +1888,6 @@ class ObserverAdmin(CustomTranslatableAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = super().get_readonly_fields(request, obj)
         user = request.user
-        # only the platform admin can change the functionalities
-        if not user_in_group(user, "PlatformAdmin"):
-            readonly_fields += ("functionalities",)
-
         if obj and obj.pk and is_observer_user(user):
             readonly_fields += ("rt_test_button",)
 

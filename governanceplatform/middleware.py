@@ -143,6 +143,7 @@ class RestrictViewsMiddleware:
                     or request.path == reverse("create_workflow")
                     or request.path == reverse("edit_workflow")
                     or request.path.startswith("/securityobjectives/")
+                    or request.path.startswith("/reporting/")
                 ):
                     raise Http404()
 
@@ -184,7 +185,7 @@ class TermsAcceptanceMiddleware:
         return self.get_response(request)
 
 
-# check if the regulator has access to functionality
+# check if the user has access to functionality
 class CheckFunctionalityAccessMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
@@ -195,41 +196,12 @@ class CheckFunctionalityAccessMiddleware:
             return self.get_response(request)
 
         resolver = resolve(request.path)
+        module = resolver.route.split("/")[0]
+        if module == "admin":
+            # The admin catch-all view has no url_name.
+            module = resolver.kwargs.get("app_label", (resolver.url_name or "").split("_", 1)[0])
 
-        existing_functionalities = set(Functionality.objects.values_list("type", flat=True))
-
-        functionalities_types = Functionality.objects.filter(regulator__isnull=False).values_list("type", flat=True)
-
-        functionality_path = resolver.route.split("/")[0]
-
-        # regulator case
-        if request.user.regulators.exists():
-            regulator = request.user.regulators.first()
-            regulator_functionalities = regulator.functionalities.values_list("type", flat=True)
-
-            if functionality_path == "admin":
-                url_name = resolver.url_name
-                app_label = resolver.kwargs.get("app_label", url_name.split("_", 1)[0])
-
-                if not app_label:
-                    return self.get_response(request)
-
-                if app_label not in existing_functionalities:
-                    return self.get_response(request)
-
-                if app_label not in regulator_functionalities:
-                    raise Http404()
-
-            if functionality_path not in existing_functionalities:
-                return self.get_response(request)
-
-            if functionality_path not in regulator_functionalities:
-                raise Http404()
-
-        if functionality_path not in existing_functionalities:
-            return self.get_response(request)
-
-        if functionality_path not in functionalities_types:
+        if Functionality.objects.filter(type=module).exists() and module not in user.get_module_permissions():
             raise Http404()
 
         return self.get_response(request)

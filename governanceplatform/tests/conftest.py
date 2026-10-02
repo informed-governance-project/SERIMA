@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.translation import activate
 
 from conftest import import_from_json
+from governanceplatform.globals import FUNCTIONALITY_ELIGIBLE_ROLES
 from governanceplatform.models import (
     Company,
     CompanyUser,
@@ -105,6 +106,9 @@ def populate_db(db):
 
     # Create permission groups
     created_permission_groups = import_from_json(Group, permission_groups)
+    # Open every functionality to all its eligible roles, so the per-entity switches decide access
+    for functionality in created_functionalities:
+        functionality.roles.set(Group.objects.filter(name__in=FUNCTIONALITY_ELIGIBLE_ROLES[functionality.type]))
 
     # Create sectors
     created_sectors = import_from_json(Sector, sectors)
