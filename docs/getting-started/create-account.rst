@@ -1,6 +1,11 @@
 Create an account
 -------------------------
 
+Anyone can create an account, including organisations that want to report an incident voluntarily.
+A self-created account has the *incident user* role: it can notify incidents and see only its own reports.
+Once an operator administrator approves the account as a member of their operator,
+the incidents it reported move to that operator.
+
 If you do not have an account yet, create one by using the **Report an incident without account** button in the centre
 or by clicking the **Create account** link in the top right corner.
 Populate the required fields and provide a password you would like to use.
