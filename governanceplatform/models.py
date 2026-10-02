@@ -5,7 +5,7 @@ import uuid
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.models import AbstractUser, Group, PermissionsMixin
 from django.contrib.sessions.base_session import AbstractBaseSession
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
@@ -106,6 +106,12 @@ class Functionality(TranslatableModel):
         choices=get_functionality_choices,
         null=False,
         unique=True,
+    )
+    roles = models.ManyToManyField(
+        Group,
+        verbose_name=_("Roles"),
+        blank=True,
+        related_name="functionalities",
     )
 
     def __str__(self):
