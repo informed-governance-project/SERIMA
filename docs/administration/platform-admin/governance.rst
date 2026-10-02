@@ -31,16 +31,54 @@ There are two columns on the **Change Entity category** screen. The **Code** col
    :alt: Change entity category
    :target: ../../_static/images/administration/platform-admin/governance-03.png
 
+.. _functionalities:
+
 Functionalities
 ^^^^^^^^^^^^^^^^^^^^^
 
-The **Functionalities** section shows which modules are enabled in the platform. As per the screenshot below, there are two modules set up in the system: **Reporting** and **Security Objective**.
+The **Functionalities** section lists the optional modules of the platform: **Reporting** and **Security Objective**. A module listed here is not usable yet: nobody can open it until the roles allowed to use it are chosen.
 
 You can create new Functionalities by clicking the **Add Functionality** button in the top right corner. To delete a Functionality, first select it by checking the box next to the functionality. Then, open the **Action** drop-down menu and choose the **Delete selected Functionalities** option, and click **Go**.
 
 .. figure:: /_static/images/administration/platform-admin/governance-04.png
    :alt: Select Functionality to change
    :target: ../../_static/images/administration/platform-admin/governance-04.png
+
+A functionality has:
+
+- a **type**, the module it opens (security objectives or reporting). The type cannot be translated.
+- a **name**, shown in the menu. The name can be translated.
+- **roles**, the roles allowed to use the module.
+
+Who can use a functionality
+""""""""""""""""""""""""""""
+
+Access is checked in two steps, in this order:
+
+1. **By role.** On the functionality, move the roles that may use it from *Available Roles* to *Chosen Roles*. Only the roles that can work with the module are offered:
+
+   - Security objectives: RegulatorAdmin, RegulatorUser, OperatorAdmin, OperatorUser.
+   - Reporting: RegulatorAdmin, RegulatorUser.
+
+2. **By regulator.** Regulator users also need the functionality enabled on their regulator: edit the regulator and add the functionality to its *Chosen Functionalities* (see Regulators_). Operators have no such setting, their role is enough.
+
+If a role is not chosen, the regulator setting is not checked: the module stays hidden from the menu and its pages return a "not found" error.
+
+A new functionality has no role chosen, so nobody can use it until roles are added.
+
+Observers have no access to the security objectives and reporting modules.
+
+Rolling out a module
+""""""""""""""""""""
+
+The two steps let a module be opened in stages. For example, for security objectives:
+
+1. Choose the RegulatorAdmin and RegulatorUser roles on the functionality.
+2. Enable the functionality on each regulator that will use it.
+3. Let the regulators configure their standards.
+4. Once the configuration is done, choose the OperatorAdmin and OperatorUser roles.
+
+Removing a role from the functionality hides the module again for every user with that role.
 
 Observers
 ^^^^^^^^^^^^^^^^^^^^^
@@ -49,13 +87,9 @@ An observer is a type of regulator with limited permissions. Observers cannot ed
 
 As a Platform Admin, you can create an Observer either by clicking the **Add Observer** button in the top-right corner or by selecting the **Add** link in the **Governance** section. The **Change Observer** screen appears, where you can set up a new Observer.
 
-When creating a new Observer, provide its name, description, country, and address. Then configure its functionalities by selecting and adding them to the **Chosen Functionalities list**:
+When creating a new Observer, provide its name, description, country, and address. Observers have no access to the security objectives and reporting modules, so an Observer has no functionalities to configure.
 
-.. figure:: /_static/images/administration/platform-admin/governance-05.png
-   :alt: Chosen Functionalities list
-   :target: ../../_static/images/administration/platform-admin/governance-05.png
-
-Finally, add observer users and observer regulations (legal basis) to the Observer. Use the down-pointing arrows to open the dropdown menus and select a different user or regulation.
+Then add observer users and observer regulations (legal basis) to the Observer. Use the down-pointing arrows to open the dropdown menus and select a different user or regulation.
 
 If you cannot find the item you are looking for, use the **Add another Observer user** and **Add another Observer regulation** links to create new entries.
 
@@ -130,7 +164,7 @@ Regulators
 By following the **Regulators** link in the **Governance** section, you can check the list of Regulators set up in the system.
 As a Platform Admin, you can set up new regulators either by clicking the **Add Regulator** button in the top-right corner or by selecting the **Add** link in the Governance section.
 
-The **Add Regulator** screen appears, where you can set up a new **Regulator**. When creating a new Regulator, provide its name, description, country, address, and email address (for incident notification). Then configure the regulator’s functionalities by selecting and adding them to the **Chosen Functionalities list**:
+The **Add Regulator** screen appears, where you can set up a new **Regulator**. When creating a new Regulator, provide its name, description, country, address, and email address (for incident notification). Then configure the regulator’s functionalities by selecting and adding them to the **Chosen Functionalities list**. A regulator user can only use a functionality whose roles also include theirs (see :ref:`functionalities`):
 
 .. figure:: /_static/images/administration/platform-admin/governance-10.png
    :alt: Add Regulator
