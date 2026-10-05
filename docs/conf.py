@@ -98,7 +98,7 @@ latex_engine = "pdflatex"
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ("index", "serima.tex", "SERIMA Governance Platform", "NC3-LU", "howto"),
+    ("pdf", "serima.tex", "SERIMA Governance Platform", "NC3-LU", "howto"),
 ]
 
 latex_show_urls = "footnote"
