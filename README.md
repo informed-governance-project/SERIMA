@@ -8,7 +8,7 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Documentation Status](https://readthedocs.org/projects/serima/badge/?version=latest)](https://serima.readthedocs.io/en/latest/?badge=latest)
 [![Translation status](https://weblate.nc3.lu/widget/serima/svg-badge.svg)](https://weblate.nc3.lu/engage/serima/)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/informed-governance-project/SERIMA)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue.svg?style=flat-square)](https://deepwiki.com/informed-governance-project/SERIMA)
 
 ## Description
 
