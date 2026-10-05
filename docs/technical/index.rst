@@ -1,5 +1,5 @@
-Technical guide
-===============
+Overview
+========
 
 For the people who install, update and maintain a SERIMA instance, and for those who work on its code.
 
@@ -7,8 +7,7 @@ A SERIMA instance is more than a web application. Alongside the Django applicati
 a Redis server, two background processes (a Celery worker and Celery beat), an outgoing email server,
 and the theme, which lives in its own Git repository.
 
-Which page do I need?
----------------------
+.. rubric:: Which page do I need?
 
 - **Installing a new instance:** check the :doc:`prerequisites`, then follow either :doc:`docker`
   (recommended) or the manual :doc:`installation`.
