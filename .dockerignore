@@ -4,3 +4,4 @@
 .dockerignore
 **/node_modules
 **/npm_components
+governanceplatform/management/commands/screenshot_fixture.py

@@ -43,7 +43,7 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-numfig = True
+numfig = False
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -51,25 +51,43 @@ numfig = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_book_theme"
+html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
 
 html_title = "SERIMA"
+
+# Theme options for sphinx_book_theme
+# html_theme_options = {
+#     "path_to_docs": "docs",
+#     "repository_url": "https://github.com/informed-governance-project/SERIMA",
+#     "launch_buttons": {
+#         "binderhub_url": "https://github.com/informed-governance-project/SERIMA",
+#     },
+#     "use_edit_page_button": True,
+#     "use_issues_button": True,
+#     "use_repository_button": True,
+#     "use_download_button": True,
+#     "home_page_in_toc": True,
+# }
+
+# Theme options for sphinx_rtd_theme
 html_theme_options = {
-    "path_to_docs": "docs",
-    "repository_url": "https://github.com/informed-governance-project/SERIMA",
-    "launch_buttons": {
-        "binderhub_url": "https://github.com/informed-governance-project/SERIMA",
-    },
-    "use_edit_page_button": True,
-    "use_issues_button": True,
-    "use_repository_button": True,
-    "use_download_button": True,
-    "home_page_in_toc": True,
+    "style_nav_header_background": "#e40521",
+    "prev_next_buttons_location": "both",
+    "version_selector": False,
+}
+# sphinx_rtd_theme takes the GitHub link from the context, not from a theme option.
+html_context = {
+    "display_github": True,
+    "github_user": "informed-governance-project",
+    "github_repo": "SERIMA",
+    "github_version": "dev",
+    "conf_py_path": "/docs/",
 }
 
 
@@ -83,7 +101,7 @@ latex_documents = [
     ("index", "serima.tex", "SERIMA Governance Platform", "NC3-LU", "howto"),
 ]
 
-latex_show_urls = True
+latex_show_urls = "footnote"
 latex_show_pagerefs = True
 
 ADDITIONAL_PREAMBLE = r"""

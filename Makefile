@@ -14,7 +14,7 @@ help:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 activate:
-	poetry shell
+	@env -u MAKELEVEL -u MAKEFLAGS -u MFLAGS bash --rcfile <(echo '[ -f ~/.bashrc ] && . ~/.bashrc'; echo 'cd "$(CURDIR)"'; poetry env activate)
 
 run:
 	python manage.py runserver
@@ -29,10 +29,22 @@ superuser:
 	python manage.py createsuperuser
 
 models:
-	python manage.py graph_models governanceplatform incidents --pydot -g -o docs/_static/app-models.png
+	python manage.py graph_models governanceplatform incidents --pydot -g -o docs/_static/images/technical/app-models.png
 
 openapi:
 	python manage.py spectacular --format openapi > docs/_static/openapi.yml
+
+screenshots:
+	python docs/screenshots/capture.py
+
+# ATTENTION: This target will flush the database and load the screenshots fixture. Use with caution.
+screenshots-fixture:
+	@printf "\033[31mATTENTION: This deletes ALL data in the database. Type 'yes' to continue:\033[0m "; read answer; [ "$$answer" = yes ]
+	python manage.py flush --no-input
+	python manage.py migrate
+	python manage.py update_group_permissions
+	python manage.py loaddata docs/screenshots/fixture.json
+	python manage.py screenshot_fixture --create
 
 generatepot:
 	python manage.py makemessages -a --keep-pot

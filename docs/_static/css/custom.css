@@ -1,0 +1,24 @@
+/* sphinx_rtd_theme centres only figures marked :align: center; centre the
+   unaligned ones too, so captions sit under their screenshot. */
+.rst-content figure.align-default {
+  text-align: center;
+}
+
+/* sphinx_rtd_theme keeps table cells on one line, so a table with sentences in
+   it overflows sideways behind a scrollbar; let cells wrap and tables fill the
+   column, which also makes the :widths: of list-table apply. */
+.rst-content .wy-table-responsive table td,
+.rst-content .wy-table-responsive table th {
+  white-space: normal;
+}
+
+.rst-content table.docutils {
+  width: 100%;
+}
+
+/* The theme caps the page at 800px whatever the screen; screenshots are taken
+   at 1440px, so give them and wide tables more room while keeping lines short
+   enough to read. */
+.wy-nav-content {
+  max-width: 1200px;
+}

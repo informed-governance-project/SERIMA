@@ -1,5 +1,5 @@
-Incident Notification Module
-==================================
+SERIMA
+======
 
 
 .. only:: html
@@ -24,69 +24,69 @@ Incident Notification Module
         :target: https://serima.readthedocs.io/en/latest/?badge=latest
         :alt: Documentation Status
 
-
-.. toctree::
-   :caption: Technical considerations
-   :maxdepth: 3
-   :hidden:
-
-   prerequisites
-   installation
-   update
-   modules
-   architecture
-   api-v1
+    .. image:: https://weblate.nc3.lu/widget/serima/svg-badge.svg
+        :target: https://weblate.nc3.lu/widget/serima/svg-badge.svg
+        :alt: Translation status
 
 
 .. toctree::
-   :caption: Conceptual considerations
-   :maxdepth: 3
+   :caption: User guide
+   :maxdepth: 2
    :hidden:
 
-   security
-   permissions
-
+   getting-started/index
+   incident-notification/index
+   security-objectives/index
+   reporting/index
+   administration/index
 
 .. toctree::
-   :caption: Application interface
-   :maxdepth: 3
+   :caption: Technical guide
+   :maxdepth: 2
    :hidden:
 
-   ui_user
-   ui_administrator
-   ui_platformadmin
+   technical/index
 
 Presentation
 ------------
 
-The Incident Notification Module is developed and maintained by
-`NC3-LU <https://github.com/NC3-LU>`_ team in the framework of the
-`Informed Governance Project <https://github.com/informed-governance-project>`_.
+SERIMA is developed and maintained by the Luxembourg National Cybersecurity Competence Centre (`NC3 <https://www.nc3.lu>`__)
+in the framework of the `Informed Governance Project <https://github.com/informed-governance-project>`_.
 
-The incident notification module is designed to be used as a national incident notification tool. It is multi-regulator, i.e. any regulator or competent authority of the country can use it and receive the incident notifications. It is multi-regulation, i.e. it can completely be configured, and each regulator is responsible to configure the regulations he is responsible for.
-The operators under supervision can use it to notify their incidents.
+It is a governance platform shared by several regulators (competent authorities)
+and the operators they supervise. Each regulator configures the regulations it is accountable for,
+and the platform offers one module per activity:
 
-This project is lead by `NC3-LU <https://www.nc3.lu>`__.
-Developed in partnership with `ILR.lu <https://web.ilr.lu>`_ and
-`IBPT.be <https://www.ibpt.be>`_.
+- :doc:`incident-notification/index` — operators report incidents to their regulator.
+- :doc:`security-objectives/index` — operators declare how they meet their regulator's security objectives.
+- :doc:`reporting/index` — regulators build and distribute reports to operators.
 
-.. figure:: _static/screenshot_incidents-page.png
-   :alt: Screenshot of the list of incidents from the regulator view.
-   :target: _static/screenshot_incidents-page.png
+This project is developed in partnership with the Institut Luxembourgeois de Régulation (`ILR <https://web.ilr.lu>`_) and the Institut Belge des services Postaux et des Télécommunications (`IBPT <https://www.ibpt.be>`_).
 
-   Screenshot of the list of incidents from the regulator view.
+.. figure:: /_static/images/index/home-page.png
+   :alt: Regulator home page screenshot
+   :target: _static/images/index/home-page.png
 
-This document is intended to be a documentation for operators and users of the module.
+   Regulator home page
+
+Which section do I read?
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+- **New to SERIMA:** :doc:`getting-started/index`.
+- **Operators and regulators:** the section of the module you work in.
+- **Admins:** :doc:`administration/index`, plus the *Configuration* page of each module you configure.
+- **Installing or maintaining an instance:** :doc:`technical/index`.
+
+This document is intended for the operators and users of the platform.
 If you find errors or omission, please don't hesitate to submit
 `an issue <https://github.com/informed-governance-project/SERIMA/issues/new?labels=documentation&template=bug_report.md>`_
 or open a pull request with a fix.
 
-
 Contact
 -------
 
-`NC3 Luxembourg <https://www.nc3.lu>`_ - `info@nc3.lu <info@nc3.lu>`_
-
+- `NC3 Luxembourg <https://www.nc3.lu>`_ - `info@nc3.lu <info@nc3.lu>`_
+- `ILR <https://web.ilr.lu>`_ - `serima@ilr.lu <serima@ilr.lu>`_
 
 License
 -------
@@ -94,8 +94,8 @@ License
 The Governance Platform is licensed under
 `GNU Affero General Public License version 3 <https://www.gnu.org/licenses/agpl-3.0.html>`_.
 
-- Copyright (C) 2023-2026 Cédric Bonhomme <cedric.bonhomme@nc3.lu>
-- Copyright (C) 2023-2026 Jérôme Lombardi <jerome.lombardi@nc3.lu>
 - Copyright (C) 2023-2026 Juan Rocha <juan.rocha@nc3.lu>
-- Copyright (C) 2023-2026 `NC3 Luxembourg <https://www.nc3.lu>`_
+- Copyright (C) 2023-2026 Jérôme Lombardi <jerome.lombardi@nc3.lu>
+- Copyright (C) 2023-2026 Cédric Bonhomme <cedric.bonhomme@nc3.lu>
 - Copyright (C) 2023-2026 Ruslan Baidan <ruslan.baidan@nc3.lu>
+- Copyright (C) 2023-2026 `NC3 Luxembourg <https://www.nc3.lu>`_

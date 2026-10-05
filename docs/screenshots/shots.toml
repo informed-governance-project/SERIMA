@@ -1,0 +1,338 @@
+# Shot list for docs/screenshots/capture.py.
+#
+# `name` is the file written to docs/_static/<name>.png — it must match the
+# filename the .rst files already reference, so the docs never need editing.
+
+base_url = "http://127.0.0.1:8000"
+locale = "en-GB"
+
+[viewport]
+width = 1440
+height = 900
+
+[defaults]
+settle_ms = 400
+hide = [
+  # The footer version string would otherwise re-diff every screenshot on each
+  # release, for a number the docs never refer to.
+  "footer .justify-content-between > .text-end",
+]
+# Matches the red of the hand-drawn callouts already in the manual.
+annotation_color = "#0e0acc"
+# The manual is laid out around 1440px-wide figures.
+
+# Every role has a throwaway account, written to `credentials_file` under the
+# role's name by `manage.py screenshot_fixture --create`. The environment still
+# overrides it when a real account is wanted instead.
+
+[roles.operator_admin]
+username_env = "SERIMA_SHOT_OPERATOR_ADMIN_USER"
+password_env = "SERIMA_SHOT_OPERATOR_ADMIN_PASS"
+credentials_file = ".fixture-credentials.json"
+# The fixture makes this account administrator of both operators, so the
+# company-selection interstitial is answered the same way every run.
+company = "Operator A"
+
+[roles.operator_user]
+# An account with NO TOTP device yet — the enrolment wizard is only reachable
+# while 2FA is off. See the note under the 2FA shots below.
+username_env = "SERIMA_SHOT_OPERATOR_USER"
+password_env = "SERIMA_SHOT_OPERATOR_PASS"
+credentials_file = ".fixture-credentials.json"
+
+[roles.regulator_admin]
+username_env = "SERIMA_SHOT_REGULATOR_ADMIN_USER"
+password_env = "SERIMA_SHOT_REGULATOR_ADMIN_PASS"
+credentials_file = ".fixture-credentials.json"
+
+[roles.regulator_user]
+username_env = "SERIMA_SHOT_REGULATOR_USER"
+password_env = "SERIMA_SHOT_REGULATOR_PASS"
+credentials_file = ".fixture-credentials.json"
+
+[roles.observer_admin]
+username_env = "SERIMA_SHOT_OBSERVER_ADMIN_USER"
+password_env = "SERIMA_SHOT_OBSERVER_ADMIN_PASS"
+credentials_file = ".fixture-credentials.json"
+
+[roles.platform_admin]
+username_env = "SERIMA_SHOT_PLATFORM_USER"
+password_env = "SERIMA_SHOT_PLATFORM_PASS"
+credentials_file = ".fixture-credentials.json"
+
+# --- Two-factor enrolment (docs/getting-started/enable-2fa.rst) -------------
+#
+# The wizard's "Next" is `button[type=submit]:not([name])`. A bare
+# `button[type=submit]` also matches "Back", which django-two-factor-auth
+# renders FIRST and only from the second step on — so it silently walks the
+# wizard backwards instead of forwards.
+#
+# STATEFUL. The wizard only exists while the account has no TOTP device, and
+# enable-2fa-04 requires actually completing it — which creates one.
+# `manage.py screenshot_fixture --create` removes it again before each run.
+#
+# The first three shots persist nothing, so they are safe to re-run on their
+# own; only enable-2fa-04 enrols the device. enable-2fa-05 shows the token
+# prompt at login, which exists only once a device is enrolled — so it has to
+# run after enable-2fa-04, in the order below.
+
+[[shots]]
+name = "images/getting-started/enable-2fa-01"
+role = "operator_user"
+path = "/account/two_factor/"
+
+[[shots]]
+name = "images/getting-started/enable-2fa-02"
+role = "operator_user"
+path = "/account/two_factor/setup/"
+
+[[shots]]
+name = "images/getting-started/enable-2fa-03"
+role = "operator_user"
+path = "/account/two_factor/setup/"
+steps = [{ action = "click", selector = "button[type=submit]:not([name])" }]
+
+
+[[shots]]
+name = "images/getting-started/enable-2fa-04"
+role = "operator_user"
+path = "/account/two_factor/setup/"
+steps = [
+  { action = "click", selector = "button[type=submit]:not([name])" },
+  { action = "totp", selector = "a[href^='otpauth:']", into = "#id_generator-token" },
+  { action = "click", selector = "button[type=submit]:not([name])" },
+]
+
+[[shots]]
+name = "images/getting-started/enable-2fa-05"
+path = "/account/login"
+# Types the credentials itself, and signs in — so it borrows them from the role
+# and needs a context it cannot leak into the other anonymous shots.
+credentials_from = "operator_user"
+fresh = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.submit_login" },
+]
+
+[[shots]]
+name = "images/getting-started/enable-2fa-06"
+path = "/account/login"
+# Types the credentials itself rather than being logged in beforehand, so it
+# borrows them from the role instead of the environment.
+credentials_from = "operator_user"
+# Signs in through its own steps, so it needs a context it cannot leak into the
+# other anonymous shots.
+fresh = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  # The login token step never shows the secret, so it is read from the
+  # enrolled device instead — nothing to export by hand.
+  { action = "totp", into = "#id_token-otp_token" },
+  # "Use backup token" also carries .submit_login, so name the primary one.
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  # Last 2FA shot: drop the device it enrolled, so the operator_user shots
+  # below log in without a token prompt.
+  { action = "delete_totp" },
+]
+
+# --- Index page (docs/index.rst) ----------------------------------
+
+[[shots]]
+name = "images/index/home-page"
+path = "/"
+role = "regulator_admin"
+full_page = true
+
+# --- Login page (docs/getting-started/login.rst) -----------------------------
+#
+# Outlines mark what the prose tells the reader to click. The header Login
+# button also gets an arrow: it is small, far from the card, and easy to skim
+# past with only an outline.
+
+[[shots]]
+name = "images/getting-started/login-01"
+path = "/account/login"
+full_page = true
+annotate = [
+  { selector = "#login_button", box = true, arrow = "bottom" },
+  { selector = "#with-account", box = true },
+]
+
+[[shots]]
+name = "images/getting-started/login-02"
+path = "/account/login"
+full_page = true
+steps = [{ action = "click", selector = "#with-account" }]
+annotate = [{ selector = ["#id_auth-username", "#id_auth-password"], box = true }]
+
+[[shots]]
+name = "images/getting-started/login-03"
+path = "/account/login"
+full_page = true
+annotate = [
+  # Both the header link and the card button carry id="registration_button";
+  # the class is what separates them.
+  { selector = "a#registration_button.btn-link", box = true },
+  { selector = "#login_card a.report-incident-button", box = true },
+]
+
+[[shots]]
+name = "images/getting-started/login-04"
+path = "/account/login"
+# operator_admin belongs to two operators, so its login stops on the company
+# selection. The steps log in themselves: the role's automatic login would
+# answer that page before the shot could capture it.
+credentials_from = "operator_admin"
+fresh = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#id_select_company" },
+]
+
+[[shots]]
+name = "images/getting-started/login-05"
+path = "/account/password_reset/"
+full_page = true
+
+[[shots]]
+name = "images/getting-started/login-06"
+path = "/account/password_reset/"
+# Submitting sends a reset email to the screenshot account; harmless, as
+# screenshot_fixture --create sets a new password on every run anyway.
+fresh = true
+full_page = true
+steps = [
+  { action = "fill", selector = "#id_email", value = "operator-user@example.org" },
+  { action = "captcha", into = "#id_captcha_1" },
+  { action = "click", selector = "button[type=submit].btn-primary" },
+  { action = "wait_for", selector = "text=Email sent" },
+]
+
+[[shots]]
+name = "images/getting-started/create-account-01"
+path = "/account/signup"
+full_page = true
+
+[[shots]]
+name = "images/getting-started/create-account-02"
+path = "/account/signup"
+# Submitting creates new-account@example.org, which `screenshot_fixture
+# --create` deletes again so the next run can sign up the same way.
+fresh = true
+full_page = true
+steps = [
+  { action = "fill", selector = "#id_first_name", value = "New" },
+  { action = "fill", selector = "#id_last_name", value = "Account" },
+  { action = "fill", selector = "#id_email", value = "new-account@example.org" },
+  { action = "captcha", into = "#id_captcha_1" },
+  { action = "click", selector = "#id_accept_terms" },
+  { action = "click", selector = "button[type=submit].btn-primary" },
+  # Lands on the login page with the "Account created" message.
+  { action = "wait_for", selector = ".alert-success" },
+]
+
+[[shots]]
+name = "images/getting-started/create-account-03"
+# The set-password email the sign-up above sent; it must stay right after it.
+email = true
+full_page = true
+# Narrow and short, so the image is the message rather than empty page.
+viewport = { width = 900, height = 200 }
+
+# --- Homepage page (docs/getting-started/homepage.rst) ----------------------------------
+
+[[shots]]
+name = "images/getting-started/homepage-01"
+# The homepage once logged in; the role's login already answers the
+# company selection, so the shot needs no steps. The numbers match the list
+# in docs/getting-started/homepage.rst.
+path = "/"
+role = "operator_admin"
+full_page = true
+annotate = [
+  { selector = "a.navbar-brand", box = true, arrow = "bottom", label = "1" },
+  { selector = "#admin-link", box = true, arrow = "bottom", label = "2" },
+  { selector = "#navbarDropdown", box = true, arrow = "bottom", label = "3" },
+  { selector = "a.nav-link[href='/contact/']", box = true, arrow = "bottom", label = "4" },
+  { selector = "#language_selector", box = true, arrow = "bottom", label = "5" },
+  { selector = ".card:has(a[href='/incidents/'])", box = true, arrow = "bottom", label = "6" },
+  { selector = ".card:has(a[href='/securityobjectives/'])", box = true, arrow = "bottom", label = "7" },
+]
+
+[[shots]]
+name = "images/getting-started/homepage-02"
+path = "/"
+role = "operator_admin"
+steps = [
+  { action = "click", selector = "#navbarDropdown" },
+  { action = "wait_for", selector = "[aria-labelledby='navbarDropdown'].show" },
+]
+annotate = [{ selector = "[aria-labelledby='navbarDropdown']", box = true }]
+
+[[shots]]
+name = "images/getting-started/homepage-03"
+path = "/account/edit/"
+role = "operator_admin"
+credentials_from = "operator_admin"
+fresh = true
+full_page = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  # The forced logout cleared the company in use, and this account belongs to two.
+  { action = "select", selector = "#id_select_company", value = "Operator A" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#id_first_name" },
+]
+
+[[shots]]
+name = "images/getting-started/homepage-04"
+path = "/account/password_change/"
+role = "operator_admin"
+credentials_from = "operator_admin"
+fresh = true
+full_page = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  # The forced logout cleared the company in use, and this account belongs to two.
+  { action = "select", selector = "#id_select_company", value = "Operator A" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#id_old_password" },
+]
+
+[[shots]]
+name = "images/getting-started/homepage-05"
+path = "/contact/"
+role = "operator_admin"
+full_page = true
+
+
+[[shots]]
+name = "images/getting-started/homepage-06"
+path = "/contact/"
+role = "operator_admin"
+steps = [
+  { action = "click", selector = "#module_selector" },
+  { action = "wait_for", selector = "ul[aria-labelledby='module_selector'].show" },
+]
+annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
+
+# --- Not covered yet --------------------------------------------------------
+#
+# Only the getting-started pages above are scripted. Every other page owns the
+# images under docs/_static/images/<section>/<page>-NN.png, and none of them
+# are scripted here yet.
