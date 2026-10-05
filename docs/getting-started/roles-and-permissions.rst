@@ -32,14 +32,9 @@ gives you access to the administration console, and which modules you see.
      - Yes
      - Incident notification, security objectives, reporting
    * - ObserverAdmin
-     - Administrators of an observer
-     - Reads the incidents forwarded to their organisation, and creates observer administrators and users.
-     - Yes
-     - Incident notification (read-only)
-   * - ObserverUser
      - Staff of an observer
-     - Reads the incidents forwarded to their organisation.
-     - No
+     - Reads the incidents forwarded to their organisation, and creates the other accounts of their observer.
+     - Yes
      - Incident notification (read-only)
    * - OperatorAdmin
      - Administrators of an operator
@@ -61,6 +56,7 @@ gives you access to the administration console, and which modules you see.
 A **regulator**, also known as competent authority, is a public organisation that supervises one or more regulations.
 An **observer** is an organisation that, by law, receives information about incidents to carry out its missions,
 read-only; which incidents it receives follows rules set by the platform administrator.
+For now, every member of an observer's staff has the ObserverAdmin role.
 
 The security objectives and reporting modules appear only once the platform administrator has enabled them
 for your role and, for regulator accounts, for your regulator (see :ref:`functionalities`).

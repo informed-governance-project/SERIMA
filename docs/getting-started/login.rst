@@ -51,14 +51,3 @@ check your spam folder and that you used the address your account is registered 
 .. figure:: /_static/images/getting-started/login-06.png
    :alt: Confirmation that the password reset email has been sent
    :target: ../_static/images/getting-started/login-06.png
-
-No account yet?
-~~~~~~~~~~~~~~~
-
-Use the **Report an incident without account** button in the centre, or the **Create account** link in the top right corner:
-
-.. figure:: /_static/images/getting-started/login-03.png
-   :alt: Login page with the Create account link and the Report an incident without account button highlighted
-   :target: ../_static/images/getting-started/login-03.png
-
-Both take you to the account creation form: see :doc:`create-account`.

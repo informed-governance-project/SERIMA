@@ -48,7 +48,7 @@ Click the **Observers** link to go to the **Select Observers to change** screen.
    :alt: Select Observers to change
    :target: ../../_static/images/administration/regulator-admin/governance-06.png
 
-Click the name of the Observer in the **Name** column to view it. Once you click the name of an Observer, you will be directed to the **View Observer** screen. At the top, you can see the contact information of the chosen Observer, whereas further down, you can see the linked Observer Users and Observer Regulations.
+Click the name of the Observer in the **Name** column to view it. Once you click the name of an Observer, you will be directed to the **View Observer** screen. At the top, you can see the contact information of the chosen Observer, whereas further down, you can see the accounts of the Observer (Observer Admins) and its Observer Regulations.
 
 Operators
 ^^^^^^^^^^^^^^^^^^^^^^^^

@@ -89,7 +89,7 @@ As a Platform Admin, you can create an Observer either by clicking the **Add Obs
 
 When creating a new Observer, provide its name, description, country, and address. Observers have no access to the security objectives and reporting modules, so an Observer has no functionalities to configure.
 
-Then add observer users and observer regulations (legal basis) to the Observer. Use the down-pointing arrows to open the dropdown menus and select a different user or regulation.
+Then add the observer's accounts (Observer Admins) and its observer regulations (legal basis). Use the down-pointing arrows to open the dropdown menus and select a different account or regulation.
 
 If you cannot find the item you are looking for, use the **Add another Observer user** and **Add another Observer regulation** links to create new entries.
 
@@ -198,7 +198,7 @@ You have two options to delete a regulator:
 Users
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Platform Admins can create other Platform Admins, Regulator Admins, and Observer Users.** If you click the Users link in the Governance section, you will be directed to the **Select User to Change** screen. This screen lists all users (Platform Admins, Regulator Admins, and Observer Users) that the Regulator Admin of your SERIMA instance has set up.
+**Platform Admins can create other Platform Admins, Regulator Admins, and Observer Admins.** If you click the Users link in the Governance section, you will be directed to the **Select User to Change** screen. This screen lists all users (Platform Admins, Regulator Admins, and Observer Admins) that the Platform Admins of your SERIMA instance have set up.
 
 You can add new users by clicking the **Add** link in the **Governance** section or by using the **Add User** link in the top right-hand corner. The **Add User** screen appears, where you can provide basic information such as First Name, Last Name, Email Address, and Phone Number.
 

@@ -8,6 +8,11 @@ the incidents it reported move to that operator.
 
 If you do not have an account yet, create one by using the **Report an incident without account** button in the centre
 or by clicking the **Create account** link in the top right corner.
+
+.. figure:: /_static/images/getting-started/login-03.png
+   :alt: Login page with the Create account link and the Report an incident without account button highlighted
+   :target: ../_static/images/getting-started/login-03.png
+
 Fill in your first name, last name and email address, and answer the captcha.
 
 .. figure:: /_static/images/getting-started/create-account-01.png
