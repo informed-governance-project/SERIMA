@@ -1,31 +1,47 @@
 Updating the application
 ========================
 
-All you have to do is:
+Manual installation
+-------------------
+
+The update script updates the application and the theme in one go:
 
 .. code-block:: bash
 
     $ cd SERIMA/
     $ ./contrib/update.sh {APP_TAG} {THEME_TAG}
 
-Replace `{APP_TAG}` and `{THEME_TAG}` with the Git tag or branch you want to deploy for the application and theme respectively. If omitted, both default to `main`.
+Replace ``{APP_TAG}`` and ``{THEME_TAG}`` with the Git tag or branch to deploy for the application and the theme;
+both default to ``main``. Use matching versions of the two (see :doc:`installation`).
 
-Or manually:
+The script runs the same steps as this manual update:
 
 .. code-block:: bash
 
     $ cd SERIMA/
-    $ git pull origin main --tags
+    $ git fetch origin --tags
+    $ git checkout {APP_TAG}
     $ npm ci
-    $ poetry install
-    $ poetry run python manage.py collectstatic
+    $ poetry install --only main
+    $ poetry run python manage.py collectstatic --noinput
     $ poetry run python manage.py migrate
     $ poetry run python manage.py compilemessages
     $ poetry run python manage.py update_group_permissions
+    $ cd theme/
+    $ git fetch origin --tags
+    $ git checkout {THEME_TAG}
 
-
-Finally, restart Apache:
+Then restart the web server and the background workers, so that they all run the new code:
 
 .. code-block:: bash
 
     $ sudo systemctl restart apache2.service
+    $ sudo systemctl restart serima-celery-worker serima-celery-beat
+
+Use the names of your own services if you set them up differently.
+
+
+Docker
+------
+
+Set the new versions, remove the theme volume and recreate the containers, as described in :doc:`docker`.

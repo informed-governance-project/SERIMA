@@ -38,7 +38,7 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | Type checking | mypy | <2.4 |
 | Testing | pytest-django | ^4.11.1 |
 
-Kaleido renders Plotly charts to static images for the generated reports and bundles its own Chromium. It is the heaviest runtime dependency, and the reason `KALEIDO_CONCURRENCY_PER_WORKER` exists to cap how many renders a Celery worker runs at once.
+Kaleido renders Plotly charts to static images for the generated reports. Kaleido 1.x does not bundle a browser: it drives a Chrome that must be installed separately, with `plotly_get_chrome -y` (run as the user the Celery worker runs as; the Docker image does it at build time), plus Chrome's system libraries. It is the heaviest runtime dependency, and the reason `KALEIDO_CONCURRENCY_PER_WORKER` exists to cap how many renders a Celery worker runs at once.
 
 ## Build & Run
 
@@ -54,7 +54,8 @@ make run          # dev server
 make migrate      # apply migrations
 make migration    # create new migrations
 make superuser    # create admin user
-make update       # install deps + collectstatic + compilemessages + migrate
+make permissions  # update_group_permissions — sync GROUP_PERMISSIONS to the groups
+make update       # install deps + collectstatic + compilemessages + migrate + update_group_permissions
 ```
 
 ## Configuration
@@ -289,7 +290,7 @@ Templates use Bootstrap 5. When adding or modifying UI components:
 | Change middleware order | `governanceplatform/settings.py` → `MIDDLEWARE` list |
 | Add a Celery task | the `tasks.py` of the app concerned |
 | Gate a feature per role and regulator | `governanceplatform/globals.py` → `FUNCTIONALITIES` and `FUNCTIONALITY_ELIGIBLE_ROLES`, checked by `User.get_module_permissions()`; keep `RestrictViewsMiddleware` in step |
-| Change group permissions | `governanceplatform/permissions.py` → `GROUP_PERMISSIONS`, then run `manage.py update_group_permissions` |
+| Change group permissions | `governanceplatform/permissions.py` → `GROUP_PERMISSIONS`, then run `make permissions` (`manage.py update_group_permissions`) |
 | Generate model diagram | `make models` |
 
 ## Changelog

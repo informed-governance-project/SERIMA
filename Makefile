@@ -28,6 +28,9 @@ migrate:
 superuser:
 	python manage.py createsuperuser
 
+permissions:
+	python manage.py update_group_permissions
+
 models:
 	python manage.py graph_models governanceplatform incidents --pydot -g -o docs/_static/images/technical/app-models.png
 
@@ -55,6 +58,7 @@ update:
 	python manage.py collectstatic
 	python manage.py compilemessages
 	python manage.py migrate
+	python manage.py update_group_permissions
 
 clean:
 	find . -type f -name "*.py[co]" -delete
