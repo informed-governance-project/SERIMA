@@ -38,7 +38,7 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | Type checking | mypy | <2.4 |
 | Testing | pytest-django | ^4.11.1 |
 
-Kaleido renders Plotly charts to static images for the generated reports and bundles its own Chromium. It is the heaviest runtime dependency, and the reason `KALEIDO_CONCURRENCY_PER_WORKER` exists to cap how many renders a Celery worker runs at once.
+Kaleido renders Plotly charts to static images for the generated reports. Kaleido 1.x does not bundle a browser: it drives a Chrome that must be installed separately, with `plotly_get_chrome -y` (run as the user the Celery worker runs as; the Docker image does it at build time), plus Chrome's system libraries. It is the heaviest runtime dependency, and the reason `KALEIDO_CONCURRENCY_PER_WORKER` exists to cap how many renders a Celery worker runs at once.
 
 ## Build & Run
 
