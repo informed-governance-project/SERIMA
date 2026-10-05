@@ -8,6 +8,7 @@ For the people who install, update and maintain a SERIMA instance.
 
    prerequisites
    installation
+   docker
    update
    architecture
    modules

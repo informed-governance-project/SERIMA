@@ -1,25 +1,49 @@
 Installation
 ============
 
-This section covers the installation steps of the software.
+There are two ways to install SERIMA:
 
-Containerized installation
---------------------------
+- **Docker**: the official images bundle the application and its system dependencies. See :doc:`docker`.
+- **Manual installation** on a GNU/Linux server, described below.
 
-You can, optionally, create an LXC container.
-
-.. code-block:: bash
-
-    $ lxc launch ubuntu:23.10 SERIMA --storage your-storage
-    $ lxc exec SERIMA -- /bin/bash
+The rest of this page covers the manual installation. The configuration, the first platform administrator
+and the background workers apply to both.
 
 
 System packages
 ---------------
 
+On Ubuntu 26.04 LTS, the same packages as the official Docker image:
+
 .. code-block:: bash
 
-    $ sudo apt install gettext curl npm postfix
+    $ sudo apt install \
+        git curl gettext postfix postgresql redis-server \
+        python3.14 python3-venv \
+        nodejs npm \
+        libreoffice-writer python3-uno \
+        fonts-liberation fonts-crosextra-carlito fonts-crosextra-caladea \
+        libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libharfbuzz-subset0 \
+        libffi-dev libjpeg-dev libopenjp2-7-dev \
+        libnss3 libnspr4 libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libdrm2 \
+        libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libasound2t64
+
+What each group is for:
+
+- ``git``, ``curl``, ``gettext``, ``postfix``, ``postgresql``, ``redis-server``: getting the code,
+  compiling the translations, sending emails, the database and the broker of the background workers;
+- ``python3.14``, ``python3-venv``: the interpreter, and the ``venv`` module the Poetry installer needs;
+- ``nodejs``, ``npm``: the front-end assets. Check that they are version 24 and 11 (``node --version``,
+  ``npm --version``); install them from NodeSource if your distribution provides older ones;
+- ``libreoffice-writer``, ``python3-uno`` and the fonts: the reporting module uses LibreOffice to update
+  the table of contents of the generated DOCX reports and to convert them to PDF;
+  the fonts keep the documents' layout faithful;
+- the ``libpango``/``libharfbuzz`` libraries and ``libffi-dev``, ``libjpeg-dev``, ``libopenjp2-7-dev``:
+  PDF rendering with WeasyPrint and its image support;
+- the remaining libraries (``libnss3`` to ``libasound2t64``): the Chrome that Kaleido drives to render
+  the report charts, installed in the next section.
+
+The ``t64`` package names are those of Ubuntu 24.04 and later; on older distributions, drop the suffix.
 
 
 Poetry
@@ -29,40 +53,23 @@ Poetry
 
     $ curl -sSL https://install.python-poetry.org | python3 -
 
-
-at the end of the `~/.bashrc` file add the line:
+Then add Poetry to your ``PATH``, at the end of ``~/.bashrc``:
 
 .. code-block:: bash
 
-    $ export PATH="/root/.local/bin:$PATH"
+    export PATH="$HOME/.local/bin:$PATH"
 
 
 PostgreSQL
 ----------
 
-Install PostgreSQL, the version provided by default for your
-GNU/Linux distribution.
-
-.. code-block:: bash
-
-    $ sudo apt-get install postgresql
-
-
-Create a database, database user:
+Create a database user and a database owned by it:
 
 .. code-block:: bash
 
     $ sudo -u postgres createuser <username>
-    $ sudo -u postgres createdb <database>
-    $ sudo -u postgres psql
-    psql (15.6 (Debian 15.6-0+deb12u1))
-    Type "help" for help.
-    postgres=# alter user <username> with encrypted password '<password>';
-    ALTER ROLE
-    postgres=# grant all privileges on database <database> to <username>;
-    GRANT
-    postgres=# ALTER DATABASE <database> OWNER TO <username>;
-    GRANT
+    $ sudo -u postgres createdb --owner=<username> <database>
+    $ sudo -u postgres psql -c "ALTER USER <username> WITH ENCRYPTED PASSWORD '<password>';"
 
 
 SERIMA
@@ -70,80 +77,98 @@ SERIMA
 
 .. code-block:: bash
 
-    git clone https://github.com/informed-governance-project/SERIMA.git
-    cd SERIMA
-    git submodule update --init --recursive
-    npm install
-    # Copy the config and adjust the DB connection and the other settings:
-    cp governanceplatform/config_dev.py governanceplatform/config.py
-    poetry install
-    poetry shell
-    python manage.py migrate
-    python manage.py collectstatic
-    python manage.py compilemessages
+    $ git clone https://github.com/informed-governance-project/SERIMA.git
+    $ cd SERIMA
+    $ git clone https://github.com/informed-governance-project/default-theme.git theme
+    $ npm ci
+    $ cp governanceplatform/config_dev.py governanceplatform/config.py   # then edit it, see below
+    $ poetry install --only main
+    $ poetry run plotly_get_chrome -y
+    $ poetry run python manage.py migrate
+    $ poetry run python manage.py update_group_permissions
+    $ poetry run python manage.py collectstatic
+    $ poetry run python manage.py compilemessages
+
+``plotly_get_chrome`` downloads the Chrome that Kaleido uses to render the report charts, for the current user:
+run it as the user the Celery worker runs as.
+``update_group_permissions`` creates the user groups (roles) and their permissions; run it again after every update.
 
 
 Theme
 `````
 
-In this case, the theme (CSS, icons, etc.) of the software will be under the ``theme`` folder as a Git submodule.
-You can replace it with your own. Currently, two themes are available:
+The interface (templates, styles, icons and their translations) lives in a separate Git repository,
+cloned into the ``theme`` folder. That folder is ignored by the main repository: update it from inside it.
+Two themes are available:
 
-- https://github.com/informed-governance-project/default-theme (default theme, used for ILR Luxembourg)
-- https://github.com/informed-governance-project/serimabe-theme (theme for IBPT.be)
+- https://github.com/informed-governance-project/default-theme — the default theme;
+- https://github.com/informed-governance-project/serimabe-theme — the theme of the Belgian instance (IBPT).
 
-If you do not want to use the default theme, do not clone the main repository with the submodule.
+Check out a theme version that matches the application version: a tag of the same release,
+or the matching branch (``main`` with ``main``, ``dev`` with ``dev``).
 
+
+.. _configuration:
 
 Configuration
 `````````````
 
-In the configuration file ``governanceplatform/config.py`` , ensure that you have configured:
+All settings live in ``governanceplatform/config.py``, which is not part of the repository.
+Start from ``governanceplatform/config_dev.py`` and set at least:
 
-- ``PUBLIC_URL``
-- ``ALLOWED_HOSTS``
-- ``OPERATOR_CONTACT`` and ``REGULATOR_CONTACT``
-- ``DATABASES``
-- ``HASH_KEY`` and ``SECRET_KEY``
-- ``DEBUG``: must be set to ``False`` in a production environment
-- ``CSRF_TRUSTED_ORIGINS``
-- ``EMAIL_SENDER``
-- etc.
+- ``SECRET_KEY`` and ``HASH_KEY`` — **your own** keys, see below;
+- ``DEBUG`` — ``False`` in production;
+- ``PUBLIC_URL``, ``ALLOWED_HOSTS`` and, behind a reverse proxy, ``CSRF_TRUSTED_ORIGINS``;
+- ``SITE_NAME`` and ``REGULATOR_CONTACT``;
+- ``DATABASES``;
+- ``EMAIL_HOST``, ``EMAIL_PORT``, ``EMAIL_SENDER``, and ``EMAIL_FOR_CONTACT`` / ``EMAIL_CONTACT_FROM`` for the contact form;
+- ``CELERY_BROKER_URL`` and ``CELERY_RESULT_BACKEND`` — the Redis server;
+- ``COOKIEBANNER``;
+- ``MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER``;
+- ``LANGUAGES``, ``PARLER_LANGUAGES`` and ``PARLER_DEFAULT_LANGUAGE_CODE``.
 
-If ``DEBUG`` is set to ``True`` emails generated by SERIMA won't be sent but
-stored in a dedicated folder at the root of the project.
+``API_ENABLED`` must be present but has no effect: SERIMA has no API yet.
 
-You **must** set **your** secret keys.
+These settings are optional; the application applies a default when they are missing:
 
-Here is an example of the Fernet hash key (``HASH_KEY``):
+- ``PATH_FOR_REPORTING_PDF`` — where generated reports and import/export files are written;
+- ``KALEIDO_CONCURRENCY_PER_WORKER`` — how many charts a Celery worker renders at once (default 1);
+- ``INCIDENT_RETENTION_TIME_IN_DAY`` and ``SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY`` — how long incidents
+  and security objectives declarations are kept (default 1825 days, five years);
+- ``LOG_RETENTION_TIME_IN_DAY`` — how long log entries are kept;
+- ``DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT`` — after how many days without logging in an incident user
+  account that never reported an incident is deleted (default 90);
+- ``TERMS_ACCEPTANCE_TIME_IN_DAYS`` — after how many days users must accept the terms of service again (default 365);
+- ``SESSION_COOKIE_AGE`` — after how many seconds of inactivity users are logged out;
+- ``RT_SECRET_KEY`` — the key encrypting observers' RT tokens (defaults to ``HASH_KEY``).
 
-.. code-block:: bash
+When ``DEBUG`` is ``True``, emails are not sent but written to the ``sent_emails`` folder at the root of the project.
 
-    $ python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key())'
-    b'Xaj5lFGAPiy2Ovzi4YmlWh-s4HHikFV4AswilOPPYN8='
-
-
-For the Django secret key (``SECRET_KEY``), you can for example do:
-
-.. code-block:: bash
-
-    $ python -c 'import secrets; print(secrets.token_hex())'
-    9cf5c7b13e469e6f6a9403b33410589031cfe927df6471a1cbdef1d4deb57c37
-
-
-Create the PlatformAdmin user
------------------------------
+Generate the Fernet key (``HASH_KEY``):
 
 .. code-block:: bash
 
-    $ python manage.py createsuperuser
+    $ python3 -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())'
 
-This user will be able to create RegulatorAmin users via the Web interface
-of SERIMA.
+And the Django secret key (``SECRET_KEY``):
 
-The first PlatformAdmin user will also have to configure the ``domain name``
-and the ``display name`` of the application:
+.. code-block:: bash
 
+    $ python3 -c 'import secrets; print(secrets.token_hex())'
+
+
+Create the first platform administrator
+---------------------------------------
+
+.. code-block:: bash
+
+    $ poetry run python manage.py createsuperuser
+
+Despite its name, in SERIMA this command creates a platform administrator, not a Django superuser
+(superusers cannot use the platform). This account then creates the regulators, their first administrators
+and the rest of the set-up, as described in :doc:`/administration/platform-admin/index`.
+
+It must also configure the ``domain name`` and the ``display name`` of the application in **Sites**:
 
 .. figure:: /_static/images/technical/installation-01.png
    :alt: Django application - Sites configuration.
@@ -151,181 +176,185 @@ and the ``display name`` of the application:
 
    Django application - Sites configuration.
 
-
-This step is essential for ensuring the proper functioning of the platform's email sending,
-such as for password recovery purposes, as well as for generating QR codes for
-two-factor authentication (2FA).
+This step is essential for the links in the emails (password recovery, for instance)
+and for the QR codes of two-factor authentication.
 
 
-Launch the Django application
------------------------------
+Background workers
+------------------
 
-.. code-block:: bash
+Two Celery processes must run alongside the web application, both connected to Redis:
 
-    poetry run python manage.py runserver 127.0.0.1:8000
-
-Of course, do not do that in a production environment.
-
-
-Scheduled tasks
----------------
-
-Configure the cron tasks:
+- the **worker**, which generates the reports and the security objectives exports and imports,
+  and runs the scheduled tasks;
+- **beat**, which triggers the scheduled tasks.
 
 .. code-block:: bash
 
-    0 * * * * cd /<-application-path->/SERIMA/  ; python manage.py runscript workflow_update_status
-    0 * * * * cd /<-application-path->/SERIMA/  ; python manage.py runscript email_reminder
+    $ poetry run celery -A celery_worker worker --loglevel=info
+    $ poetry run celery -A celery_beat beat --loglevel=info
 
-The best is to use the Python executable in the virtual environment.
+Run them as services, for instance with systemd:
+
+.. code-block:: ini
+
+    # /etc/systemd/system/serima-celery-worker.service
+    [Unit]
+    Description=SERIMA Celery worker
+    After=network.target redis-server.service postgresql.service
+
+    [Service]
+    User=<user>
+    WorkingDirectory=/home/<user>/SERIMA
+    ExecStart=/home/<user>/.local/bin/poetry run celery -A celery_worker worker --loglevel=info
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+
+Create ``serima-celery-beat.service`` the same way, with ``celery -A celery_beat beat``,
+then enable both with ``sudo systemctl enable --now serima-celery-worker serima-celery-beat``.
+
+Celery beat triggers these tasks (times in the server's time zone):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 20 50
+
+   * - Task
+     - When
+     - What it does
+   * - ``email_reminder``
+     - Every hour
+     - Sends the reminders configured on the incident workflows.
+   * - ``workflow_update_status``
+     - Every hour
+     - For ongoing incidents, sends the workflow's "report status changed" email when an unsubmitted report
+       reaches the configured delay past its deadline.
+   * - ``incident_cleaning``
+     - Daily, 20:30
+     - Deletes incidents older than ``INCIDENT_RETENTION_TIME_IN_DAY``.
+   * - ``log_cleaning``
+     - Daily, 21:00
+     - Deletes log entries older than ``LOG_RETENTION_TIME_IN_DAY``.
+   * - ``unactive_account_cleaning``
+     - Daily, 22:00
+     - Deletes incident user accounts that were never activated, once their set-password link has expired.
+   * - ``clean_incident_user``
+     - Daily, 23:00
+     - Deletes incident user accounts that never reported an incident, after
+       ``DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT`` days (default 90) without logging in.
+   * - ``so_declarations_cleaning``
+     - Daily, 23:30
+     - Deletes security objectives declarations older than ``SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY``.
+
+No cron job is needed.
 
 
-Apache
-------
-
-The ``mod_wsgi`` package provides an Apache module that implements a WSGI compliant
-interface for hosting Python-based web applications on top of the Apache web
-server. Install Apache and this module.
-
+Try it locally
+--------------
 
 .. code-block:: bash
 
-        $ sudo apt install apache2 libapache2-mod-wsgi-py3
+    $ poetry run python manage.py runserver 127.0.0.1:8000
+
+The development server is for local testing only; never use it in production.
 
 
-.. note::
+Production web server
+---------------------
 
-    Only do this if you cannot use the version of mod_wsgi provided by your GNU/Linux distribution:
+Serve the application with Gunicorn behind a reverse proxy, as the Docker image does:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        $ sudo apt install apache2 apache2-dev # apxs2
-        $ wget https://github.com/GrahamDumpleton/mod_wsgi/archive/refs/tags/5.0.0.tar.gz
-        $ tar -xzvf 5.0.0.tar.gz
-        $ cd mod_wsgi-5.0.0/
-        $ ./configure --with-apxs=/usr/bin/apxs2 --with-python=/home/<user>/.pyenv/shims/python
-        $ make
-        $ sudo make install
+    $ poetry run gunicorn governanceplatform.wsgi --workers 4 --bind 127.0.0.1:8000
+
+or with Apache and ``mod_wsgi``, described below. For the next steps you need a valid domain name.
 
 
-    Then in ``/etc/apache2/apache2.conf`` add the lines:
+Apache with mod_wsgi
+````````````````````
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        LoadFile /home/<user>/.pyenv/versions/3.11.0/lib/libpython3.11.so
-        LoadModule wsgi_module /usr/lib/apache2/modules/mod_wsgi.so
+    $ sudo apt install apache2 libapache2-mod-wsgi-py3
 
+``libapache2-mod-wsgi-py3`` is built against the distribution's Python; on Ubuntu 26.04 LTS that is Python 3.14.
+On a distribution with an older Python, build ``mod_wsgi`` against Python 3.14 instead (``pip install mod_wsgi``).
 
-    Restart Apache:
+Find the virtual environment Poetry created:
 
-    .. code-block:: bash
+.. code-block:: bash
 
-        sudo systemctl restart apache2.service
-
-
-
-For the next steps you must have a valid domain name.
+    $ poetry env info --path
 
 
-Example of VirtualHost configuration file
-`````````````````````````````````````````
+Example of VirtualHost configuration files
+``````````````````````````````````````````
 
-VirtualHost for a reverse proxy server:
-
+Reverse proxy, terminating HTTPS:
 
 .. code-block:: apacheconf
 
     <VirtualHost *:80>
-        ServerAdmin info@incidents.serima.lu
-        ServerName incidents.serima.lu
-
-        DocumentRoot /var/www/html
+        ServerName incidents.example.org
         RewriteEngine on
         RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
     </VirtualHost>
 
     <VirtualHost *:443>
-        ServerAdmin info@incidents.serima.lu
-        DocumentRoot /var/www/html
-        ServerName incidents.serima.lu
+        ServerName incidents.example.org
 
-        # main configuration
         RewriteEngine On
         RewriteCond %{REQUEST_METHOD} !^(GET|POST|PUT|PATCH|DELETE|HEAD)
         RewriteRule .* - [R=405,L]
 
-        SSLProxyEngine On
         ProxyPreserveHost On
         ProxyTimeout 1800
-
-        CustomLog ${APACHE_LOG_DIR}/incidents.serima.lu_access.log combined
-        ErrorLog ${APACHE_LOG_DIR}/incidents.serima.lu_error.log
+        RequestHeader set X-Forwarded-Proto "https"
 
         SSLEngine on
-        SSLCertificateFile /etc/ssl/private/incidents_serima_lu/incidents_serima_lu.cer
-        SSLCertificateChainFile /etc/ssl/private/incidents_serima_lu/incidents_serima_lu_interm.cer
-        SSLCertificateKeyFile /etc/ssl/private/incidents_serima_lu/incidents.serima_lu.key
+        SSLCertificateFile /etc/letsencrypt/live/incidents.example.org/fullchain.pem
+        SSLCertificateKeyFile /etc/letsencrypt/live/incidents.example.org/privkey.pem
 
-        ProxyPass / http://web01.private.serima.lu/
-        ProxyPassReverse / http://web01.private.serima.lu/
+        ProxyPass / http://app.internal.example.org/
+        ProxyPassReverse / http://app.internal.example.org/
+
+        CustomLog ${APACHE_LOG_DIR}/incidents_access.log combined
+        ErrorLog ${APACHE_LOG_DIR}/incidents_error.log
     </VirtualHost>
 
-
-Then configure HTTPS properly. If you want to use Let's Encrypt:
-
-.. code-block:: bash
-
-    sudo apt install certbot python3-certbot-apache
-    sudo certbot certonly --standalone -d incidents.serima.lu
-    sudo a2enmod rewrite
-    sudo systemctl restart apache2.service
-
-Verify that the certificate will be automatically updated:
+To obtain the certificate with Let's Encrypt:
 
 .. code-block:: bash
 
-    $ cat /etc/letsencrypt/renewal/incidents.serima.lu.conf
-    # Options used in the renewal process
-    [renewalparams]
-    account = <-account-id->
-    authenticator = apache
-    server = https://acme-v02.api.letsencrypt.org/directory
+    $ sudo apt install certbot python3-certbot-apache
+    $ sudo certbot certonly --apache -d incidents.example.org
+    $ sudo a2enmod ssl rewrite proxy proxy_http headers
+    $ sudo systemctl restart apache2.service
 
-
-
-VirtualHost for the application:
+The application, with ``mod_wsgi``:
 
 .. code-block:: apacheconf
 
     <VirtualHost *:80>
-        ServerName web01.private.serima.lu
-        ServerAdmin info@incidents.serima.lu
+        ServerName app.internal.example.org
 
-        WSGIDaemonProcess serima python-path=/home/USER/SERIMA:/home/USER/.cache/pypoetry/virtualenvs/governanceplatform-AGxECetm-py3.10/lib/python3.10/site-packages/
+        WSGIDaemonProcess serima python-home=<virtualenv-path> python-path=/home/<user>/SERIMA
         WSGIProcessGroup serima
-        WSGIScriptAlias / /home/USER/SERIMA/governanceplatform/wsgi.py
+        WSGIApplicationGroup %{GLOBAL}
+        WSGIScriptAlias / /home/<user>/SERIMA/governanceplatform/wsgi.py
 
-        <Directory "/home/USER/SERIMA/governanceplatform/">
-            <Files "wsgi.py">
+        <Directory /home/<user>/SERIMA/governanceplatform>
+            <Files wsgi.py>
                 Require all granted
             </Files>
-            WSGIApplicationGroup %{GLOBAL}
-            WSGIPassAuthorization On
-
-            Options Indexes FollowSymLinks
-            Require all granted
         </Directory>
 
-        Alias /static /home/USER/SERIMA/governanceplatform/static
-        <Directory /home/USER/SERIMA/static>
-            Require all granted
-        </Directory>
-
-        # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
-        # error, crit, alert, emerg.
-        # It is also possible to configure the loglevel for particular
-        # modules, e.g.
         LogLevel warn
-        CustomLog ${APACHE_LOG_DIR}/incidents.serima.lu_access.log combined
-        ErrorLog ${APACHE_LOG_DIR}/incidents.serima.lu_error.log
+        CustomLog ${APACHE_LOG_DIR}/serima_access.log combined
+        ErrorLog ${APACHE_LOG_DIR}/serima_error.log
     </VirtualHost>
+
+Static files are served by the application (WhiteNoise), so no ``Alias /static`` is needed.

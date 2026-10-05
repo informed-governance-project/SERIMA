@@ -4,48 +4,45 @@ Prerequisites
 Software
 --------
 
-Generally speaking, the requirements are the following:
+- A GNU/Linux distribution. Tested on Ubuntu 26.04 LTS, which is also the base image of the official Docker image.
+- Python 3.14 or later.
+- PostgreSQL, for persistent storage. Tested with PostgreSQL 18.
+- Redis, as the message broker of the background workers (Celery).
+- Node.js 24 and npm 11, to install the front-end assets.
+- An outgoing email server (Postfix or equivalent), for notifications, reminders and password resets.
+- A web server: Gunicorn, or Apache with ``mod_wsgi``, behind Apache or Nginx as a reverse proxy.
 
-- A GNU/Linux distribution. Tested on Ubuntu 26.04 LTS, which is also the base
-  image of the official Docker image;
-- Python version >= 3.14. Tested with Python 3.14;
-- A PostgreSQL server for persistent storage. Tested with PostgreSQL 18.4;
-- An email server — outgoing email;
-- A cron daemon — scheduled tasks.
+Ubuntu 26.04 LTS provides Python 3.14 as its default interpreter. On distributions that ship an older one
+— Debian Bookworm (3.11) or Ubuntu 22.04 LTS (3.10), for instance — install Python 3.14 separately,
+either from the deadsnakes PPA or with ``pyenv install 3.14``.
 
-Ubuntu 26.04 LTS provides Python 3.14 as its default interpreter. On
-distributions that ship an older one — Debian Bookworm (3.11) or Ubuntu 22.04
-LTS (3.10), for instance — install Python 3.14 separately, either from the
-deadsnakes PPA or with ``pyenv install 3.14``.
+The reporting module needs two more pieces of software, both listed in :doc:`installation`:
 
-Postfix, or an equivalent software, is required for the email notifications.
+- LibreOffice, to update the table of contents of the generated DOCX reports and convert them to PDF;
+- Chrome, which Kaleido drives to render the report charts, with the system libraries it depends on.
 
-For the Web server you can use Gunicorn, uWSGI, Apache or Nginx.
+The official Docker image includes both.
+
+Instead of installing all of this by hand, you can run the official Docker images: see :doc:`docker`.
 
 
 Hardware
 --------
 
-The Django application is designed to operate efficiently, and it can run
-seamlessly on a Raspberry Pi when paired with Gunicorn and either Nginx or
-Apache to handle request proxying. It is advisable to allocate ample memory
-and disk space, particularly for the database, especially when it shares the
-same server. This proactive approach ensures smoother performance and
-mitigates potential resource constraints.
+A server with the following resources runs the platform comfortably,
+with the database on the same machine:
 
-A decent configuration for a server would be:
+- 4 vCPU;
+- 4 GB of RAM;
+- 20 GB of disk.
 
-- number of vCPU: 4;
-- RAM (GB): 4;
-- HDD (GB): 20.
-
-The application will function seamlessly with these settings.
-Moreover, these values are relatively low when considering the capacity of
-modern servers.
+Report generation is the most demanding task: each chart render starts a Chromium process.
+Allow more memory if many reports are generated at once,
+and cap the renders per worker with ``KALEIDO_CONCURRENCY_PER_WORKER`` (see :doc:`installation`).
 
 
 Network
 -------
 
-The deployment on the different servers requires an Internet connection since
-the updates are retrieved from the GitHub repository.
+Installing and updating the platform requires access to GitHub, PyPI and npm,
+from which the application, the theme and their dependencies are retrieved.
