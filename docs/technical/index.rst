@@ -1,5 +1,5 @@
-Overview
-========
+Technical guide
+===============
 
 For the people who install, update and maintain a SERIMA instance, and for those who work on its code.
 
