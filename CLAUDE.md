@@ -54,7 +54,8 @@ make run          # dev server
 make migrate      # apply migrations
 make migration    # create new migrations
 make superuser    # create admin user
-make update       # install deps + collectstatic + compilemessages + migrate
+make permissions  # update_group_permissions — sync GROUP_PERMISSIONS to the groups
+make update       # install deps + collectstatic + compilemessages + migrate + update_group_permissions
 ```
 
 ## Configuration
@@ -289,7 +290,7 @@ Templates use Bootstrap 5. When adding or modifying UI components:
 | Change middleware order | `governanceplatform/settings.py` → `MIDDLEWARE` list |
 | Add a Celery task | the `tasks.py` of the app concerned |
 | Gate a feature per role and regulator | `governanceplatform/globals.py` → `FUNCTIONALITIES` and `FUNCTIONALITY_ELIGIBLE_ROLES`, checked by `User.get_module_permissions()`; keep `RestrictViewsMiddleware` in step |
-| Change group permissions | `governanceplatform/permissions.py` → `GROUP_PERMISSIONS`, then run `manage.py update_group_permissions` |
+| Change group permissions | `governanceplatform/permissions.py` → `GROUP_PERMISSIONS`, then run `make permissions` (`manage.py update_group_permissions`) |
 | Generate model diagram | `make models` |
 
 ## Changelog
