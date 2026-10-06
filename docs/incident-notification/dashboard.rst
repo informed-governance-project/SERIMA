@@ -1,139 +1,110 @@
 Dashboard
 ----------------------------------
 One of the main functions of this platform is to allow you to report incidents.
-You can begin the process by either clicking the **Modules** drop-down menu and selecting
-**Incident notification** or by clicking the **Go to Dashboard** button of the **Incident notification** tile in the center of the screen.
+You can begin the process by either clicking the :ref:`module selector <module-selector>` and selecting
+**Incident notification** or by clicking the **Go to dashboard** button of the **Incident notification** tile in the center of the screen.
 
 .. figure:: /_static/images/incident-notification/dashboard-01.png
-   :alt: Incident notification module
+   :alt: Incident notification tile on the homepage
    :target: ../_static/images/incident-notification/dashboard-01.png
 
 Either way, you will get to the Incident notification dashboard, where you can see the overview of the reported incidents.
 The incident notification dashboard is a central screen where you can manage all your reported incidents.
+Which incidents it lists depends on your role: operators see the incidents of their operator, regulators the incidents
+notified to them, and observers the incidents forwarded to their organisation (see :doc:`/getting-started/roles-and-permissions`).
 
 Due to the complexity of the screen, its different parts will be presented one by one, with numbered sections describing the functionality of each.
 
 .. figure:: /_static/images/incident-notification/dashboard-02.png
-   :alt: Overview of reported incidents
+   :alt: Incident notification dashboard with its parts numbered
    :target: ../_static/images/incident-notification/dashboard-02.png
 
-1.	**Overview**: By clicking the **Overview** link in the top-right corner, you can return to the landing page of the Incident Notification dashboard, which displays an overview of the reported incidents.
-2.	**Notify an incident**: Click the red **Notify an Incident** button to report an incident. This will take you to the **Report an Incident** page.
+1. **Overview**: By clicking the **Overview** link in the top-right corner, you can return to the landing page of the Incident notification dashboard, which displays an overview of the reported incidents.
 
-.. figure:: /_static/images/incident-notification/dashboard-03.png
-   :alt: Report an Incident
-   :target: ../_static/images/incident-notification/dashboard-03.png
+2. **Notify an incident**: Click the red **Notify an incident** button to report an incident. This will take you to the **Report an incident** page, described in the :doc:`report-an-incident` chapter.
 
-This screen will be described in detail in the “Report an incident” chapter.
+3. **Search**: The search field is the quickest way to find an incident when there are many of them.
+   It looks for the text you enter in the incident reference, the contact and technical contact names, the operator, the regulator, the regulation and the sectors.
 
-3.	**Search**: The search function can be very useful if there are many incidents and you want to filter among them
-according to different aspects to find the incident you are looking for.
+4. **Filter**: The **Filter** button opens a panel where you can narrow the list down with the following fields:
 
-4.	**Filter**: You can search among your incidents by **Incident ID**, **Incident status** (Closed, or Ongoing), **Significant impact**
-(Unknown, Yes, or No), and **Impacted sectors** (a list of available options appears).
+   - **Incident Reference**: Shows only the incidents whose reference contains the text you enter.
+   - **Incident status**: Shows only the **Ongoing** or only the **Closed** incidents.
+   - **Significant impact**: Shows only the incidents with (**Yes**) or without (**No**) a significant impact. **Unknown**, the default, shows all incidents.
+   - **Sectors**: Shows only the incidents affecting the sectors you tick in the drop-down list.
 
-.. figure:: /_static/images/incident-notification/dashboard-04.png
-   :alt: Filter
-   :target: ../_static/images/incident-notification/dashboard-04.png
+   Click **Search** to apply the filter, or **Reset** to clear it.
 
-You can filter among all your incidents, and the filter can be used with the following search fields:
-    •	**Incident ID contains**: This is a free-word search engine that can be used to search among incident identifiers by character strings.
-    •	**Incident status**: The Incident status is a Boolean data type; it can take only two values: “Closed” or “On-going”.
+   For example, if you select **Yes** under **Significant impact** and click **Search**,
+   the list shows only the incidents marked as having a significant impact
+   (indicated by a white exclamation mark on a red hexagon in the **Status** column).
+   While a filter is applied, the **Filter** button shows the label **(Active)**.
 
-    •	**Significant impact**: This field filters by Significant Impact, which can have two possible values: “Yes” or “No”.
-By default, the value is set to Unknown, meaning that all incidents are shown in the list.
-    •	**Impacted sectors**: you can search among the affected sectors here by clicking on the down-pointing arrow (a list of possible sectors appears, so you can search for a specific sector).
+   .. note::
 
-For example, if you click the drop-down menu under **Significant Impact**, select **Yes**, and then click **Search**,
-the incident list will refresh to show only incidents marked as having a significant impact
-(indicated by a white exclamation mark on a red hexagon in the **Status** column).
+      The search, the filter and the sort order are kept until you log out, even if you leave the dashboard.
+      If the list looks incomplete, check whether the **Filter** button shows **(Active)**, and click **Reset** to see all incidents again.
 
-Additionally, the **Filter** button will update to show the label **Active** in parentheses.
-In the screenshot below, the mentioned parts are marked with red arrows:
+5. **Icon guide**: The Icon guide is represented by a book-shaped icon labeled **AZ**.
+   Clicking this icon displays the legend above the incident list.
 
-.. figure:: /_static/images/incident-notification/dashboard-05.png
-   :alt: Filter
-   :target: ../_static/images/incident-notification/dashboard-05.png
+   .. figure:: /_static/images/incident-notification/dashboard-03.png
+      :alt: Legend shown by the icon guide
+      :target: ../_static/images/incident-notification/dashboard-03.png
 
-5.	**Icon guide**: The Icon Guide is represented by a book-shaped icon labeled **AZ**.
-Clicking this icon displays the legend above the incident report list (highlighted in yellow in the screenshot below).
+   The first part of the legend explains the icons of the **Status** column: whether the incident has a significant impact, and whether it is ongoing or closed.
+   The second part explains the status of each report in the **Report** column: unsubmitted, under review, submission overdue, late submission, revision required or passed.
+   You can hide the legend by clicking the Icon guide again.
+   How a report moves from one status to the next is described in the :doc:`operator` and :doc:`regulator` chapters.
 
-.. figure:: /_static/images/incident-notification/dashboard-06.png
-   :alt: Icon guide
-   :target: ../_static/images/incident-notification/dashboard-06.png
+6. **Columns and sorting**: On the dashboard, reported incidents are displayed in a table with the following headers by default:
+   **Status, Last update, Creation date, Regulator, Regulation, Sectors, Report**, and **Actions**.
 
-These legends appear in the Status column on the far left of the incident list.
-By looking at the status of the incident, you can have a quick overview of the incident.
-You can hide the legend by clicking the Icon guide again.
+   Except for the **Report** and **Actions** columns, each column has an up-and-down arrow beside its header.
+   Clicking the header sorts the incidents in ascending or descending order based on that column.
+   Only one column can be sorted at a time, and its arrow is shown in a darker grey.
+   By default, the list is sorted by **Last update**, with the most recently updated incident at the top.
+   Each column is described in the :doc:`reported-incidents` chapter.
 
-6.	**Column headers**: On the dashboard, reported incidents are displayed in a table with the following headers:
-**Status, Creation Date, Regulator, Regulation, Reference, Sectors, Report**, and **Actions** (highlighted in yellow in the screenshot below).
+7. **Column settings**: To hide a column or change which columns are shown, click the **Column settings** icon, which is a white gear icon on a red background.
 
-.. figure:: /_static/images/incident-notification/dashboard-07.png
-   :alt: Column headers
-   :target: ../_static/images/incident-notification/dashboard-07.png
+   Clicking the icon opens the **Choice of columns** pop-up, showing all available columns. A checkmark in front of a column name indicates that the column is currently displayed. To hide a column, remove the checkmark next to its name; the column disappears from the dashboard immediately.
+   Besides the default columns, you can display the **Reference**, **Detection date**, **Start date** and **Resolution date** columns.
 
-Except for the **Report** and **Actions** columns, each column has an up-and-down arrow on its right edge.
-Clicking the arrow sorts the incidents in ascending or descending order based on that column.
-The active sort is indicated by the arrow appearing bold.
+   .. note::
 
-Only one sorting aspect can be active at a time, and the active aspect is shown by a darker grey triangle.
-As shown in the screenshot below, the two incidents are sorted by **Creation Date** in descending order, with the most recent incident at the top and the earlier one below.
+      Your choice of columns is saved in your web browser, not in your account.
+      On another computer or browser, or after clearing your browser data, the dashboard shows the default columns again.
 
-.. figure:: /_static/images/incident-notification/dashboard-08.png
-   :alt: Column sorting
-   :target: ../_static/images/incident-notification/dashboard-08.png
+   .. figure:: /_static/images/incident-notification/dashboard-04.png
+      :alt: Choice of columns
+      :target: ../_static/images/incident-notification/dashboard-04.png
 
-7.	**Column settings**: By default, all columns listed in point six are displayed on the dashboard. To hide a column or change which columns are shown, click the **Column Settings** icon, which is a white gear icon on a red background. Hovering your mouse over the icon displays the tooltip **Column Settings**.
+8. **Version control**: For each submitted report, version control shows when the report was changed and the status of each version.
+   Its icon is beside the report name in the **Report** column.
 
-.. figure:: /_static/images/incident-notification/dashboard-09.png
-   :alt: Column settings
-   :target: ../_static/images/incident-notification/dashboard-09.png
+   Clicking the icon opens the **Version control** pop-up. At the top, you will see the name of the report and the reference of the incident.
+   Below that, each version is listed with its date, its status, and action icons to read the regulator's comment, view the version, or download it as a PDF document.
+   The review of a report by the regulator is described in the :doc:`regulator` chapter.
 
-Clicking the icon opens the **Choice of Columns** pop-up, showing all available columns. A checkmark in front of a column name indicates that the column is currently displayed. To hide a column, simply remove the checkmark next to the relevant column name.
+   .. figure:: /_static/images/incident-notification/dashboard-05.png
+      :alt: Version control pop-up
+      :target: ../_static/images/incident-notification/dashboard-05.png
 
-.. figure:: /_static/images/incident-notification/dashboard-10.png
-   :alt: Choice of columns
-   :target: ../_static/images/incident-notification/dashboard-10.png
+9. **More options and access log**: The **More options** icon (three dots) in the **Actions** column opens a menu with further actions on the incident.
+   For operators, it holds the **Access Log**, which displays all activities that occurred during the incident's lifecycle.
 
-For example, if most incidents you report are related to the same sector, displaying the Sectors column may not be necessary. Hiding it can make the incident list on the dashboard cleaner and easier to understand. Once you uncheck a checkbox, the relevant column immediately disappears from the dashboard.
+   Clicking **Access Log** opens the log. At the top, you can see the reference of the incident, and below it, a table with the columns **Date, User, Role, Document**, and **Action**.
+   Regulators also see an **Entity** column. You can sort the table by clicking a column header; in the example below, the log is sorted by **Date**, from the oldest entry to the newest.
 
-In the example below, the **Regulator**, **Regulation**, and **Sectors** columns were hidden (since the values were always ILR as the regulator, NIS as the regulation, and Digital Infrastructure as the sector). As a result, only the columns with varying values remain visible:
+   .. note::
 
-.. figure:: /_static/images/incident-notification/dashboard-11.png
-   :alt: Choice of columns
-   :target: ../_static/images/incident-notification/dashboard-11.png
+      Operators see only the actions of their own users in the log. When the regulator or an observer opens,
+      reviews or downloads a report, the entry appears in the regulator's log but not in the operator's.
 
-8.	**Version control**: For each reported incident, version control shows when changes occurred and what was updated in the relevant report. If you hover your mouse over the **Version control** icon (highlighted in yellow in the screenshot below), a tooltip labeled **Version control** appears.
+   .. figure:: /_static/images/incident-notification/dashboard-06.png
+      :alt: Access log sorted by date
+      :target: ../_static/images/incident-notification/dashboard-06.png
 
-.. figure:: /_static/images/incident-notification/dashboard-12.png
-   :alt: Version control
-   :target: ../_static/images/incident-notification/dashboard-12.png
-
-Clicking the icon opens the Version Control pop-up. At the top, you will see the name of the reported incident (taken from the **Reference** column). Below that, you can view the date or dates on which actions occurred, the status to which the report was changed, and two action buttons. These buttons allow you to either review the report or download it as a PDF document.
-
-.. figure:: /_static/images/incident-notification/dashboard-13.png
-   :alt: Version control
-   :target: ../_static/images/incident-notification/dashboard-13.png
-
-If you click **Review**, you will return to the report itself, where you can make edits. Downloading a report can be useful for several reasons. The most common reason is the ability to share its contents with someone else, including individuals who do not have access to the platform.
-
-9.	**Access log**: For each reported incident, the access log displays all activities that occurred during the incident's lifecycle. If you hover your mouse over the **Log** icon (highlighted in yellow in the screenshot below), a tooltip labeled **Access log** will appear.
-
-.. figure:: /_static/images/incident-notification/dashboard-14.png
-   :alt: Version control
-   :target: ../_static/images/incident-notification/dashboard-14.png
-
-Clicking the icon opens the log. At the top, you can see the name of the report (taken from the **Reference** column), and below it, a table with the columns **Date, User, Role, Document**, and **Action**. You can sort the columns by clicking the up- or down-pointing arrows beside each column header.
-
-In the example below, the **Date** column is sorted chronologically from oldest to newest (indicated by the upward-pointing arrow highlighted in yellow). This allows you to see the earliest record at the top and follow, step by step, on which day which user (and in what role) performed what action on which document.
-
-.. figure:: /_static/images/incident-notification/dashboard-15.png
-   :alt: Access log
-   :target: ../_static/images/incident-notification/dashboard-15.png
-
-10.	**Download PDF report**: For each reported incident, you have the option to download it as a PDF report. If you hover your mouse over the **PDF** icon (highlighted in yellow in the screenshot below), a tooltip will appear. You can download the report by clicking the **Download PDF report** button.
-
-.. figure:: /_static/images/incident-notification/dashboard-16.png
-   :alt: Download PDF report
-   :target: ../_static/images/incident-notification/dashboard-16.png
+10. **Download PDF report**: Click the **PDF** icon in the **Actions** column to download the whole incident, with all its reports, as a PDF document.
+    To download a single report instead, use the small PDF icon beside the report in the **Report** column.
