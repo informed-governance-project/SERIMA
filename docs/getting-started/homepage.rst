@@ -30,11 +30,16 @@ On the homepage, you will find the following main functionalities (as numbered i
 
    - **Security**: The Security menu takes you to the Account Security screen,
      where you can generate backup tokens for account access and enable or disable
-     (This is strongly not recommended) two-factor authentication (see :doc:`enable-2fa`).
+     two-factor authentication (see :doc:`enable-2fa`).
+
+     .. warning::
+
+        Do not disable two-factor authentication: without it, your password alone protects
+        the sensitive incident data your account can access.
 
    - **Password**: If you select the **Password** menu, you will need to log in again and provide your token to access the **Change Password** screen.
      There, you can update your password. You must enter your current password and then type your new password twice
-     (Please make sure to follow the :ref:`password requirements <password-requirements>`).
+     (it must follow the :ref:`password requirements <password-requirements>`).
 
      .. figure:: /_static/images/getting-started/homepage-04.png
         :alt: Change password form
@@ -44,16 +49,20 @@ On the homepage, you will find the following main functionalities (as numbered i
 
 4. **Contact**: Click the envelope icon to open the Contact form, through which you can send a message to the platform's support team.
 
-     .. figure:: /_static/images/getting-started/homepage-05.png
-        :alt: Contact form
-        :target: ../_static/images/getting-started/homepage-05.png
+   .. figure:: /_static/images/getting-started/homepage-05.png
+      :alt: Contact form
+      :target: ../_static/images/getting-started/homepage-05.png
 
 5. **Language selector**: In the top right-hand corner, you can switch between English (**EN**), French (**FR**), Dutch (**NL**), and German (**DE**).
 6. **Incident notification**: Use this module to report cybersecurity incidents to the competent authority (see :doc:`/incident-notification/index`).
 7. **Security objectives**: A self-assessment module to fulfill security objectives evaluation and provide evidence for security measures in place
    (see :doc:`/security-objectives/index`).
 
-The modules shown depend on your role and on what your regulator has enabled.
+.. note::
+
+   The modules shown depend on your role and on what your regulator has enabled.
+
+.. _module-selector:
 
 Module selector
 ~~~~~~~~~~~~~~~

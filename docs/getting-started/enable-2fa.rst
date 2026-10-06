@@ -57,8 +57,15 @@ Backup tokens
 
 Backup tokens are one-time codes you can use instead of the token from your authenticator,
 for example when your smartphone is not at hand. Generate them from **Security** in the account menu
-(see :doc:`homepage`), and keep them somewhere safe: each one works only once.
+(see :doc:`homepage`).
+
 At login, click **Use backup token** on the token step and enter one of them.
+
+.. important::
+
+   Keep your backup tokens somewhere safe, away from your smartphone: they are your way back into your account
+   if you lose it. Each token works only once.
+
 
 Lost your smartphone?
 ~~~~~~~~~~~~~~~~~~~~~

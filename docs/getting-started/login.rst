@@ -28,7 +28,10 @@ Choose your operator
 
 If your account belongs to more than one operator, the platform asks which one you want to work for.
 Select it and click **Select**; everything you then do applies to that operator.
-To switch to another operator, log out and log in again.
+
+.. note::
+
+   To switch to another operator, log out and log in again.
 
 .. figure:: /_static/images/getting-started/login-04.png
    :alt: Page asking to select one of the operators the account is linked to
@@ -45,8 +48,12 @@ Enter the email address of your account, answer the captcha and click **Reset pa
    :target: ../_static/images/getting-started/login-05.png
 
 The platform sends you an email with a link to choose a new password, which must follow the
-:ref:`password requirements <password-requirements>`. If it does not arrive within a few minutes,
-check your spam folder and that you used the address your account is registered with.
+:ref:`password requirements <password-requirements>`.
+
+.. tip::
+
+   If the email does not arrive within a few minutes, check your spam folder
+   and that you used the address your account is registered with.
 
 .. figure:: /_static/images/getting-started/login-06.png
    :alt: Confirmation that the password reset email has been sent

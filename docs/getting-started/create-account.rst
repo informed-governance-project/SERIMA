@@ -35,10 +35,12 @@ you can then log in with your email address and that password (see :doc:`login`)
 
 .. _password-requirements:
 
-**Please note that the following password restrictions apply:**
+.. important::
 
-- Your password can't be too similar to your other personal information.
-- Your password must contain at least 12 characters.
-- Your password can't be a commonly used password.
-- Your password can't be entirely numeric.
-- Your password must differ from your current password and from your last 24 passwords.
+   Your password must follow these rules:
+
+   - It can't be too similar to your other personal information.
+   - It must contain at least 12 characters.
+   - It can't be a commonly used password.
+   - It can't be entirely numeric.
+   - It must differ from your current password and from your last 24 passwords.
