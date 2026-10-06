@@ -97,23 +97,26 @@ ANNOTATION_JS = """
     }
 
     if (!item.arrow) continue;
+    // `length = 0` drops the arrow and sets the label right beside the element,
+    // for controls packed too tightly for arrows to clear one another.
+    const len = item.length ?? LEN;
 
     const horizontal = item.arrow === 'left' || item.arrow === 'right';
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('width', horizontal ? LEN : 24);
-    svg.setAttribute('height', horizontal ? 24 : LEN);
-    // Coordinates run from the tail (0) to the tip (LEN), then the whole SVG is
+    svg.setAttribute('width', horizontal ? len : 24);
+    svg.setAttribute('height', horizontal ? 24 : len);
+    // Coordinates run from the tail (0) to the tip (len), then the whole SVG is
     // flipped for the arrows that point back towards the element.
     const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     const head = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
     if (horizontal) {
       line.setAttribute('x1', 2); line.setAttribute('y1', 12);
-      line.setAttribute('x2', LEN - 12); line.setAttribute('y2', 12);
-      head.setAttribute('points', `${LEN},12 ${LEN - 14},5 ${LEN - 14},19`);
+      line.setAttribute('x2', len - 12); line.setAttribute('y2', 12);
+      head.setAttribute('points', `${len},12 ${len - 14},5 ${len - 14},19`);
     } else {
       line.setAttribute('x1', 12); line.setAttribute('y1', 2);
-      line.setAttribute('x2', 12); line.setAttribute('y2', LEN - 12);
-      head.setAttribute('points', `12,${LEN} 5,${LEN - 14} 19,${LEN - 14}`);
+      line.setAttribute('x2', 12); line.setAttribute('y2', len - 12);
+      head.setAttribute('points', `12,${len} 5,${len - 14} 19,${len - 14}`);
     }
     const halo = line.cloneNode();
     halo.setAttribute('stroke', '#fff');
@@ -131,11 +134,11 @@ ANNOTATION_JS = """
     if (item.arrow === 'bottom') svg.style.transform = 'scaleY(-1)';
 
     let arrowLeft, arrowTop;
-    if (item.arrow === 'left') { arrowLeft = box.left - GAP - LEN; arrowTop = box.cy - 12; }
+    if (item.arrow === 'left') { arrowLeft = box.left - GAP - len; arrowTop = box.cy - 12; }
     else if (item.arrow === 'right') { arrowLeft = box.right + GAP; arrowTop = box.cy - 12; }
-    else if (item.arrow === 'top') { arrowLeft = box.cx - 12; arrowTop = box.top - GAP - LEN; }
+    else if (item.arrow === 'top') { arrowLeft = box.cx - 12; arrowTop = box.top - GAP - len; }
     else { arrowLeft = box.cx - 12; arrowTop = box.bottom + GAP; }
-    place(svg, arrowLeft, arrowTop);
+    if (len > 0) place(svg, arrowLeft, arrowTop);
 
     if (!item.label) continue;
     const label = document.createElement('div');
@@ -146,9 +149,9 @@ ANNOTATION_JS = """
     place(label, 0, 0);
     const width = label.offsetWidth, height = label.offsetHeight;
     if (item.arrow === 'left') { label.style.left = `${arrowLeft - 8 - width}px`; label.style.top = `${box.cy - height / 2}px`; }
-    else if (item.arrow === 'right') { label.style.left = `${arrowLeft + LEN + 8}px`; label.style.top = `${box.cy - height / 2}px`; }
+    else if (item.arrow === 'right') { label.style.left = `${arrowLeft + len + 8}px`; label.style.top = `${box.cy - height / 2}px`; }
     else if (item.arrow === 'top') { label.style.left = `${box.cx - width / 2}px`; label.style.top = `${arrowTop - 8 - height}px`; }
-    else { label.style.left = `${box.cx - width / 2}px`; label.style.top = `${arrowTop + LEN + 8}px`; }
+    else { label.style.left = `${box.cx - width / 2}px`; label.style.top = `${arrowTop + len + 8}px`; }
   }
 }
 """
@@ -354,6 +357,8 @@ def run_steps(page: Page, steps: list[dict[str, Any]], creds: tuple[str, str] | 
             page.fill(step["selector"], value)
         elif action == "select":
             page.select_option(step["selector"], label=step["value"])
+        elif action == "hover":
+            page.hover(step["selector"])
         elif action == "press":
             page.press(step["selector"], step["key"])
         elif action == "totp":

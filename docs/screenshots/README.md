@@ -117,7 +117,7 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | `role` | which credentials to log in with beforehand; omit for anonymous pages |
 | `credentials_from` | a role whose credentials `fill` steps can type as `${username}` / `${password}` |
 | `fresh` | use a new browser context for this shot alone, and close it afterwards |
-| `steps` | `click` / `fill` / `select` / `press` / `totp` / `delete_totp` / `captcha` / `wait_for` / `wait_ms` actions run after navigation |
+| `steps` | `click` / `fill` / `select` / `hover` / `press` / `totp` / `delete_totp` / `captcha` / `wait_for` / `wait_ms` actions run after navigation |
 | `email` | `true` to capture the last email the instance sent instead of a page; `path` is then not needed |
 | `selector` | capture just this element instead of the viewport |
 | `full_page` | capture the whole scroll height |
@@ -201,7 +201,10 @@ elements at once — that is how the two credential fields get a single outline.
 
 `arrow` is `left`, `right`, `top` or `bottom` — the side the arrow comes in
 from, pointing at the element. `box` outlines the element, `label` prints text
-at the arrow's tail, and the three can be combined on one entry. Colour comes
+at the arrow's tail, and the three can be combined on one entry. `length`
+changes the arrow from its default 90px; `length = 0` drops the arrow and sets
+the label right beside the element, for controls packed too close together for
+arrows to clear one another. Colour comes
 from `[defaults].annotation_color`.
 
 A `selector` that matches nothing fails the run rather than quietly capturing an
