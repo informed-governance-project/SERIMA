@@ -7213,7 +7213,7 @@
    "entity_name": "Regulator A",
    "incident_report": 44,
    "incident": 55,
-   "action": "REVIEW STATUS: Améliorations requises"
+   "action": "REVIEW STATUS: Revision required"
   }
  },
  {
@@ -7230,6 +7230,1158 @@
    "incident_report": 44,
    "incident": 55,
    "action": "COMMENT"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 405,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2025-11-26T12:54:54.010Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": null,
+   "incident": 39,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 406,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2025-11-26T13:34:27.319Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": null,
+   "incident": 47,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 407,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2025-11-26T13:38:02.279Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": null,
+   "incident": 49,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 408,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2025-11-26T14:37:14.315Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": null,
+   "incident": 55,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 409,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-01-22T08:19:36.049Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": 44,
+   "incident": 55,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 410,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-01-22T11:39:00.738Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": 45,
+   "incident": 55,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 411,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-01-22T11:59:00.738Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 45,
+   "incident": 55,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 412,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-01-22T12:04:00.738Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 45,
+   "incident": 55,
+   "action": "REVIEW STATUS: Passed"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 413,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-01-22T12:04:00.750Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 45,
+   "incident": 55,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 414,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-01-22T13:39:00.738Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 45,
+   "incident": 55,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 415,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-01-23T11:39:00.738Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 45,
+   "incident": 55,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 416,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-02-06T10:57:04.046Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": null,
+   "incident": 60,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 417,
+  "fields": {
+   "user": [
+    "operator-user@example.org"
+   ],
+   "timestamp": "2026-02-09T09:37:54.400Z",
+   "user_full_name": "Operator User",
+   "role": "OperatorUser",
+   "entity_name": "Operator B",
+   "incident_report": null,
+   "incident": 63,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 418,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-09T12:08:33.624Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": null,
+   "incident": 68,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 419,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-09T12:09:04.728Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": 48,
+   "incident": 68,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 420,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-02-09T14:09:04.728Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 48,
+   "incident": 68,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 421,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-10T09:31:06.894Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": 49,
+   "incident": 47,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 422,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-02-10T11:31:06.894Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 49,
+   "incident": 47,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 423,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-02-10T12:09:04.728Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 48,
+   "incident": 68,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 424,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-02-11T09:31:06.894Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 49,
+   "incident": 47,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 425,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-21T12:10:31.382Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "incident_report": 51,
+   "incident": 47,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 426,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-04-21T14:10:31.382Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 51,
+   "incident": 47,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 427,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-04-22T12:10:31.382Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 51,
+   "incident": 47,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 428,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-05-05T14:53:07.894Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": null,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 429,
+  "fields": {
+   "user": [
+    "operator-user@example.org"
+   ],
+   "timestamp": "2026-05-12T07:56:25.187Z",
+   "user_full_name": "Operator User",
+   "role": "OperatorUser",
+   "entity_name": "Operator B",
+   "incident_report": null,
+   "incident": 72,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 430,
+  "fields": {
+   "user": [
+    "operator-user@example.org"
+   ],
+   "timestamp": "2026-05-12T07:56:51.845Z",
+   "user_full_name": "Operator User",
+   "role": "OperatorUser",
+   "entity_name": "Operator B",
+   "incident_report": 53,
+   "incident": 72,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 431,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-05-12T09:56:51.845Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 53,
+   "incident": 72,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 432,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-05-13T07:56:51.845Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 53,
+   "incident": 72,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 433,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-08T09:27:49.815Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 67,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 434,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-08T09:28:26.619Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 68,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 435,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-08T09:29:09.465Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 69,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 436,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-08T09:30:02.949Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 70,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 437,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-08T09:30:46.446Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 71,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 438,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-08T13:05:07.557Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 72,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 439,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-08T13:25:57.330Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 73,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 440,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-09T09:30:02.949Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 70,
+   "incident": 70,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 441,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-15T11:54:47.227Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": null,
+   "incident": 77,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 442,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-16T08:08:15.362Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 74,
+   "incident": 77,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 443,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-16T09:39:25.169Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 75,
+   "incident": 70,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 444,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-17T08:08:15.362Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 74,
+   "incident": 77,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 445,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-17T09:39:25.169Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 75,
+   "incident": 70,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 446,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T07:44:55.312Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": null,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 447,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T07:45:20.461Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 79,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 448,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T07:53:47.055Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 80,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 449,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T11:32:13.652Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 81,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 450,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T12:10:28.247Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 82,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 451,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T12:23:06.452Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 83,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 452,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T12:33:14.033Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 84,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 453,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T12:47:33.267Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 85,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 454,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T12:48:11.292Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 86,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 455,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T12:58:59.041Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 87,
+   "incident": 81,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 456,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-11T07:45:20.461Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 79,
+   "incident": 81,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 457,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-11T12:58:59.041Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 87,
+   "incident": 81,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 458,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-25T07:36:46.699Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": null,
+   "incident": 86,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 459,
+  "fields": {
+   "user": [
+    "operator-user@example.org"
+   ],
+   "timestamp": "2026-08-26T14:14:09.163Z",
+   "user_full_name": "Operator User",
+   "role": "OperatorUser",
+   "entity_name": "Operator B",
+   "incident_report": 96,
+   "incident": 72,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 460,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-26T16:14:09.163Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 96,
+   "incident": 72,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 461,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-27T14:14:09.163Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 96,
+   "incident": 72,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 462,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T07:37:47.980Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "incident_report": null,
+   "incident": 102,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 463,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T07:38:12.237Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "incident_report": 99,
+   "incident": 102,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 464,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T07:38:55.665Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "incident_report": null,
+   "incident": 103,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 465,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T07:39:41.654Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "incident_report": 100,
+   "incident": 103,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 466,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T07:40:19.387Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "incident_report": 101,
+   "incident": 103,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 467,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T08:00:19.387Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 101,
+   "incident": 103,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 468,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T08:05:19.387Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 101,
+   "incident": 103,
+   "action": "REVIEW STATUS: Passed"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 469,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T08:05:19.399Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 101,
+   "incident": 103,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 470,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T09:38:12.237Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 99,
+   "incident": 102,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 471,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T09:39:41.654Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 100,
+   "incident": 103,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 472,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T09:40:19.387Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "incident_report": 101,
+   "incident": 103,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 473,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-09-01T07:38:12.237Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 99,
+   "incident": 102,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 474,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-09-01T07:39:41.654Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 100,
+   "incident": 103,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 475,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-09-01T07:40:19.387Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": 101,
+   "incident": 103,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "incidents.logreportread",
+  "pk": 476,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-09-29T09:55:59.001Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "incident_report": null,
+   "incident": 105,
+   "action": "CREATE"
   }
  },
  {
