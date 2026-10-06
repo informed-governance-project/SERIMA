@@ -13,6 +13,5 @@ regulators follow each report through its notification workflow.
 
    dashboard
    report-an-incident
-   reported-incidents
    operator
    regulator

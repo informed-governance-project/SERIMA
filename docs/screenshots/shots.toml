@@ -394,6 +394,43 @@ annotate = [{ selector = "#collapseLegend", box = true }]
 
 [[shots]]
 name = "images/incident-notification/dashboard-04"
+# Every column an operator can display, numbered as in the column table of
+# dashboard.rst: the four hidden by default (Detection, Start and
+# Resolution date, Reference) are ticked in the column choice first. The rows
+# are hidden, with the footer they would pull up: with twelve narrow columns,
+# the labels would cover their data.
+path = "/incidents/"
+role = "operator_admin"
+fresh = true
+viewport = { width = 1440, height = 400 }
+hide = ["#incidents-table tbody", "footer"]
+steps = [
+  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
+  { action = "wait_for", selector = "#IncidentshideColumns.show" },
+  { action = "click", selector = "#column-3" },
+  { action = "click", selector = "#column-4" },
+  { action = "click", selector = "#column-5" },
+  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#IncidentshideColumns .btn-close" },
+  { action = "wait_ms", value = 500 },
+]
+annotate = [
+  { selector = "th[data-sort-field='status']", arrow = "bottom", length = 45, label = "1" },
+  { selector = "th[data-sort-field='last_update']", arrow = "bottom", length = 45, label = "2" },
+  { selector = "th[data-sort-field='notification_date']", arrow = "bottom", length = 45, label = "3" },
+  { selector = "th[data-sort-field='detection_date']", arrow = "bottom", length = 45, label = "4" },
+  { selector = "th[data-sort-field='starting_date']", arrow = "bottom", length = 45, label = "5" },
+  { selector = "th[data-sort-field='resolution_date']", arrow = "bottom", length = 45, label = "6" },
+  { selector = "th[data-sort-field='regulator']", arrow = "bottom", length = 45, label = "7" },
+  { selector = "th[data-sort-field='regulation']", arrow = "bottom", length = 45, label = "8" },
+  { selector = "th[data-sort-field='reference']", arrow = "bottom", length = 45, label = "9" },
+  { selector = "th[data-sort-field='sectors']", arrow = "bottom", length = 45, label = "10" },
+  { selector = "#incidents-table thead th:nth-last-child(2)", arrow = "bottom", length = 45, label = "11" },
+  { selector = "#incidents-table thead th:last-child", arrow = "bottom", length = 45, label = "12" },
+]
+
+[[shots]]
+name = "images/incident-notification/dashboard-05"
 path = "/incidents/"
 role = "operator_admin"
 selector = "#IncidentshideColumns .modal-content"
@@ -404,7 +441,7 @@ steps = [
 ]
 
 [[shots]]
-name = "images/incident-notification/dashboard-05"
+name = "images/incident-notification/dashboard-06"
 path = "/incidents/"
 role = "operator_admin"
 selector = "#report_versions .modal-content"
@@ -414,7 +451,7 @@ steps = [
 ]
 
 [[shots]]
-name = "images/incident-notification/dashboard-06"
+name = "images/incident-notification/dashboard-07"
 # An operator's log leaves out the regulator's entries, and the fixture's only
 # operator entry is a single CREATE, which shows no sorting. The regulator sees
 # the whole log of the same incident through the same dialog.
@@ -435,7 +472,7 @@ steps = [
 ]
 
 [[shots]]
-name = "images/incident-notification/dashboard-07"
+name = "images/incident-notification/dashboard-08"
 # Not in dashboard.rst: docs/security-objectives/dashboard.rst shows it for
 # the same Column settings button on its own dashboard.
 path = "/incidents/"
@@ -446,51 +483,6 @@ steps = [
   { action = "wait_for", selector = ".tooltip.show" },
 ]
 annotate = [{ selector = "button[data-bs-target='#IncidentshideColumns']", box = true }]
-
-# --- Reported incidents (docs/incident-notification/reported-incidents.rst) --
-
-[[shots]]
-name = "images/incident-notification/reported-incidents-01"
-# The prose numbers eight columns; by default the dashboard shows "Last update"
-# instead of "Reference", so the column choice is swapped first.
-path = "/incidents/"
-role = "operator_admin"
-fresh = true
-viewport = { width = 1440, height = 440 }
-steps = [
-  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
-  { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
-  { action = "click", selector = "#IncidentshideColumns .btn-close" },
-  { action = "wait_ms", value = 500 },
-]
-annotate = [
-  { selector = "th[data-sort-field='status']", arrow = "bottom", label = "1" },
-  { selector = "th[data-sort-field='notification_date']", arrow = "bottom", label = "2" },
-  { selector = "th[data-sort-field='regulator']", arrow = "bottom", label = "3" },
-  { selector = "th[data-sort-field='regulation']", arrow = "bottom", label = "4" },
-  { selector = "th[data-sort-field='reference']", arrow = "bottom", label = "5" },
-  { selector = "th[data-sort-field='sectors']", arrow = "bottom", label = "6" },
-  { selector = "#incidents-table thead th:nth-last-child(2)", arrow = "bottom", label = "7" },
-  { selector = "#incidents-table thead th:last-child", arrow = "bottom", label = "8" },
-]
-
-[[shots]]
-name = "images/incident-notification/reported-incidents-03"
-path = "/incidents/?sort_field=notification_date&sort_direction=asc"
-role = "operator_admin"
-fresh = true
-viewport = { width = 1440, height = 620 }
-annotate = [
-  { selector = "th[data-sort-field='notification_date'] svg:not(.unsorted)", box = true },
-  { selector = "#incidents-table tbody tr:nth-child(-n+2) td:nth-child(3) > div", box = true },
-]
-
-# --- Not scripted ------------------------------------------------------------
-#
-# reported-incidents-02 is a table of column descriptions made in a word
-# processor, not a screen of the platform.
 
 # --- Regulator review (docs/incident-notification/regulator.rst) ------------
 #
