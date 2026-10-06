@@ -456,7 +456,8 @@ msgstr ""
 #: governanceplatform/forms.py:388
 #, python-format
 msgid "These roles cannot access this functionality: %(roles)s"
-msgstr "Die folgenden Rollen haben keinen Zugriff auf diese Funktion: %(roles)s"
+msgstr ""
+"Die folgenden Rollen haben keinen Zugriff auf diese Funktion: %(roles)s"
 
 #: governanceplatform/formset.py:25
 msgid "There must be at least one administrator user."
