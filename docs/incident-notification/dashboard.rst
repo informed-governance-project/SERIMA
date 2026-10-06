@@ -21,7 +21,7 @@ Due to the complexity of the screen, its different parts will be presented one b
 
 1. **Overview**: By clicking the **Overview** link in the top-right corner, you can return to the landing page of the Incident notification dashboard, which displays an overview of the reported incidents.
 
-2. **Notify an incident**: Click the red **Notify an incident** button to report an incident. This will take you to the **Report an incident** page, described in the :doc:`report-an-incident` chapter.
+2. **Notify an incident**: This red button opens the form for a new incident (see :doc:`report-an-incident`).
 
 3. **Search**: The search field is the quickest way to find an incident when there are many of them.
    It looks for the text you enter in the incident reference, the contact and technical contact names, the operator, the regulator, the regulation and the sectors.

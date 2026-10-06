@@ -1075,7 +1075,7 @@ hide = [".submit-row"]
 # configuration-14 is a hand-made table explaining the pencil, plus, cross and
 # eye icons beside each select; it is not a screen of the platform.
 
-# report-an-incident-07 submits the wizard and creates two incidents, so this
+# report-an-incident-06 submits the wizard and creates two incidents, so this
 # section stays last: every list shot above expects the fixture's incidents.
 
 # --- Report an incident (docs/incident-notification/report-an-incident.rst) ---
@@ -1093,16 +1093,6 @@ hide = [".submit-row"]
 
 [[shots]]
 name = "images/incident-notification/report-an-incident-01"
-path = "/incidents/"
-role = "operator_admin"
-viewport = { width = 1440, height = 560 }
-annotate = [
-  # From below: an arrow from the left would run through the Overview link.
-  { selector = "a.btn-primary[href='/incidents/declaration']", box = true, arrow = "bottom" },
-]
-
-[[shots]]
-name = "images/incident-notification/report-an-incident-02"
 path = "/incidents/declaration"
 role = "operator_admin"
 viewport = { width = 1440, height = 1010 }
@@ -1112,7 +1102,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/report-an-incident-03"
+name = "images/incident-notification/report-an-incident-02"
 path = "/incidents/declaration"
 role = "operator_admin"
 viewport = { width = 1440, height = 540 }
@@ -1128,7 +1118,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/report-an-incident-04"
+name = "images/incident-notification/report-an-incident-03"
 path = "/incidents/declaration"
 role = "operator_admin"
 viewport = { width = 1440, height = 540 }
@@ -1143,7 +1133,7 @@ steps = [
 annotate = [{ selector = ["#id_2-regulators_0", "label[for='id_2-regulators_0']"], box = true }]
 
 [[shots]]
-name = "images/incident-notification/report-an-incident-05"
+name = "images/incident-notification/report-an-incident-04"
 path = "/incidents/declaration"
 role = "operator_admin"
 viewport = { width = 1440, height = 680 }
@@ -1161,7 +1151,7 @@ steps = [
 ]
 
 [[shots]]
-name = "images/incident-notification/report-an-incident-06"
+name = "images/incident-notification/report-an-incident-05"
 path = "/incidents/declaration"
 role = "operator_admin"
 # The open picker hangs below the card, over where the footer would be.
@@ -1193,7 +1183,7 @@ steps = [
 ]
 
 [[shots]]
-name = "images/incident-notification/report-an-incident-07"
+name = "images/incident-notification/report-an-incident-06"
 path = "/incidents/declaration"
 role = "operator_admin"
 # STATEFUL. Submits the wizard: every run adds two incidents for Operator A,
