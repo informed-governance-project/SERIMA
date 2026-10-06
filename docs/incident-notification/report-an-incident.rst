@@ -99,7 +99,7 @@ and, if your regulator has set one up, sends an email announcing it.
    so selecting several legal bases, regulators or sectors can create several incidents, each with its own reference and reports.
 
 - If a single incident is created, the platform opens its first report straight away, so that you can fill it in
-  (see :doc:`operator`).
+  (see :doc:`fill-in-a-report`).
 - If several incidents are created, the platform takes you back to the dashboard, where each one appears on its own line.
   Open each incident's first report from the **Report** column.
 

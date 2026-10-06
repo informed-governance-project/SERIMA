@@ -13,5 +13,5 @@ regulators follow each report through its notification workflow.
 
    dashboard
    report-an-incident
-   operator
+   fill-in-a-report
    regulator

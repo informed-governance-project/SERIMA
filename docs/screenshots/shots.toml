@@ -591,7 +591,7 @@ annotate = [{ selector = "#id_3-review_status", box = true }]
 # followed by a PASS on the same report. Producing one means submitting a
 # review, which would change the report every other shot sees.
 
-# --- Operator workflow (docs/incident-notification/operator.rst) ------------
+# --- Fill in a report (docs/incident-notification/fill-in-a-report.rst) ------
 #
 # The list shots show the Reference column, which the dashboard hides by
 # default, and drop "Last update" as the manual's figures do. The choice is
@@ -601,75 +601,20 @@ annotate = [{ selector = "#id_3-review_status", box = true }]
 # The list filter is kept in the session, so every list path sets it
 # explicitly: `?reset=1` for the whole list, `?search=` for one incident.
 #
-# Neither wizard persists anything before its last step, so the form shots
-# stop short of the final Next/Submit and change no data.
+# The report wizard persists nothing before its last step, so the form shots
+# stop short of Submit and change no data.
 
 [[shots]]
 name = "images/incident-notification/workflow-operator-01"
 role = "operator_admin"
-path = "/incidents/?reset=1"
-fresh = true
-viewport = { width = 1440, height = 420 }
-steps = [
-  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
-  { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
-  { action = "click", selector = "#IncidentshideColumns .btn-close" },
-  { action = "wait_ms", value = 500 },
-]
-annotate = [{ selector = "a.btn-primary[href='/incidents/declaration']", box = true, arrow = "bottom" }]
+path = "/incidents/create_workflow?incident_id=36&workflow_id=1"
+viewport = { width = 1440, height = 1300 }
 
 [[shots]]
 name = "images/incident-notification/workflow-operator-02"
 role = "operator_admin"
-path = "/incidents/declaration"
-viewport = { width = 1440, height = 530 }
-steps = [
-  { action = "fill", selector = "#id_0-contact_title", value = "Security officer" },
-  { action = "click", selector = "#id_0-is_technical_the_same" },
-  { action = "click", selector = "#wizard-next-btn" },
-  { action = "click", selector = "#id_1-regulations_0" },
-  { action = "click", selector = "#wizard-next-btn" },
-  { action = "click", selector = "#id_2-regulators_0" },
-]
-
-[[shots]]
-name = "images/incident-notification/workflow-operator-03"
-role = "operator_admin"
-path = "/incidents/declaration"
-viewport = { width = 1440, height = 570 }
-# Regulation A with Regulator A is what adds the Sectors and Detection date
-# steps. Stops on Detection date: its Next creates the incident.
-steps = [
-  { action = "fill", selector = "#id_0-contact_title", value = "Security officer" },
-  { action = "click", selector = "#id_0-is_technical_the_same" },
-  { action = "click", selector = "#wizard-next-btn" },
-  { action = "click", selector = "#id_1-regulations_0" },
-  { action = "click", selector = "#wizard-next-btn" },
-  { action = "click", selector = "#id_2-regulators_0" },
-  { action = "click", selector = "#wizard-next-btn" },
-  { action = "click", selector = "#sector_10" },
-  { action = "click", selector = "#wizard-next-btn" },
-  { action = "wait_for", selector = "#id_4-detection_date" },
-  { action = "fill", selector = "#id_4-detection_date", value = "2025-11-01 13:51" },
-]
-
-# The report wizard of the Preliminary Incident Report (workflow 1) of
-# NI_PCVJG9CV (incident 36), which Operator A has not submitted yet — the
-# same screens a newly declared incident leads to.
-
-[[shots]]
-name = "images/incident-notification/workflow-operator-04"
-role = "operator_admin"
 path = "/incidents/create_workflow?incident_id=36&workflow_id=1"
-viewport = { width = 1440, height = 680 }
-
-[[shots]]
-name = "images/incident-notification/workflow-operator-05"
-role = "operator_admin"
-path = "/incidents/create_workflow?incident_id=36&workflow_id=1"
-viewport = { width = 1440, height = 680 }
+viewport = { width = 1440, height = 900 }
 steps = [
   { action = "click", selector = "#wizard-next-btn" },
   { action = "click", selector = "#id_1-__question__1_1" },
@@ -685,7 +630,7 @@ steps = [
 hide = [".tooltip"]
 
 [[shots]]
-name = "images/incident-notification/workflow-operator-06"
+name = "images/incident-notification/workflow-operator-03"
 role = "operator_admin"
 path = "/incidents/create_workflow?incident_id=36&workflow_id=1"
 viewport = { width = 1440, height = 900 }
@@ -708,7 +653,7 @@ steps = [
 # since any incident created since the fixture was loaded sorts above it.
 
 [[shots]]
-name = "images/incident-notification/workflow-operator-07"
+name = "images/incident-notification/workflow-operator-04"
 role = "operator_admin"
 path = "/incidents/?search=NI_1ZTF3PPZ"
 fresh = true
@@ -727,7 +672,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/workflow-operator-08"
+name = "images/incident-notification/workflow-operator-05"
 role = "operator_admin"
 path = "/incidents/?search=NI_1ZTF3PPZ"
 selector = "#report_versions .modal-content"
@@ -739,7 +684,7 @@ steps = [
 # NI_GZ41A260's Preliminary Incident Report passed review, with a comment.
 
 [[shots]]
-name = "images/incident-notification/workflow-operator-09"
+name = "images/incident-notification/workflow-operator-06"
 role = "operator_admin"
 path = "/incidents/?search=NI_GZ41A260"
 fresh = true
@@ -755,7 +700,7 @@ steps = [
 annotate = [{ selector = "#incidents-table tbody td:nth-child(11) li:first-child .hstack", box = true }]
 
 [[shots]]
-name = "images/incident-notification/workflow-operator-10"
+name = "images/incident-notification/workflow-operator-07"
 role = "operator_admin"
 path = "/incidents/?search=NI_GZ41A260"
 fresh = true
@@ -775,7 +720,7 @@ steps = [
 annotate = [{ selector = ".tooltip.show", arrow = "left" }]
 
 [[shots]]
-name = "images/incident-notification/workflow-operator-11"
+name = "images/incident-notification/workflow-operator-08"
 role = "operator_admin"
 path = "/incidents/?search=NI_GZ41A260"
 viewport = { width = 1440, height = 640 }
@@ -787,15 +732,6 @@ annotate = [
   { selector = "#incidents-table tbody td:nth-child(11) li:first-child button.workflow_comment", box = true },
   { selector = "#workflow_comment .modal-content", box = true },
 ]
-
-# Not scripted:
-#
-# - workflow-operator-12, -13, -14: a Preliminary Incident Report that failed
-#   review — red in the list, its "failed the review" tooltip, and its review
-#   comment. No fixture incident has a failed report as its latest version
-#   (NI_GZ41A260's failed review was followed by a passing one), and making
-#   one means a regulator submitting a review, which the other shots would see.
-#   They would mirror 09–11 once the fixture has such an incident.
 
 # --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---
 #

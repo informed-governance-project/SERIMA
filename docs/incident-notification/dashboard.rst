@@ -55,7 +55,7 @@ Due to the complexity of the screen, its different parts will be presented one b
    The first part of the legend explains the icons of the **Status** column: whether the incident has a significant impact, and whether it is ongoing or closed.
    The second part explains the status of each report in the **Report** column: unsubmitted, under review, submission overdue, late submission, revision required or passed.
    You can hide the legend by clicking the Icon guide again.
-   How a report moves from one status to the next is described in the :doc:`operator` and :doc:`regulator` chapters.
+   How a report moves from one status to the next is described in the :doc:`fill-in-a-report` and :doc:`regulator` chapters.
 
 6. **Columns and sorting**: The incidents are listed in a table. The screenshot below shows every column an operator can display;
    those hidden by default can be displayed with the **Column settings** (see point 7).
