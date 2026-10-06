@@ -71,9 +71,9 @@ As shown in the screenshot below, the two entries are sorted by **Last update** 
 To hide a column or change which columns are shown, click the **Column Settings** icon, which is a white gear icon on a red background.
 Hovering your mouse over the icon displays the tooltip **Column Settings**.
 
-.. figure:: /_static/images/incident-notification/dashboard-09.png
+.. figure:: /_static/images/incident-notification/dashboard-08.png
    :alt: Column Settings
-   :target: ../_static/images/incident-notification/dashboard-09.png
+   :target: ../_static/images/incident-notification/dashboard-08.png
 
 Clicking the icon opens the **Choice of columns** pop-up, showing all available columns.
 A checkmark in front of a column name indicates that the column is currently displayed.
