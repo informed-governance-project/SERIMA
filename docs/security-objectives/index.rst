@@ -13,7 +13,5 @@ regulators review and score those declarations.
    :maxdepth: 2
 
    dashboard
-   submit-a-declaration
-   scoring
-   operator
+   fill-in-a-declaration
    regulator

@@ -1,4 +1,4 @@
-Security Objectives Dashboard
+Dashboard
 ----------------------------------
 
 The **Security Objectives** module is a self-assessment tool: you declare how your organisation meets the security objectives
@@ -21,7 +21,7 @@ Its parts are numbered in the screenshot below and described one by one.
 1. **Dashboard**: This link in the top-right corner brings you back to the dashboard from any page of the module.
 
 2. **New submission**: This red button opens the **Create a new security objectives statement** pop-up.
-   The new declaration is then filled in as described in :doc:`submit-a-declaration`.
+   The new declaration is then filled in as described in :doc:`fill-in-a-declaration`.
 
 3. **Search**: Finds declarations by the text you enter, looked up in the framework, the creator, the operator, the year and the sectors.
 
@@ -111,7 +111,8 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. important::
 
-      A declaration is submitted from the dashboard: once it is complete, click the **Submit** button that replaces its progress bar.
+      Once a declaration is complete, a **Submit** button replaces its progress bar: click it to submit the declaration.
+      The declaration screen has its own **Submit** button (see :doc:`fill-in-a-declaration`).
 
 7. **Column settings**: The white gear icon on a red background opens the **Choice of columns** pop-up.
    A checkmark in front of a column name means the column is displayed; remove it to hide the column.

@@ -1143,6 +1143,104 @@ annotate = [
   { selector = "#incidents-table tbody tr:nth-child(2) td.list-sectors li", box = true },
 ]
 
+# --- Fill in a declaration (docs/security-objectives/fill-in-a-declaration.rst) ---
+#
+# The declaration screen saves each field as soon as it changes, so these shots
+# only click navigation: the objective selector, the Icon Guide and the
+# "View previous version" pills. Opening a declaration still writes a READ entry
+# to its access log, which is why none of them opens 107: dashboard-09 shows
+# that log.
+#
+# 105 is Unsubmitted, about 90 % filled, and an update of a declaration that
+# needed revision: it has objectives fully filled, partially filled, not
+# filled and still in revision, and changed answers to compare. 51 is that
+# declaration's "Revision required and sent" version.
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-01"
+# Numbered as in the list of fill-in-a-declaration.rst.
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=105"
+viewport = { width = 1440, height = 450 }
+annotate = [
+  { selector = ".card-header .row > div:nth-child(1)", box = true, arrow = "top", length = 0, label = "1" },
+  { selector = ".card-header .row > div:nth-child(3)", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = ".card-header .row > div:nth-child(5)", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = ".card-header .ms-auto .d-flex > button:first-child", box = true, arrow = "left", length = 0, label = "4" },
+  { selector = "#so_submit_button", box = true, arrow = "top", length = 0, label = "5" },
+  { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "6" },
+  { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "7" },
+  { selector = [".carousel-control-prev", ".carousel-control-next"], box = true, arrow = "bottom", length = 0, label = "8" },
+  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "9" },
+  { selector = ".carousel-item.active .me-auto", box = true, arrow = "right", length = 0, label = "10" },
+  { selector = ".carousel-item.active #score_container", box = true, arrow = "left", length = 0, label = "11" },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-02"
+# Objective 2 of 23: an unsubmitted declaration with no earlier version, so
+# no "View previous version" outlines, and some measures on with their
+# justification. The tall viewport keeps the whole slide in the capture.
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=23"
+viewport = { width = 1440, height = 2000 }
+selector = ".carousel-item.active"
+steps = [
+  { action = "click", selector = "#security_objective_selector [data-bs-slide-to='1']" },
+  { action = "wait_for", selector = "#security_objective_selector [data-bs-slide-to='1'].slide-active-container" },
+  { action = "wait_ms", value = 1000 },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-03"
+# The legend's open state is kept in localStorage, hence fresh.
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=105"
+fresh = true
+viewport = { width = 1440, height = 530 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_declaration_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-04"
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=51"
+viewport = { width = 1440, height = 450 }
+annotate = [
+  { selector = ".card-header .ms-auto button.review_comment_so_declaration", box = true },
+  { selector = "#so_status_form > div:not(.d-none)", box = true },
+  { selector = "#security_objective_selector", box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-05"
+# 28 (Passed) is the only 2025 declaration of Operator A. The search is kept
+# in the session, hence fresh.
+role = "operator_admin"
+path = "/securityobjectives/?search=2025"
+fresh = true
+selector = "#update_so_declaration .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='28']) .update_so_declaration" },
+  { action = "wait_for", selector = "#update_so_declaration.show" },
+  { action = "wait_ms", value = 400 },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-06"
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=105"
+selector = "#so_previous_answer .modal-content"
+steps = [
+  { action = "click", selector = ".carousel-item.active .view-previous-version" },
+  { action = "wait_for", selector = "#so_previous_answer.show" },
+  { action = "wait_ms", value = 400 },
+]
+
 # --- Security objectives dashboard (docs/security-objectives/dashboard.rst) ---
 #
 # The operator's dashboard. Row callouts target two fixture declarations by the
@@ -1288,7 +1386,7 @@ name = "images/security-objectives/dashboard-07"
 # it last in the section: the copy heads the list and pushes 105 and 107 down.
 path = "/securityobjectives/"
 role = "operator_admin"
-viewport = { width = 1440, height = 640 }
+viewport = { width = 1440, height = 940 }
 steps = [
   { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='105']) .copy_so_declaration" },
   { action = "wait_for", selector = "#copy_so_declaration.show #copy-so-declaration-form" },
@@ -1297,6 +1395,8 @@ steps = [
   # Sector groups open collapsed, which leaves their options unclickable.
   { action = "click", selector = "#copy_so_declaration .multiselect-group[title='Transport'] .caret-container" },
   { action = "click", selector = "#copy_so_declaration .multiselect-option:has(input[value='6'])" },
+  # Close the sector list: left open, it can cover the Duplicate button.
+  { action = "click", selector = "#copy_so_declaration button.multiselect" },
   { action = "click", selector = "#copy-so-declaration-form button[type='submit']" },
   { action = "wait_for", selector = ".alert-success" },
 ]
@@ -1307,6 +1407,7 @@ annotate = [
 
 # --- Not covered yet --------------------------------------------------------
 #
-# The getting-started and incident-notification pages and the security
-# objectives dashboard are scripted. The other security-objectives pages, the
-# reporting and the remaining administration images are not.
+# The getting-started and incident-notification pages, the security
+# objectives dashboard and fill-in-a-declaration are scripted. The regulator's
+# security-objectives page, the reporting and the remaining administration
+# images are not.
