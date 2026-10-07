@@ -6,10 +6,8 @@ High-level architecture
 -----------------------
 
 .. figure:: /_static/images/technical/global-architecture.png
-   :alt: High-level architecture
+   :alt: High-level architecture of a Django application
    :target: ../_static/images/technical/global-architecture.png
-
-   High-level architecture of a Django application.
 
 A SERIMA instance is made of the following components:
 
@@ -30,9 +28,7 @@ Models
 ------
 
 .. figure:: /_static/images/technical/app-models.png
-   :alt: Application models
+   :alt: Business-related models of the incidents and governance modules
    :target: ../_static/images/technical/app-models.png
-
-   Business-related models for the *incidents* and *governance* modules.
 
 The diagram is generated with ``make models``.

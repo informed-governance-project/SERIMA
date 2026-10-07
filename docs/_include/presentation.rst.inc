@@ -15,8 +15,6 @@ This project is developed in partnership with the Institut Luxembourgeois de Ré
    :alt: Home page of a regulator administrator with the Incident notification, Security objectives and Report generation modules
    :target: _static/images/index/home-page.png
 
-   Regulator home page
-
 .. rubric:: Which section do I read?
 
 - **New to SERIMA:** :doc:`getting-started/index`.
