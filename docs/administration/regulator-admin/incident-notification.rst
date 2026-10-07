@@ -77,10 +77,6 @@ Placeholders
 Click **Available placeholders** to list the placeholders you can type in the subject or the content.
 Each one is replaced by its value when the email is sent.
 
-.. figure:: /_static/images/incident-notification/configuration-03.png
-   :alt: Available placeholders dialog listing each placeholder and what replaces it
-   :target: ../../_static/images/incident-notification/configuration-03.png
-
 .. list-table::
    :header-rows: 1
    :widths: 35 65
@@ -133,9 +129,9 @@ Questions
 The **Questions** list holds the questions you can use in your reports, with their **Reference**, **Label**,
 **Question Type** and **Answers**. A question can be used in several reports.
 
-.. figure:: /_static/images/incident-notification/configuration-04.png
+.. figure:: /_static/images/incident-notification/configuration-03.png
    :alt: Questions list with the Questions entry of the sidebar and the column headers outlined
-   :target: ../../_static/images/incident-notification/configuration-04.png
+   :target: ../../_static/images/incident-notification/configuration-03.png
 
 A question has:
 
@@ -146,13 +142,13 @@ A question has:
 - **Predefined answers**, for the choice types: click **Add another Predefined answer** for each answer,
   and set their order with **Position**.
 
-.. figure:: /_static/images/incident-notification/configuration-05.png
+.. figure:: /_static/images/incident-notification/configuration-04.png
    :alt: Change Question form with its type, reference, label and tooltip, and the predefined answers outlined
-   :target: ../../_static/images/incident-notification/configuration-05.png
+   :target: ../../_static/images/incident-notification/configuration-04.png
 
-.. figure:: /_static/images/incident-notification/configuration-06.png
+.. figure:: /_static/images/incident-notification/configuration-05.png
    :alt: Question Type drop-down open with the eight types
-   :target: ../../_static/images/incident-notification/configuration-06.png
+   :target: ../../_static/images/incident-notification/configuration-05.png
 
 .. list-table::
    :header-rows: 1
@@ -191,9 +187,9 @@ Incident reports
 The **Incident reports** list shows the **Name**, **Label** and **Description** of each report,
 whether **Impacts disclosure required** is ticked, and its **Submission email**.
 
-.. figure:: /_static/images/incident-notification/configuration-07.png
+.. figure:: /_static/images/incident-notification/configuration-06.png
    :alt: Incident reports list with the Incident reports entry of the sidebar and the column headers outlined
-   :target: ../../_static/images/incident-notification/configuration-07.png
+   :target: ../../_static/images/incident-notification/configuration-06.png
 
 Create a report
 """""""""""""""
@@ -209,9 +205,9 @@ Create a report
 2. In **Notification Email**, select the **Submission email**, sent each time this report is submitted,
    unless the incident is closed.
 
-   .. figure:: /_static/images/incident-notification/configuration-08.png
+   .. figure:: /_static/images/incident-notification/configuration-07.png
       :alt: Change Incident report form with its General and Notification Email sections
-      :target: ../../_static/images/incident-notification/configuration-08.png
+      :target: ../../_static/images/incident-notification/configuration-07.png
 
 3. Build the **Questionnaire**, as described below, and click **Save**.
 
@@ -232,9 +228,9 @@ Click **Add another Question** for each question of the report, and fill in its 
   in the pop-up, select the **Question category**, or create it with the plus icon, and give its **Position**,
   the order of this form in the report.
 
-.. figure:: /_static/images/incident-notification/configuration-09.png
+.. figure:: /_static/images/incident-notification/configuration-08.png
    :alt: Questionnaire section of a report with its column headers outlined
-   :target: ../../_static/images/incident-notification/configuration-09.png
+   :target: ../../_static/images/incident-notification/configuration-08.png
 
 To remove a question from the report, tick **Delete?** on its row and click **Save**.
 
@@ -260,9 +256,9 @@ For example, the operator is asked how many times the incident recurred only aft
 "Is this a recurring incident?". Each rule links a question, one of its answers, and the question it displays.
 The list shows the **Workflow** (the report), **Question**, **Selected answer** and **Next question** of each rule.
 
-.. figure:: /_static/images/incident-notification/configuration-10.png
+.. figure:: /_static/images/incident-notification/configuration-09.png
    :alt: Conditional questions list with the Conditional questions entry of the sidebar and the column headers outlined
-   :target: ../../_static/images/incident-notification/configuration-10.png
+   :target: ../../_static/images/incident-notification/configuration-09.png
 
 To create a rule:
 
@@ -272,9 +268,9 @@ To create a rule:
 3. Select the **Question** that triggers the display, the **Selected answer** that triggers it,
    and the **Next question** to display. Click **Save**.
 
-   .. figure:: /_static/images/incident-notification/configuration-11.png
+   .. figure:: /_static/images/incident-notification/configuration-10.png
       :alt: Add Conditional question form with a report, a question, an answer and the next question selected
-      :target: ../../_static/images/incident-notification/configuration-11.png
+      :target: ../../_static/images/incident-notification/configuration-10.png
 
 Create one rule for each answer that must display the question. The rules have these limits:
 
@@ -298,9 +294,9 @@ sectors of the incident, grouped by sector, and the operator selects those that 
 The **Impact** list shows the **Regulations**, **Sector**, **Sub-sector** and **Headline** of each impact.
 Use the **By Sectors** and **By Legal basis** filters, or the search box, to find one.
 
-.. figure:: /_static/images/incident-notification/configuration-12.png
+.. figure:: /_static/images/incident-notification/configuration-11.png
    :alt: Impact list with the Impact entry of the sidebar and the column headers outlined
-   :target: ../../_static/images/incident-notification/configuration-12.png
+   :target: ../../_static/images/incident-notification/configuration-11.png
 
 An impact has:
 
@@ -309,9 +305,9 @@ An impact has:
 - its **Legal basis**: the regulations it applies to. Only the regulations of your regulator are listed.
 - its **Sectors**.
 
-.. figure:: /_static/images/incident-notification/configuration-13.png
+.. figure:: /_static/images/incident-notification/configuration-12.png
    :alt: Change Impacts form with its label, title, legal basis and sectors
-   :target: ../../_static/images/incident-notification/configuration-13.png
+   :target: ../../_static/images/incident-notification/configuration-12.png
 
 Impacts stay editable after incidents have used them.
 
@@ -323,9 +319,9 @@ The **Incident notification workflows** list shows whether each workflow is **Ac
 It also lists the workflows of the other regulators, which you can open read-only.
 The user pages call a workflow a notification procedure.
 
-.. figure:: /_static/images/incident-notification/configuration-14.png
+.. figure:: /_static/images/incident-notification/configuration-13.png
    :alt: Incident notification workflows list with the sidebar entry and the column headers outlined
-   :target: ../../_static/images/incident-notification/configuration-14.png
+   :target: ../../_static/images/incident-notification/configuration-13.png
 
 Create a workflow
 """""""""""""""""
@@ -343,9 +339,9 @@ Create a workflow
 3. In **Sectors**, move the sectors the workflow covers to the list on the right.
    A workflow without sectors applies to every incident notified under its legal basis to your regulator.
 
-   .. figure:: /_static/images/incident-notification/configuration-15.png
+   .. figure:: /_static/images/incident-notification/configuration-14.png
       :alt: Add Incident notification workflow form with its General, Supervision and Sectors sections filled in
-      :target: ../../_static/images/incident-notification/configuration-15.png
+      :target: ../../_static/images/incident-notification/configuration-14.png
 
 4. In **Notification Email**, select the emails of the workflow:
 
@@ -355,9 +351,9 @@ Create a workflow
      (see :doc:`/incident-notification/review-a-report`), and when a report reaches its deadline
      without having been submitted.
 
-   .. figure:: /_static/images/incident-notification/configuration-16.png
+   .. figure:: /_static/images/incident-notification/configuration-15.png
       :alt: Notification Email section with an opening, closing and status update email selected
-      :target: ../../_static/images/incident-notification/configuration-16.png
+      :target: ../../_static/images/incident-notification/configuration-15.png
 
 5. In **Incident reports**, click **Add another Incident report** for each report of the workflow, and fill in its row:
 
@@ -368,9 +364,9 @@ Create a workflow
      **Notification Date** (of the incident), **Detection Date** (of the incident), or **Previous Workflow**
      (the latest submission of the previous report). With **None**, the report has no deadline.
 
-   .. figure:: /_static/images/incident-notification/configuration-17.png
+   .. figure:: /_static/images/incident-notification/configuration-16.png
       :alt: Incident reports section with a preliminary report due 24 hours and a final report due 360 hours after the detection date
-      :target: ../../_static/images/incident-notification/configuration-17.png
+      :target: ../../_static/images/incident-notification/configuration-16.png
 
 6. Click **Save**.
 
@@ -387,16 +383,16 @@ the reports and deadlines they started with. To change it:
 1. Open the workflow and click **Save as new** to create a copy, with the same sectors, emails and reports.
    Make your changes in the copy and save it.
 
-   .. figure:: /_static/images/incident-notification/configuration-18.png
+   .. figure:: /_static/images/incident-notification/configuration-17.png
       :alt: Read-only workflow with the message that modification is not allowed and the Save as new button outlined
-      :target: ../../_static/images/incident-notification/configuration-18.png
+      :target: ../../_static/images/incident-notification/configuration-17.png
 
 2. In the list, tick the old workflow, choose **Toggle active status of selected items** in the **Action** drop-down
    and click **Run**. The old workflow no longer creates incidents; its incidents carry on.
 
-   .. figure:: /_static/images/incident-notification/configuration-19.png
+   .. figure:: /_static/images/incident-notification/configuration-18.png
       :alt: Action drop-down of the workflows list open on Toggle active status of selected items
-      :target: ../../_static/images/incident-notification/configuration-19.png
+      :target: ../../_static/images/incident-notification/configuration-18.png
 
 .. tip::
 
@@ -409,9 +405,9 @@ Reminder emails chase the reports of an incident in progress. The platform check
 and sends each reminder once, when its delay has elapsed. The list shows the **Regulation**, **Report**,
 **Headline**, **Trigger event** and **Delay in hours** of each reminder.
 
-.. figure:: /_static/images/incident-notification/configuration-20.png
+.. figure:: /_static/images/incident-notification/configuration-19.png
    :alt: Reminder emails list with the Reminder emails entry of the sidebar and the column headers outlined
-   :target: ../../_static/images/incident-notification/configuration-20.png
+   :target: ../../_static/images/incident-notification/configuration-19.png
 
 A reminder has:
 
@@ -427,9 +423,9 @@ A reminder has:
 
 - an **Email subject**: the name of the reminder in the list. The email sent uses the subject of its template.
 
-.. figure:: /_static/images/incident-notification/configuration-21.png
+.. figure:: /_static/images/incident-notification/configuration-20.png
    :alt: Change Reminder email form with its report, email, trigger event, delay and email subject
-   :target: ../../_static/images/incident-notification/configuration-21.png
+   :target: ../../_static/images/incident-notification/configuration-20.png
 
 .. note::
 

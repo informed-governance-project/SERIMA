@@ -509,7 +509,7 @@ annotate = [
 name = "images/incident-notification/workflow-regulator-03"
 role = "regulator_admin"
 path = "/incidents/"
-viewport = { width = 1440, height = 495 }
+viewport = { width = 1440, height = 550 }
 annotate = [{ selector = "a[href$='incident_workflow_id=99']", box = true }]
 
 [[shots]]
@@ -1027,16 +1027,6 @@ annotate = [
 [[shots]]
 name = "images/incident-notification/configuration-03"
 role = "regulator_admin"
-path = "/admin/incidents/email/1/change/"
-steps = [
-  { action = "click", selector = "button[data-placeholders-help-open]" },
-  { action = "wait_for", selector = "#email-placeholders-help[open]" },
-]
-selector = "#email-placeholders-help"
-
-[[shots]]
-name = "images/incident-notification/configuration-04"
-role = "regulator_admin"
 path = "/admin/incidents/question/"
 annotate = [
   { selector = "#nav-sidebar tr.current-model", box = true },
@@ -1044,7 +1034,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-05"
+name = "images/incident-notification/configuration-04"
 role = "regulator_admin"
 # Question 1 has never been answered, so it opens as an editable form.
 path = "/admin/incidents/question/1/change/"
@@ -1053,14 +1043,14 @@ hide = [".submit-row"]
 annotate = [{ selector = "#predefinedanswer_set-group", box = true }]
 
 [[shots]]
-name = "images/incident-notification/configuration-06"
+name = "images/incident-notification/configuration-05"
 role = "regulator_admin"
 path = "/admin/incidents/question/1/change/"
 steps = [{ action = "click", selector = "#id_question_type" }]
 annotate = [{ selector = "#id_question_type", box = true }]
 
 [[shots]]
-name = "images/incident-notification/configuration-07"
+name = "images/incident-notification/configuration-06"
 role = "regulator_admin"
 path = "/admin/incidents/workflow/"
 annotate = [
@@ -1069,7 +1059,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-08"
+name = "images/incident-notification/configuration-07"
 role = "regulator_admin"
 # Report 11 is a final report, with impacts disclosure required.
 path = "/admin/incidents/workflow/11/change/"
@@ -1078,7 +1068,7 @@ viewport = { width = 1440, height = 1000 }
 annotate = [{ selector = "#nav-sidebar tr.current-model", box = true }]
 
 [[shots]]
-name = "images/incident-notification/configuration-09"
+name = "images/incident-notification/configuration-08"
 role = "regulator_admin"
 path = "/admin/incidents/workflow/10/change/"
 selector = "#questionoptions_set-group"
@@ -1090,7 +1080,7 @@ hide = [
 annotate = [{ selector = "#questionoptions_set-group thead", box = true }]
 
 [[shots]]
-name = "images/incident-notification/configuration-10"
+name = "images/incident-notification/configuration-09"
 role = "regulator_admin"
 path = "/admin/incidents/conditionalquestionoption/"
 annotate = [
@@ -1099,7 +1089,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-11"
+name = "images/incident-notification/configuration-10"
 role = "regulator_admin"
 # The question lists load from the selected report; select_option waits for
 # each option to arrive. The form is never saved.
@@ -1116,7 +1106,7 @@ steps = [
 hide = [".submit-row"]
 
 [[shots]]
-name = "images/incident-notification/configuration-12"
+name = "images/incident-notification/configuration-11"
 role = "regulator_admin"
 path = "/admin/incidents/impact/"
 annotate = [
@@ -1125,7 +1115,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-13"
+name = "images/incident-notification/configuration-12"
 role = "regulator_admin"
 # Impact 68 is "DNS 1h".
 path = "/admin/incidents/impact/68/change/"
@@ -1133,7 +1123,7 @@ selector = "#content"
 hide = [".submit-row"]
 
 [[shots]]
-name = "images/incident-notification/configuration-14"
+name = "images/incident-notification/configuration-13"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
 annotate = [
@@ -1146,7 +1136,7 @@ annotate = [
 # fill the add form instead, and never save it.
 
 [[shots]]
-name = "images/incident-notification/configuration-15"
+name = "images/incident-notification/configuration-14"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/add/"
 selector = "#content"
@@ -1164,7 +1154,7 @@ hide = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-16"
+name = "images/incident-notification/configuration-15"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/add/"
 selector = "#sectorregulation_form fieldset:has(#fieldset-0-3-heading)"
@@ -1175,7 +1165,7 @@ steps = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-17"
+name = "images/incident-notification/configuration-16"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/add/"
 selector = "#sectorregulationworkflow_set-group"
@@ -1199,7 +1189,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-18"
+name = "images/incident-notification/configuration-17"
 role = "regulator_admin"
 # Workflow 1 has incidents, so it opens as the read-only view.
 path = "/admin/incidents/sectorregulation/1/change/"
@@ -1212,7 +1202,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-19"
+name = "images/incident-notification/configuration-18"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
 steps = [
@@ -1222,7 +1212,7 @@ steps = [
 annotate = [{ selector = "select[name=action]", box = true }]
 
 [[shots]]
-name = "images/incident-notification/configuration-20"
+name = "images/incident-notification/configuration-19"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulationworkflowemail/"
 annotate = [
@@ -1231,7 +1221,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/incident-notification/configuration-21"
+name = "images/incident-notification/configuration-20"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulationworkflowemail/1/change/"
 selector = "#content"
@@ -1490,7 +1480,7 @@ role = "operator_admin"
 # The wizard lands on the list, which keeps the search the operator shots above
 # left in the session; a fresh login shows it unfiltered.
 fresh = true
-viewport = { width = 1440, height = 495 }
+viewport = { width = 1440, height = 550 }
 steps = [
   { action = "click", selector = "#id_0-is_technical_the_same" },
   { action = "click", selector = "#wizard-next-btn" },
