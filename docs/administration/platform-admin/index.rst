@@ -25,6 +25,13 @@ The console has three sections and a panel:
 - **Sites**: the address and name of the platform, see `Sites`_ below.
 - **Recent actions**: your own latest actions, logins included, each with a link to the object concerned.
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   administration
+   governance
+
 The first platform administrator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -78,10 +85,3 @@ two-factor authentication.
    do not lead to your platform.
 
 With Docker, the ``MAIN_SITE`` and ``MAIN_SITE_NAME`` variables set both fields at startup (see :doc:`/technical/docker`).
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   administration
-   governance

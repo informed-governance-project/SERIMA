@@ -43,8 +43,9 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 # The reporting module is still under development and its interface will change a lot:
 # its pages are kept out of the build until it settles. To publish them again, remove
-# "reporting/**" here and put reporting/index back in the toctrees of index.rst and pdf.rst.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "reporting/**"]
+# the two reporting patterns here, put reporting/index back in the toctrees of index.rst
+# and pdf.rst, and reporting back in administration/regulator-admin/index.rst.
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "reporting/**", "administration/regulator-admin/reporting.rst"]
 
 numfig = False
 
