@@ -749,7 +749,7 @@ annotate = [
 ]
 
 [[shots]]
-name = "images/administration/platform-admin/index-02"
+name = "images/administration/platform-admin/sites-01"
 role = "platform_admin"
 path = "/admin/sites/site/1/change/"
 selector = "#content"
