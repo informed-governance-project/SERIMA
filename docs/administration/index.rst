@@ -11,7 +11,7 @@ The following section explains how the Operator Admin, Regulator User, Regulator
 .. toctree::
    :maxdepth: 2
 
-   operator-admin
-   regulator-user
-   regulator-admin/index
    platform-admin/index
+   regulator-admin/index
+   regulator-user
+   operator-admin

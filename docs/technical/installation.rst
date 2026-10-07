@@ -168,16 +168,9 @@ Despite its name, in SERIMA this command creates a platform administrator, not a
 (superusers cannot use the platform). This account then creates the regulators, their first administrators
 and the rest of the set-up, as described in :doc:`/administration/platform-admin/index`.
 
-It must also configure the ``domain name`` and the ``display name`` of the application in **Sites**:
-
-.. figure:: /_static/images/technical/installation-01.png
-   :alt: Django application - Sites configuration.
-   :target: ../_static/images/technical/installation-01.png
-
-   Django application - Sites configuration.
-
-This step is essential for the links in the emails (password recovery, for instance)
-and for the QR codes of two-factor authentication.
+Its first task is to set the domain name and display name of the platform in **Sites**
+(see :ref:`platform-sites`): until then, the links in the emails, such as password recovery,
+do not lead to your platform, and authenticator apps do not show its name.
 
 
 Background workers
