@@ -160,7 +160,7 @@ name = "images/getting-started/login-01"
 path = "/account/login"
 full_page = true
 annotate = [
-  { selector = "#login_button", box = true, arrow = "bottom" },
+  { selector = "#login_button", box = true },
   { selector = "#with-account", box = true },
 ]
 
