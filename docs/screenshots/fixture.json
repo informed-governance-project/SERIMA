@@ -50503,6 +50503,1956 @@
   }
  },
  {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 301,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-13T13:41:39.846Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 24,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 302,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-13T13:43:39.846Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 24,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 303,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T13:15:25.177Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 28,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 304,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T13:17:25.177Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 28,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 305,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T13:20:23.316Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 28,
+   "action": "REVIEW STATUS: Passed"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 306,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T13:20:23.328Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 28,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 307,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-02-19T15:19:30.726Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 28,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 308,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T15:30:52.618Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 29,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 309,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T15:32:52.618Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 29,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 310,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T15:35:18.324Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 29,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 311,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T15:35:56.752Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 29,
+   "action": "REVIEW STATUS: Passed"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 312,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-02-19T15:35:56.764Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 29,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 313,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-02-19T17:35:18.324Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 29,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 314,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-20T13:21:23.316Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 28,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 315,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-02-20T15:36:56.752Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 29,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 316,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-03-05T13:23:58.169Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 30,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 317,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-03-05T13:25:58.169Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 30,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 318,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-23T14:30:46.871Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 32,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 319,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-23T14:30:48.914Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 32,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 320,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-23T14:32:46.871Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 32,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 321,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-04-23T16:30:48.914Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 32,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 322,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-29T13:20:59.664Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 34,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 323,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-29T13:21:05.010Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 34,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 324,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-04-29T13:22:31.229Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 34,
+   "action": "REVIEW STATUS: Passed"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 325,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-04-29T13:22:31.241Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 34,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 326,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-29T13:22:59.664Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 34,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 327,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-04-29T15:21:05.010Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 34,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 328,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-04-30T13:23:31.229Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 34,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 329,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-01T06:50:32.621Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 32,
+   "action": "REVIEW STATUS: Passed"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 330,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-06-01T06:50:32.633Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 32,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 331,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-06-01T09:04:53.387Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 36,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 332,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-06-01T09:06:30.904Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 36,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 333,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-06-01T09:06:53.387Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 36,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 334,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-06-01T11:06:30.904Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 36,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 335,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-06-02T06:51:32.621Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 32,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 336,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T06:57:19.822Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 36,
+   "action": "REVIEW STATUS: Revision required"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 337,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T06:57:19.834Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 36,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 338,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:46:16.486Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 42,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 339,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:46:16.486Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 42,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 340,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:46:31.935Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 43,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 341,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:46:31.935Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 43,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 342,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:46:49.897Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 44,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 343,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:46:49.897Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 44,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 344,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:48:16.486Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 42,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 345,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:48:31.935Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 43,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 346,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-10T14:48:49.897Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator B",
+   "standard_answer": 44,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 347,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-07-10T16:46:16.486Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 42,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 348,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-07-10T16:46:31.935Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 43,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 349,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-07-10T16:46:49.897Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 44,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 350,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:31:30.926Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 45,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 351,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:33:30.926Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 45,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 352,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:34:34.651Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 45,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 353,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:35:46.488Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 46,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 354,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:36:17.807Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 46,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 355,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:37:39.666Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 46,
+   "action": "REVIEW STATUS: Revision required"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 356,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:37:39.678Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 46,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 357,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:37:46.488Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 46,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 358,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:39:09.567Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 47,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 359,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:40:02.207Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 47,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 360,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:41:09.567Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 47,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 361,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:52:49.850Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 48,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 362,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T09:54:49.850Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 48,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 363,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-07-27T11:34:34.651Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 45,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 364,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-07-27T11:36:17.807Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 46,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 365,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-07-27T11:40:02.207Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 47,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 366,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T12:15:01.014Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 47,
+   "action": "REVIEW STATUS: Revision required"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 367,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-07-27T12:15:01.026Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 47,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 368,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-18T08:34:06.068Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 50,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 369,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-18T08:36:06.068Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 50,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 370,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-21T12:41:31.680Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 51,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 371,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-21T12:43:31.680Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 51,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 372,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T12:57:06.328Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 51,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 373,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:09:39.083Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 50,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 374,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:09:57.083Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 67,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 375,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:10:19.906Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 67,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 376,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:10:55.322Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 69,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 377,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:10:57.426Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 69,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 378,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:11:57.083Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 67,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 379,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:12:55.322Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 69,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 380,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:13:49.362Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 82,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 381,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:13:54.942Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 83,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 382,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:13:55.123Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 84,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 383,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:13:55.360Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 85,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 384,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:13:55.573Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 86,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 385,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:15:49.362Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 82,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 386,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:15:54.942Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 83,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 387,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:15:55.123Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 84,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 388,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:15:55.360Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 85,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 389,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:15:55.573Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 86,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 390,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:18:09.269Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 87,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 391,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:18:09.464Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 88,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 392,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:18:09.645Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 89,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 393,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:18:09.796Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 90,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 394,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:19:26.818Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 92,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 395,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:19:32.864Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 93,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 396,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:20:09.269Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 87,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 397,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:20:09.464Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 88,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 398,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:20:09.645Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 89,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 399,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:20:09.796Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 90,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 400,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:21:11.429Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 90,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 401,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:21:26.818Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 92,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 402,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T13:21:32.864Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 93,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 403,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T14:57:06.328Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 51,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 404,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T14:58:22.761Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 51,
+   "action": "REVIEW STATUS: Revision required"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 405,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T14:58:22.773Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 51,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 406,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T14:59:54.376Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 50,
+   "action": "REVIEW STATUS: Revision required"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 407,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T14:59:54.388Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 50,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 408,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T15:05:13.693Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 90,
+   "action": "REVIEW STATUS: Passed"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 409,
+  "fields": {
+   "user": [
+    "regulator-admin@example.org"
+   ],
+   "timestamp": "2026-08-31T15:05:13.705Z",
+   "user_full_name": "Regulator Admin",
+   "role": "RegulatorAdmin",
+   "entity_name": "Regulator A",
+   "standard_answer": 90,
+   "action": "COMMENT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 410,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T15:09:39.083Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 50,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 411,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T15:10:19.906Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 67,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 412,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T15:10:57.426Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 69,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 413,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-08-31T15:21:11.429Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 90,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 414,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-01T15:06:13.693Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 90,
+   "action": "DOWNLOAD"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 415,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T08:39:09.345Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 99,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 416,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T08:41:09.345Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 99,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 417,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:16:17.786Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 100,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 418,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:18:17.786Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 100,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 419,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:37:04.662Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 101,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 420,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:37:34.055Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 102,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 421,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:39:04.662Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 101,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 422,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:39:34.055Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 102,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 423,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:48:22.673Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 104,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 424,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:50:22.673Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 104,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 425,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T09:59:57.277Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 105,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 426,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-21T10:01:57.277Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 105,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 427,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-22T11:13:49.622Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 107,
+   "action": "CREATE"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 428,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-22T11:14:24.322Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 107,
+   "action": "SUBMIT"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 429,
+  "fields": {
+   "user": [
+    "operator-admin@example.org"
+   ],
+   "timestamp": "2026-09-22T11:15:49.622Z",
+   "user_full_name": "Operator Admin",
+   "role": "OperatorAdmin",
+   "entity_name": "Operator A",
+   "standard_answer": 107,
+   "action": "READ"
+  }
+ },
+ {
+  "model": "securityobjectives.logstandardanswer",
+  "pk": 430,
+  "fields": {
+   "user": [
+    "regulator-user@example.org"
+   ],
+   "timestamp": "2026-09-22T13:14:24.322Z",
+   "user_full_name": "Regulator User",
+   "role": "RegulatorUser",
+   "entity_name": "Regulator A",
+   "standard_answer": 107,
+   "action": "READ"
+  }
+ },
+ {
   "model": "reporting.companyreporting",
   "pk": 32,
   "fields": {
