@@ -741,6 +741,7 @@ annotate = [
 name = "images/administration/platform-admin/index-01"
 role = "platform_admin"
 path = "/admin/"
+viewport = { width = 1440, height = 640 }
 annotate = [
   { selector = "#content-main .app-admin", box = true },
   { selector = "#content-main .app-governanceplatform", box = true },
@@ -1003,6 +1004,7 @@ hide = [".submit-row"]
 name = "images/administration/regulator-user/index-01"
 role = "regulator_user"
 path = "/admin/"
+viewport = { width = 1440, height = 400 }
 annotate = [
   { selector = "#content-main .app-governanceplatform", box = true },
   { selector = "#recent-actions-module", box = true },
@@ -1072,6 +1074,7 @@ annotate = [
 name = "images/administration/operator-admin/index-01"
 role = "operator_admin"
 path = "/admin/"
+viewport = { width = 1440, height = 400 }
 annotate = [
   { selector = "#content-main .app-governanceplatform", box = true },
   { selector = "#recent-actions-module", box = true },
@@ -1163,6 +1166,7 @@ annotate = [
 name = "images/administration/observer-admin/index-01"
 role = "observer_admin"
 path = "/admin/"
+viewport = { width = 1440, height = 400 }
 annotate = [
   { selector = "#content-main .app-governanceplatform", box = true },
   { selector = "#recent-actions-module", box = true },
