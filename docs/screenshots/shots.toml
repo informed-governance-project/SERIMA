@@ -471,19 +471,6 @@ steps = [
   { action = "wait_for", selector = "#access-log-table thead th:first-child[aria-sort='ascending']" },
 ]
 
-[[shots]]
-name = "images/incident-notification/dashboard-08"
-# Not in dashboard.rst: docs/security-objectives/dashboard.rst shows it for
-# the same Column settings button on its own dashboard.
-path = "/incidents/"
-role = "operator_admin"
-viewport = { width = 1440, height = 420 }
-steps = [
-  { action = "hover", selector = "button[data-bs-target='#IncidentshideColumns'] i" },
-  { action = "wait_for", selector = ".tooltip.show" },
-]
-annotate = [{ selector = "button[data-bs-target='#IncidentshideColumns']", box = true }]
-
 # --- Review a report (docs/incident-notification/review-a-report.rst) --------
 #
 # The walkthrough follows NI_K07S3XB3 (Operator B), whose Preliminary Incident
@@ -522,7 +509,7 @@ annotate = [
 name = "images/incident-notification/workflow-regulator-03"
 role = "regulator_admin"
 path = "/incidents/"
-viewport = { width = 1440, height = 560 }
+viewport = { width = 1440, height = 495 }
 annotate = [{ selector = "a[href$='incident_workflow_id=99']", box = true }]
 
 [[shots]]
@@ -1132,7 +1119,7 @@ role = "operator_admin"
 # The wizard lands on the list, which keeps the search the operator shots above
 # left in the session; a fresh login shows it unfiltered.
 fresh = true
-viewport = { width = 1440, height = 560 }
+viewport = { width = 1440, height = 495 }
 steps = [
   { action = "click", selector = "#id_0-is_technical_the_same" },
   { action = "click", selector = "#wizard-next-btn" },
@@ -1156,7 +1143,170 @@ annotate = [
   { selector = "#incidents-table tbody tr:nth-child(2) td.list-sectors li", box = true },
 ]
 
+# --- Security objectives dashboard (docs/security-objectives/dashboard.rst) ---
+#
+# The operator's dashboard. Row callouts target two fixture declarations by the
+# pk on their Access Log button: 107 (Under review) and 105 (Unsubmitted). They
+# are the two most recently updated, so they head the list — until
+# dashboard-07 duplicates one, which pushes both down and out of the cropped
+# viewports. Reload the fixture before shooting this section a second time.
+#
+# Column choices and the legend are kept in localStorage, filters and sort
+# order in the Django session — both shared by every shot of a role. Shots
+# that change any of them run `fresh`, so the next shot sees the defaults.
+
+[[shots]]
+name = "images/security-objectives/dashboard-01"
+# The Modules menu is no longer rendered on the homepage, so only the tile
+# route to the dashboard can be shown.
+path = "/"
+role = "operator_admin"
+annotate = [
+  { selector = ".card:has(a[href='/securityobjectives/'])", box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-02"
+# The numbers match the list in dashboard.rst, the row's actions numbered
+# left to right. The controls are packed too tightly for arrows, so most
+# labels sit right beside their element.
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 495 }
+annotate = [
+  { selector = "a.fw-bold[href='/securityobjectives/']", box = true, arrow = "top", length = 0, label = "1" },
+  { selector = "button.create_so_declaration", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = "#search_bar_form", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = "#openFilter", box = true, arrow = "top", length = 0, label = "4" },
+  { selector = "#so_status_legend_btn", box = true, arrow = "top", length = 0, label = "5" },
+  { selector = "#securityobjectives-table thead", box = true, arrow = "top", length = 40, label = "6" },
+  { selector = "button[data-bs-target='#SOhideColumns']", box = true, arrow = "left", length = 0, label = "7" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .update_so_declaration", box = true, arrow = "bottom", length = 0, label = "8" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-comments-disabled", box = true, arrow = "bottom", length = 0, label = "9" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .copy_so_declaration", box = true, arrow = "bottom", length = 0, label = "10" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) a[href^='/securityobjectives/download/']", box = true, arrow = "bottom", length = 0, label = "11" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .delete_so_declaration", box = true, arrow = "bottom", length = 0, label = "12" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options", box = true, arrow = "bottom", length = 0, label = "13" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-03"
+path = "/securityobjectives/"
+role = "operator_admin"
+fresh = true
+viewport = { width = 1440, height = 430 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+# The "Legend" title sits on the frame's top edge, outside #collapseLegend, so
+# the outline takes in both or it would strike through the title.
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/dashboard-04"
+# Every column an operator sees, numbered as in the column table of
+# dashboard.rst. The rows are hidden, with the pager and footer they would
+# pull up, so the labels sit in free space instead of over the data.
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 400 }
+hide = ["#securityobjectives-table tbody", "footer", "div.small:has(.pagination)"]
+annotate = [
+  { selector = "th[data-sort-field='status']", arrow = "bottom", length = 45, label = "1" },
+  { selector = "th[data-sort-field='last_update']", arrow = "bottom", length = 45, label = "2" },
+  { selector = "th[data-sort-field='submit_date']", arrow = "bottom", length = 45, label = "3" },
+  { selector = "th[data-sort-field='identifier']", arrow = "bottom", length = 45, label = "4" },
+  { selector = "th[data-sort-field='framework']", arrow = "bottom", length = 45, label = "5" },
+  { selector = "th[data-sort-field='creator']", arrow = "bottom", length = 45, label = "6" },
+  { selector = "th[data-sort-field='sectors']", arrow = "bottom", length = 45, label = "7" },
+  { selector = "th[data-sort-field='year']", arrow = "bottom", length = 45, label = "8" },
+  { selector = "#securityobjectives-table thead th:nth-last-child(2)", arrow = "bottom", length = 45, label = "9" },
+  { selector = "#securityobjectives-table thead th:last-child", arrow = "bottom", length = 45, label = "10" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-05"
+path = "/securityobjectives/"
+role = "operator_admin"
+selector = "#SOhideColumns .modal-content"
+steps = [
+  { action = "click", selector = "button[data-bs-target='#SOhideColumns']" },
+  { action = "wait_for", selector = "#SOhideColumns.show" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-06"
+# Stops at the dialog; dashboard-07 is the one that confirms.
+path = "/securityobjectives/"
+role = "operator_admin"
+selector = "#copy_so_declaration .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='105']) .copy_so_declaration" },
+  { action = "wait_for", selector = "#copy_so_declaration.show #copy-so-declaration-form" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-08"
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 495 }
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options" },
+  { action = "wait_for", selector = ".more-actions-dropdown.show" },
+]
+annotate = [
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options", box = true },
+  { selector = ".more-actions-dropdown.show .so_access_log", box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-09"
+# The operator's log of 107 (Under review): CREATE, READ and SUBMIT, enough to
+# show the sort. DataTables lists the newest first and cycles asc → desc →
+# unsorted, so the first click clears the sort and the second shows the oldest
+# first.
+path = "/securityobjectives/"
+role = "operator_admin"
+selector = "#so_access_log .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options" },
+  { action = "click", selector = ".more-actions-dropdown.show .so_access_log" },
+  # The sort control exists only once DataTables has initialised; a click on
+  # the header before that is lost.
+  { action = "wait_for", selector = "#so_access_log.show #access-log-table th:first-child .dt-column-order" },
+  { action = "click", selector = "#access-log-table thead th:first-child" },
+  { action = "click", selector = "#access-log-table thead th:first-child" },
+  { action = "wait_for", selector = "#access-log-table thead th:first-child[aria-sort='ascending']" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-07"
+# STATEFUL: confirms the duplicate, creating a new Unsubmitted declaration
+# (2027, Rail transport) for Operator A plus CREATE and COPY log entries. Keep
+# it last in the section: the copy heads the list and pushes 105 and 107 down.
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 640 }
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='105']) .copy_so_declaration" },
+  { action = "wait_for", selector = "#copy_so_declaration.show #copy-so-declaration-form" },
+  { action = "select", selector = "#copy_so_declaration #id_year", value = "2027" },
+  { action = "click", selector = "#copy_so_declaration button.multiselect" },
+  # Sector groups open collapsed, which leaves their options unclickable.
+  { action = "click", selector = "#copy_so_declaration .multiselect-group[title='Transport'] .caret-container" },
+  { action = "click", selector = "#copy_so_declaration .multiselect-option:has(input[value='6'])" },
+  { action = "click", selector = "#copy-so-declaration-form button[type='submit']" },
+  { action = "wait_for", selector = ".alert-success" },
+]
+annotate = [
+  { selector = "#securityobjectives-table tbody tr:nth-child(1)", box = true },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='105'])", box = true },
+]
+
 # --- Not covered yet --------------------------------------------------------
 #
-# The getting-started and incident-notification pages are scripted. The
-# security-objectives, reporting and remaining administration images are not.
+# The getting-started and incident-notification pages and the security
+# objectives dashboard are scripted. The other security-objectives pages, the
+# reporting and the remaining administration images are not.
