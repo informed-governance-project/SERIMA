@@ -1163,6 +1163,25 @@ annotate = [
 # only opened, never saved, and the RT connection is never tested.
 
 [[shots]]
+name = "images/administration/operator-admin/governance-06"
+# incident-user@example.org is suggested to Operator A in the fixture and
+# waits for its approval; nothing here approves or rejects it.
+path = "/admin/governanceplatform/user/"
+role = "operator_admin"
+viewport = { width = 1920, height = 520 }
+annotate = [
+  { selector = ".messagelist", box = true },
+  { selector = "#result_list tbody tr:has(.link-pending) td.field-account_actions", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-07"
+path = "/admin/governanceplatform/user/150/change/"
+role = "operator_admin"
+viewport = { width = 1440, height = 700 }
+annotate = [{ selector = ".pending-link-prompt", box = true }]
+
+[[shots]]
 name = "images/administration/observer-admin/index-01"
 role = "observer_admin"
 path = "/admin/"

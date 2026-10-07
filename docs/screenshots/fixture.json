@@ -665,6 +665,31 @@
   }
  },
  {
+  "model": "governanceplatform.user",
+  "pk": 150,
+  "fields": {
+   "password": "!",
+   "last_login": null,
+   "is_superuser": false,
+   "first_name": "Incident",
+   "last_name": "User",
+   "is_active": true,
+   "date_joined": "2025-10-09T06:55:30.635Z",
+   "email": "incident-user@example.org",
+   "phone_number": "+352 000 000 010",
+   "is_staff": false,
+   "email_verified": false,
+   "accepted_terms": true,
+   "accepted_terms_date": "2026-01-29T15:05:29.246Z",
+   "groups": [
+    [
+     "IncidentUser"
+    ]
+   ],
+   "user_permissions": []
+  }
+ },
+ {
   "model": "governanceplatform.companyuser",
   "pk": 69,
   "fields": {
@@ -698,6 +723,18 @@
    ],
    "is_company_administrator": false,
    "approved": true
+  }
+ },
+ {
+  "model": "governanceplatform.companyuser",
+  "pk": 111,
+  "fields": {
+   "company": 46,
+   "user": [
+    "incident-user@example.org"
+   ],
+   "is_company_administrator": false,
+   "approved": false
   }
  },
  {

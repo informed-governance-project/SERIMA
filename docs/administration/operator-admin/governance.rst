@@ -94,27 +94,38 @@ and work as in the list:
 
 .. _operator-admin-approve:
 
-Approve an incident user
-""""""""""""""""""""""""
+Approve or reject a suggested account
+"""""""""""""""""""""""""""""""""""""
 
 An incident user is someone who created their own account to notify incidents (see :doc:`/getting-started/create-account`).
-When your regulator adds such an account to your operator (see :ref:`regulator-user-contacts`),
-it is suggested as a member of the operator and waits for your approval. Unless the account already belongs
-to another operator, the email address of your operator and its administrators receive an email about the suggestion.
+When a regulator user adds such an account to your operator (see :ref:`regulator-user-contacts`), the account is only
+suggested: it joins your operator once you approve it. Unless the account already belongs to another operator,
+the email address of your operator and its administrators receive an email about the suggestion.
 
 The **Users** list then shows **There is a suggestion to link a User Account to your company. Please Approve or Reject
-the suggestion.** The row of the account has **Approved** unticked and two buttons:
+the suggestion.** The row of the suggested account has **Approved** unticked, and **Approve** and **Reject**
+in **Account actions**.
+
+.. figure:: /_static/images/administration/operator-admin/governance-06.png
+   :alt: Users list with the suggestion message and the Approve and Reject buttons of the suggested account outlined
+   :target: ../../_static/images/administration/operator-admin/governance-06.png
+
+1. Check who the account belongs to. Click its name to see its details: the account opens read-only, with the question
+   **Add this user to Company** followed by the name of your operator, and the same two buttons.
+
+   .. figure:: /_static/images/administration/operator-admin/governance-07.png
+      :alt: Suggested account opened read-only, with the Add this user to Company question and the Approve and Reject buttons outlined
+      :target: ../../_static/images/administration/operator-admin/governance-07.png
+
+2. Click **Approve** to accept the suggestion, or **Reject** to refuse it.
+3. In the **Attention** pop-up, which explains what the action does, click **Confirm**, or **Cancel** to change your mind.
 
 - **Approve**: the account becomes an operator user of your operator, and the incidents it notified move to your operator.
-- **Reject**: the suggestion is removed.
-
-Until you decide, the account opens read-only, with the question **Add this user to Company** followed by the name
-of your operator, and the same two buttons.
+- **Reject**: the suggestion is removed, and the account is not linked to your operator.
 
 .. important::
 
-   Check the name and email address of the account before approving it: once approved, its owner works
-   for your operator.
+   Approve only an account you know: once approved, its owner works for your operator and sees its incidents.
 
 Remove an account
 """""""""""""""""

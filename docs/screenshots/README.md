@@ -45,6 +45,7 @@ every status, two report projects, and the accounts below.
 | Regulator B | `regulator-b-admin@example.org`, `regulator-b-user@example.org` |
 | Operator A | `operator-admin@example.org` (also administrator of Operator B) |
 | Operator B | `operator-user@example.org` |
+| — | `incident-user@example.org`: an incident user suggested to Operator A, awaiting its approval |
 | Observer A | `observer-admin@example.org` |
 | — | `platform-admin@example.org` |
 
