@@ -34,5 +34,5 @@ as described in :doc:`platform-admin/governance`.
    platform-admin/index
    regulator-admin/index
    regulator-user/index
-   operator-admin/index
    observer-admin/index
+   operator-admin/index
