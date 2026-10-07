@@ -10,8 +10,8 @@ What you can do in it depends on your role:
   of the modules (see :doc:`regulator-admin/index`).
 - **Regulator User**: creates the operators their regulator supervises and the accounts of those operators
   (see :doc:`regulator-user/index`).
-- **Operator Admin**: manages the accounts of their operator (see :doc:`operator-admin/index`).
 - **Observer Admin**: manages the details and accounts of their observer (see :doc:`observer-admin/index`).
+- **Operator Admin**: manages the accounts of their operator (see :doc:`operator-admin/index`).
 
 .. note::
 
