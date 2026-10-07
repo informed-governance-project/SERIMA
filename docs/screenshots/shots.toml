@@ -730,6 +730,157 @@ annotate = [
   { selector = "#workflow_comment .modal-content", box = true },
 ]
 
+# --- Platform admin (docs/administration/platform-admin/) ---------------------
+#
+# The Django admin under /admin/, as the platform administrator, whom
+# RestrictViewsMiddleware sends back there from every page of the platform.
+# Changelists outline the column header the prose lists, and the open model in
+# the sidebar. Change forms are only opened, never saved.
+
+[[shots]]
+name = "images/administration/platform-admin/index-01"
+role = "platform_admin"
+path = "/admin/"
+annotate = [
+  { selector = "#content-main .app-admin", box = true },
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#content-main .app-sites", box = true },
+  { selector = "#recent-actions-module", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/index-02"
+role = "platform_admin"
+path = "/admin/sites/site/1/change/"
+selector = "#content"
+
+[[shots]]
+name = "images/administration/platform-admin/administration-01"
+role = "platform_admin"
+path = "/admin/admin/logentry/"
+annotate = [
+  { selector = "#changelist-filter", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/administration-02"
+role = "platform_admin"
+# Opens the newest entry: its id grows with every login, so it cannot be a path.
+path = "/admin/admin/logentry/"
+steps = [
+  { action = "click", selector = "#result_list tbody tr:first-child th a" },
+  { action = "wait_for", selector = "#logentry_form" },
+]
+selector = "#content"
+
+[[shots]]
+name = "images/administration/platform-admin/governance-01"
+role = "platform_admin"
+path = "/admin/governanceplatform/regulator/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-02"
+role = "platform_admin"
+# Regulator 1 is Regulator A, with both functionalities chosen.
+path = "/admin/governanceplatform/regulator/1/change/"
+selector = "#content"
+hide = ["#regulatoruser_set-group", ".submit-row"]
+annotate = [{ selector = "#id_functionalities_selector_chosen", box = true }]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-03"
+role = "platform_admin"
+path = "/admin/governanceplatform/regulator/1/change/"
+selector = "#regulatoruser_set-group"
+annotate = [{ selector = "#add_id_regulatoruser_set-0-user", box = true }]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-04"
+role = "platform_admin"
+# Regulation 1 is Regulation A, assigned to both regulators.
+path = "/admin/governanceplatform/regulation/1/change/"
+selector = "#content"
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-05"
+role = "platform_admin"
+path = "/admin/governanceplatform/functionality/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-06"
+role = "platform_admin"
+# Functionality 1 is security objectives, the one open to all four eligible roles.
+path = "/admin/governanceplatform/functionality/1/change/"
+selector = "#content"
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-07"
+role = "platform_admin"
+path = "/admin/governanceplatform/entitycategory/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-08"
+role = "platform_admin"
+# Observer 2 is Observer A, the fixture's only observer.
+path = "/admin/governanceplatform/observer/2/change/"
+selector = "#content"
+hide = ["#observerregulation_set-group", ".submit-row"]
+annotate = [{ selector = "#observeruser_set-group", box = true }]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-09"
+role = "platform_admin"
+path = "/admin/governanceplatform/observer/2/change/"
+# At 1440px the two sector lists squeeze the Legal basis drop-down down to "Reg".
+viewport = { width = 1920, height = 900 }
+selector = "#observerregulation_set-group"
+
+[[shots]]
+name = "images/administration/platform-admin/governance-10"
+role = "platform_admin"
+path = "/admin/governanceplatform/user/"
+# Wide enough for the columns after Roles, which the prose lists, to fit.
+viewport = { width = 1920, height = 900 }
+annotate = [
+  { selector = [".object-tools li:nth-child(2)", ".object-tools li:nth-child(3)"], box = true },
+  { selector = "#changelist-filter", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-11"
+role = "platform_admin"
+# User 143 is regulator-admin@example.org: a regulator administrator's form has the Active box.
+path = "/admin/governanceplatform/user/143/change/"
+selector = "#content"
+annotate = [
+  { selector = "#content .field-is_active", box = true },
+  { selector = "#content .field-reset_2FA_action .account-actions", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-12"
+role = "platform_admin"
+path = "/admin/governanceplatform/settingsdummy/"
+viewport = { width = 1440, height = 700 }
+# The first row lists the names of the hidden settings in one unbroken line,
+# which would fill the capture; the prose describes the settings themselves.
+hide = ["#content table.table tbody tr:first-child"]
+
 # --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---
 #
 # The Django admin under /admin/, as the regulator administrator. Changelists
@@ -1545,6 +1696,7 @@ annotate = [
 
 # --- Not covered yet --------------------------------------------------------
 #
-# The getting-started and incident-notification pages and the three security
-# objectives pages are scripted. The reporting and the remaining
-# administration images are not.
+# The getting-started and incident-notification pages, the three security
+# objectives pages and the platform admin pages are scripted. The reporting
+# images and the remaining administration images (operator admin, regulator
+# user, and the regulator admin pages other than incident notification) are not.
