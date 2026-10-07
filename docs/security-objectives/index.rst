@@ -14,4 +14,4 @@ regulators review and score those declarations.
 
    dashboard
    fill-in-a-declaration
-   regulator
+   review-a-declaration

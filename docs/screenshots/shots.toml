@@ -1241,6 +1241,144 @@ steps = [
   { action = "wait_ms", value = 400 },
 ]
 
+# --- Review a declaration (docs/security-objectives/review-a-declaration.rst) ---
+#
+# The regulator's review inputs (objective result, review comments) are saved
+# on `change` and Send notifies the operator, so these shots only open
+# declarations and pop-ups: the result list is opened by a click, which fires
+# no `change`. Opening a declaration writes a READ entry to its access log,
+# which is why none of them opens 107: dashboard-09 shows that log.
+#
+# 67 is Under review with its objectives passed, in revision and not reviewed
+# yet. 36 is Revision required, not sent, with a review comment drafted. 51 is
+# the sent version that followed 36, and 50 the latest of four versions.
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-01"
+# Numbered as in the list of review-a-declaration.rst; the row actions are
+# those of 107, which is only pointed at, never opened.
+role = "regulator_admin"
+path = "/securityobjectives/"
+viewport = { width = 1440, height = 495 }
+annotate = [
+  { selector = "a.import_so_declaration", box = true, arrow = "top", length = 0, label = "1" },
+  { selector = "th[data-sort-field='company_name']", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = "#securityobjectives-table thead th:nth-last-child(2)", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) a[href$='declaration?id=107']", box = true, arrow = "bottom", length = 0, label = "4" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-comments-disabled", box = true, arrow = "bottom", length = 0, label = "5" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .delete_so_declaration", box = true, arrow = "bottom", length = 0, label = "6" },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-02"
+role = "regulator_admin"
+path = "/securityobjectives/"
+viewport = { width = 1440, height = 430 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-03"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+viewport = { width = 1440, height = 450 }
+annotate = [
+  { selector = ".card-header .ms-auto .d-flex > button:first-child", box = true, arrow = "left", length = 0, label = "1" },
+  { selector = "#so_status_form > div:not(.d-none)", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = "#so_send_button", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "4" },
+  { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "5" },
+  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "6" },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-04"
+# The legend's open state is kept in localStorage, hence fresh.
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+fresh = true
+viewport = { width = 1440, height = 600 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_declaration_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-05"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+# Tall enough for the whole slide: the capture stops at the viewport, and a
+# taller one leaves blank space under the table. The card body rather than the
+# slide, so the outline of the last column is not cut off at the edge.
+viewport = { width = 1440, height = 1650 }
+selector = ".card-body"
+steps = [{ action = "wait_ms", value = 1000 }]
+# The planned measures take the last two rows, so the third from last is the
+# last measure: outlining it with the header covers the whole column.
+annotate = [
+  { selector = [".carousel-item.active thead th:last-child", ".carousel-item.active tbody tr:nth-last-child(3) td:last-child"], box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-06"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+viewport = { width = 1440, height = 450 }
+steps = [{ action = "click", selector = "#so_status_form > div:not(.d-none) select" }]
+annotate = [{ selector = "#so_status_form > div:not(.d-none) select", box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-07"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=36"
+selector = "#review_comment_so_declaration > .modal-dialog > .modal-content"
+steps = [
+  # Send carries the same class; this is the comment-only icon, whose pop-up
+  # saves without sending.
+  { action = "click", selector = "button.review_comment_so_declaration[data-only-review-comment]" },
+  { action = "wait_for", selector = "#review_comment_so_declaration.show .note-editor" },
+  { action = "wait_ms", value = 400 },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-08"
+role = "regulator_admin"
+path = "/securityobjectives/"
+selector = "#review_comment_so_declaration > .modal-dialog > .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='51']) button.review_comment_so_declaration" },
+  { action = "wait_for", selector = "#review_comment_so_declaration.show .note-editor" },
+  { action = "wait_ms", value = 400 },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-09"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=51"
+# Compared with 36, the version before it.
+viewport = { width = 1440, height = 2000 }
+selector = ".carousel-item.active"
+steps = [{ action = "wait_ms", value = 1000 }]
+annotate = [{ selector = ".carousel-item.active .view-previous-version", box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-10"
+role = "regulator_admin"
+path = "/securityobjectives/"
+selector = "#so_versions .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='50']) .custom-icon-more-options" },
+  { action = "click", selector = ".more-actions-dropdown.show .so_versions" },
+  { action = "wait_for", selector = "#so_versions.show" },
+  { action = "wait_ms", value = 400 },
+]
+
 # --- Security objectives dashboard (docs/security-objectives/dashboard.rst) ---
 #
 # The operator's dashboard. Row callouts target two fixture declarations by the
@@ -1407,7 +1545,6 @@ annotate = [
 
 # --- Not covered yet --------------------------------------------------------
 #
-# The getting-started and incident-notification pages, the security
-# objectives dashboard and fill-in-a-declaration are scripted. The regulator's
-# security-objectives page, the reporting and the remaining administration
-# images are not.
+# The getting-started and incident-notification pages and the three security
+# objectives pages are scripted. The reporting and the remaining
+# administration images are not.

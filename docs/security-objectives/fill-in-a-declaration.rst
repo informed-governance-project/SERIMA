@@ -14,7 +14,7 @@ Each declaration goes through the same cycle:
 3. If changes are needed, you update the declaration and submit the new version, which the regulator reviews again.
 
 This chapter describes your side of that cycle. The dashboard and its statuses are described in :doc:`dashboard`,
-and the regulator's review in :doc:`regulator`.
+and the regulator's review in :doc:`review-a-declaration`.
 
 .. important::
 
@@ -35,6 +35,8 @@ To come back to it later, click its **Edit** icon (pencil) in the **Actions** co
 .. tip::
 
    To start from the answers of an existing declaration instead, use **Duplicate** on the dashboard.
+
+.. _declaration-screen:
 
 The declaration screen
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -212,6 +214,8 @@ The earlier versions remain unchanged, and are listed under **Version control** 
 
    **Update** is offered on every submitted declaration, not only after a **Revision required**,
    so you can also send new information to the regulator.
+
+.. _compare-versions:
 
 Compare with the previous version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
