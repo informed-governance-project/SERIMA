@@ -1,4 +1,4 @@
-Regulator Admin
+Regulator admin
 ---------------
 
 The regulator administrator sets up the platform for their regulator: the accounts of the regulator,

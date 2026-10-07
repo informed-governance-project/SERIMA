@@ -21,7 +21,7 @@ The dashboard works as described in :doc:`dashboard`, with the differences numbe
    An **Export** link follows it when you have the right to export (see `Export the list of declarations`_).
 
 2. **Company**: Replaces the **Creator** column: the operator that submitted the declaration.
-   The **Filter** panel also has a **Submitter** field to select an operator.
+   In the **Filter** panel, **Submitter** selects an operator rather than a person.
 
 3. **Progress**: The share of the objectives you have reviewed. Once all are reviewed, a **Send** button
    replaces the bar until you send the result (see `Send the result`_).

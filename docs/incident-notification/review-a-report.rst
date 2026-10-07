@@ -106,3 +106,88 @@ The labels show the change the option makes:
 
    Once you close an incident, the operator can no longer submit or update any of its reports.
    Close it only when no further report is expected; you can reopen it with **Set to Active**.
+
+.. _incident-export:
+
+Export incidents
+~~~~~~~~~~~~~~~~
+
+Regulator administrators can export the incidents notified to their regulator, with the answers of one of their reports,
+to a spreadsheet. The **Export** link appears in the top-right corner of the module once a platform administrator
+has ticked **Can export incidents** on your account (see :ref:`platform-regulators`). Regulator users cannot export
+incidents, even with the box ticked. Observers export the incidents their observer receives in the same way,
+when the platform administrator has ticked the box on their account (see :ref:`platform-observers`).
+
+.. figure:: /_static/images/incident-notification/workflow-regulator-10.png
+   :alt: Header of the incident notification module with the Export link outlined
+   :target: ../_static/images/incident-notification/workflow-regulator-10.png
+
+1. Click **Export**.
+2. In the **Export incidents** pop-up, select:
+
+   - **Regulation**: the regulation of the incidents.
+   - **Workflow**: the notification procedure of that regulation. Only the procedures of the selected regulation are listed.
+   - **Report**: the report whose answers you want, among the reports of the selected procedure.
+   - **From** and **To**: the period in which the incidents were notified. The calendars cover the last two years.
+   - **File format**: **Excel (.xlsx)** or **CSV (.csv)**.
+
+   .. figure:: /_static/images/incident-notification/workflow-regulator-11.png
+      :alt: Export incidents pop-up with the Regulation, Workflow, Report, From, To and File format fields
+      :target: ../_static/images/incident-notification/workflow-regulator-11.png
+
+3. Click **Export**. The file, ``export.xlsx`` or ``export.csv``, downloads straight away.
+
+The file has one row per incident notified in the period under the selected procedure, from the most recent,
+and holds the latest submitted version of the selected report. Incidents for which that report has not been submitted
+are left out. Each row gives:
+
+- the operator, the incident reference, the notification, detection, start and resolution dates, the regulation,
+  whether the impact is significant, the incident status, and the contact and technical contact details;
+- the report, its status and the date of its version;
+- one column per affected sector, one per answer of the report, and the impacts selected for each sector.
+
+The headers of the incident and report columns are in English, whatever the language of the platform.
+If no incident matches your choices, the pop-up closes with the message **No incidents available for export.**
+
+.. note::
+
+   Each export is recorded in the log entries of the administration console (activity **Export**), with the number
+   of incidents exported, the regulation, the procedure, the report and the period
+   (see :doc:`/administration/regulator-admin/administration`). Every platform administrator also receives an email,
+   **New incident mass export**, naming the regulation.
+
+.. _regulator-own-incidents:
+
+My reported incidents
+~~~~~~~~~~~~~~~~~~~~~
+
+A regulator can also be the victim of an incident, and notify it like an operator. Regulator administrators and
+regulator users do this in a second view of the module: click **My reported incidents** in the top-right corner.
+Click **Overview** to return to the incidents notified to you.
+
+.. figure:: /_static/images/incident-notification/workflow-regulator-12.png
+   :alt: My reported incidents view with the My reported incidents link and the Notify an incident button outlined
+   :target: ../_static/images/incident-notification/workflow-regulator-12.png
+
+The view lists the incidents notified by the accounts of your regulator, and works like an operator's dashboard
+(see :doc:`dashboard`): it shows the **Regulator** each incident was notified to instead of the operator columns,
+and the **Report** column lets you fill in the reports.
+
+- To notify an incident, click **Notify an incident** and follow :doc:`report-an-incident`.
+  The **Legal Entity Name** is your regulator, and the incident is recorded under its name.
+
+  .. figure:: /_static/images/incident-notification/workflow-regulator-13.png
+     :alt: Contact form of a new notification with the Legal Entity Name filled in with the regulator outlined
+     :target: ../_static/images/incident-notification/workflow-regulator-13.png
+
+- To submit or update its reports, follow :doc:`fill-in-a-report`. You fill in the reports yourself, as an operator does:
+  there is no **Comment/Explanation** form for you there.
+- As long as none of its reports is submitted, an incident can be deleted with the **Delete** icon in the **Actions** column.
+
+The regulator you select in the **Regulators** form reviews your reports, as described above, on its **Overview**.
+It may be your own regulator: the incident then appears in both views, and you review it from the **Overview**.
+
+.. important::
+
+   Open your own incidents from **My reported incidents**. From the **Overview**, an incident your regulator
+   notified opens in review mode, with read-only answers.

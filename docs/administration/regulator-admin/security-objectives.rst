@@ -1,7 +1,7 @@
-Security Objectives
--------------------
+Security objectives configuration
+---------------------------------
 
-The **Security Objectives** section of the console holds the evaluation frameworks that operators answer
+The **Security objectives** section of the console holds the evaluation frameworks that operators answer
 in their declarations (see :doc:`/security-objectives/fill-in-a-declaration`) and that your regulator reviews
 (see :doc:`/security-objectives/review-a-declaration`). It lists **Domains**, **Email templates**,
 **Maturity levels**, **Security Measures**, **Security Objectives** and **Standards**.
@@ -35,14 +35,8 @@ Since each item refers to the previous ones, set them up in this order:
 
 Alternatively, create the standard and import the rest from a file (see `Import and export a framework`_).
 
-Every item works the same way:
-
-- Click its name to open the list. Click **Add** next to the name, or the **Add** button at the top right of the list,
-  to create a new one; click a line of the list to open and change it.
-- To delete objects, tick them in the list, choose the **Delete selected** action in the **Action** drop-down
-  and click **Run**.
-- Texts can be translated: the tabs above the form (**English**, **French**, **Dutch**, **German**) switch
-  between the languages of the platform. Save your changes before you leave the tab of a language.
+The lists, forms, language tabs and the icons beside the drop-downs work as described in
+:doc:`/administration/platform-admin/governance`.
 
 .. important::
 

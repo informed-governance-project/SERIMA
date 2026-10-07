@@ -38,8 +38,7 @@ Then click **Save**.
 
 .. note::
 
-   When no RT ticketing system is connected, the emails about an incident also go to every account of your observer,
-   administrators and users alike.
+   When no RT ticketing system is connected, the emails about an incident also go to every account of your observer.
 
 .. _observer-admin-rt:
 
@@ -91,7 +90,7 @@ Each row has:
 - **Is administrator**: keep it ticked: every member of an observer's staff is an observer administrator.
   Changing it switches the role of the account and logs it out.
 - **Can export incidents**: whether the account can export the incidents your observer receives, read-only:
-  the platform administrator sets it.
+  the platform administrator sets it (see :ref:`incident-export`).
 - **Delete?**: removes the account from your observer. The account is logged out, and can no longer use the platform;
   an observer administrator left without any observer to administer is also deactivated.
 

@@ -16,21 +16,21 @@ or by clicking the **Create account** link in the top right corner.
 Fill in your first name, last name and email address, and answer the captcha.
 
 .. figure:: /_static/images/getting-started/create-account-01.png
-   :alt: Create an account
+   :alt: Create account form with the first name, last name, email address, captcha and terms of service fields
    :target: ../_static/images/getting-started/create-account-01.png
 
 Accept the terms of service and submit the form. The platform takes you back to the login page
 and confirms that your account was created.
 
 .. figure:: /_static/images/getting-started/create-account-02.png
-   :alt: Account created
+   :alt: Login page with the message confirming that the account was created and a password email sent
    :target: ../_static/images/getting-started/create-account-02.png
 
 You then receive an email from the platform. Open the link it contains and choose your password;
 you can then log in with your email address and that password (see :doc:`login`).
 
 .. figure:: /_static/images/getting-started/create-account-03.png
-   :alt: Email with the link to set your password
+   :alt: Password reset email with the link to set your password
    :target: ../_static/images/getting-started/create-account-03.png
 
 .. _password-requirements:

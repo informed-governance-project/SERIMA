@@ -136,5 +136,5 @@ and logged out. An account left without any operator is deactivated.
 .. note::
 
    **Delete** is not shown for an operator administrator whose account has log entries, which it has as soon as
-   it has worked in the console or the modules: click **Unset Administrator** first.
+   its owner has changed something in the console: click **Unset Administrator** first.
    For a suggested account, click **Reject** instead.

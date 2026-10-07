@@ -23,9 +23,10 @@ Its parts are numbered in the screenshot below and described one by one.
 2. **New submission**: This red button opens the **Create a new security objectives statement** pop-up.
    The new declaration is then filled in as described in :doc:`fill-in-a-declaration`.
 
-3. **Search**: Finds declarations by the text you enter, looked up in the framework, the creator, the operator, the year and the sectors.
+3. **Search**: Finds declarations by the text you enter, looked up in the identifier, the framework, the creator, the operator, the year and the sectors.
 
-4. **Filter**: Opens a panel to narrow the list down by **evaluation framework**, **year**, **sectors** and **status**.
+4. **Filter**: Opens a panel to narrow the list down by **Standard** (the evaluation framework), **Year of submission**,
+   **Sectors**, **Status** and **Submitter** (the person who submitted the declaration).
    Click **Search** to apply the filter, or **Reset** to clear it. While a filter is applied, the **Filter** button shows the label **(Active)**.
 
    .. note::
@@ -160,7 +161,8 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
 
 12. **Delete**: Deletes the declaration. Only unsubmitted declarations can be deleted; for the others, the icon is greyed out.
 
-13. **More options**: The three-dot icon opens a menu with the **Access Log** and, once the declaration has several versions, **Version control**.
+13. **More options**: The three-dot icon opens a menu with the **Access Log** and **Version control**,
+    which is greyed out until the declaration has been submitted.
 
     .. figure:: /_static/images/security-objectives/dashboard-08.png
        :alt: More options menu with the Access Log outlined

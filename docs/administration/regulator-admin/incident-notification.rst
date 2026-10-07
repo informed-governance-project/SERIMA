@@ -1,7 +1,7 @@
-Incident Notification
----------------------
+Incident notification configuration
+-----------------------------------
 
-The **Incident Notification** section of the console holds everything operators go through when they notify
+The **Incident notification** section of the console holds everything operators go through when they notify
 an incident to your regulator: the reports they fill in, their questions and deadlines, and the emails
 the platform sends along the way. It lists **Conditional questions**, **Emails**, **Impact**,
 **Incident notification workflows**, **Incident reports**, **Questions** and **Reminder emails**.
@@ -32,16 +32,8 @@ Since each item refers to the previous ones, set them up in this order:
 6. `Incident notification workflows`_
 7. `Reminder emails`_
 
-Every item works the same way:
-
-- Click its name to open the list. Click **Add** next to the name, or the **Add** button at the top right of the list,
-  to create a new one; click a name in the list to open and change it.
-- To delete objects, tick them in the list, choose the **Delete selected** action in the **Action** drop-down
-  and click **Run**.
-- Texts can be translated: the tabs above the form (**English**, **French**, **Dutch**, **German**) switch
-  between the languages of the platform. Save your changes before you leave the tab of a language.
-- Beside a drop-down, the pencil icon changes the selected object, the plus icon creates a new one in a pop-up,
-  the cross icon deletes the selected object and the eye icon displays it.
+The lists, forms, language tabs and the icons beside the drop-downs work as described in
+:doc:`/administration/platform-admin/governance`.
 
 .. important::
 

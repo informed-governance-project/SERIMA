@@ -13,9 +13,10 @@ Every item works the same way:
 - To delete objects, tick them in the list, choose **Delete selected** in the **Action** drop-down and click **Run**.
   A confirmation page lists everything that will be deleted along with them.
 - Names, labels and descriptions can be translated: the tabs above the form (**English**, **French**, **Dutch**, **German**)
-  switch between the languages of the platform.
-- Beside a drop-down, the pencil icon changes the selected object, the plus icon creates a new one in a pop-up
-  and the eye icon displays it.
+  switch between the languages of the platform. Save your changes before you leave the tab of a language,
+  as the banner at the top of the form reminds you.
+- Beside a drop-down, the pencil icon changes the selected object, the plus icon creates a new one in a pop-up,
+  the cross icon, where shown, deletes the selected object, and the eye icon displays it.
 
 .. _platform-regulators:
 
@@ -26,7 +27,7 @@ A regulator, also known as a competent authority, supervises one or more regulat
 The **Regulators** list shows the **Name**, **Full name** and **Description** of each of them.
 
 .. figure:: /_static/images/administration/platform-admin/governance-01.png
-   :alt: Regulators list with its column headers outlined
+   :alt: Regulators list with the Regulators entry of the sidebar and the column headers outlined
    :target: ../../_static/images/administration/platform-admin/governance-01.png
 
 Create a regulator
@@ -73,7 +74,7 @@ It has no password yet. Its owner chooses one with **Password forgotten?** on th
 
 Two boxes on each row grant export rights:
 
-- **Can export incidents** lets the administrator export the incidents of the regulator.
+- **Can export incidents** lets the administrator export the incidents of the regulator (see :ref:`incident-export`).
   Only a platform administrator can tick it.
 - **Can export security objectives** lets the administrator export the list of security objectives declarations
   (see :doc:`/security-objectives/review-a-declaration`).
@@ -124,7 +125,7 @@ The **Functionalities** list holds the optional modules of the platform: **Secur
 It shows the **Type** of each functionality, its **Name** and the **Roles** that may use it.
 
 .. figure:: /_static/images/administration/platform-admin/governance-05.png
-   :alt: Functionalities list with the security objectives and reporting functionalities and their roles
+   :alt: Functionalities list with the Functionalities entry of the sidebar outlined, showing the Reporting and Security Objective functionalities and their roles
    :target: ../../_static/images/administration/platform-admin/governance-05.png
 
 A functionality has:
@@ -185,7 +186,7 @@ Regulators assign them to their operators, and the incident rules of the observe
 (see `Observer regulations`_). The list shows the **Code** and **Label** of each category.
 
 .. figure:: /_static/images/administration/platform-admin/governance-07.png
-   :alt: Entity categories list with the Code and Label columns outlined
+   :alt: Entity categories list with the Entity categories entry of the sidebar and the Code and Label columns outlined
    :target: ../../_static/images/administration/platform-admin/governance-07.png
 
 To create one, click **Add entity category**, enter its **Label**, which can be translated, and its **Code**, and click **Save**.
@@ -214,7 +215,7 @@ Create an observer
    (see :ref:`observer-admin-rt`).
 3. Add the first observer administrator in the **Observer users** section, as for a regulator
    (see `Regulator administrators`_): click **Add another Observer user**, then select the account or create it
-   with the plus icon. Tick **Can export incidents** to let it export the incidents the observer receives.
+   with the plus icon. Tick **Can export incidents** to let it export the incidents the observer receives (see :ref:`incident-export`).
 
    .. figure:: /_static/images/administration/platform-admin/governance-08.png
       :alt: Change Observer form with its contact fields and the Observer users section outlined

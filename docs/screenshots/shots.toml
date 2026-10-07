@@ -588,6 +588,49 @@ steps = [
 ]
 annotate = [{ selector = ".more-actions-dropdown.show", box = true }]
 
+[[shots]]
+name = "images/incident-notification/workflow-regulator-10"
+# The fixture gives regulator-admin@example.org "Can export incidents".
+role = "regulator_admin"
+path = "/incidents/"
+viewport = { width = 1440, height = 520 }
+annotate = [{ selector = "a.export_incidents", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-11"
+# Opens the pop-up only: submitting it logs the export, emails the platform
+# administrators and downloads the file.
+role = "regulator_admin"
+path = "/incidents/"
+selector = "#export_incidents .modal-content"
+steps = [
+  { action = "click", selector = "a.export_incidents" },
+  { action = "wait_for", selector = "#export_incidents.show #exportIncidentsForm" },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-12"
+# get_incidents stores is_regulator_incidents in the session on this path, and
+# the report and access-log views read it, so this shot and the next run fresh.
+role = "regulator_admin"
+fresh = true
+path = "/incidents/regulator_incidents"
+annotate = [
+  { selector = "a[href$='/incidents/regulator_incidents']", box = true },
+  { selector = "a.btn[href$='/incidents/declaration']", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-13"
+# Opens the first form of the notification only; the wizard saves nothing
+# before its last step.
+role = "regulator_admin"
+fresh = true
+path = "/incidents/regulator_incidents"
+viewport = { width = 1440, height = 700 }
+steps = [{ action = "click", selector = "a.btn[href$='/incidents/declaration']" }]
+annotate = [{ selector = "#id_0-company_name", box = true }]
+
 # --- Fill in a report (docs/incident-notification/fill-in-a-report.rst) ------
 #
 # The list shots show the Reference column, which the dashboard hides by

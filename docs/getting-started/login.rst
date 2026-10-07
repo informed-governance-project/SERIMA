@@ -20,7 +20,7 @@ Both open the **Sign in** form. Enter your email address and password, then clic
    :target: ../_static/images/getting-started/login-02.png
 
 If two-factor authentication is enabled on your account, the platform then asks for a token;
-the first time you log in, it suggests enabling it. Both are described in :doc:`enable-2fa`.
+the first time you log in, it asks you to enable it first. Both are described in :doc:`enable-2fa`.
 Once logged in, you land on the homepage, described in :doc:`homepage`.
 
 Choose your operator

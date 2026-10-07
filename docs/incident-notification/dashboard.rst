@@ -22,6 +22,9 @@ Due to the complexity of the screen, its different parts will be presented one b
 1. **Overview**: By clicking the **Overview** link in the top-right corner, you can return to the landing page of the Incident notification dashboard, which displays an overview of the reported incidents.
 
 2. **Notify an incident**: This red button opens the form for a new incident (see :doc:`report-an-incident`).
+   Observers do not have it, and regulators have it only in **My reported incidents**, beside **Overview**,
+   where they notify incidents of their own (see :ref:`regulator-own-incidents`).
+   Accounts allowed to export incidents also have an **Export** link there (see :ref:`incident-export`).
 
 3. **Search**: The search field is the quickest way to find an incident when there are many of them.
    It looks for the text you enter in the incident reference, the contact and technical contact names, the operator, the regulator, the regulation and the sectors.
@@ -130,8 +133,9 @@ Due to the complexity of the screen, its different parts will be presented one b
       * - 12
         - Actions
         - Always
-        - Download the incident as a PDF report, open the access log from the **More options** menu,
-          and delete the incident as long as none of its reports has been submitted.
+        - Download the incident as a PDF report and open the access log from the **More options** menu.
+          Operators can also delete the incident as long as none of its reports has been submitted;
+          regulators and observers have a **Contacts** icon instead.
 
    Except for the **Report** and **Actions** columns, each column has an up-and-down arrow beside its header.
    Clicking the header sorts the incidents in ascending or descending order based on that column.
@@ -149,7 +153,7 @@ Due to the complexity of the screen, its different parts will be presented one b
       On another computer or browser, or after clearing your browser data, the dashboard shows the default columns again.
 
    .. figure:: /_static/images/incident-notification/dashboard-05.png
-      :alt: Choice of columns
+      :alt: Choice of columns pop-up with the displayed columns ticked
       :target: ../_static/images/incident-notification/dashboard-05.png
 
 8. **Version control**: For each submitted report, version control shows when the report was changed and the status of each version.
@@ -160,14 +164,15 @@ Due to the complexity of the screen, its different parts will be presented one b
    The review of a report by the regulator is described in the :doc:`review-a-report` chapter.
 
    .. figure:: /_static/images/incident-notification/dashboard-06.png
-      :alt: Version control pop-up
+      :alt: Version control pop-up listing one version with its date, status and action icons
       :target: ../_static/images/incident-notification/dashboard-06.png
 
 9. **More options and access log**: The **More options** icon (three dots) in the **Actions** column opens a menu with further actions on the incident.
-   For operators, it holds the **Access Log**, which displays all activities that occurred during the incident's lifecycle.
+   It holds the **Access Log**, which displays all activities that occurred during the incident's lifecycle,
+   and, for regulators, the incident settings described in :doc:`review-a-report`.
 
    Clicking **Access Log** opens the log. At the top, you can see the reference of the incident, and below it, a table with the columns **Date, User, Role, Document**, and **Action**.
-   Regulators also see an **Entity** column. You can sort the table by clicking a column header; in the example below, the log is sorted by **Date**, from the oldest entry to the newest.
+   Regulators and observers also see an **Entity** column. You can sort the table by clicking a column header; in the example below, the log is sorted by **Date**, from the oldest entry to the newest.
 
    .. note::
 
@@ -179,4 +184,5 @@ Due to the complexity of the screen, its different parts will be presented one b
       :target: ../_static/images/incident-notification/dashboard-07.png
 
 10. **Download PDF report**: Click the **PDF** icon in the **Actions** column to download the whole incident, with all its reports, as a PDF document.
-    To download a single report instead, use the small PDF icon beside the report in the **Report** column.
+    To download a single report instead, use the PDF icon of its version in the **Version control** pop-up;
+    regulators and observers also have a small PDF icon beside the report in the **Report** column.

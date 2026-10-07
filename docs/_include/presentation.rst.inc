@@ -12,7 +12,7 @@ and the platform offers one module per activity:
 This project is developed in partnership with the Institut Luxembourgeois de Régulation (`ILR <https://web.ilr.lu>`_) and the Institut Belge des services Postaux et des Télécommunications (`IBPT <https://www.ibpt.be>`_).
 
 .. figure:: /_static/images/index/home-page.png
-   :alt: Regulator home page screenshot
+   :alt: Home page of a regulator administrator with the Incident notification, Security objectives and Report generation modules
    :target: _static/images/index/home-page.png
 
    Regulator home page
@@ -21,10 +21,10 @@ This project is developed in partnership with the Institut Luxembourgeois de Ré
 
 - **New to SERIMA:** :doc:`getting-started/index`.
 - **Operators and regulators:** the section of the module you work in.
-- **Admins:** :doc:`administration/index`, plus the *Configuration* page of each module you configure.
+- **Admins:** :doc:`administration/index`, which also covers the configuration of the modules.
 - **Installing or maintaining an instance:** :doc:`technical/index`.
 
 This document is intended for the operators and users of the platform.
-If you find errors or omission, please don't hesitate to submit
+If you find errors or omissions, please don't hesitate to submit
 `an issue <https://github.com/informed-governance-project/SERIMA/issues/new?labels=documentation&template=bug_report.md>`_
 or open a pull request with a fix.

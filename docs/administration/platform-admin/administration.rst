@@ -1,5 +1,5 @@
-Log entries
------------
+Logs
+----
 
 The **Administration** section of the console holds the **Log entries**. As a platform administrator, you see:
 

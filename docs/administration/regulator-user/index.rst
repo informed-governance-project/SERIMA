@@ -1,4 +1,4 @@
-Regulator User
+Regulator user
 --------------
 
 A regulator user reviews, in the modules of the platform, the incidents and security objectives declarations

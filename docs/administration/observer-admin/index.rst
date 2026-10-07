@@ -1,4 +1,4 @@
-Observer Admin
+Observer admin
 --------------
 
 An observer is an organisation that receives, read-only, the incidents forwarded by the platform according to

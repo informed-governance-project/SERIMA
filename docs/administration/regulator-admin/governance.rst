@@ -24,7 +24,7 @@ its **Country** and **Address**, and its **E-mail address for incident notificat
 a copy of the emails the platform sends about the incidents and security objectives declarations of your regulator.
 
 .. figure:: /_static/images/administration/regulator-admin/governance-01.png
-   :alt: Change Regulator form with the contact fields and the read-only Functionalities outlined
+   :alt: Change Regulator form with the contact fields, and the read-only Functionalities field outlined
    :target: ../../_static/images/administration/regulator-admin/governance-01.png
 
 **Functionalities** lists, read-only, the optional modules the platform administrator has opened to your regulator
@@ -47,10 +47,11 @@ Each row has:
 - **User**: the account.
 - **Is administrator**: ticked for a regulator administrator, unticked for a regulator user.
   Changing it switches the role of the account and logs it out.
-- **Can export incidents**: read-only. The platform administrator grants it, and it applies to administrators only.
+- **Can export incidents**: read-only. The platform administrator grants it, and it applies to administrators only
+  (see :ref:`incident-export`).
 - **Can export security objectives**: lets the account export the list of security objectives declarations
   (see :doc:`/security-objectives/review-a-declaration`).
-- **Sectors**: the sectors a regulator user handles. It sees only the incidents and declarations of these sectors.
+- **Sectors**: the sectors a regulator user handles. They see only the incidents and declarations of these sectors.
   Administrators see all the sectors, whatever is chosen here.
 
 .. important::
@@ -132,7 +133,7 @@ The **Delete** button of an account behaves differently depending on the account
 .. note::
 
    **Delete** is not offered for an account that has log entries: a regulator account once it has logged in,
-   an operator administrator once it has made a change in the console. Untick **Active** instead.
+   an operator administrator once they have made a change in the console. Untick **Active** instead.
 
 .. _regulator-sectors:
 

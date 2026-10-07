@@ -89,7 +89,7 @@ in the format ``yyyy-mm-dd hh:mm``. You can also pick them in the calendar that 
 After the incident is submitted
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Click the button of the last form to submit the notification. The platform then creates the incident
+Click **Next** on the last form to submit the notification. The platform then creates the incident
 and, if your regulator has set one up, sends an email announcing it.
 
 .. important::

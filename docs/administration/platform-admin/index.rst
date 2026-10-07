@@ -1,12 +1,13 @@
-Platform Admin
+Platform admin
 --------------
 
 The platform administrator sets up the platform for the regulators and observers that use it:
-it creates the regulators and observers with their first administrators, the regulations, the entity categories that classify the operators,
-and decides which modules are available.
+they create the regulators and observers with their first administrators, the regulations, the entity categories that classify the operators,
+and decide which modules are available.
 Everything else, such as the incident notification workflows or the operators, is configured by the regulators
 (see :doc:`/administration/regulator-admin/index`).
 
+The first platform administrator is created during the installation (see :doc:`first-platform-admin`).
 A platform administrator works only in the administration console. After logging in, you land on its home page,
 **Site administration**; the homepage and the modules of the platform are not available to you,
 and opening them takes you back to the console.
