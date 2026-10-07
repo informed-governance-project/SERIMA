@@ -14,4 +14,4 @@ regulators follow each report through its notification workflow.
    dashboard
    report-an-incident
    fill-in-a-report
-   regulator
+   review-a-report

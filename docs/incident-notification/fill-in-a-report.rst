@@ -10,7 +10,9 @@ Each report goes through the same cycle:
 3. If changes are needed, you submit a new version of the report, which the regulator reviews again.
 
 This chapter describes your side of that cycle. Creating the incident itself is described in :doc:`report-an-incident`,
-and the regulator's review in :doc:`regulator`.
+and the regulator's review in :doc:`review-a-report`.
+
+.. _report-statuses:
 
 Report statuses
 ~~~~~~~~~~~~~~~
@@ -150,6 +152,8 @@ The regulator can add a comment to the review. When there is one, click the **Re
    :alt: Review comment pop-up with the regulator's comment
    :target: ../_static/images/incident-notification/workflow-operator-08.png
 
+
+.. _update-a-report:
 
 Update a report
 ~~~~~~~~~~~~~~~

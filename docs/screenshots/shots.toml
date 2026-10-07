@@ -484,7 +484,7 @@ steps = [
 ]
 annotate = [{ selector = "button[data-bs-target='#IncidentshideColumns']", box = true }]
 
-# --- Regulator review (docs/incident-notification/regulator.rst) ------------
+# --- Review a report (docs/incident-notification/review-a-report.rst) --------
 #
 # The walkthrough follows NI_K07S3XB3 (Operator B), whose Preliminary Incident
 # Report is the fixture's IncidentWorkflow 99, submitted and awaiting review.
@@ -527,6 +527,32 @@ annotate = [{ selector = "a[href$='incident_workflow_id=99']", box = true }]
 
 [[shots]]
 name = "images/incident-notification/workflow-regulator-04"
+# NI_GZ41A260's Preliminary Incident Report has two versions (IncidentWorkflow
+# 44 and 45) with different answers, so its latest one shows the changes.
+# On the open step the circle is red, so the orange marker shows on the other
+# changed step (Regulation).
+role = "regulator_admin"
+path = "/incidents/edit_workflow?incident_workflow_id=45"
+viewport = { width = 1440, height = 860 }
+steps = [{ action = "click", selector = "button[name=wizard_goto_step][value='2']" }]
+annotate = [
+  { selector = ".nav-pills li:has(.bg-answer-modified)", box = true },
+  { selector = ".view-previous-version", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-05"
+role = "regulator_admin"
+path = "/incidents/edit_workflow?incident_workflow_id=45"
+selector = "#previous-answer-modal .modal-content"
+steps = [
+  { action = "click", selector = "button[name=wizard_goto_step][value='2']" },
+  { action = "click", selector = ".view-previous-version" },
+  { action = "wait_for", selector = "#previous-answer-modal.show" },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-06"
 role = "regulator_admin"
 path = "/incidents/edit_workflow?incident_workflow_id=99"
 # The comment editor pushes the status field and Submit below the default
@@ -539,29 +565,19 @@ steps = [
 annotate = [{ selector = "#id_3-review_status", box = true }]
 
 [[shots]]
-name = "images/incident-notification/workflow-regulator-05"
+name = "images/incident-notification/workflow-regulator-07"
 role = "regulator_admin"
 path = "/incidents/edit_workflow?incident_workflow_id=99"
 viewport = { width = 1440, height = 1030 }
 steps = [
   { action = "click", selector = "button[name=wizard_goto_step][value='3']" },
-  # The comment is a Summernote editor; the textarea behind it stays hidden.
-  { action = "fill", selector = ".note-editable", value = "The report is acceptable" },
-  { action = "select", selector = "#id_3-review_status", value = "Passed" },
+  { action = "fill", selector = ".note-editable", value = "The incident has not been resolved yet" },
+  { action = "select", selector = "#id_3-review_status", value = "Revision required" },
 ]
-annotate = [{ selector = "#wizard-next-btn", box = true }]
+annotate = [{ selector = "#id_3-review_status", box = true }]
 
 [[shots]]
-name = "images/incident-notification/workflow-regulator-06"
-role = "regulator_admin"
-path = "/incidents/"
-# The fixture's passed report on the first page of the overview is the Final
-# Incident Report of NI_WR43DYJ9 (IncidentWorkflow 101).
-viewport = { width = 1440, height = 450 }
-annotate = [{ selector = "a[href$='incident_workflow_id=101']", box = true }]
-
-[[shots]]
-name = "images/incident-notification/workflow-regulator-07"
+name = "images/incident-notification/workflow-regulator-08"
 role = "regulator_admin"
 path = "/incidents/"
 selector = "#incidents-table tbody tr:has(a[href$='incident_workflow_id=101'])"
@@ -573,23 +589,17 @@ steps = [
 ]
 
 [[shots]]
-name = "images/incident-notification/workflow-regulator-08"
+name = "images/incident-notification/workflow-regulator-09"
+# The menu opens upwards over the row above; the regulator's version adds the
+# significant impact and incident status switches below the access log.
 role = "regulator_admin"
-path = "/incidents/edit_workflow?incident_workflow_id=99"
-viewport = { width = 1440, height = 1030 }
+path = "/incidents/"
+viewport = { width = 1440, height = 620 }
 steps = [
-  { action = "click", selector = "button[name=wizard_goto_step][value='3']" },
-  { action = "fill", selector = ".note-editable", value = "The incident has not been resolved yet" },
-  { action = "select", selector = "#id_3-review_status", value = "Revision required" },
+  { action = "click", selector = "tr:has(a[href$='incident_workflow_id=99']) .custom-icon-more-options" },
+  { action = "wait_for", selector = ".more-actions-dropdown.show" },
 ]
-annotate = [{ selector = "#id_3-review_status", box = true }]
-
-# --- Not scripted (docs/incident-notification/regulator.rst) ----------------
-#
-# workflow-regulator-09 and -10 show a report whose latest review is "Revision
-# required", and the fixture has none: NI_GZ41A260's only FAIL review is
-# followed by a PASS on the same report. Producing one means submitting a
-# review, which would change the report every other shot sees.
+annotate = [{ selector = ".more-actions-dropdown.show", box = true }]
 
 # --- Fill in a report (docs/incident-notification/fill-in-a-report.rst) ------
 #

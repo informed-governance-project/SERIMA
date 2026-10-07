@@ -3,6 +3,8 @@ Incident Notification
 
 Use this section to create your incident notification workflow.
 
+.. _incident-emails:
+
 Emails
 ^^^^^^^^^^^^^^^^^^^^^
 
