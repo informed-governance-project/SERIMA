@@ -993,6 +993,73 @@ path = "/admin/governanceplatform/company/46/change/"
 selector = "#content"
 hide = [".submit-row"]
 
+# --- Regulator user (docs/administration/regulator-user/) ---------------------
+#
+# The Django admin under /admin/, as the regulator user of Regulator A.
+# Changelists outline the column header the prose lists, and the open model in
+# the sidebar. Change forms are only opened, never saved.
+
+[[shots]]
+name = "images/administration/regulator-user/index-01"
+role = "regulator_user"
+path = "/admin/"
+annotate = [
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#recent-actions-module", box = true },
+  { selector = "#back-to-interface", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-01"
+role = "regulator_user"
+path = "/admin/governanceplatform/company/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-02"
+role = "regulator_user"
+# Company 46 is Operator A, with operator-admin@example.org as its administrator.
+path = "/admin/governanceplatform/company/46/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#companyuser_set-group", box = true }]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-03"
+role = "regulator_user"
+path = "/admin/governanceplatform/company/46/change/"
+selector = "#companyuser_set-group"
+annotate = [
+  { selector = "#companyuser_set-0", box = true },
+  { selector = "#add_id_companyuser_set-0-user", box = true },
+  { selector = "#companyuser_set-group .add-row a", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-04"
+role = "regulator_user"
+path = "/admin/governanceplatform/user/"
+# Wide enough for the Account actions column, which the prose describes.
+viewport = { width = 1920, height = 900 }
+annotate = [
+  { selector = "#result_list thead", box = true },
+  { selector = "#changelist-filter", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-05"
+role = "regulator_user"
+# User 146 is operator-user@example.org, an operator user of Operator B.
+path = "/admin/governanceplatform/user/146/change/"
+selector = "#content"
+annotate = [
+  { selector = "#content .field-is_active", box = true },
+  { selector = "#content .field-reset_2FA_action .account-actions", box = true },
+]
+
 # --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---
 #
 # The Django admin under /admin/, as the regulator administrator. Changelists
@@ -1907,7 +1974,7 @@ annotate = [
 # --- Not covered yet --------------------------------------------------------
 #
 # The getting-started, incident-notification and security-objectives pages, and
-# the platform admin and regulator admin pages, are scripted. Not yet: the
+# the platform admin, regulator admin and regulator user pages, are scripted.
+# Not yet: the operator admin administration page. Left out on purpose: the
 # reporting images (the module is still changing; its user guide is excluded
-# from the build) including the regulator admin reporting configuration, and the
-# operator admin and regulator user administration pages.
+# from the build), including the regulator admin reporting configuration.

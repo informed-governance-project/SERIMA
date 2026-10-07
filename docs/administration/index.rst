@@ -13,5 +13,5 @@ The following section explains how the Operator Admin, Regulator User, Regulator
 
    platform-admin/index
    regulator-admin/index
-   regulator-user
+   regulator-user/index
    operator-admin

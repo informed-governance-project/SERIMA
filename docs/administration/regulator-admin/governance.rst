@@ -112,7 +112,7 @@ its owner can no longer log in. The account of a regulator user or administrator
    :target: ../../_static/images/administration/regulator-admin/governance-04.png
 
 The accounts of an operator are attached to it by a regulator user or by its operator administrators
-(see :doc:`/administration/regulator-user` and :doc:`/administration/operator-admin`), not here.
+(see :ref:`regulator-user-contacts` and :doc:`/administration/operator-admin`), not here.
 
 Reset two-factor authentication
 """""""""""""""""""""""""""""""
@@ -184,7 +184,7 @@ Click **Save**.
    :target: ../../_static/images/administration/regulator-admin/governance-07.png
 
 The operator then needs its first operator administrator, which a regulator user adds
-(see :doc:`/administration/regulator-user`).
+(see :ref:`regulator-user-contacts`).
 
 .. note::
 
