@@ -11,11 +11,11 @@ What you can do in it depends on your role:
 - **Regulator User**: creates the operators their regulator supervises and the accounts of those operators
   (see :doc:`regulator-user/index`).
 - **Operator Admin**: manages the accounts of their operator (see :doc:`operator-admin/index`).
-- **Observer Admin**: manages the details and accounts of their observer. This guide does not cover it yet.
+- **Observer Admin**: manages the details and accounts of their observer (see :doc:`observer-admin/index`).
 
 .. note::
 
-   Operator users, incident users and observer users have no access to the console: the **Settings** link
+   Operator users and incident users have no access to the console: the **Settings** link
    is not shown to them. What each role can do is summarised in :doc:`/getting-started/roles-and-permissions`.
 
 Click **Settings** in the header of the platform to open the console on its home page, **Site administration**,
@@ -35,3 +35,4 @@ as described in :doc:`platform-admin/governance`.
    regulator-admin/index
    regulator-user/index
    operator-admin/index
+   observer-admin/index

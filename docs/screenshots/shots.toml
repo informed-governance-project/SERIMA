@@ -1152,6 +1152,100 @@ annotate = [
   { selector = "#content a.deletelink", box = true },
 ]
 
+# --- Observer admin (docs/administration/observer-admin/) ---------------------
+#
+# The Django admin under /admin/, as the observer administrator of Observer A,
+# the only account of that observer in the fixture: no shot shows the Reset 2FA
+# token button, which is never offered on your own account. Change forms are
+# only opened, never saved, and the RT connection is never tested.
+
+[[shots]]
+name = "images/administration/observer-admin/index-01"
+role = "observer_admin"
+path = "/admin/"
+annotate = [
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#recent-actions-module", box = true },
+  { selector = "#back-to-interface", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-01"
+role = "observer_admin"
+path = "/admin/governanceplatform/observer/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-02"
+role = "observer_admin"
+# Observer 2 is Observer A.
+path = "/admin/governanceplatform/observer/2/change/"
+selector = "#content"
+# The RT configuration and the accounts have shots of their own below.
+hide = ["#content fieldset.collapse", "#observeruser_set-group", ".submit-row"]
+annotate = [
+  { selector = "#content .parler-language-tabs", box = true },
+  { selector = "#content .form-row.field-email_for_notification", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-03"
+role = "observer_admin"
+path = "/admin/governanceplatform/observer/2/change/"
+# Unfolds the collapsed RT Configuration fieldset; nothing is saved or tested.
+steps = [{ action = "click", selector = "#content fieldset.collapse summary" }]
+selector = "#content fieldset.collapse"
+annotate = [
+  { selector = ["#id_rt_url", "#id_rt_token", "#id_rt_queue"], box = true },
+  { selector = "#content .rt-test-btn", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-04"
+role = "observer_admin"
+path = "/admin/governanceplatform/observer/2/change/"
+selector = "#observeruser_set-group"
+annotate = [
+  { selector = ["#observeruser_set-group th.column-is_observer_administrator", "#observeruser_set-group th.column-can_export_incidents"], box = true },
+  { selector = "#observeruser_set-group .add-row a", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-05"
+role = "observer_admin"
+path = "/admin/governanceplatform/user/"
+# Wide enough for the Account actions column, which the prose describes.
+viewport = { width = 1920, height = 900 }
+annotate = [
+  { selector = "#result_list thead", box = true },
+  { selector = "#changelist-filter", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-06"
+role = "observer_admin"
+path = "/admin/governanceplatform/user/add/"
+# Moves the focus off the autofocused First name, whose ring reads as a callout.
+steps = [{ action = "click", selector = "#content h1" }]
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#content fieldset.module", box = true }]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-07"
+role = "observer_admin"
+# User 147 is observer-admin@example.org, the observer administrator of Observer A.
+path = "/admin/governanceplatform/user/147/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [
+  { selector = "#content fieldset.module:has(.field-email)", box = true },
+  { selector = "#content fieldset.module:has(.field-get_observers)", box = true },
+]
+
 # --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---
 #
 # The Django admin under /admin/, as the regulator administrator. Changelists
@@ -2067,6 +2161,6 @@ annotate = [
 #
 # The getting-started, incident-notification and security-objectives pages, and
 # every administration role (platform admin, regulator admin, regulator user,
-# operator admin), are scripted. Left out on purpose: the reporting images (the
+# operator admin, observer admin), are scripted. Left out on purpose: the reporting images (the
 # module is still changing; its user guide is excluded from the build),
 # including the regulator admin reporting configuration.

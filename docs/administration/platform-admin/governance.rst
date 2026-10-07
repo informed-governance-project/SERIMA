@@ -210,7 +210,8 @@ Create an observer
    then the **Country** and **Address**.
 2. In **E-mail address for incident notification**, enter the shared address of the observer:
    it receives the emails the platform sends about the incidents the observer receives, unless the observer
-   administrator connects the observer to an RT ticketing system, which then receives them as tickets.
+   administrator connects the observer to an RT ticketing system, which then receives them as tickets
+   (see :ref:`observer-admin-rt`).
 3. Add the first observer administrator in the **Observer users** section, as for a regulator
    (see `Regulator administrators`_): click **Add another Observer user**, then select the account or create it
    with the plus icon. Tick **Can export incidents** to let it export the incidents the observer receives.
@@ -221,7 +222,7 @@ Create an observer
 
 4. Add its observer regulations, as described below, and click **Save**.
 
-The observer administrator then creates the other accounts of the observer.
+The observer administrator then creates the other accounts of the observer (see :ref:`observer-admin-users`).
 Removing an administrator from the **Observer users** section deactivates the account.
 
 Observer regulations
