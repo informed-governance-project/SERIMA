@@ -7,7 +7,7 @@ and the platform offers one module per activity:
 
 - :doc:`incident-notification/index` — operators report incidents to their regulator.
 - :doc:`security-objectives/index` — operators declare how they meet their regulator's security objectives.
-- :doc:`reporting/index` — regulators build and distribute reports to operators.
+- **Reporting** — regulators build and distribute reports to operators. Its guide will be published once the module is stable.
 
 This project is developed in partnership with the Institut Luxembourgeois de Régulation (`ILR <https://web.ilr.lu>`_) and the Institut Belge des services Postaux et des Télécommunications (`IBPT <https://www.ibpt.be>`_).
 

@@ -37,7 +37,6 @@ SERIMA
    getting-started/index
    incident-notification/index
    security-objectives/index
-   reporting/index
    administration/index
 
 .. toctree::

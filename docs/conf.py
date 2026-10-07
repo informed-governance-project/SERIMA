@@ -41,7 +41,10 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+# The reporting module is still under development and its interface will change a lot:
+# its pages are kept out of the build until it settles. To publish them again, remove
+# "reporting/**" here and put reporting/index back in the toctrees of index.rst and pdf.rst.
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "reporting/**"]
 
 numfig = False
 
