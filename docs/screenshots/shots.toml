@@ -1060,6 +1060,98 @@ annotate = [
   { selector = "#content .field-reset_2FA_action .account-actions", box = true },
 ]
 
+# --- Operator admin (docs/administration/operator-admin/) ---------------------
+#
+# The Django admin under /admin/, as the operator administrator. The role's
+# login works for Operator A, whose only account is that administrator, so the
+# shots of other accounts log in themselves and pick Operator B, whose operator
+# user carries the account action buttons. Change forms are only opened, never
+# saved, and no account action button is clicked.
+
+[[shots]]
+name = "images/administration/operator-admin/index-01"
+role = "operator_admin"
+path = "/admin/"
+annotate = [
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#recent-actions-module", box = true },
+  { selector = "#back-to-interface", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-01"
+role = "operator_admin"
+path = "/admin/governanceplatform/company/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-02"
+role = "operator_admin"
+# Company 46 is Operator A.
+path = "/admin/governanceplatform/company/46/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#content .form-row.field-email", box = true }]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-03"
+# The login, and the company selection it stops on, land back on `next`.
+path = "/account/login?next=/admin/governanceplatform/user/"
+credentials_from = "operator_admin"
+fresh = true
+# Wide enough for the Account actions column, which the prose describes.
+viewport = { width = 1920, height = 900 }
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#id_select_company" },
+  { action = "select", selector = "#id_select_company", value = "Operator B" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#result_list" },
+]
+annotate = [
+  { selector = "#result_list thead", box = true },
+  { selector = "#result_list tbody tr:first-child td.field-account_actions", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-04"
+role = "operator_admin"
+path = "/admin/governanceplatform/user/add/"
+# Moves the focus off the autofocused First name, whose ring reads as a callout.
+steps = [{ action = "click", selector = "#content h1" }]
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#content .field-is_administrator", box = true }]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-05"
+# User 146 is operator-user@example.org, the operator user of Operator B.
+path = "/account/login?next=/admin/governanceplatform/user/146/change/"
+credentials_from = "operator_admin"
+fresh = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#id_select_company" },
+  { action = "select", selector = "#id_select_company", value = "Operator B" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#user_form" },
+]
+selector = "#content"
+annotate = [
+  { selector = "#content .field-reset_2FA_action button", box = true },
+  { selector = "#content .field-administrator_action button", box = true },
+  { selector = "#content a.deletelink", box = true },
+]
+
 # --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---
 #
 # The Django admin under /admin/, as the regulator administrator. Changelists
@@ -1974,7 +2066,7 @@ annotate = [
 # --- Not covered yet --------------------------------------------------------
 #
 # The getting-started, incident-notification and security-objectives pages, and
-# the platform admin, regulator admin and regulator user pages, are scripted.
-# Not yet: the operator admin administration page. Left out on purpose: the
-# reporting images (the module is still changing; its user guide is excluded
-# from the build), including the regulator admin reporting configuration.
+# every administration role (platform admin, regulator admin, regulator user,
+# operator admin), are scripted. Left out on purpose: the reporting images (the
+# module is still changing; its user guide is excluded from the build),
+# including the regulator admin reporting configuration.

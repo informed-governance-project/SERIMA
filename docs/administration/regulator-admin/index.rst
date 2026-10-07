@@ -9,10 +9,7 @@ are created by the platform administrator (see :doc:`/administration/platform-ad
 Besides the administration console, a regulator administrator uses the modules of the platform like a regulator user,
 and sees everything of their regulator whatever the sectors (see :doc:`/getting-started/roles-and-permissions`).
 
-Click **Settings** in the header of the platform to open the console on its home page, **Site administration**.
-Click **Return to user interface** at the top right to go back to the platform. The other links at the top right
-manage your **Account security** (two-factor authentication) and your password, log you out and choose the language
-of the console.
+Open the console with **Settings** in the header of the platform (see :doc:`/administration/index`).
 
 .. figure:: /_static/images/administration/regulator-admin/index-01.png
    :alt: Site administration page of a regulator administrator with its five sections, the Recent actions panel and the Return to user interface link outlined
@@ -29,9 +26,6 @@ The console has five sections and a panel:
 - **Security objectives**: the frameworks operators declare against, see :doc:`security-objectives`.
 - **Recent actions**: your own latest actions, logins included. Each one, except deletions,
   links to the object concerned.
-
-Each item of a section shows **View** when you can only read it, and **Add** and **Change** when you can edit it.
-The lists and forms work as described in :doc:`/administration/platform-admin/governance`.
 
 .. note::
 

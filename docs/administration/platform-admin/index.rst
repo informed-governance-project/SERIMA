@@ -2,7 +2,7 @@ Platform Admin
 --------------
 
 The platform administrator sets up the platform for the regulators and observers that use it:
-it creates the regulators and observers with their first administrators, the regulations, the operator categories,
+it creates the regulators and observers with their first administrators, the regulations, the entity categories that classify the operators,
 and decides which modules are available.
 Everything else, such as the incident notification workflows or the operators, is configured by the regulators
 (see :doc:`/administration/regulator-admin/index`).

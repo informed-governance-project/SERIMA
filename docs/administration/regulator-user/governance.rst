@@ -82,7 +82,7 @@ Incident user accounts
 
 An incident user account you add to an operator that already has an administrator is not linked straight away.
 Unless the account already belongs to another operator, the platform emails a suggestion to link it
-to the operator's email address and to its administrators. An operator administrator approves or rejects the link (see :doc:`/administration/operator-admin`).
+to the operator's email address and to its administrators. An operator administrator approves or rejects the link (see :ref:`operator-admin-approve`).
 Until then, the account keeps the incident user role, and it cannot be made an administrator.
 
 When the operator has no administrator yet, the account is linked as soon as you save.
