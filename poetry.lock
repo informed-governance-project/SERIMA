@@ -3493,28 +3493,6 @@ i18n = ["Babel", "jinja2"]
 test = ["pytest", "pytest-cov", "pytest-playwright", "pytest-regressions", "sphinx[test]", "typing-extensions"]
 
 [[package]]
-name = "pydot"
-version = "4.0.1"
-description = "Python interface to Graphviz's Dot"
-optional = false
-python-versions = ">=3.8"
-groups = ["docs"]
-files = [
-    {file = "pydot-4.0.1-py3-none-any.whl", hash = "sha256:869c0efadd2708c0be1f916eb669f3d664ca684bc57ffb7ecc08e70d5e93fee6"},
-    {file = "pydot-4.0.1.tar.gz", hash = "sha256:c2148f681c4a33e08bf0e26a9e5f8e4099a82e0e2a068098f32ce86577364ad5"},
-]
-
-[package.dependencies]
-pyparsing = ">=3.1.0"
-
-[package.extras]
-dev = ["chardet", "parameterized", "pydot[lint]", "pydot[types]"]
-lint = ["ruff"]
-release = ["zest.releaser[recommended]"]
-tests = ["pydot[dev]", "pytest", "pytest-cov", "pytest-xdist[psutil]", "tox"]
-types = ["mypy"]
-
-[[package]]
 name = "pydyf"
 version = "0.12.1"
 description = "A low-level PDF generator."
@@ -3581,7 +3559,7 @@ version = "3.3.3"
 description = "pyparsing - Classes and methods to define and execute parsing grammars"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "docs"]
+groups = ["dev"]
 files = [
     {file = "pyparsing-3.3.3-py3-none-any.whl", hash = "sha256:ece8c00a69cf01b45d0b1dedabb469c90d8caf996d4fda40f147627a122849a4"},
     {file = "pyparsing-3.3.3.tar.gz", hash = "sha256:928ae7e20211f3b6f3915a72f06a0cfd29ab9d24279dd6346b6b1a7146397d36"},
@@ -5005,4 +4983,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14,<4"
-content-hash = "ac49a3b32bebd6c0c8f9d450bb0e7a04cd813370db20bfdcec83f9c2721d0cf9"
+content-hash = "8e378f3f8e13c61cd3b3470f0a6df8a7682f5a77770ecc4248376c2ba36761ec"

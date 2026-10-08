@@ -84,7 +84,6 @@ optional = true
 [tool.poetry.group.docs.dependencies]
 sphinx-book-theme = "^1.0.1"
 sphinxcontrib-openapi = "^0.8.1"
-pydot = "^4.0.1"
 sphinx = "^9.1.0"
 playwright = "^1.62.0"
 sphinx-rtd-theme = "^3.1.0"
