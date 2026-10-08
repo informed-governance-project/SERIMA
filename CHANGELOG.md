@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-06
+
 ### Added
 
 - Security Objectives, a new module: an operator declares how it meets the security objectives of a framework its regulator publishes. A framework groups its objectives into domains, each objective carries the security measures that implement it, and the operator answers measure by measure — marking it implemented or not and writing the justification behind the answer. A declaration is identified by a code prefixed `SO_`, and a new one can be started empty, copied from a declaration of an earlier year, or imported from an Excel workbook
@@ -758,6 +760,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.6.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.18...v0.6.0
 [0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
 [0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17
 [0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
