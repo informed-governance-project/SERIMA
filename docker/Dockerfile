@@ -8,9 +8,7 @@ RUN npm ci
 
 FROM ubuntu:26.04
 
-ARG APP_VERSION
-ENV APP_VERSION=$APP_VERSION \
-    DEBIAN_FRONTEND=noninteractive \
+ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="${PATH}:/var/www/.local/bin"
@@ -61,27 +59,34 @@ RUN ln -sf /usr/bin/python3.14 /usr/bin/python3 \
 RUN mkdir -p /app /var/www && chown www-data: /app /var/www
 USER www-data
 
-# because package.json scripts.postinstall tries to be smart
-COPY --chown=www-data --from=npmbuilder /app/node_modules /app/static/npm_components
-
-COPY --chown=www-data governanceplatform /app/governanceplatform
-COPY --chown=www-data incidents /app/incidents
-COPY --chown=www-data locale /app/locale
-COPY --chown=www-data static /app/static
-COPY --chown=www-data templates /app/templates
-
-COPY --chown=www-data pyproject.toml /app/pyproject.toml
-COPY --chown=www-data README.md /app/README.md
-COPY --chown=www-data README.md /app/LICENSE
-COPY --chown=www-data manage.py /app/manage.py
+# requirements.txt is exported from poetry.lock by the poetry-export pre-commit hook;
+# installed before the source copies so an application change does not reinstall the dependencies
+COPY --chown=www-data requirements.txt /app/requirements.txt
 
 RUN python -m pip install \
     --user \
     --break-system-packages \
     --no-cache-dir \
-    .
+    --requirement requirements.txt
 
 RUN plotly_get_chrome -y
+
+# because package.json scripts.postinstall tries to be smart
+COPY --chown=www-data --from=npmbuilder /app/node_modules /app/static/npm_components
+
+COPY --chown=www-data governanceplatform /app/governanceplatform
+COPY --chown=www-data incidents /app/incidents
+COPY --chown=www-data securityobjectives /app/securityobjectives
+COPY --chown=www-data reporting /app/reporting
+COPY --chown=www-data locale /app/locale
+COPY --chown=www-data static /app/static
+COPY --chown=www-data templates /app/templates
+
+# read at runtime by governanceplatform.tools.get_version()
+COPY --chown=www-data pyproject.toml /app/pyproject.toml
+COPY --chown=www-data README.md /app/README.md
+COPY --chown=www-data README.md /app/LICENSE
+COPY --chown=www-data manage.py /app/manage.py
 
 COPY celery_worker.py celery_beat.py docker/docker-init.sh /app/
 

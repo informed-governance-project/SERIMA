@@ -3,7 +3,11 @@ from django.utils.translation import gettext_lazy as _
 
 from governanceplatform import __version__
 
-from .helpers import is_observer_user, is_user_regulator, user_in_group
+from .helpers import (
+    is_observer_user,
+    is_user_regulator,
+    user_in_group,
+)
 from .models import ApplicationConfig, Functionality
 from .settings import COOKIEBANNER, REGULATOR_CONTACT, SITE_NAME
 
@@ -53,26 +57,11 @@ def user_modules(request):
     }
 
     if request.user.is_authenticated:
-        user_module_permissions = []
-        # TODO: Uncomment next lines when merging with reporting branch
-        # user = request.user
-
-        # if is_user_regulator(user) or is_observer_user(user):
-        #     user_module_permissions = user.get_module_permissions()
-        # if is_user_operator(user):
-        #     user_module_permissions = ["securityobjectives"]
-
-        app_module_availables = Functionality.objects.filter(regulator__isnull=False).distinct().order_by("id")
+        app_module_availables = Functionality.objects.filter(type__in=request.user.get_module_permissions()).order_by("id")
         for module in app_module_availables:
-            if module.type in user_module_permissions:
-                module_name = None
-                if hasattr(module, "safe_translation_getter"):
-                    module_name = module.safe_translation_getter("name", language_code=get_language())
-                else:
-                    module_name = getattr(module, "name", None)
-
-                user_modules.append({"type": module.type, "name": module_name})
-                module_labels[f"/{module.type}"] = module_name
+            module_name = module.safe_translation_getter("name", language_code=get_language())
+            user_modules.append({"type": module.type, "name": module_name})
+            module_labels[f"/{module.type}"] = module_name
 
     name = next(
         (label for prefix, label in module_labels.items() if path.startswith(prefix)),

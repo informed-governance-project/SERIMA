@@ -1,6 +1,7 @@
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.urls import reverse
 
 from conftest import (
     list_admin_add_urls,
@@ -8,13 +9,14 @@ from conftest import (
     test_get_with_otp,
 )
 from governanceplatform.helpers import user_in_group
-from governanceplatform.models import CompanyUser, RegulatorUser
+from governanceplatform.models import CompanyUser, Regulation, RegulatorUser
+from governanceplatform.settings import TIME_ZONE
 from incidents.access_control import (
     can_access_incident,
     can_create_incident_report,
     can_edit_incident_report,
 )
-from incidents.models import SectorRegulation, SectorRegulationWorkflow
+from incidents.models import Incident, SectorRegulation, SectorRegulationWorkflow
 
 
 @pytest.mark.django_db
@@ -69,7 +71,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
         u
         for u in users
         if u.email == "opadmin@com1.lu"
-        or u.email == "obsadm@cert1.lu"  # receive all incident
+        or u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "opuser@com1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -105,7 +107,7 @@ def test_can_access_incident_function(populate_incident_db):
         u
         for u in users
         if u.email == "opadmin@com1.lu"
-        or u.email == "obsadm@cert1.lu"  # receive all incident
+        or u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "opuser@com1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -147,7 +149,7 @@ def test_can_access_incident_function(populate_incident_db):
     authorized_users = [
         u
         for u in users
-        if u.email == "obsadm@cert1.lu"  # receive all incident
+        if u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "reguser@reg1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -274,7 +276,7 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
         u
         for u in users
         if u.email == "opadmin@com1.lu"
-        or u.email == "obsadm@cert1.lu"  # receive all incident
+        or u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "opuser@com1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -286,7 +288,7 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
     authorized_users = [
         u
         for u in users
-        if u.email == "obsadm@cert1.lu"  # receive all incident
+        if u.email == "obsadm@cert1.lu"  # regulation rules without sectors
         or u.email == "reguser@reg1.lu"
         or u.email == "regadmin@reg1.lu"
     ]
@@ -341,3 +343,76 @@ def test_export_incidents_reports_list_every_sector_regulation(otp_client, popul
     report = next(wf for wf in response.context["form"].fields["workflow"].queryset if wf.pk == shared_report.pk)
     assert sorted(report.sectorregulation_ids) == sorted([own_sector_regulation.pk, other_sector_regulation.pk])
     assert f'data-sectorregulation="{own_sector_regulation.pk},{other_sector_regulation.pk}"' in response.content.decode()
+
+
+def start_declaration(otp_client, populate_incident_db):
+    """Log in an operator, fill the contact step, and return a function posting a wizard step"""
+    # the fixture leaves REG2 unlinked, so the sectorial "NIS workflow" would not be selectable
+    Regulation.objects.get(id=1).regulators.add(2)
+    user = next(u for u in populate_incident_db["users"] if u.email == "opadmin@com1.lu")
+    client = otp_client(user)
+    url = reverse("declaration")
+
+    def post(current_step, goto_step, data):
+        return client.post(url, {"form_wizard_view-current_step": current_step, "wizard_goto_step": goto_step, **data})
+
+    client.get(url)
+    contact = {
+        f"0-{field}": "Test"
+        for field in ("company_name", "contact_lastname", "contact_firstname", "technical_lastname", "technical_firstname")
+    }
+    contact |= {"0-contact_email": "a@a.lu", "0-contact_telephone": "1", "0-technical_email": "a@a.lu", "0-technical_telephone": "1"}
+    post("0", "1", contact)
+    post("1", "2", {"1-regulations": ["1", "2"]})
+    return post
+
+
+@pytest.mark.django_db
+def test_declaration_wizard_skips_sector_step_after_switching_to_asectorial_workflow(otp_client, populate_incident_db):
+    """
+    Going back to the regulators step and dropping the sectorial workflow must not leave the wizard on the sectors step
+    """
+    post = start_declaration(otp_client, populate_incident_db)
+    response = post("2", "3", {"2-regulators": ["1", "2"]})
+    assert response.context["wizard"]["steps"].current == "3"
+
+    post("3", "2", {})
+    existing_ids = list(Incident.objects.values_list("id", flat=True))
+    response = post("2", "3", {"2-regulators": ["1"]})
+
+    assert response.status_code == 302
+    assert Incident.objects.exclude(id__in=existing_ids).get().sector_regulation_id == 1
+
+
+@pytest.mark.django_db
+def test_declaration_wizard_shows_sector_step_after_switching_to_sectorial_workflow(otp_client, populate_incident_db):
+    """
+    Going back to the regulators step and adding a sectorial workflow must not skip the sectors step,
+    although the Next button of the page still points at the detection date step
+    """
+    SectorRegulation.objects.filter(id=1).update(is_detection_date_needed=True)
+    post = start_declaration(otp_client, populate_incident_db)
+    response = post("2", "4", {"2-regulators": ["1"]})
+    assert response.context["wizard"]["steps"].current == "4"
+
+    post("4", "2", {})
+    response = post("2", "4", {"2-regulators": ["1", "2"]})
+
+    assert response.context["wizard"]["steps"].current == "3"
+
+
+@pytest.mark.django_db
+def test_declaration_wizard_detection_date_step_defaults_to_platform_timezone_when_revisited(otp_client, populate_incident_db):
+    """
+    Leaving the detection date step without a date must not blank its time zone when the step is shown again
+    """
+    SectorRegulation.objects.filter(id=1).update(is_detection_date_needed=True)
+    post = start_declaration(otp_client, populate_incident_db)
+    post("2", "4", {"2-regulators": ["1"]})
+    post("4", "2", {"4-incident_timezone": "Europe/Paris"})
+
+    response = post("2", "4", {"2-regulators": ["1"]})
+
+    form = response.context["wizard"]["form"]
+    assert response.context["wizard"]["steps"].current == "4"
+    assert form["incident_timezone"].value() == TIME_ZONE

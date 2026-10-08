@@ -31,7 +31,7 @@ class TranslatedNameM2MWidget(widgets.ManyToManyWidget):
 class TranslatedNameWidget(widgets.ForeignKeyWidget):
     def clean(self, value, row=None, *args, **kwargs):
         if not value:
-            return self.model.objects.none()
+            return None
 
         languages = [lang[0] for lang in LANGUAGES]
 
@@ -43,4 +43,4 @@ class TranslatedNameWidget(widgets.ForeignKeyWidget):
 
             if instance is not None:
                 return instance.master
-        return self.model.objects.none()
+        return None

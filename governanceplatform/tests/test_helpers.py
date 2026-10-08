@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, Group
-from django.test import override_settings
+from django.test import RequestFactory, override_settings
+from django.urls import reverse
 
 from governanceplatform import helpers
 from governanceplatform.models import User
@@ -65,19 +66,6 @@ def test_role_helpers_accept_one_of_their_groups(helper, matching_group, foreign
     """Recognize users belonging to one of the groups for each supported role."""
     assert helper(_user_in_groups(f"{matching_group}@example.org", matching_group)) is True
     assert helper(_user_in_groups(f"{foreign_group}@example.org", foreign_group)) is False
-
-
-@pytest.mark.parametrize(
-    ("is_observer", "is_receiving_all_incident", "expected"),
-    [(False, None, False), (True, None, False), (True, True, True)],
-)
-def test_is_observer_user_viewing_all_incident(monkeypatch, is_observer, is_receiving_all_incident, expected):
-    """Allow global incident access only to observers configured for it."""
-    monkeypatch.setattr(helpers, "is_observer_user", lambda user: is_observer)
-    observer_instance = None if is_receiving_all_incident is None else SimpleNamespace(is_receiving_all_incident=is_receiving_all_incident)
-    user = SimpleNamespace(observers=SimpleNamespace(first=lambda: observer_instance))
-
-    assert helpers.is_observer_user_viewing_all_incident(user) is expected
 
 
 def test_get_active_company_from_session():
@@ -215,6 +203,18 @@ def test_render_to_string_multi_languages_skips_identical_translation(monkeypatc
     assert helpers.render_to_string_multi_languages("email.html", {}) == "<h3>English (en)</h3>\n                same content"
 
 
+@override_settings(LANGUAGE_CODE="en-us", LANGUAGES=[("en", "English"), ("fr", "French"), ("de", "German")])
+def test_render_to_string_multi_languages_keeps_default_language_when_language_code_is_regional(monkeypatch):
+    """Render English first and keep only the translations that differ from it, with LANGUAGE_CODE set to en-us."""
+    monkeypatch.setattr(helpers.translation, "gettext", lambda name: name)
+    rendered_by_language = {"en": "hello", "fr": "bonjour", "de": "hello"}
+    monkeypatch.setattr(helpers, "render_to_string", lambda template, context: rendered_by_language[helpers.translation.get_language()])
+
+    result = helpers.render_to_string_multi_languages("email.html", {})
+
+    assert result == "<h3>English (en)</h3>\n                hello<hr><h3>French (fr)</h3>\n                bonjour"
+
+
 def test_sanitize_html_removes_scripts_and_unsafe_styles():
     """Strip disallowed tags and CSS properties while retaining safe content."""
     html = '<p style="color: red; position: fixed">Safe</p><script>alert(1)</script>'
@@ -222,3 +222,57 @@ def test_sanitize_html_removes_scripts_and_unsafe_styles():
     sanitized = helpers.sanitize_html(html)
 
     assert sanitized == '<p style="color: red;">Safe</p>alert(1)'
+
+
+@pytest.fixture
+def referer_request():
+    """Build a request carrying the given Referer header, as a browser would send it."""
+    factory = RequestFactory()
+
+    def _build(referer=None):
+        headers = {"HTTP_REFERER": referer} if referer is not None else {}
+        return factory.get("/", **headers)
+
+    return _build
+
+
+def test_safe_redirect_to_referer_follows_relative_referer(referer_request):
+    """A same-site Referer sends the user back to the page they came from."""
+    response = helpers.safe_redirect_to_referer(referer_request("/securityobjectives/"), "reporting")
+
+    assert response.url == "/securityobjectives/"
+
+
+def test_safe_redirect_to_referer_follows_referer_on_the_request_host(referer_request):
+    """An absolute Referer on our own host is still our own page."""
+    response = helpers.safe_redirect_to_referer(referer_request("http://testserver/reporting/"), "reporting")
+
+    assert response.url == "http://testserver/reporting/"
+
+
+def test_safe_redirect_to_referer_rejects_external_host(referer_request):
+    """A Referer pointing off-site must not be turned into a redirect."""
+    response = helpers.safe_redirect_to_referer(referer_request("https://evil.example/phish"), "reporting")
+
+    assert response.url == reverse("reporting")
+
+
+def test_safe_redirect_to_referer_rejects_protocol_relative_url(referer_request):
+    """`//host` is an absolute URL to another host, not a path on ours."""
+    response = helpers.safe_redirect_to_referer(referer_request("//evil.example/phish"), "reporting")
+
+    assert response.url == reverse("reporting")
+
+
+def test_safe_redirect_to_referer_rejects_non_http_scheme(referer_request):
+    """A `javascript:` Referer would execute in the user's session if followed."""
+    response = helpers.safe_redirect_to_referer(referer_request("javascript:alert(1)"), "reporting")
+
+    assert response.url == reverse("reporting")
+
+
+def test_safe_redirect_to_referer_falls_back_without_referer(referer_request):
+    """Browsers may strip the Referer entirely; the view must still land somewhere."""
+    response = helpers.safe_redirect_to_referer(referer_request(), "securityobjectives")
+
+    assert response.url == reverse("securityobjectives")

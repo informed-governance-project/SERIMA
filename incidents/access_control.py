@@ -2,15 +2,15 @@
 
 from typing import TYPE_CHECKING
 
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 
 from governanceplatform.helpers import (
     is_observer_user,
-    is_observer_user_viewing_all_incident,
     is_user_operator,
     is_user_regulator,
     user_in_group,
 )
+from governanceplatform.models import Company
 
 from .models import Incident
 
@@ -23,9 +23,6 @@ if TYPE_CHECKING:
 def get_observer_incidents(observer: Observer) -> QuerySet[Incident]:
     """The incidents an observer is entitled to see, per its regulation rules."""
     base_qs = Incident.objects.exclude(sector_regulation__isnull=True)
-
-    if observer.is_receiving_all_incident:
-        return base_qs
 
     observer_regulations = observer.observerregulation_set.all()
     if not observer_regulations:
@@ -40,14 +37,22 @@ def get_observer_incidents(observer: Observer) -> QuerySet[Incident]:
         conditions = filter_conditions.get("conditions", [])
 
         regulation_q = Q(sector_regulation__regulation=regulation)
-        sectors_q = Q(affected_sectors__in=sectors)
+        # A rule without sectors spans the whole regulation, asectorial incidents included
+        sectors_q = Q(affected_sectors__in=sectors) if sectors else Q()
 
         if conditions:
             for condition in conditions:
                 condition_q = Q()
 
                 for code in condition.get("include", []):
-                    condition_q &= Q(company__entity_categories__code=code)
+                    condition_q &= Q(
+                        Exists(
+                            Company.entity_categories.through.objects.filter(
+                                company=OuterRef("company"),
+                                entitycategory__code=code,
+                            )
+                        )
+                    )
 
                 for code in condition.get("exclude", []):
                     condition_q &= ~Q(company__entity_categories__code=code)
@@ -99,9 +104,6 @@ def can_access_incident(user: User, incident: Incident, company_id: int | None =
         return True
     # IncidentUser can access their reports.
     if user_in_group(user, "IncidentUser") and Incident.objects.filter(pk=incident.id, contact_user=user).exists():
-        return True
-    # ObserverUser access all incident if he is in a observer who can access all incident.
-    if is_observer_user_viewing_all_incident(user):
         return True
     if is_observer_user(user) and observer_can_access_incident(user.observers.first(), incident):
         return True
@@ -163,3 +165,19 @@ def can_edit_incident_report(user: User, incident: Incident, company_id: int | N
         return incident.affected_sectors.filter(id__in=user.get_sectors().all()).exists()
 
     return False
+
+
+def can_export_incidents(user: User) -> bool:
+    regulator = user.regulators.first()
+    observer = user.observers.first()
+    return bool(
+        (
+            regulator
+            and user.regulatoruser_set.filter(
+                regulator=regulator,
+                is_regulator_administrator=True,
+                can_export_incidents=True,
+            ).exists()
+        )
+        or (observer and user.observeruser_set.filter(observer=observer, can_export_incidents=True).exists())
+    )

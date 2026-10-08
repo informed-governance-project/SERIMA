@@ -45,8 +45,6 @@ jobs:
           context: .
           load: true
           tags: ${{ env.TEST_IMAGE_FULLNAME }}
-          build-args: |
-            APP_VERSION=${{ github.ref_name }}
 
       - name: Test for any missing migration
         run: >
@@ -97,5 +95,3 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            APP_VERSION=${{ github.ref_name }}

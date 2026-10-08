@@ -103,11 +103,11 @@ def update_user_incidents(sender, instance, **kwargs):
 def force_logout_regulator_user(sender, instance, **kwargs):
     user = instance.user
 
-    if instance.pk:
-        old_instance = sender.objects.get(pk=instance.pk)
+    # A preset pk does not mean the row exists yet: loaddata saves with one.
+    old_instance = sender.objects.filter(pk=instance.pk).first() if instance.pk else None
 
-        if old_instance.is_regulator_administrator != instance.is_regulator_administrator:
-            force_logout_user(user)
+    if old_instance and old_instance.is_regulator_administrator != instance.is_regulator_administrator:
+        force_logout_user(user)
 
 
 @receiver(post_save, sender=RegulatorUser)
@@ -128,11 +128,11 @@ def update_regulator_user_groups(sender, instance, created, **kwargs):
 def force_logout_observer_user(sender, instance, **kwargs):
     user = instance.user
 
-    if instance.pk:
-        old_instance = sender.objects.get(pk=instance.pk)
+    # A preset pk does not mean the row exists yet: loaddata saves with one.
+    old_instance = sender.objects.filter(pk=instance.pk).first() if instance.pk else None
 
-        if old_instance.is_observer_administrator != instance.is_observer_administrator:
-            force_logout_user(user)
+    if old_instance and old_instance.is_observer_administrator != instance.is_observer_administrator:
+        force_logout_user(user)
 
 
 @receiver(post_save, sender=ObserverUser)

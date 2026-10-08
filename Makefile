@@ -14,7 +14,7 @@ help:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 activate:
-	poetry shell
+	@env -u MAKELEVEL -u MAKEFLAGS -u MFLAGS bash --rcfile <(echo '[ -f ~/.bashrc ] && . ~/.bashrc'; echo 'cd "$(CURDIR)"'; poetry env activate)
 
 run:
 	python manage.py runserver
@@ -28,11 +28,35 @@ migrate:
 superuser:
 	python manage.py createsuperuser
 
+permissions:
+	python manage.py update_group_permissions
+
+MODELS_APPS = governanceplatform incidents securityobjectives reporting
+MODELS_EXCLUDE = '*Translation,TranslatableModel,TranslatedFieldsModel,PermissionsMixin,AbstractUser,AbstractBaseSession'
+MODELS_DIR = docs/_static/images/technical
+
 models:
-	python manage.py graph_models governanceplatform incidents --pydot -g -o docs/_static/app-models.png
+	python manage.py graph_models $(MODELS_APPS) -g -d -E -X $(MODELS_EXCLUDE) --hide-edge-labels --dot \
+		| dot -Gconcentrate=true -Granksep=1.2 -Tpng -o $(MODELS_DIR)/app-models.png
+	for app in $(MODELS_APPS); do \
+		python manage.py graph_models $$app -E -X $(MODELS_EXCLUDE) --hide-edge-labels --dot \
+			| dot -Gconcentrate=true -Tpng -o $(MODELS_DIR)/models-$$app.png; \
+	done
 
 openapi:
 	python manage.py spectacular --format openapi > docs/_static/openapi.yml
+
+screenshots:
+	python docs/screenshots/capture.py
+
+# ATTENTION: This target will flush the database and load the screenshots fixture. Use with caution.
+screenshots-fixture:
+	@printf "\033[31mATTENTION: This deletes ALL data in the database. Type 'yes' to continue:\033[0m "; read answer; [ "$$answer" = yes ]
+	python manage.py flush --no-input
+	python manage.py migrate
+	python manage.py update_group_permissions
+	python manage.py loaddata docs/screenshots/fixture.json
+	python manage.py screenshot_fixture --create
 
 generatepot:
 	python manage.py makemessages -a --keep-pot
@@ -43,10 +67,11 @@ update:
 	python manage.py collectstatic
 	python manage.py compilemessages
 	python manage.py migrate
+	python manage.py update_group_permissions
 
 clean:
 	find . -type f -name "*.py[co]" -delete
 	find . -type d -name "__pycache__" -delete
 
 image:
-	docker build -f docker/Dockerfile --build-arg APP_VERSION=$(shell git describe --tags) -t $(IMAGE):$(VERSION) .
+	docker build -f docker/Dockerfile -t $(IMAGE):$(VERSION) .

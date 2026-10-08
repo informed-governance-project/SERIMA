@@ -22,7 +22,7 @@ companies_data = [
 ]
 
 functionalities_data = [
-    {"name": "Reporting", "type": "Reporting"},
+    {"name": "Reporting", "type": "reporting"},
     {"name": "so", "type": "securityobjectives"},
 ]
 
@@ -57,7 +57,6 @@ observers_data = [
         "country": "LU",
         "address": "123 rue de Luxembourg",
         "email_for_notification": "cert1@cert1.lu",
-        "is_receiving_all_incident": True,
     }
 ]
 

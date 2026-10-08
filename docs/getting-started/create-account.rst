@@ -1,0 +1,46 @@
+Create an account
+-------------------------
+
+Anyone can create an account, including organisations that want to report an incident voluntarily.
+A self-created account has the *incident user* role (see :doc:`roles-and-permissions`): it can notify incidents and see only its own reports.
+Once an operator administrator approves the account as a member of their operator,
+the incidents it reported move to that operator.
+
+If you do not have an account yet, create one by using the **Report an incident without account** button in the centre
+or by clicking the **Create account** link in the top right corner.
+
+.. figure:: /_static/images/getting-started/login-03.png
+   :alt: Login page with the Create account link and the Report an incident without account button highlighted
+   :target: ../_static/images/getting-started/login-03.png
+
+Fill in your first name, last name and email address, and answer the captcha.
+
+.. figure:: /_static/images/getting-started/create-account-01.png
+   :alt: Create account form with the first name, last name, email address, captcha and terms of service fields
+   :target: ../_static/images/getting-started/create-account-01.png
+
+Accept the terms of service and submit the form. The platform takes you back to the login page
+and confirms that your account was created.
+
+.. figure:: /_static/images/getting-started/create-account-02.png
+   :alt: Login page with the message confirming that the account was created and a password email sent
+   :target: ../_static/images/getting-started/create-account-02.png
+
+You then receive an email from the platform. Open the link it contains and choose your password;
+you can then log in with your email address and that password (see :doc:`login`).
+
+.. figure:: /_static/images/getting-started/create-account-03.png
+   :alt: Password reset email with the link to set your password
+   :target: ../_static/images/getting-started/create-account-03.png
+
+.. _password-requirements:
+
+.. important::
+
+   Your password must follow these rules:
+
+   - It can't be too similar to your other personal information.
+   - It must contain at least 12 characters.
+   - It can't be a commonly used password.
+   - It can't be entirely numeric.
+   - It must differ from your current password and from your last 24 passwords.

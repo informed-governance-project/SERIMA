@@ -8,6 +8,7 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![Documentation Status](https://readthedocs.org/projects/serima/badge/?version=latest)](https://serima.readthedocs.io/en/latest/?badge=latest)
 [![Translation status](https://weblate.nc3.lu/widget/serima/svg-badge.svg)](https://weblate.nc3.lu/engage/serima/)
+[![Ask DeepWiki](https://img.shields.io/badge/Ask-DeepWiki-blue.svg?style=flat-square)](https://deepwiki.com/informed-governance-project/SERIMA)
 
 ## Description
 
@@ -18,7 +19,7 @@ Different regulations are supported.
 This project is lead by [NC3-LU](https://www.nc3.lu).
 Developed in partnership with [ILR.lu](https://web.ilr.lu) and [IBPT.be](https://www.ibpt.be).
 
-![List of incidents from the regulator view.](docs/_static/home_page.png)
+![List of incidents from the regulator view.](docs/_static/images/index/home-page.png)
 
 ## Documentation
 

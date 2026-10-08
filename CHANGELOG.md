@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-06
+
+### Added
+
+- Security Objectives, a new module: an operator declares how it meets the security objectives of a framework its regulator publishes. A framework groups its objectives into domains, each objective carries the security measures that implement it, and the operator answers measure by measure — marking it implemented or not and writing the justification behind the answer. A declaration is identified by a code prefixed `SO_`, and a new one can be started empty, copied from a declaration of an earlier year, or imported from an Excel workbook
+- A security objectives declaration is reviewed by the regulator: the operator submits it, the regulator passes it or returns it for revision, and the decision is sent to the operator by email. Review comments are left on the declaration as a whole and on individual security measures, the declaration is downloadable as a PDF at any point, and every consultation is recorded in an access log
+- Reporting, a new module: a regulator builds a report project over a framework, a set of sectors and a range of years, imports the risk analyses its operators produce with MONARC as JSON, and generates one report per operator. A report sets the operator against the average and the ranking of its sector, charts how its risks and its maturity moved from the base year, and lists its risks by treatment — reduced, denied, accepted, shared or untreated — with a configurable threshold marking a risk as high and a Top 3, 5 or 10 ranking
+- A report is laid out from a DOCX template the regulator uploads with its own colour scheme, and is produced as DOCX or PDF in each of the languages chosen for the project. Observations and the recommendations attached to them are written once and reused across projects. Generation runs as a background task whose progress is followed from the project dashboard and which can be cancelled while it runs; every report produced is kept for download
+- Both modules are switched on by a platform administrator in two steps. First per role: on each functionality the administrator ticks the roles that may use it, from a list holding only the roles that can work with that module, and a new functionality starts with none ticked. Then, for regulator users, per regulator: the Security Objective and Reporting functionalities are granted to their regulator, while operators need only their role. Observers have access to neither module. Until both steps allow it, neither the pages nor their menu entries are reachable, so the security objectives module can be opened to regulators for configuration and to operators once it is done (#895)
+- A regulator can export its security objectives declarations from the dashboard, filtered by regulation, evaluation frameworks, years, sectors and statuses, as an XLSX workbook or as a ZIP of CSV files. The file carries the columns the dashboard shows, in the same order and with the same values, alongside a metadata sheet recording who exported it, when, with which parameters and how many rows it returned. The right to export is granted per user by the regulator administrator, to regulator administrators and regulator users alike; operators and observers have no access to it. Every export is written to the log and announced by email to the regulator's notification contacts, and no declaration outside the exporting user's own sectors can be reached, whatever parameters are submitted
+- An evaluation framework can be deactivated by its regulator from its configuration page, retiring it without deleting it or disturbing the declarations already made against it. A deactivated framework is no longer offered when an operator starts a declaration, when an operator duplicates one of an earlier year, or when a regulator imports a declaration from an Excel workbook. The declarations already made on it stay readable, editable, reviewable and downloadable, and an operator whose declaration was sent back for revision can still produce a new version of it. The reporting module is unaffected: a report is built over the declarations already made, so a retired framework stays available both for new report projects and for those already built on it
+- Platform administrators, regulator administrators, regulator users and observer administrators get the Reset 2FA token button operator administrators already had: in an "Account actions" column of the Users list, and beside "2FA Activated" on the account's own page. The button asks for confirmation first, and appears only on the accounts each role may reset: a regulator administrator resets the accounts of its regulator, and a regulator user those of operators, never another regulator account. Every reset is recorded in the account history (#883)
+
+
+### Changed
+
+- The "Receives all incident notifications" option of an observer is removed (#886). The incidents an observer sees and is notified of are now set only by its observer regulations, and an observer regulation with no sector selected covers every sector of its regulation, incidents declared without a sector included. An observer that relied on the option receives no incident until a platform administrator gives it observer regulations: one per regulation, with no sector and empty incident rules, restores what it received before
+- Resetting the accepted terms of service or the accepted cookies from the user list now asks the platform administrator to confirm first, and the reset can no longer be triggered by simply opening its address (#889)
+- The "Reset 2FA" bulk action of the Users list now skips the account of the user running it, whose token is reset from their own profile instead (#883)
+
+### Fixed
+
+- A link back to the previous page, after importing a declaration or a risk analysis or after editing a report project, is now followed only when it points at SERIMA itself. The address was taken from the browser's Referer header and used unchecked, so a crafted link could have bounced a signed-in user onto an outside site
+- Generating a report over a range of years in which no declaration was ever submitted no longer fails; the report is produced with its security objectives by priority left empty
+- Observer incident rules combining several entity categories in one condition now behave as documented. A condition listing several categories in `include` matched no incident at all, so an observer silently missed, and was never notified of, every incident it should have received through it. A condition pairing an `include` with an `exclude` ignored the `exclude`, so an observer saw and was notified of incidents from operators it should have been kept from
+
+
+## [0.5.18] - 2026-09-17
+
 ### Added
 
 - Operator administrators manage the accounts of their own company from the Users list: an "Account actions" column offers Approve and Reject for an account whose link to the company is still a suggestion, and Set/Unset Administrator and Reset 2FA token for accounts already approved. Every button asks for confirmation first and states what the action implies — approving an incident-notification account, for instance, associates it with the company along with the incidents it has already notified (#861)
@@ -731,6 +760,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.6.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.18...v0.6.0
+[0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
 [0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17
 [0.5.16]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.15...v0.5.16
 [0.5.15]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.14...v0.5.15

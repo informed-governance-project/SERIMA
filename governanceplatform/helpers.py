@@ -1,19 +1,25 @@
 import logging
+import os
 import secrets
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
 import bleach
+import redis
 from bleach.css_sanitizer import CSSSanitizer
+from celery import current_app
 from django.conf import settings
 from django.contrib import messages
 from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
+from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 
@@ -29,9 +35,6 @@ if TYPE_CHECKING:
     from django.utils.functional import Promise
 
     from .models import Company, Sector, User
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -64,13 +67,6 @@ def is_user_operator(user: User | AnonymousUser) -> bool:
 
 def is_observer_user(user: User | AnonymousUser) -> bool:
     return user.is_authenticated and user.is_observer()
-
-
-def is_observer_user_viewing_all_incident(user: User | AnonymousUser) -> bool:
-    if not is_observer_user(user):
-        return False
-    observer = user.observers.first()
-    return observer is not None and observer.is_receiving_all_incident
 
 
 def get_active_company_from_session(request: HttpRequest) -> Company | None:
@@ -197,9 +193,11 @@ def translated_queryset(
 ) -> QuerySet:
     default_lang = default_language
     lang = language
-    annotations = {}
+
     if translated_fields is None:
         translated_fields = []
+
+    annotations = {}
 
     for f in translated_fields:
         # Annotate value with the requested lang and default one
@@ -327,17 +325,8 @@ def render_to_string_multi_languages(
     replace_email_variables is a function to be given depending of the module sending email,
     object is an object (incident, standard_answer) to be given depending of the module,
     """
-    parts = []
 
-    with translation.override(settings.LANGUAGE_CODE):
-        if content and object and replace_email_variables:
-            context["content"] = replace_email_variables(
-                content.safe_translation_getter("content", language_code=settings.LANGUAGE_CODE),
-                object,
-            )
-        baseline = render_to_string(template_name, context)
-
-    for lang_code, lang_name in settings.LANGUAGES:
+    def render(lang_code: str) -> str:
         with translation.override(lang_code):
             if content and object and replace_email_variables:
                 context["content"] = replace_email_variables(
@@ -346,19 +335,27 @@ def render_to_string_multi_languages(
                 )
                 context["content"] = markdown(text=context["content"], output_format="html")
                 context["content"] = sanitize_html(context["content"])
-            rendered = render_to_string(template_name, context)
+            return render_to_string(template_name, context)
 
-            if rendered == baseline and lang_code != settings.LANGUAGE_CODE:
+    default_lang = settings.PARLER_DEFAULT_LANGUAGE_CODE
+    baseline = render(default_lang)
+
+    parts = []
+    for lang_code, lang_name in settings.LANGUAGES:
+        if lang_code == default_lang:
+            rendered = baseline
+        else:
+            rendered = render(lang_code)
+            if rendered == baseline:
                 continue
 
+        with translation.override(lang_code):
             parts.append(
                 f"""
                 <h3>{translation.gettext(lang_name)} ({lang_code})</h3>
                 {rendered}
                 """.strip()
             )
-    if not parts:
-        return baseline
     return "<hr>".join(parts)
 
 
@@ -437,6 +434,7 @@ def sort_queryset_by_field(
 
     field = config_field["field"]
     is_string = config_field["type"] == "string"
+    is_boolean = config_field["type"] == "boolean"
 
     if "__translations__" in field:
         annotated_name = f"sort_{field.replace('__', '_')}"
@@ -452,6 +450,8 @@ def sort_queryset_by_field(
     if is_string:
         expr = Lower(field)
         ordering.append(expr.desc() if sort_direction == "desc" else expr.asc())
+    elif is_boolean:
+        ordering.append(field if sort_direction == "desc" else f"-{field}")
     else:
         ordering.append(f"-{field}" if sort_direction == "desc" else field)
 
@@ -459,6 +459,46 @@ def sort_queryset_by_field(
         ordering.append(f"-{default_sort_field}")
 
     return qs.order_by(*ordering)
+
+
+def delete_file_and_parents(file_field, label: str) -> None:
+    """
+    Delete a FileField file from storage and clean up empty parent directories
+    up to (but not including) the storage root.
+    """
+    if not file_field:
+        return
+    try:
+        # Resolve the absolute path before deleting the file
+        storage = file_field.storage
+        abs_path = os.path.realpath(storage.path(file_field.name))
+
+        # Delete the file itself
+        file_field.delete(save=False)
+
+        # Walk up and remove empty directories until we hit the storage root
+        storage_root = os.path.abspath(storage.location)
+        current_dir = os.path.dirname(abs_path)
+
+        while True:
+            current_dir = os.path.realpath(current_dir)
+
+            # Guard 1: never climb above storage root
+            if not current_dir.startswith(storage_root + os.sep):
+                break
+
+            # Guard 2: universal filesystem root backstop
+            if current_dir == os.path.dirname(current_dir):
+                break
+            try:
+                os.rmdir(current_dir)  # only removes if empty
+                current_dir = os.path.dirname(current_dir)
+            except OSError:
+                # Directory not empty or already gone — stop climbing
+                break
+
+    except Exception:
+        logger.exception("Failed to delete %s: %s", label, file_field.name)
 
 
 def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
@@ -477,3 +517,46 @@ def normalize_reference(value: str, prefix: str) -> str:
     if upper.startswith(prefix):
         return prefix + normalize_crockford(upper[len(prefix) :])
     return normalize_crockford(upper)
+
+
+def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpResponseRedirect:
+    """Send the user back where they came from, or to the `fallback` URL name.
+
+    The Referer header is set by the client, so redirecting to it unchecked lets a crafted
+    link bounce an authenticated user onto an attacker's site with our styling and session.
+    """
+    referer = request.headers.get("referer", "")
+    if url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return HttpResponseRedirect(referer)
+    return HttpResponseRedirect(reverse(fallback))
+
+
+def render_error_messages(request: HttpRequest) -> str:
+    return render_to_string(
+        "django_bootstrap5/messages.html",
+        {"messages": messages.get_messages(request)},
+        request=request,
+    )
+
+
+def is_celery_worker_alive() -> bool:
+    try:
+        inspect = current_app.control.inspect()
+        response = inspect.ping()
+        return bool(response)
+    except Exception:
+        return False
+
+
+def is_redis_available() -> bool:
+    try:
+        r = redis.Redis.from_url(settings.CELERY_BROKER_URL)
+        r.ping()
+        return True
+    except redis.exceptions.RedisError:
+        return False
+
+
+def celery_health_check() -> bool:
+    """Whether a task queued now would actually be picked up by a worker."""
+    return is_celery_worker_alive() and is_redis_available()

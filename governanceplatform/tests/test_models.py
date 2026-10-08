@@ -25,19 +25,20 @@ def test_user_group(populate_db):
 def test_user_functionnalities(populate_db):
     """
     Test User model
-    - test User::get_module_permissions according to the dataset
+    - test User::get_module_permissions according to the dataset, where every eligible role is enabled
     """
     users = populate_db["users"]
     for user in users:
         if (
-            user_in_group(user, "OperatorUser")
-            or user_in_group(user, "OperatorAdmin")
-            or user_in_group(user, "PlatformAdmin")
+            user_in_group(user, "PlatformAdmin")
             or user_in_group(user, "IncidentUser")
             or user_in_group(user, "ObserverAdmin")
             or user_in_group(user, "ObserverUser")
         ):
             assert len(user.get_module_permissions()) == 0, f"User {user.email} should have no permission"
+        # Operators have no entity switch, so their enabled role is enough
+        if user_in_group(user, "OperatorUser") or user_in_group(user, "OperatorAdmin"):
+            assert user.get_module_permissions() == ["securityobjectives"], f"User {user.email} should have SO"
         if user_in_group(user, "RegulatorUser") or user_in_group(user, "RegulatorAdmin"):
             # REG1 has access to other modules
             if user.regulators.first().name == "REG1":

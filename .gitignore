@@ -43,3 +43,6 @@ id_rsa
 id_ed25519
 credentials.json
 secrets.toml
+
+# Throwaway screenshot account credentials
+docs/screenshots/.fixture-credentials.json

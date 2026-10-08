@@ -5,7 +5,7 @@ import uuid
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.models import AbstractUser, Group, PermissionsMixin
 from django.contrib.sessions.base_session import AbstractBaseSession
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
@@ -107,6 +107,12 @@ class Functionality(TranslatableModel):
         null=False,
         unique=True,
     )
+    roles = models.ManyToManyField(
+        Group,
+        verbose_name=_("Roles"),
+        blank=True,
+        related_name="functionalities",
+    )
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)
@@ -190,18 +196,6 @@ class Company(models.Model):
     def __str__(self):
         return self.name
 
-    def security_objective_exists(self, year=None, sector=None):
-        if not (year and sector):
-            return False
-
-        return self.standardanswer_set.filter(year_of_submission=year, sectors__in=[sector.id], status="PASS").exists()
-
-    def risk_analysis_exists(self, year=None, sector=None):
-        if not (year and sector):
-            return False
-
-        return self.companyreporting_set.filter(year=year, sector=sector, servicestat__isnull=False).exists()
-
     class Meta:
         verbose_name = _("Operator")
         verbose_name_plural = _("Operators")
@@ -262,7 +256,6 @@ class Observer(TranslatableModel):
         blank=True,
         null=True,
     )
-    is_receiving_all_incident = models.BooleanField(default=False, verbose_name=_("Receives all incident notifications"))
     functionalities = models.ManyToManyField(
         Functionality,
         verbose_name=_("Functionalities"),
@@ -431,19 +424,14 @@ class User(AbstractUser, PermissionsMixin):
             sectors = Sector.objects.all()
         return sectors
 
-    def get_module_permissions(self):
-        user_entity = None
+    def get_module_permissions(self) -> list[str]:
+        """A module needs the user's role enabled on it first; regulators then also need it
+        enabled on their regulator. Operators have no entity switch."""
+        # Listing the groups reuses the prefetch done at authentication instead of a subquery
+        functionalities = Functionality.objects.filter(roles__in=list(self.groups.all()))
         if self.is_regulator():
-            regulator_user = self.regulatoruser_set.first()
-            if regulator_user:
-                user_entity = regulator_user.regulator
-        elif self.is_observer():
-            observer_user = self.observeruser_set.first()
-            if observer_user:
-                user_entity = observer_user.observer
-        if user_entity:
-            return list(user_entity.functionalities.values_list("type", flat=True))
-        return []
+            functionalities = functionalities.filter(regulator__in=self.regulators.all())
+        return list(functionalities.values_list("type", flat=True).distinct())
 
     class Meta:
         verbose_name_plural = _("Users")
@@ -515,6 +503,7 @@ class RegulatorUser(models.Model):
     )
     is_regulator_administrator = models.BooleanField(default=False, verbose_name=_("Is administrator"))
     can_export_incidents = models.BooleanField(default=False, verbose_name=_("Can export incidents"))
+    can_export_security_objectives = models.BooleanField(default=False, verbose_name=_("Can export security objectives"))
     sectors = models.ManyToManyField(Sector, blank=True)
 
     class Meta:

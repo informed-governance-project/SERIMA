@@ -1,0 +1,13 @@
+del {
+  color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  ins {
+    color: var(--body-fg);
+  }
+
+  del {
+    color: var(--body-fg);
+  }
+}
