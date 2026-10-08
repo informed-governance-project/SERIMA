@@ -1,4 +1,4 @@
-Security Model
+Security model
 ==============
 
 Security policy

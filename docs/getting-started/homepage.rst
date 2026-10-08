@@ -13,8 +13,8 @@ On the homepage, you will find the following main functionalities (as numbered i
 1. **SERIMA Home button**: Use this button in the top-left corner to come back to the homepage at any time.
 2. **Settings**: This option takes you to the settings page. The content of the Settings page may vary depending on the type of user
    account you are logged in with. See :doc:`/administration/index`.
-3. **Account type**: Use the downward-pointing arrow next to the user type to open the drop-down menu.
-   What each account type can do is described in :doc:`roles-and-permissions`.
+3. **Account menu**: Use the downward-pointing arrow next to your name to open the drop-down menu.
+   What each role can do is described in :doc:`roles-and-permissions`.
 
    .. figure:: /_static/images/getting-started/homepage-02.png
       :alt: Account menu open, with the Account, Security, Password and Log out entries
@@ -30,30 +30,39 @@ On the homepage, you will find the following main functionalities (as numbered i
 
    - **Security**: The Security menu takes you to the Account Security screen,
      where you can generate backup tokens for account access and enable or disable
-     (This is strongly not recommended) two-factor authentication (see :doc:`enable-2fa`).
+     two-factor authentication (see :doc:`enable-2fa`).
+
+     .. warning::
+
+        Two-factor authentication is mandatory. If you disable it, you cannot use the platform
+        until you enable it again.
 
    - **Password**: If you select the **Password** menu, you will need to log in again and provide your token to access the **Change Password** screen.
      There, you can update your password. You must enter your current password and then type your new password twice
-     (Please make sure to follow the :ref:`password requirements <password-requirements>`).
+     (it must follow the :ref:`password requirements <password-requirements>`).
 
      .. figure:: /_static/images/getting-started/homepage-04.png
-        :alt: Change password form
+        :alt: Change password form with the old password, new password and confirmation fields and the password rules
         :target: ../_static/images/getting-started/homepage-04.png
 
    - **Log out**: Use this link to log out of the application. In case you are not active, the system will log you out for security reasons.
 
 4. **Contact**: Click the envelope icon to open the Contact form, through which you can send a message to the platform's support team.
 
-     .. figure:: /_static/images/getting-started/homepage-05.png
-        :alt: Contact form
-        :target: ../_static/images/getting-started/homepage-05.png
+   .. figure:: /_static/images/getting-started/homepage-05.png
+      :alt: Contact form with the account details filled in, the message field and the platform's address
+      :target: ../_static/images/getting-started/homepage-05.png
 
 5. **Language selector**: In the top right-hand corner, you can switch between English (**EN**), French (**FR**), Dutch (**NL**), and German (**DE**).
 6. **Incident notification**: Use this module to report cybersecurity incidents to the competent authority (see :doc:`/incident-notification/index`).
 7. **Security objectives**: A self-assessment module to fulfill security objectives evaluation and provide evidence for security measures in place
    (see :doc:`/security-objectives/index`).
 
-The modules shown depend on your role and on what your regulator has enabled.
+.. note::
+
+   The modules shown depend on your role and on what your regulator has enabled.
+
+.. _module-selector:
 
 Module selector
 ~~~~~~~~~~~~~~~

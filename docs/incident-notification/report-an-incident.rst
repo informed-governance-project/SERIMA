@@ -1,96 +1,115 @@
-How to report an incident?
----------------------------
+Report an incident
+------------------
 
-To report an incident, you should go to the incident notification dashboard.
-You can reach the dashboard by either clicking the **Modules** drop-down menu and selecting **Incident notification**,
-or by clicking the **Go to Dashboard** button on the **Incident notification** tile in the center of the screen.
+To report an incident, open the :doc:`incident notification dashboard <dashboard>`
+and click the **Notify an incident** button in the top-right corner of the screen.
 
-.. figure:: /_static/images/incident-notification/dashboard-01.png
-   :alt: Incident notification module
-   :target: ../_static/images/incident-notification/dashboard-01.png
+The **Report an incident** screen guides you through up to five forms, described below:
+`Contact form`_, `Legal bases`_, `Regulators`_, `Sectors`_ and `Detection date`_.
+The steps are shown at the top of the screen. Click **Next** to move to the following form, **Previous** or the name of an
+earlier step to go back, and **Cancel** to stop without reporting anything.
+Fields marked with an asterisk (*) are mandatory.
 
-Either way, you will be taken to the **Incident Notification dashboard**, where you can view an overview of all reported incidents.
-Once on the dashboard, click the **Notify an Incident** button in the top-right corner of the screen.
+.. note::
 
-.. figure:: /_static/images/incident-notification/report-an-incident-01.png
-   :alt: Incident notification module
-   :target: ../_static/images/incident-notification/report-an-incident-01.png
-
-The **Report an Incident** screen appears, showing the three main steps required to submit an incident.
-You must complete the **Contact, Legal Bases**, and **Regulators** forms.
+   Nothing is saved until you submit the last form. If you click **Cancel** or leave the page before that,
+   no incident is created.
 
 Contact form
-~~~~~~~~~~~~~~
-The **Contact** form appears. Please fill in the required fields so the authorities to whom you are sending the incident report can get back to you.
-The form has three main parts:
+~~~~~~~~~~~~
 
-1.	**Name of the Operator**: This is the person in charge of the incident notification. Provide your name, job title, email, and telephone number.
-2.	**Technical contact**: If it is the same person, please activate the slider (Is the incident notification manager also the technical contact?), so it will be red.
-3.	**References** (Optional): Incident reference, Complaint reference.
+Fill in the contact details, so that the authorities receiving your notification can get back to you.
+The form has four parts:
 
-.. figure:: /_static/images/incident-notification/report-an-incident-02.png
-   :alt: Contact form
-   :target: ../_static/images/incident-notification/report-an-incident-02.png
+1. **Legal Entity Name**: The organisation reporting the incident. It is filled in with the operator you are working for.
+2. **Contact Information**: The person in charge of the incident notification: job title, first name, last name, email and telephone.
+   It is filled in with the details of your account; change them if someone else is in charge.
+3. **Technical Contact Information**: The person who can answer technical questions about the incident.
+   If it is the same person as the contact, turn on the **Is the contact also the technical contact?** switch
+   instead of entering the same details again.
+4. **References** (optional):
 
-Once you have populated all required fields, click **Next**. In case you want to interrupt the process of reporting an incident, click **Cancel**.
-If you click Next, you will be directed to the **Legal bases** form.
+   - **Incident reference**: Your own reference for the incident, such as an internal ticket number or a CERT reference,
+     to make it easier to track.
+   - **Complaint reference**: The file number of a criminal complaint you have filed with the police about the incident.
+
+.. figure:: /_static/images/incident-notification/report-an-incident-01.png
+   :alt: Contact form with the Legal Entity Name and Technical Contact Information sections outlined
+   :target: ../_static/images/incident-notification/report-an-incident-01.png
+
+Once you have filled in all mandatory fields, click **Next** to go to the **Legal bases** form.
 
 Legal bases
-~~~~~~~~~~~~~~
-The next step is the **Legal Bases** form. Select the applicable regulations by checking one or both options (EECC – Telecom Law and/or NIS).
-You may choose either regulation individually or both together. After making your selection, click Next to proceed to the **Regulators** form.
+~~~~~~~~~~~
 
-.. figure:: /_static/images/incident-notification/report-an-incident-03.png
-   :alt: Legal bases
-   :target: ../_static/images/incident-notification/report-an-incident-03.png
+Select the regulations under which you are notifying the incident. You can select one or several of them.
+Only the regulations for which a regulator has set up an incident notification procedure are listed.
+After making your selection, click **Next** to go to the **Regulators** form.
+
+.. figure:: /_static/images/incident-notification/report-an-incident-02.png
+   :alt: Legal bases form with two regulations selected
+   :target: ../_static/images/incident-notification/report-an-incident-02.png
 
 Regulators
-~~~~~~~~~~~~~~
-The next form is **Regulator**. As you can see, there is only one available option: **ILR**.
-This field is mandatory and cannot be left blank. After selecting it, click **Next** to continue.
+~~~~~~~~~~
 
-.. figure:: /_static/images/incident-notification/report-an-incident-04.png
-   :alt: Regulators
-   :target: ../_static/images/incident-notification/report-an-incident-04.png
+Under **Send notification to**, select the regulators that must receive your notification.
+Only the regulators in charge of the regulations you selected are listed. At least one regulator is required.
+After making your selection, click **Next** to continue.
+
+.. figure:: /_static/images/incident-notification/report-an-incident-03.png
+   :alt: Regulators form with one regulator selected
+   :target: ../_static/images/incident-notification/report-an-incident-03.png
 
 Sectors
-~~~~~~~~~~~~~~
-On the **Sectors** form, you can indicate which sectors are affected by the incident you are reporting. The main sector options are:
+~~~~~~~
 
-•	Digital Infrastructure sector
-•	Drinking water sector
-•	Electronic communication sector
-•	Energy
-•	Health sector
-•	Transport
+Select the sectors affected by the incident. The sectors are grouped under their main sector,
+and only the sectors covered by the regulations and regulators you selected are listed.
 
-For demonstration purposes, let’s choose two sectors (**Digital Infrastructure**, and **Telecommunication services or network provider**):
-
-.. figure:: /_static/images/incident-notification/report-an-incident-05.png
-   :alt: Sectors
-   :target: ../_static/images/incident-notification/report-an-incident-05.png
+.. figure:: /_static/images/incident-notification/report-an-incident-04.png
+   :alt: Sectors form with two sectors selected
+   :target: ../_static/images/incident-notification/report-an-incident-04.png
 
 Detection date
-~~~~~~~~~~~~~~~
-As the final step in the incident reporting process, you should provide the timezone and the date and time of the incident.
-Entering the date and time of the incident is straightforward. When you click the calendar icon, the field is automatically populated with the current date and time.
-From there, only minor adjustments should be needed, as typically there is little difference between the moment the incident is detected and the moment it is reported.
+~~~~~~~~~~~~~~
+
+Select the time zone of the incident, then enter the date and time at which the incident was detected,
+in the format ``yyyy-mm-dd hh:mm``. You can also pick them in the calendar that opens from the calendar icon.
+
+.. figure:: /_static/images/incident-notification/report-an-incident-05.png
+   :alt: Detection date form with the time zone and the calendar open
+   :target: ../_static/images/incident-notification/report-an-incident-05.png
+
+.. note::
+
+   The **Sectors** and **Detection date** forms appear only when the regulations and regulators you selected need them.
+   If they do not, the wizard ends at the previous form.
+
+After the incident is submitted
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Click **Next** on the last form to submit the notification. The platform then creates the incident
+and, if your regulator has set one up, sends an email announcing it.
+
+.. important::
+
+   The platform creates **one incident for each notification procedure** that matches your selection.
+   A notification procedure is set up by a regulator for a regulation and a group of sectors,
+   so selecting several legal bases, regulators or sectors can create several incidents, each with its own reference and reports.
+
+- If a single incident is created, the platform opens its first report straight away, so that you can fill it in
+  (see :doc:`fill-in-a-report`).
+- If several incidents are created, the platform takes you back to the dashboard, where each one appears on its own line.
+  Open each incident's first report from the **Report** column.
+
+In the example below, the two selected sectors belong to two different notification procedures, so two incidents were created:
 
 .. figure:: /_static/images/incident-notification/report-an-incident-06.png
-   :alt: Detection date
+   :alt: Dashboard listing the two incidents just created, with their sectors outlined
    :target: ../_static/images/incident-notification/report-an-incident-06.png
 
-If the detection date field is filled in correctly, click the **Next** button to complete the incident reporting process.
-You will then be redirected to the main screen (**Incident List View**), where the newly created incident report will appear.
+.. note::
 
-The table displays the information you entered during the incident report preparation,
-along with additional columns such as **Significant Impact, Incident Status**, and **Actions**.
-
-   **Please note that the system creates one incident entry for each sector you select.**
-
-In the previous example, two sectors were chosen (Digital Infrastructure, and Telecommunication services or network provider).
-As a result, two separate incidents were created, each represented by its own line in the list.
-
-.. figure:: /_static/images/incident-notification/report-an-incident-07.png
-   :alt: Two sectors chosen
-   :target: ../_static/images/incident-notification/report-an-incident-07.png
+   The number of incidents you can report per day is limited. Once the limit is reached, the platform shows
+   **The daily limit of incident reports has been reached. Please try again tomorrow.** and takes you back to the dashboard.

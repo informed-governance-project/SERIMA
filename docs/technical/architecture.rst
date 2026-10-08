@@ -6,10 +6,8 @@ High-level architecture
 -----------------------
 
 .. figure:: /_static/images/technical/global-architecture.png
-   :alt: High-level architecture
+   :alt: High-level architecture of a Django application
    :target: ../_static/images/technical/global-architecture.png
-
-   High-level architecture of a Django application.
 
 A SERIMA instance is made of the following components:
 
@@ -29,10 +27,41 @@ A SERIMA instance is made of the following components:
 Models
 ------
 
+The overview shows the models of the four applications and their relations, without fields.
+The diagrams below show each application in detail; models from other applications appear as plain boxes.
+The django-parler translation models (``*Translation``) are left out: a translatable model is marked
+``<TranslatableModel>`` in its header.
+
 .. figure:: /_static/images/technical/app-models.png
-   :alt: Application models
+   :alt: Overview of the models of the governance, incidents, security objectives and reporting applications
    :target: ../_static/images/technical/app-models.png
 
-   Business-related models for the *incidents* and *governance* modules.
+Governance
+~~~~~~~~~~
 
-The diagram is generated with ``make models``.
+.. figure:: /_static/images/technical/models-governanceplatform.png
+   :alt: Models of the governance application: users, companies, regulators, sectors and regulations
+   :target: ../_static/images/technical/models-governanceplatform.png
+
+Incident notification
+~~~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/technical/models-incidents.png
+   :alt: Models of the incidents application: incidents, workflows, questions and impacts
+   :target: ../_static/images/technical/models-incidents.png
+
+Security objectives
+~~~~~~~~~~~~~~~~~~~
+
+.. figure:: /_static/images/technical/models-securityobjectives.png
+   :alt: Models of the security objectives application: standards, domains, objectives, measures and answers
+   :target: ../_static/images/technical/models-securityobjectives.png
+
+Reporting
+~~~~~~~~~
+
+.. figure:: /_static/images/technical/models-reporting.png
+   :alt: Models of the reporting application: projects, risk data, observations, templates and generated reports
+   :target: ../_static/images/technical/models-reporting.png
+
+The diagrams are generated with ``make models``.

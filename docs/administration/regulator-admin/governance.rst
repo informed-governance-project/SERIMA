@@ -1,156 +1,206 @@
 Governance
-~~~~~~~~~~~~~~~~~~~
+----------
 
-In the **Governance** section, you can find the following functionalities:
+The **Governance** section of the console is where you manage your regulator, its accounts, the sectors and
+the operators. For a regulator administrator, it lists:
+
+- **Regulators**, **Users**, **Sectors** and **Operators**, which you can change, as described on this page;
+- **Entity categories**, **Functionalities**, **Observers** and **Regulations**, set up by the platform administrator,
+  which you can only view (see `Read-only items`_).
+
+The lists, forms, language tabs and the icons beside the drop-downs work as described in
+:doc:`/administration/platform-admin/governance`.
+
+.. _regulator-own:
+
+Your regulator
+~~~~~~~~~~~~~~
+
+The **Regulators** list shows every regulator of the platform. Click your regulator to change it;
+the others open read-only, with their accounts.
+
+The form holds the **Name**, **Full name** and **Description** of your regulator, which can be translated,
+its **Country** and **Address**, and its **E-mail address for incident notification**: the shared address that receives
+a copy of the emails the platform sends about the incidents and security objectives declarations of your regulator.
 
 .. figure:: /_static/images/administration/regulator-admin/governance-01.png
-   :alt: Governance
+   :alt: Change Regulator form with the contact fields, and the read-only Functionalities field outlined
    :target: ../../_static/images/administration/regulator-admin/governance-01.png
 
-In the left panel, you can see the functionalities and their links. To the right, you can see whether the Regulator Admin has write access (**Add/Change**) or only read access (**View**) for each functionality. **These permissions are set by the Platform Admin.**
+**Functionalities** lists, read-only, the optional modules the platform administrator has opened to your regulator
+(see :ref:`functionalities`). You cannot delete your regulator.
 
-Entity categories
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. _regulator-accounts:
 
-Click the **Entity categories** link to go to the **Select entity category view** screen. On this screen, you can see what kind of entities are defined in your system. You can view an entity on the **View Entity category** screen by clicking on its link. You can set up an entity in four different languages.
+Regulator accounts
+~~~~~~~~~~~~~~~~~~
+
+The **Regulator users** section at the bottom of the form of your regulator lists all its accounts,
+administrators and users, one row each.
 
 .. figure:: /_static/images/administration/regulator-admin/governance-02.png
-   :alt: Select entity category view
+   :alt: Regulator users section with the row of a regulator user and the Add another Regulator user link outlined
    :target: ../../_static/images/administration/regulator-admin/governance-02.png
 
-You only have read-only access to the Entity categories. Once you click the name of the Entity Category in the **Code** column, you will be directed to the **View Entity Category** screen:
+Each row has:
 
-.. figure:: /_static/images/administration/regulator-admin/governance-03.png
-   :alt: View Entity Category
-   :target: ../../_static/images/administration/regulator-admin/governance-03.png
+- **User**: the account.
+- **Is administrator**: ticked for a regulator administrator, unticked for a regulator user.
+  Changing it switches the role of the account and logs it out.
+- **Can export incidents**: read-only. The platform administrator grants it, and it applies to administrators only
+  (see :ref:`incident-export`).
+- **Can export security objectives**: lets the account export the list of security objectives declarations
+  (see :doc:`/security-objectives/review-a-declaration`).
+- **Sectors**: the sectors a regulator user handles. They see only the incidents and declarations of these sectors.
+  Administrators see all the sectors, whatever is chosen here.
 
-Functionalities
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. important::
 
-Click the **Functionalities** link to go to the **Select Functionality to view** screen. On this screen, you can check what kind of functionalities are defined in your system. The screenshot below shows two configured functionalities (**Reporting** and **Security Objective**):
+   A regulator user with no sector chosen sees no incidents and no declarations.
 
-.. figure:: /_static/images/administration/regulator-admin/governance-04.png
-   :alt: Select a functionality to view
-   :target: ../../_static/images/administration/regulator-admin/governance-04.png
+Add an account
+""""""""""""""
 
-You only have read-only access to the **Functionalities**. Once you click the name of the Functionality in the **Type** column, you will be directed to the **View Functionality** screen:
+1. Click **Add another Regulator user**.
+2. Select the account in the **User** drop-down, which lists the regulator accounts not yet attached to a regulator,
+   or click the plus icon beside it to create the account in a pop-up, with its **First name**, **Last name**,
+   **Email address** and **Phone number**.
+3. Tick **Is administrator** to make it a regulator administrator. Otherwise, choose its **Sectors**.
+4. Tick **Can export security objectives** if the account may export the declarations.
+5. Click **Save**.
 
-.. figure:: /_static/images/administration/regulator-admin/governance-05.png
-   :alt: View Functionality
-   :target: ../../_static/images/administration/regulator-admin/governance-05.png
+The new account has no password yet. Its owner chooses one with **Password forgotten?** on the login page
+(see :doc:`/getting-started/login`), then sets up two-factor authentication at the first login
+(see :doc:`/getting-started/enable-2fa`).
 
-Observers
-^^^^^^^^^^^^^^^^^^^^^^^^
+You can also create the account with **Add User** in the **Users** list: it is created as a regulator user
+attached to no regulator. Open it, choose your regulator in its **Regulator user** section (see `Users`_),
+and click **Save**.
 
-Click the **Observers** link to go to the **Select Observers to change** screen. On this screen, you can see what kind of Observers are defined in your system. You only have view access to the Observers screen.
+Remove an account
+"""""""""""""""""
 
-.. figure:: /_static/images/administration/regulator-admin/governance-06.png
-   :alt: Select Observers to change
-   :target: ../../_static/images/administration/regulator-admin/governance-06.png
+Tick **Delete?** on the row of the account and click **Save**. The account is not deleted, but deactivated:
+its owner can no longer log in.
 
-Click the name of the Observer in the **Name** column to view it. Once you click the name of an Observer, you will be directed to the **View Observer** screen. At the top, you can see the contact information of the chosen Observer, whereas further down, you can see the accounts of the Observer (Observer Admins) and its Observer Regulations.
+.. warning::
 
-Operators
-^^^^^^^^^^^^^^^^^^^^^^^^
+   Your own account is listed too. Unticking **Is administrator** or ticking **Delete?** on your own row
+   takes away your own access.
 
-Click the **Operators** link to go to the **Select Operator to change** screen. On this screen, you can see what types of operators are defined in your system. The screenshot below shows two configured operators:
-
-.. figure:: /_static/images/administration/regulator-admin/governance-07.png
-   :alt: Select Operator to change
-   :target: ../../_static/images/administration/regulator-admin/governance-07.png
-
-Please note that you can add new operators either by clicking the **Add** link in the **Governance** section on the left panel or by clicking the **Add Operator** button in the top right-hand corner.
-
-Once clicked, you will be directed to the **Add Operator** screen, where you can set up a new operator. First, provide the operator’s contact information (name, address, country, email address, and phone number). Then choose an acronym for the operator. Finally, assign entity categories to the operator.
-
-.. figure:: /_static/images/administration/regulator-admin/governance-08.png
-   :alt:  Operator configuration
-   :target: ../../_static/images/administration/regulator-admin/governance-08.png
-
-Regulations
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-By clicking the **Regulations** link, you can view the regulations that have been set up in your SERIMA instance.
-
-   **SERIMA is a multi-regulation platform, meaning that the Platform Admin can configure as many regulations as needed.**
-
-Please note that, as a **Regulator Admin**, you do not have write permissions for this functionality and, therefore, cannot add or delete regulations. You can only view the regulations available in your system.
-
-.. figure:: /_static/images/administration/regulator-admin/governance-09.png
-   :alt:  Select Regulation to view
-   :target: ../../_static/images/administration/regulator-admin/governance-09.png
-
-Once you click the name of a regulation, you will be directed to the **View Regulation** screen, where you can see the regulation **Label** and the **Regulators** linked to it.
-
-.. figure:: /_static/images/administration/regulator-admin/governance-10.png
-   :alt:  View Regulation
-   :target: ../../_static/images/administration/regulator-admin/governance-10.png
-
-Regulators
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-By clicking the **Regulators** link, you can view the regulators that have been set up in your SERIMA instance.
-
-  **Please note that, as a Regulator Admin, you do not have write permissions for this functionality and therefore cannot add or delete regulators.**      You can only view the regulators available in your system (set up the Platform Admin).
-
-.. figure:: /_static/images/administration/regulator-admin/governance-11.png
-   :alt:  Select Regulator to view
-   :target: ../../_static/images/administration/regulator-admin/governance-11.png
-
-Once you click the name of a regulator, you will be directed to the **Change Regulator** screen, where you can view detailed information about the selected regulator. At the top of the screen, the regulator’s contact details are displayed (name, address, country, email address, and phone number). Below this, you can see the linked regulator users and their associated sectors.
-
-Sectors
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-By clicking the **Sectors** link, you can go to the **Select Sector to Change** screen. There are three columns (**Acronym, Name, Parent Sector**) displayed. To sort the list items, first select the column you want to sort and choose the sorting order (ascending or descending). To refine the sorting further, you can select additional columns and specify their sorting order.
-
-An upward-facing triangle in the top-right corner of the column indicates that the entries are sorted in descending order, with older entries at the top and newer ones at the bottom.
-
-When more than one column is used for sorting, numbers appear next to the up or down arrows to indicate the sorting sequence. In the example below, the list of entries is sorted first by **Acronym** (descending), then by **Parent Sector** (ascending).
-
-.. figure:: /_static/images/administration/regulator-admin/governance-12.png
-   :alt: Select Sector to Change
-   :target: ../../_static/images/administration/regulator-admin/governance-12.png
-
-Please note that you can add new sectors either by clicking the **Add** link in the Governance section on the left panel or by clicking the **Add Sector** button in the top right-hand corner. Either way, you will be directed to the **Add Sector** screen, where you can create a new sector by providing its name, parent sector (optional), and acronym.
-
-.. figure:: /_static/images/administration/regulator-admin/governance-13.png
-   :alt: Add Sector screen
-   :target: ../../_static/images/administration/regulator-admin/governance-13.png
-
-Once you set up a new sector and click Save, the newly-added sector appears on the list of Sectors.
+.. _regulator-users:
 
 Users
-^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~
 
-To view the users and their types, select the **Users** link in the **Governance** panel on the left. After clicking the Users link, you will be directed to the **Select User to Change** screen (also called the **User Table**). You can create new users by clicking the **+Add** link or by choosing the **Add User** button in the top right-hand corner.
+The **Users** list opens on the accounts of your regulator, and the regulator users not attached to any regulator yet.
+To see the other accounts you can manage, the operator and incident user accounts, choose a role in **By Roles**
+or an operator in **By Operators** in the **Filter** panel, or search for a name.
 
-The User table contains several columns (Active, First Name, Last Name, Email Address, etc.). If you have many users, you can search among them using the **Search** field or filter them using the **Filter** panel on the right.
+The list shows the contact details of each account, its **Regulator**, its **Companies** (operators), its **Roles**,
+whether the email address is verified and two-factor authentication is activated, and when the account was created.
 
-.. figure:: /_static/images/administration/regulator-admin/governance-14.png
-   :alt: Filter users
-   :target: ../../_static/images/administration/regulator-admin/governance-14.png
+.. figure:: /_static/images/administration/regulator-admin/governance-03.png
+   :alt: Users list of a regulator administrator with the column headers and the Filter panel outlined
+   :target: ../../_static/images/administration/regulator-admin/governance-03.png
 
-On the **Add User** screen, you can add new users by filling in the required fields (First name, Last name, Email address, and Phone number). The required field (Email address) is indicated with an asterisk. You can create several users by using the **Save and add another** button (circled in red in the screenshot below).
+Click a name to open the account. You can change its contact details and untick **Active** to deactivate it:
+its owner can no longer log in. The account of a regulator user or administrator also has its
+**Regulator user** section, which works like a row of the **Regulator users** section of your regulator.
 
-.. figure:: /_static/images/administration/regulator-admin/governance-15.png
-   :alt: Add User screen
-   :target: ../../_static/images/administration/regulator-admin/governance-15.png
+.. figure:: /_static/images/administration/regulator-admin/governance-04.png
+   :alt: Change User form of a regulator user with the Active box, the Reset 2FA token button and the Regulator user section outlined
+   :target: ../../_static/images/administration/regulator-admin/governance-04.png
 
-**Please note that as a Regulator Admin, you can only create regulator users and regulator admins (you cannot create operator admins).**
+The accounts of an operator are attached to it by a regulator user or by its operator administrators
+(see :ref:`regulator-user-contacts` and :ref:`operator-admin-users`), not here.
 
- **How to filter among users?**
+Reset two-factor authentication
+"""""""""""""""""""""""""""""""
 
-Use the Filter section on the far right. The **Show counts** link displays how many users and in what roles can be found in your platform.
+You can reset the two-factor authentication of the accounts of your regulator, with the **Reset 2FA token** button
+or the **Reset 2FA** action, as described in :ref:`platform-users`. You cannot reset it for operator accounts,
+nor for your own: use **Account security** at the top of the console.
 
-  **How to reset 2FA?**
+Delete an account
+"""""""""""""""""
 
-Choose a user by clicking the checkmark on the far left, before the First Name column. Then, go to the down-pointing arrow in the Action field and choose the option **Reset 2FA**.
+The **Delete** button of an account behaves differently depending on the account:
 
-  **How to export selected users?**
+- for a regulator account, it deactivates the account rather than deleting it;
+- for an operator or incident user account, it deletes the account for good.
 
-Choose a user by clicking the checkmark on the far left, before the First Name column. Then, go to the down-pointing arrow in the Action field and choose the option **Export selected users**.
+.. note::
 
-.. figure:: /_static/images/administration/regulator-admin/governance-16.png
-   :alt: Reset 2FA and export users
-   :target: ../../_static/images/administration/regulator-admin/governance-16.png
+   **Delete** is not offered for an account that has log entries: a regulator account once it has logged in,
+   an operator administrator once they have made a change in the console. Untick **Active** instead.
+
+.. _regulator-sectors:
+
+Sectors
+~~~~~~~
+
+The **Sectors** list shows the **Acronym**, **Name** and **Parent Sector** of each sector.
+
+.. figure:: /_static/images/administration/regulator-admin/governance-05.png
+   :alt: Sectors list with Sectors selected in the sidebar and the column headers outlined
+   :target: ../../_static/images/administration/regulator-admin/governance-05.png
+
+To create one, click **Add Sector**, enter its **Name**, which can be translated, and its **Acronym**,
+of up to four characters, and click **Save**.
+
+.. figure:: /_static/images/administration/regulator-admin/governance-06.png
+   :alt: Add Sector form with the language tabs and the Name, Parent Sector and Acronym fields
+   :target: ../../_static/images/administration/regulator-admin/governance-06.png
+
+To make it a subsector, choose its **Parent Sector**, which lists the sectors that have no parent:
+sectors have two levels at most. A sector that has subsectors only groups them: operators, regulator users
+and observers are assigned its subsectors, not the sector itself.
+
+.. warning::
+
+   Sectors are shared by every regulator of the platform. Changing or deleting a sector changes or deletes it
+   for all of them, and deleting a sector also deletes its subsectors. Read the confirmation page before confirming.
+
+.. _regulator-operators:
+
+Operators
+~~~~~~~~~
+
+The **Operators** list shows the **Acronym**, **Name**, **Address**, **Country**, **Email address** and **Phone number**
+of each operator. Like sectors, operators are shared by every regulator of the platform.
+
+To create one, click **Add Operator**, then fill in:
+
+- **Contact information**: its **Name**, which must be unique, **Address**, **Country**, **Email address** and **Phone number**.
+- **Configuration information**: its **Acronym**, unique, of up to ten characters.
+- **Entity categories**: the categories of the operator. The incident rules of the observers refer to them
+  (see :ref:`platform-observers`).
+- **Sectors**: the sectors the operator is active in.
+
+Click **Save**.
+
+.. figure:: /_static/images/administration/regulator-admin/governance-07.png
+   :alt: Change Operator form with its contact information, acronym, entity categories and sectors
+   :target: ../../_static/images/administration/regulator-admin/governance-07.png
+
+The operator then needs its first operator administrator, which a regulator user adds
+(see :ref:`regulator-user-contacts`).
+
+.. note::
+
+   An operator that still has accounts cannot be deleted: the platform keeps it and shows a warning.
+
+Read-only items
+~~~~~~~~~~~~~~~
+
+The platform administrator sets up the following items; you can open them but not change them:
+
+- **Regulations**: the **Label** of each regulation and its **Regulators**. You build workflows only for the regulations
+  of your regulator (see :ref:`platform-regulations`).
+- **Functionalities**: the optional modules and the roles that may use them (see :ref:`functionalities`).
+- **Entity categories**: the **Code** and **Label** of the categories you assign to operators
+  (see :ref:`platform-entity-categories`).
+- **Observers**: the name and contact details of each observer, without its accounts or incident rules
+  (see :ref:`platform-observers`).
+- **Regulators**: the other regulators of the platform and their accounts (see :ref:`platform-regulators`).

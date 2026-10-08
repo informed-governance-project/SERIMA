@@ -31,8 +31,17 @@ superuser:
 permissions:
 	python manage.py update_group_permissions
 
+MODELS_APPS = governanceplatform incidents securityobjectives reporting
+MODELS_EXCLUDE = '*Translation,TranslatableModel,TranslatedFieldsModel,PermissionsMixin,AbstractUser,AbstractBaseSession'
+MODELS_DIR = docs/_static/images/technical
+
 models:
-	python manage.py graph_models governanceplatform incidents --pydot -g -o docs/_static/images/technical/app-models.png
+	python manage.py graph_models $(MODELS_APPS) -g -d -E -X $(MODELS_EXCLUDE) --hide-edge-labels --dot \
+		| dot -Gconcentrate=true -Granksep=1.2 -Tpng -o $(MODELS_DIR)/app-models.png
+	for app in $(MODELS_APPS); do \
+		python manage.py graph_models $$app -E -X $(MODELS_EXCLUDE) --hide-edge-labels --dot \
+			| dot -Gconcentrate=true -Tpng -o $(MODELS_DIR)/models-$$app.png; \
+	done
 
 openapi:
 	python manage.py spectacular --format openapi > docs/_static/openapi.yml

@@ -27,7 +27,7 @@ gives you access to the administration console, and which modules you see.
      - Incident notification, security objectives, reporting
    * - RegulatorUser
      - Staff of a regulator
-     - Reviews what operators send, for the sectors assigned to them (all sectors if none are assigned),
+     - Reviews what operators send, for the sectors assigned to them (nothing until a sector is assigned),
        and creates operators with their first operator administrator.
      - Yes
      - Incident notification, security objectives, reporting

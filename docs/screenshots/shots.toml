@@ -160,7 +160,7 @@ name = "images/getting-started/login-01"
 path = "/account/login"
 full_page = true
 annotate = [
-  { selector = "#login_button", box = true, arrow = "bottom" },
+  { selector = "#login_button", box = true },
   { selector = "#with-account", box = true },
 ]
 
@@ -331,8 +331,1902 @@ steps = [
 ]
 annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
 
+# --- Incident dashboard (docs/incident-notification/dashboard.rst) ----------
+#
+# The operator's dashboard. Row callouts target the fixture incident NI_ZDTBC16Y
+# (pk 47): both its reports have versions and it carries access-log entries. It
+# is the most recently updated incident in the fixture, so it heads the
+# dashboard — but only until a shot creates an incident, which would push it
+# down and out of the cropped viewports. Run these shots before any shot that
+# notifies an incident.
+#
+# Filter and sort choices are kept in the Django session, and column choices
+# and the legend in localStorage — both shared by every shot of a role. Shots
+# that change any of them run `fresh`, so the next shot sees the defaults.
+#
+# Tooltip shots crop with a short viewport rather than an element `selector`:
+# the tooltip is drawn outside the element it belongs to and would be cut off.
+
+[[shots]]
+name = "images/incident-notification/dashboard-01"
+# The Modules menu is no longer rendered on the homepage, so only the tile
+# route to the dashboard can be shown.
+path = "/"
+role = "operator_admin"
+annotate = [
+  { selector = ".card:has(a[href='/incidents/'])", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/dashboard-02"
+# The numbers match the list in dashboard.rst. The top-right controls and the
+# row icons sit too close together for 90px arrows to clear one another, so
+# those labels sit right beside their element (`length = 0`); only the
+# callouts with free space around them keep an arrow.
+path = "/incidents/"
+role = "operator_admin"
+viewport = { width = 1440, height = 500 }
+annotate = [
+  { selector = "a.fw-bold[href='/incidents/']", box = true, arrow = "top", length = 0, label = "1" },
+  { selector = "a.btn-primary[href='/incidents/declaration']", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = "#search_bar_form", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = "#openFilter", box = true, arrow = "top", length = 0, label = "4" },
+  { selector = "#ni_legend_btn", box = true, arrow = "top", length = 0, label = "5" },
+  { selector = "#incidents-table thead", box = true, arrow = "top", length = 40, label = "6" },
+  { selector = "button[data-bs-target='#IncidentshideColumns']", box = true, arrow = "bottom", length = 40, label = "7" },
+  { selector = "tr:has(.access_log[data-incident-id='47']) .report_versions", box = true, arrow = "bottom", length = 0, label = "8" },
+  { selector = "tr:has(.access_log[data-incident-id='47']) .custom-icon-more-options", box = true, arrow = "bottom", length = 0, label = "9" },
+  { selector = "tr:has(.access_log[data-incident-id='47']) a[href^='/incidents/download-pdf/']", box = true, arrow = "bottom", length = 0, label = "10" },
+]
+
+[[shots]]
+name = "images/incident-notification/dashboard-03"
+path = "/incidents/"
+role = "operator_admin"
+fresh = true
+viewport = { width = 1440, height = 440 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#ni_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+annotate = [{ selector = "#collapseLegend", box = true }]
+
+[[shots]]
+name = "images/incident-notification/dashboard-04"
+# Every column an operator can display, numbered as in the column table of
+# dashboard.rst: the four hidden by default (Detection, Start and
+# Resolution date, Reference) are ticked in the column choice first. The rows
+# are hidden, with the footer they would pull up: with twelve narrow columns,
+# the labels would cover their data.
+path = "/incidents/"
+role = "operator_admin"
+fresh = true
+viewport = { width = 1440, height = 400 }
+hide = ["#incidents-table tbody", "footer"]
+steps = [
+  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
+  { action = "wait_for", selector = "#IncidentshideColumns.show" },
+  { action = "click", selector = "#column-3" },
+  { action = "click", selector = "#column-4" },
+  { action = "click", selector = "#column-5" },
+  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#IncidentshideColumns .btn-close" },
+  { action = "wait_ms", value = 500 },
+]
+annotate = [
+  { selector = "th[data-sort-field='status']", arrow = "bottom", length = 45, label = "1" },
+  { selector = "th[data-sort-field='last_update']", arrow = "bottom", length = 45, label = "2" },
+  { selector = "th[data-sort-field='notification_date']", arrow = "bottom", length = 45, label = "3" },
+  { selector = "th[data-sort-field='detection_date']", arrow = "bottom", length = 45, label = "4" },
+  { selector = "th[data-sort-field='starting_date']", arrow = "bottom", length = 45, label = "5" },
+  { selector = "th[data-sort-field='resolution_date']", arrow = "bottom", length = 45, label = "6" },
+  { selector = "th[data-sort-field='regulator']", arrow = "bottom", length = 45, label = "7" },
+  { selector = "th[data-sort-field='regulation']", arrow = "bottom", length = 45, label = "8" },
+  { selector = "th[data-sort-field='reference']", arrow = "bottom", length = 45, label = "9" },
+  { selector = "th[data-sort-field='sectors']", arrow = "bottom", length = 45, label = "10" },
+  { selector = "#incidents-table thead th:nth-last-child(2)", arrow = "bottom", length = 45, label = "11" },
+  { selector = "#incidents-table thead th:last-child", arrow = "bottom", length = 45, label = "12" },
+]
+
+[[shots]]
+name = "images/incident-notification/dashboard-05"
+path = "/incidents/"
+role = "operator_admin"
+selector = "#IncidentshideColumns .modal-content"
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
+  { action = "wait_for", selector = "#IncidentshideColumns.show" },
+]
+
+[[shots]]
+name = "images/incident-notification/dashboard-06"
+path = "/incidents/"
+role = "operator_admin"
+selector = "#report_versions .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.access_log[data-incident-id='47']) .report_versions" },
+  { action = "wait_for", selector = "#report_versions.show" },
+]
+
+[[shots]]
+name = "images/incident-notification/dashboard-07"
+# An operator's log leaves out the regulator's entries, and the fixture's only
+# operator entry is a single CREATE, which shows no sorting. The regulator sees
+# the whole log of the same incident through the same dialog.
+path = "/incidents/"
+role = "operator_admin"
+selector = "#access_log .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.access_log[data-incident-id='47']) .custom-icon-more-options" },
+  { action = "click", selector = ".more-actions-dropdown.show .access_log" },
+  # The sort control exists only once DataTables has initialised; a click on
+  # the header before that is lost.
+  { action = "wait_for", selector = "#access_log.show #access-log-table th:first-child .dt-column-order" },
+  # Newest first by default. DataTables cycles asc → desc → unsorted, so the
+  # first click only clears the sort and the second shows the oldest first.
+  { action = "click", selector = "#access-log-table thead th:first-child" },
+  { action = "click", selector = "#access-log-table thead th:first-child" },
+  { action = "wait_for", selector = "#access-log-table thead th:first-child[aria-sort='ascending']" },
+]
+
+# --- Review a report (docs/incident-notification/review-a-report.rst) --------
+#
+# The walkthrough follows NI_K07S3XB3 (Operator B), whose Preliminary Incident
+# Report is the fixture's IncidentWorkflow 99, submitted and awaiting review.
+# Rows are picked by that report's link rather than by position, since the
+# overview sorts by last update and the row order moves whenever anything else
+# changes. Searching or paging would pin the row too, but get_incidents keeps
+# those parameters in the session and so would filter every later shot of the
+# role.
+#
+# Opening a report logs a READ entry in the incident's access log; nothing else
+# here writes. The wizard keeps step data in the session, and the review shots
+# stop before Submit.
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-01"
+role = "regulator_admin"
+path = "/incidents/"
+viewport = { width = 1440, height = 590 }
+annotate = [{ selector = "#incidents-table tbody tr:has(a[href$='incident_workflow_id=99'])", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-02"
+role = "regulator_admin"
+path = "/incidents/"
+steps = [
+  { action = "click", selector = "#incidents-table tbody tr:has(a[href$='incident_workflow_id=99']) button.contacts_incident" },
+  { action = "wait_for", selector = "#contacts_incident.show" },
+]
+annotate = [
+  { selector = "#incidents-table tbody tr:has(a[href$='incident_workflow_id=99']) button.contacts_incident", box = true },
+  { selector = "#contacts_incident .modal-content", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-03"
+role = "regulator_admin"
+path = "/incidents/"
+viewport = { width = 1440, height = 550 }
+annotate = [{ selector = "a[href$='incident_workflow_id=99']", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-04"
+# NI_GZ41A260's Preliminary Incident Report has two versions (IncidentWorkflow
+# 44 and 45) with different answers, so its latest one shows the changes.
+# On the open step the circle is red, so the orange marker shows on the other
+# changed step (Regulation).
+role = "regulator_admin"
+path = "/incidents/edit_workflow?incident_workflow_id=45"
+viewport = { width = 1440, height = 860 }
+steps = [{ action = "click", selector = "button[name=wizard_goto_step][value='2']" }]
+annotate = [
+  { selector = ".nav-pills li:has(.bg-answer-modified)", box = true },
+  { selector = ".view-previous-version", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-05"
+role = "regulator_admin"
+path = "/incidents/edit_workflow?incident_workflow_id=45"
+selector = "#previous-answer-modal .modal-content"
+steps = [
+  { action = "click", selector = "button[name=wizard_goto_step][value='2']" },
+  { action = "click", selector = ".view-previous-version" },
+  { action = "wait_for", selector = "#previous-answer-modal.show" },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-06"
+role = "regulator_admin"
+path = "/incidents/edit_workflow?incident_workflow_id=99"
+# The comment editor pushes the status field and Submit below the default
+# fold; this height ends the shot at the wizard buttons, before the footer.
+viewport = { width = 1440, height = 1030 }
+steps = [
+  { action = "click", selector = "button[name=wizard_goto_step][value='3']" },
+  { action = "click", selector = "#id_3-review_status" },
+]
+annotate = [{ selector = "#id_3-review_status", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-07"
+role = "regulator_admin"
+path = "/incidents/edit_workflow?incident_workflow_id=99"
+viewport = { width = 1440, height = 1030 }
+steps = [
+  { action = "click", selector = "button[name=wizard_goto_step][value='3']" },
+  { action = "fill", selector = ".note-editable", value = "The incident has not been resolved yet" },
+  { action = "select", selector = "#id_3-review_status", value = "Revision required" },
+]
+annotate = [{ selector = "#id_3-review_status", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-08"
+role = "regulator_admin"
+path = "/incidents/"
+selector = "#incidents-table tbody tr:has(a[href$='incident_workflow_id=101'])"
+# There is no hover step; focusing the link raises the same Bootstrap tooltip,
+# and `press` focuses its target before sending the key.
+steps = [
+  { action = "press", selector = "a[href$='incident_workflow_id=101']", key = "Shift" },
+  { action = "wait_for", selector = ".tooltip.show" },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-09"
+# The menu opens upwards over the row above; the regulator's version adds the
+# significant impact and incident status switches below the access log.
+role = "regulator_admin"
+path = "/incidents/"
+viewport = { width = 1440, height = 620 }
+steps = [
+  { action = "click", selector = "tr:has(a[href$='incident_workflow_id=99']) .custom-icon-more-options" },
+  { action = "wait_for", selector = ".more-actions-dropdown.show" },
+]
+annotate = [{ selector = ".more-actions-dropdown.show", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-10"
+# The fixture gives regulator-admin@example.org "Can export incidents".
+role = "regulator_admin"
+path = "/incidents/"
+viewport = { width = 1440, height = 520 }
+annotate = [{ selector = "a.export_incidents", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-11"
+# Opens the pop-up only: submitting it logs the export, emails the platform
+# administrators and downloads the file.
+role = "regulator_admin"
+path = "/incidents/"
+selector = "#export_incidents .modal-content"
+steps = [
+  { action = "click", selector = "a.export_incidents" },
+  { action = "wait_for", selector = "#export_incidents.show #exportIncidentsForm" },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-12"
+# get_incidents stores is_regulator_incidents in the session on this path, and
+# the report and access-log views read it, so this shot and the next run fresh.
+role = "regulator_admin"
+fresh = true
+path = "/incidents/regulator_incidents"
+annotate = [
+  { selector = "a[href$='/incidents/regulator_incidents']", box = true },
+  { selector = "a.btn[href$='/incidents/declaration']", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-regulator-13"
+# Opens the first form of the notification only; the wizard saves nothing
+# before its last step.
+role = "regulator_admin"
+fresh = true
+path = "/incidents/regulator_incidents"
+viewport = { width = 1440, height = 700 }
+steps = [{ action = "click", selector = "a.btn[href$='/incidents/declaration']" }]
+annotate = [{ selector = "#id_0-company_name", box = true }]
+
+# --- Fill in a report (docs/incident-notification/fill-in-a-report.rst) ------
+#
+# The list shots show the Reference column, which the dashboard hides by
+# default, and drop "Last update" as the manual's figures do. The choice is
+# kept in localStorage and each click toggles it, so those shots run in a
+# fresh context: in the shared one the second shot would toggle it back.
+#
+# The list filter is kept in the session, so every list path sets it
+# explicitly: `?reset=1` for the whole list, `?search=` for one incident.
+#
+# The report wizard persists nothing before its last step, so the form shots
+# stop short of Submit and change no data.
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-01"
+role = "operator_admin"
+path = "/incidents/create_workflow?incident_id=36&workflow_id=1"
+viewport = { width = 1440, height = 1300 }
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-02"
+role = "operator_admin"
+path = "/incidents/create_workflow?incident_id=36&workflow_id=1"
+viewport = { width = 1440, height = 900 }
+steps = [
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_1-__question__1_1" },
+  { action = "click", selector = "#id_1-__question__37_0" },
+  # Each step scrolls down to the form about half a second after loading.
+  # Let that happen, then go back to the top; the scroll is smooth, so it
+  # needs time too.
+  { action = "wait_ms", value = 800 },
+  { action = "press", selector = "#id_1-__question__37_0", key = "Home" },
+  { action = "wait_ms", value = 800 },
+]
+# The click leaves the pointer on the box, over its field's tooltip.
+hide = [".tooltip"]
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-03"
+role = "operator_admin"
+path = "/incidents/create_workflow?incident_id=36&workflow_id=1"
+viewport = { width = 1440, height = 900 }
+steps = [
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_1-__question__1_1" },
+  { action = "click", selector = "#id_1-__question__37_0" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "fill", selector = "#id_2-__question__2", value = "The incident temporarily disrupted key internal systems, affecting real-time monitoring and automated processes. The estimated impact on essential services is moderate, as no end-users were directly affected." },
+  { action = "fill", selector = "#id_2-__question__3", value = "6" },
+  { action = "fill", selector = "#id_2-__question__4", value = "Resolution is expected within four hours." },
+  # As in 05; Home only scrolls from a control that does not use the key
+  # itself, so not from a text field.
+  { action = "wait_ms", value = 800 },
+  { action = "press", selector = "#id_2-__question__8_0", key = "Home" },
+  { action = "wait_ms", value = 800 },
+]
+
+# NI_1ZTF3PPZ has a Preliminary Incident Report under review. Filtered to it,
+# since any incident created since the fixture was loaded sorts above it.
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-04"
+role = "operator_admin"
+path = "/incidents/?search=NI_1ZTF3PPZ"
+fresh = true
+viewport = { width = 1440, height = 430 }
+steps = [
+  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
+  { action = "wait_for", selector = "#IncidentshideColumns.show" },
+  { action = "click", selector = "#column-1" },
+  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#IncidentshideColumns .btn-close" },
+  { action = "wait_ms", value = 500 },
+]
+annotate = [
+  { selector = "#incidents-table tbody td:nth-child(9)", box = true },
+  { selector = "#incidents-table tbody td:nth-child(11) li:first-child .hstack", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-05"
+role = "operator_admin"
+path = "/incidents/?search=NI_1ZTF3PPZ"
+selector = "#report_versions .modal-content"
+steps = [
+  { action = "click", selector = "button.report_versions[data-incident-ref='NI_1ZTF3PPZ']" },
+  { action = "wait_for", selector = "#report_versions.show #modal-workflow-rows tr" },
+]
+
+# NI_GZ41A260's Preliminary Incident Report passed review, with a comment.
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-06"
+role = "operator_admin"
+path = "/incidents/?search=NI_GZ41A260"
+fresh = true
+viewport = { width = 1440, height = 420 }
+steps = [
+  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
+  { action = "wait_for", selector = "#IncidentshideColumns.show" },
+  { action = "click", selector = "#column-1" },
+  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#IncidentshideColumns .btn-close" },
+  { action = "wait_ms", value = 500 },
+]
+annotate = [{ selector = "#incidents-table tbody td:nth-child(11) li:first-child .hstack", box = true }]
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-07"
+role = "operator_admin"
+path = "/incidents/?search=NI_GZ41A260"
+fresh = true
+selector = "#incidents-table"
+steps = [
+  { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
+  { action = "wait_for", selector = "#IncidentshideColumns.show" },
+  { action = "click", selector = "#column-1" },
+  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#IncidentshideColumns .btn-close" },
+  { action = "wait_ms", value = 500 },
+  # There is no hover step. Focusing the link inside the report's tooltip
+  # wrapper shows the tooltip too, as Bootstrap listens for the bubbling focusin.
+  { action = "press", selector = "#incidents-table tbody td:nth-child(11) li:first-child a", key = "Shift" },
+  { action = "wait_for", selector = ".tooltip.show" },
+]
+annotate = [{ selector = ".tooltip.show", arrow = "left" }]
+
+[[shots]]
+name = "images/incident-notification/workflow-operator-08"
+role = "operator_admin"
+path = "/incidents/?search=NI_GZ41A260"
+viewport = { width = 1440, height = 640 }
+steps = [
+  { action = "click", selector = "#incidents-table tbody td:nth-child(11) li:first-child button.workflow_comment" },
+  { action = "wait_for", selector = "#workflow_comment.show" },
+]
+annotate = [
+  { selector = "#incidents-table tbody td:nth-child(11) li:first-child button.workflow_comment", box = true },
+  { selector = "#workflow_comment .modal-content", box = true },
+]
+
+# --- Platform admin (docs/administration/platform-admin/) ---------------------
+#
+# The Django admin under /admin/, as the platform administrator, whom
+# RestrictViewsMiddleware sends back there from every page of the platform.
+# Changelists outline the column header the prose lists, and the open model in
+# the sidebar. Change forms are only opened, never saved.
+
+[[shots]]
+name = "images/administration/platform-admin/index-01"
+role = "platform_admin"
+path = "/admin/"
+viewport = { width = 1440, height = 640 }
+annotate = [
+  { selector = "#content-main .app-admin", box = true },
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#content-main .app-sites", box = true },
+  { selector = "#recent-actions-module", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/sites-01"
+role = "platform_admin"
+path = "/admin/sites/site/1/change/"
+selector = "#content"
+
+[[shots]]
+name = "images/administration/platform-admin/administration-01"
+role = "platform_admin"
+path = "/admin/admin/logentry/"
+annotate = [
+  { selector = "#changelist-filter", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/administration-02"
+role = "platform_admin"
+# Opens the newest entry: its id grows with every login, so it cannot be a path.
+path = "/admin/admin/logentry/"
+steps = [
+  { action = "click", selector = "#result_list tbody tr:first-child th a" },
+  { action = "wait_for", selector = "#logentry_form" },
+]
+selector = "#content"
+
+[[shots]]
+name = "images/administration/platform-admin/governance-01"
+role = "platform_admin"
+path = "/admin/governanceplatform/regulator/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-02"
+role = "platform_admin"
+# Regulator 1 is Regulator A, with both functionalities chosen.
+path = "/admin/governanceplatform/regulator/1/change/"
+selector = "#content"
+hide = ["#regulatoruser_set-group", ".submit-row"]
+annotate = [{ selector = "#id_functionalities_selector_chosen", box = true }]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-03"
+role = "platform_admin"
+path = "/admin/governanceplatform/regulator/1/change/"
+selector = "#regulatoruser_set-group"
+annotate = [{ selector = "#add_id_regulatoruser_set-0-user", box = true }]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-04"
+role = "platform_admin"
+# Regulation 1 is Regulation A, assigned to both regulators.
+path = "/admin/governanceplatform/regulation/1/change/"
+selector = "#content"
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-05"
+role = "platform_admin"
+path = "/admin/governanceplatform/functionality/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-06"
+role = "platform_admin"
+# Functionality 1 is security objectives, the one open to all four eligible roles.
+path = "/admin/governanceplatform/functionality/1/change/"
+selector = "#content"
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-07"
+role = "platform_admin"
+path = "/admin/governanceplatform/entitycategory/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-08"
+role = "platform_admin"
+# Observer 2 is Observer A, the fixture's only observer.
+path = "/admin/governanceplatform/observer/2/change/"
+selector = "#content"
+hide = ["#observerregulation_set-group", ".submit-row"]
+annotate = [{ selector = "#observeruser_set-group", box = true }]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-09"
+role = "platform_admin"
+path = "/admin/governanceplatform/observer/2/change/"
+# At 1440px the two sector lists squeeze the Legal basis drop-down down to "Reg".
+viewport = { width = 1920, height = 900 }
+selector = "#observerregulation_set-group"
+
+[[shots]]
+name = "images/administration/platform-admin/governance-10"
+role = "platform_admin"
+path = "/admin/governanceplatform/user/"
+# Wide enough for the columns after Roles, which the prose lists, to fit.
+viewport = { width = 1920, height = 900 }
+annotate = [
+  { selector = [".object-tools li:nth-child(2)", ".object-tools li:nth-child(3)"], box = true },
+  { selector = "#changelist-filter", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-11"
+role = "platform_admin"
+# User 143 is regulator-admin@example.org: a regulator administrator's form has the Active box.
+path = "/admin/governanceplatform/user/143/change/"
+selector = "#content"
+annotate = [
+  { selector = "#content .field-is_active", box = true },
+  { selector = "#content .field-reset_2FA_action .account-actions", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-12"
+role = "platform_admin"
+path = "/admin/governanceplatform/settingsdummy/"
+viewport = { width = 1440, height = 700 }
+# The first row lists the names of the hidden settings in one unbroken line,
+# which would fill the capture; the prose describes the settings themselves.
+hide = ["#content table.table tbody tr:first-child"]
+
+# --- Regulator admin (docs/administration/regulator-admin/) -------------------
+#
+# The Django admin under /admin/, as the administrator of Regulator A.
+# Changelists outline the column header the prose lists, and the open model in
+# the sidebar. Change forms are only opened, never saved.
+
+[[shots]]
+name = "images/administration/regulator-admin/index-01"
+role = "regulator_admin"
+path = "/admin/"
+# Tall enough for the Security objectives section, the last one.
+viewport = { width = 1440, height = 1300 }
+annotate = [
+  { selector = "#content-main .app-admin", box = true },
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#content-main .app-incidents", box = true },
+  { selector = "#content-main .app-reporting", box = true },
+  { selector = "#content-main .app-securityobjectives", box = true },
+  { selector = "#recent-actions-module", box = true },
+  { selector = "#back-to-interface", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/administration-01"
+role = "regulator_admin"
+path = "/admin/admin/logentry/"
+annotate = [
+  { selector = "#changelist-filter", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/administration-02"
+role = "regulator_admin"
+# Opens the newest entry: its id grows with every login, so it cannot be a path.
+path = "/admin/admin/logentry/"
+steps = [
+  { action = "click", selector = "#result_list tbody tr:first-child th a" },
+  { action = "wait_for", selector = "#logentry_form" },
+]
+selector = "#content"
+
+[[shots]]
+name = "images/administration/regulator-admin/governance-01"
+role = "regulator_admin"
+# Regulator 1 is Regulator A, the regulator of this account.
+path = "/admin/governanceplatform/regulator/1/change/"
+selector = "#content"
+hide = ["#regulatoruser_set-group", ".submit-row"]
+annotate = [{ selector = "#content .field-functionalities", box = true }]
+
+[[shots]]
+name = "images/administration/regulator-admin/governance-02"
+role = "regulator_admin"
+path = "/admin/governanceplatform/regulator/1/change/"
+# At 1440px the User drop-down is squeezed down to "regulat".
+viewport = { width = 1920, height = 900 }
+selector = "#regulatoruser_set-group"
+annotate = [
+  { selector = "#regulatoruser_set-1", box = true },
+  { selector = "#regulatoruser_set-group .add-row a", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/governance-03"
+role = "regulator_admin"
+path = "/admin/governanceplatform/user/"
+# Wide enough for the Account actions column, which the prose describes.
+viewport = { width = 1920, height = 900 }
+annotate = [
+  { selector = "#result_list thead", box = true },
+  { selector = "#changelist-filter", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/governance-04"
+role = "regulator_admin"
+# User 144 is regulator-user@example.org, a regulator user of Regulator A.
+path = "/admin/governanceplatform/user/144/change/"
+# At 1440px the Regulator drop-down is squeezed down to "Regulato".
+viewport = { width = 1920, height = 900 }
+selector = "#content"
+annotate = [
+  { selector = "#content .field-is_active", box = true },
+  { selector = "#content .field-reset_2FA_action .account-actions", box = true },
+  { selector = "#regulatoruser_set-group", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/governance-05"
+role = "regulator_admin"
+path = "/admin/governanceplatform/sector/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/governance-06"
+role = "regulator_admin"
+path = "/admin/governanceplatform/sector/add/"
+selector = "#content"
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/administration/regulator-admin/governance-07"
+role = "regulator_admin"
+# Company 46 is Operator A.
+path = "/admin/governanceplatform/company/46/change/"
+selector = "#content"
+hide = [".submit-row"]
+
+# --- Regulator user (docs/administration/regulator-user/) ---------------------
+#
+# The Django admin under /admin/, as the regulator user of Regulator A.
+# Changelists outline the column header the prose lists, and the open model in
+# the sidebar. Change forms are only opened, never saved.
+
+[[shots]]
+name = "images/administration/regulator-user/index-01"
+role = "regulator_user"
+path = "/admin/"
+viewport = { width = 1440, height = 400 }
+annotate = [
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#recent-actions-module", box = true },
+  { selector = "#back-to-interface", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-01"
+role = "regulator_user"
+path = "/admin/governanceplatform/company/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-02"
+role = "regulator_user"
+# Company 46 is Operator A, with operator-admin@example.org as its administrator.
+path = "/admin/governanceplatform/company/46/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#companyuser_set-group", box = true }]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-03"
+role = "regulator_user"
+path = "/admin/governanceplatform/company/46/change/"
+selector = "#companyuser_set-group"
+annotate = [
+  { selector = "#companyuser_set-0", box = true },
+  { selector = "#add_id_companyuser_set-0-user", box = true },
+  { selector = "#companyuser_set-group .add-row a", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-04"
+role = "regulator_user"
+path = "/admin/governanceplatform/user/"
+# Wide enough for the Account actions column, which the prose describes.
+viewport = { width = 1920, height = 900 }
+annotate = [
+  { selector = "#result_list thead", box = true },
+  { selector = "#changelist-filter", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-user/governance-05"
+role = "regulator_user"
+# User 146 is operator-user@example.org, an operator user of Operator B.
+path = "/admin/governanceplatform/user/146/change/"
+selector = "#content"
+annotate = [
+  { selector = "#content .field-is_active", box = true },
+  { selector = "#content .field-reset_2FA_action .account-actions", box = true },
+]
+
+# --- Operator admin (docs/administration/operator-admin/) ---------------------
+#
+# The Django admin under /admin/, as the operator administrator. The role's
+# login works for Operator A, whose only account is that administrator, so the
+# shots of other accounts log in themselves and pick Operator B, whose operator
+# user carries the account action buttons. Change forms are only opened, never
+# saved, and no account action button is clicked.
+
+[[shots]]
+name = "images/administration/operator-admin/index-01"
+role = "operator_admin"
+path = "/admin/"
+viewport = { width = 1440, height = 400 }
+annotate = [
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#recent-actions-module", box = true },
+  { selector = "#back-to-interface", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-01"
+role = "operator_admin"
+path = "/admin/governanceplatform/company/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-02"
+role = "operator_admin"
+# Company 46 is Operator A.
+path = "/admin/governanceplatform/company/46/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#content .form-row.field-email", box = true }]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-03"
+# The login, and the company selection it stops on, land back on `next`.
+path = "/account/login?next=/admin/governanceplatform/user/"
+credentials_from = "operator_admin"
+fresh = true
+# Wide enough for the Account actions column, which the prose describes.
+viewport = { width = 1920, height = 900 }
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#id_select_company" },
+  { action = "select", selector = "#id_select_company", value = "Operator B" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#result_list" },
+]
+annotate = [
+  { selector = "#result_list thead", box = true },
+  { selector = "#result_list tbody tr:first-child td.field-account_actions", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-04"
+role = "operator_admin"
+path = "/admin/governanceplatform/user/add/"
+# Moves the focus off the autofocused First name, whose ring reads as a callout.
+steps = [{ action = "click", selector = "#content h1" }]
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#content .field-is_administrator", box = true }]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-05"
+# User 146 is operator-user@example.org, the operator user of Operator B.
+path = "/account/login?next=/admin/governanceplatform/user/146/change/"
+credentials_from = "operator_admin"
+fresh = true
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#id_select_company" },
+  { action = "select", selector = "#id_select_company", value = "Operator B" },
+  { action = "click", selector = "button[type=submit]" },
+  { action = "wait_for", selector = "#user_form" },
+]
+selector = "#content"
+annotate = [
+  { selector = "#content .field-reset_2FA_action button", box = true },
+  { selector = "#content .field-administrator_action button", box = true },
+  { selector = "#content a.deletelink", box = true },
+]
+
+# --- Observer admin (docs/administration/observer-admin/) ---------------------
+#
+# The Django admin under /admin/, as the observer administrator of Observer A,
+# the only account of that observer in the fixture: no shot shows the Reset 2FA
+# token button, which is never offered on your own account. Change forms are
+# only opened, never saved, and the RT connection is never tested.
+
+[[shots]]
+name = "images/administration/operator-admin/governance-06"
+# incident-user@example.org is suggested to Operator A in the fixture and
+# waits for its approval; nothing here approves or rejects it.
+path = "/admin/governanceplatform/user/"
+role = "operator_admin"
+viewport = { width = 1920, height = 520 }
+annotate = [
+  { selector = ".messagelist", box = true },
+  { selector = "#result_list tbody tr:has(.link-pending) td.field-account_actions", box = true },
+]
+
+[[shots]]
+name = "images/administration/operator-admin/governance-07"
+path = "/admin/governanceplatform/user/150/change/"
+role = "operator_admin"
+viewport = { width = 1440, height = 700 }
+annotate = [{ selector = ".pending-link-prompt", box = true }]
+
+[[shots]]
+name = "images/administration/observer-admin/index-01"
+role = "observer_admin"
+path = "/admin/"
+viewport = { width = 1440, height = 400 }
+annotate = [
+  { selector = "#content-main .app-governanceplatform", box = true },
+  { selector = "#recent-actions-module", box = true },
+  { selector = "#back-to-interface", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-01"
+role = "observer_admin"
+path = "/admin/governanceplatform/observer/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-02"
+role = "observer_admin"
+# Observer 2 is Observer A.
+path = "/admin/governanceplatform/observer/2/change/"
+selector = "#content"
+# The RT configuration and the accounts have shots of their own below.
+hide = ["#content fieldset.collapse", "#observeruser_set-group", ".submit-row"]
+annotate = [
+  { selector = "#content .parler-language-tabs", box = true },
+  { selector = "#content .form-row.field-email_for_notification", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-03"
+role = "observer_admin"
+path = "/admin/governanceplatform/observer/2/change/"
+# Unfolds the collapsed RT Configuration fieldset; nothing is saved or tested.
+steps = [{ action = "click", selector = "#content fieldset.collapse summary" }]
+selector = "#content fieldset.collapse"
+annotate = [
+  { selector = ["#id_rt_url", "#id_rt_token", "#id_rt_queue"], box = true },
+  { selector = "#content .rt-test-btn", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-04"
+role = "observer_admin"
+path = "/admin/governanceplatform/observer/2/change/"
+selector = "#observeruser_set-group"
+annotate = [
+  { selector = ["#observeruser_set-group th.column-is_observer_administrator", "#observeruser_set-group th.column-can_export_incidents"], box = true },
+  { selector = "#observeruser_set-group .add-row a", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-05"
+role = "observer_admin"
+path = "/admin/governanceplatform/user/"
+# Wide enough for the Account actions column, which the prose describes.
+viewport = { width = 1920, height = 900 }
+annotate = [
+  { selector = "#result_list thead", box = true },
+  { selector = "#changelist-filter", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-06"
+role = "observer_admin"
+path = "/admin/governanceplatform/user/add/"
+# Moves the focus off the autofocused First name, whose ring reads as a callout.
+steps = [{ action = "click", selector = "#content h1" }]
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#content fieldset.module", box = true }]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-07"
+role = "observer_admin"
+# User 147 is observer-admin@example.org, the observer administrator of Observer A.
+path = "/admin/governanceplatform/user/147/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [
+  { selector = "#content fieldset.module:has(.field-email)", box = true },
+  { selector = "#content fieldset.module:has(.field-get_observers)", box = true },
+]
+
+# --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---
+#
+# The Django admin under /admin/, as the regulator administrator. Changelists
+# outline the column header the prose lists, and the open model in the sidebar.
+#
+# Headless Chromium paints an opened native <select> into the page, so the
+# dropdown shots click the select and take a viewport capture. Annotations can
+# outline the select but not its popup, which is not part of the DOM.
+
+[[shots]]
+name = "images/incident-notification/configuration-01"
+role = "regulator_admin"
+path = "/admin/incidents/email/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-02"
+role = "regulator_admin"
+path = "/admin/incidents/email/1/change/"
+selector = "#content"
+hide = [".field-html_preview", ".submit-row"]
+annotate = [
+  { selector = ".parler-language-tabs", box = true },
+  { selector = ["#id_name", "#id_subject"], box = true },
+  { selector = "#id_content", box = true },
+  { selector = "button[data-placeholders-help-open]", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-03"
+role = "regulator_admin"
+path = "/admin/incidents/question/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-04"
+role = "regulator_admin"
+# Question 1 has never been answered, so it opens as an editable form.
+path = "/admin/incidents/question/1/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#predefinedanswer_set-group", box = true }]
+
+[[shots]]
+name = "images/incident-notification/configuration-05"
+role = "regulator_admin"
+path = "/admin/incidents/question/1/change/"
+steps = [{ action = "click", selector = "#id_question_type" }]
+annotate = [{ selector = "#id_question_type", box = true }]
+
+[[shots]]
+name = "images/incident-notification/configuration-06"
+role = "regulator_admin"
+path = "/admin/incidents/workflow/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-07"
+role = "regulator_admin"
+# Report 11 is a final report, with impacts disclosure required.
+path = "/admin/incidents/workflow/11/change/"
+# Tall enough to reach the Notification Email section below General.
+viewport = { width = 1440, height = 1000 }
+annotate = [{ selector = "#nav-sidebar tr.current-model", box = true }]
+
+[[shots]]
+name = "images/incident-notification/configuration-08"
+role = "regulator_admin"
+path = "/admin/incidents/workflow/10/change/"
+selector = "#questionoptions_set-group"
+# Four questions are enough to show the columns.
+hide = [
+  "#questionoptions_set-group tr.dynamic-questionoptions_set:nth-child(n+5)",
+  "#questionoptions_set-group tr.add-row",
+]
+annotate = [{ selector = "#questionoptions_set-group thead", box = true }]
+
+[[shots]]
+name = "images/incident-notification/configuration-09"
+role = "regulator_admin"
+path = "/admin/incidents/conditionalquestionoption/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-10"
+role = "regulator_admin"
+# The question lists load from the selected report; select_option waits for
+# each option to arrive. The form is never saved.
+path = "/admin/incidents/conditionalquestionoption/add/"
+selector = "#content"
+steps = [
+  { action = "select", selector = "#id_report", value = "Regulator A - Regulation A - Final Incident Report" },
+  { action = "select", selector = "#id_question_options", value = "Is this a recurring incident?" },
+  { action = "select", selector = "#id_predefined_answer", value = "Yes" },
+  { action = "select", selector = "#id_next_question_options", value = "How many time ?" },
+  # Moves focus off the last select, so no focus ring shows.
+  { action = "click", selector = "#content h1" },
+]
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/incident-notification/configuration-11"
+role = "regulator_admin"
+path = "/admin/incidents/impact/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-12"
+role = "regulator_admin"
+# Impact 68 is "DNS 1h".
+path = "/admin/incidents/impact/68/change/"
+selector = "#content"
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/incident-notification/configuration-13"
+role = "regulator_admin"
+path = "/admin/incidents/sectorregulation/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+# Every fixture workflow already has incidents, so its change page is a
+# read-only view without the dropdowns the prose walks through. These shots
+# fill the add form instead, and never save it.
+
+[[shots]]
+name = "images/incident-notification/configuration-14"
+role = "regulator_admin"
+path = "/admin/incidents/sectorregulation/add/"
+selector = "#content"
+steps = [
+  { action = "fill", selector = "#id_name", value = "Regulation A workflow" },
+  { action = "click", selector = "#id_is_detection_date_needed" },
+  { action = "select", selector = "#id_regulation", value = "Regulation A" },
+  { action = "select", selector = "#id_regulator", value = "Regulator A" },
+  { action = "click", selector = "#id_sectors_add_all" },
+]
+hide = [
+  "#sectorregulation_form fieldset:has(#fieldset-0-3-heading)",
+  "#sectorregulationworkflow_set-group",
+  ".submit-row",
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-15"
+role = "regulator_admin"
+path = "/admin/incidents/sectorregulation/add/"
+selector = "#sectorregulation_form fieldset:has(#fieldset-0-3-heading)"
+steps = [
+  { action = "select", selector = "#id_opening_email", value = "Regulator A - New incident creation" },
+  { action = "select", selector = "#id_closing_email", value = "Regulator A - Incident closure" },
+  { action = "select", selector = "#id_report_status_changed_email", value = "Regulator A - Incident Notification – Status Change" },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-16"
+role = "regulator_admin"
+path = "/admin/incidents/sectorregulation/add/"
+selector = "#sectorregulationworkflow_set-group"
+steps = [
+  { action = "click", selector = "#sectorregulationworkflow_set-group tr.add-row a" },
+  { action = "click", selector = "#sectorregulationworkflow_set-group tr.add-row a" },
+  { action = "select", selector = "#id_sectorregulationworkflow_set-0-workflow", value = "Preliminary Incident Report" },
+  { action = "fill", selector = "#id_sectorregulationworkflow_set-0-position", value = "1" },
+  { action = "fill", selector = "#id_sectorregulationworkflow_set-0-delay_in_hours_before_deadline", value = "24" },
+  { action = "select", selector = "#id_sectorregulationworkflow_set-0-trigger_event_before_deadline", value = "Detection Date" },
+  { action = "select", selector = "#id_sectorregulationworkflow_set-1-workflow", value = "Final Incident Report" },
+  { action = "fill", selector = "#id_sectorregulationworkflow_set-1-position", value = "2" },
+  { action = "fill", selector = "#id_sectorregulationworkflow_set-1-delay_in_hours_before_deadline", value = "360" },
+  { action = "select", selector = "#id_sectorregulationworkflow_set-1-trigger_event_before_deadline", value = "Detection Date" },
+  # Moves focus off the last field filled, so no focus ring shows.
+  { action = "click", selector = "#sectorregulationworkflow_set-heading" },
+]
+annotate = [
+  { selector = "#id_sectorregulationworkflow_set-0-workflow", box = true },
+  { selector = "#id_sectorregulationworkflow_set-1-workflow", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-17"
+role = "regulator_admin"
+# Workflow 1 has incidents, so it opens as the read-only view.
+path = "/admin/incidents/sectorregulation/1/change/"
+# Tall enough to reach the Save as new button. A full-page capture would cut
+# the sticky sidebar short.
+viewport = { width = 1440, height = 1420 }
+annotate = [
+  { selector = "ul.messagelist", box = true },
+  { selector = "input[name=_saveasnew]", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-18"
+role = "regulator_admin"
+path = "/admin/incidents/sectorregulation/"
+steps = [
+  { action = "click", selector = "#result_list tbody tr:nth-child(3) input.action-select" },
+  { action = "click", selector = "select[name=action]" },
+]
+annotate = [{ selector = "select[name=action]", box = true }]
+
+[[shots]]
+name = "images/incident-notification/configuration-19"
+role = "regulator_admin"
+path = "/admin/incidents/sectorregulationworkflowemail/"
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/configuration-20"
+role = "regulator_admin"
+path = "/admin/incidents/sectorregulationworkflowemail/1/change/"
+selector = "#content"
+hide = [".submit-row"]
+
+# --- Security objectives configuration (docs/administration/regulator-admin/security-objectives.rst) ---
+#
+# Same conventions as the incident notification configuration above. Standard 8
+# (Security Framework A) has declarations, so its objectives are read-only;
+# the form shots use the add pages and never save them.
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-01"
+role = "regulator_admin"
+path = "/admin/securityobjectives/securityobjectiveemail/2/change/"
+selector = "#content"
+hide = [".submit-row"]
+annotate = [{ selector = "#id_content_helptext", box = true }]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-02"
+role = "regulator_admin"
+path = "/admin/securityobjectives/standard/"
+# The Security Objectives entries are the last of the sidebar: the list shots
+# are tall enough to show them.
+viewport = { width = 1440, height = 1260 }
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = ".object-tools", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-03"
+role = "regulator_admin"
+path = "/admin/securityobjectives/standard/add/"
+selector = "#content"
+# Moves focus off the Active box the form focuses on load.
+steps = [{ action = "click", selector = "#content h1" }]
+hide = [
+  "#standard_form fieldset:has(#fieldset-0-2-heading)",
+  "#standard_form fieldset:has(#fieldset-0-3-heading)",
+  ".submit-row",
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-04"
+role = "regulator_admin"
+path = "/admin/securityobjectives/standard/add/"
+selector = "#content"
+hide = [
+  "#standard_form fieldset:has(#fieldset-0-0-heading)",
+  "#standard_form fieldset:has(#fieldset-0-1-heading)",
+  ".submit-row",
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-05"
+role = "regulator_admin"
+path = "/admin/securityobjectives/standard/8/change/"
+selector = "#security_objectives_set-group"
+# Five objectives are enough to show the columns.
+hide = ["#security_objectives_set-group tbody tr:nth-child(n+6)"]
+annotate = [{ selector = "#security_objectives_set-group thead", box = true }]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-06"
+role = "regulator_admin"
+path = "/admin/securityobjectives/maturitylevel/"
+viewport = { width = 1440, height = 1260 }
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-07"
+role = "regulator_admin"
+path = "/admin/securityobjectives/domain/"
+viewport = { width = 1440, height = 1260 }
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-08"
+role = "regulator_admin"
+path = "/admin/securityobjectives/securityobjective/"
+viewport = { width = 1440, height = 1260 }
+annotate = [
+  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-09"
+role = "regulator_admin"
+path = "/admin/securityobjectives/securityobjective/add/"
+selector = "#content"
+# Moves focus off the first field, which the form focuses on load.
+steps = [{ action = "click", selector = "#content h1" }]
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-10"
+role = "regulator_admin"
+path = "/admin/securityobjectives/securitymeasure/"
+# With the sidebar open the table overflows and its Description column is cut.
+# The admin remembers a collapsed sidebar in the browser, hence a context of its own.
+fresh = true
+steps = [
+  { action = "click", selector = "#toggle-nav-sidebar" },
+  # Clicking outside the main area takes the focus ring off the toggle and
+  # scrolls back to the top, which the toggle click left.
+  { action = "click", selector = ".breadcrumbs" },
+]
+annotate = [{ selector = "#result_list thead", box = true }]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-11"
+role = "regulator_admin"
+path = "/admin/securityobjectives/securitymeasure/add/"
+selector = "#content"
+steps = [{ action = "click", selector = "#content h1" }]
+hide = [".submit-row"]
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-12"
+role = "regulator_admin"
+path = "/admin/securityobjectives/standard/celery-export/"
+selector = "#content"
+
+[[shots]]
+name = "images/administration/regulator-admin/security-objectives-13"
+role = "regulator_admin"
+path = "/admin/securityobjectives/standard/celery-import/"
+selector = "#content"
+
+# report-an-incident-06 submits the wizard and creates two incidents, so this
+# section stays last: every list shot above expects the fixture's incidents.
+
+# --- Report an incident (docs/incident-notification/report-an-incident.rst) ---
+#
+# Each wizard shot walks the wizard from its first step and captures before the
+# Next that would follow. The wizard keeps its answers in the session, so every
+# shot reopens /incidents/declaration, which starts it over.
+#
+# The fixture stands in Regulation A/B for the EECC/NIS of the prose, and
+# Regulator A for ILR.
+#
+# The viewport heights stop each shot just below the wizard card. The footer
+# sits at the bottom of the viewport when the page is shorter, so full_page
+# would bring it, and a band of empty page, into every step.
+
+[[shots]]
+name = "images/incident-notification/report-an-incident-01"
+path = "/incidents/declaration"
+role = "operator_admin"
+viewport = { width = 1440, height = 1010 }
+annotate = [
+  { selector = ".required-field:has(#id_0-company_name) > label.h6", box = true },
+  { selector = ".required-field:has(#id_0-technical_firstname) > label.h6", box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/report-an-incident-02"
+path = "/incidents/declaration"
+role = "operator_admin"
+viewport = { width = 1440, height = 540 }
+steps = [
+  { action = "click", selector = "#id_0-is_technical_the_same" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_1-regulations_0" },
+  { action = "click", selector = "#id_1-regulations_1" },
+]
+# The options, not their container, which spans the whole card.
+annotate = [
+  { selector = ["#id_1-regulations_0", "label[for='id_1-regulations_0']", "label[for='id_1-regulations_1']"], box = true },
+]
+
+[[shots]]
+name = "images/incident-notification/report-an-incident-03"
+path = "/incidents/declaration"
+role = "operator_admin"
+viewport = { width = 1440, height = 540 }
+steps = [
+  { action = "click", selector = "#id_0-is_technical_the_same" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_1-regulations_0" },
+  { action = "click", selector = "#id_1-regulations_1" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_2-regulators_0" },
+]
+annotate = [{ selector = ["#id_2-regulators_0", "label[for='id_2-regulators_0']"], box = true }]
+
+[[shots]]
+name = "images/incident-notification/report-an-incident-04"
+path = "/incidents/declaration"
+role = "operator_admin"
+viewport = { width = 1440, height = 680 }
+steps = [
+  { action = "click", selector = "#id_0-is_technical_the_same" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_1-regulations_0" },
+  { action = "click", selector = "#id_1-regulations_1" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_2-regulators_0" },
+  { action = "click", selector = "#wizard-next-btn" },
+  # Digital Infrastructure and Telecommunication services, the two the prose picks.
+  { action = "click", selector = "#sector_12" },
+  { action = "click", selector = "#sector_15" },
+]
+
+[[shots]]
+name = "images/incident-notification/report-an-incident-05"
+path = "/incidents/declaration"
+role = "operator_admin"
+# The open picker hangs below the card, over where the footer would be.
+viewport = { width = 1440, height = 840 }
+hide = ["footer"]
+steps = [
+  { action = "click", selector = "#id_0-is_technical_the_same" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_1-regulations_0" },
+  { action = "click", selector = "#id_1-regulations_1" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_2-regulators_0" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#sector_12" },
+  { action = "click", selector = "#sector_15" },
+  { action = "click", selector = "#wizard-next-btn" },
+  # The field is in the DOM before Tempus Dominus binds it, and focusing it that
+  # early opens nothing.
+  { action = "wait_ms", value = 1000 },
+  # Typed rather than left to the calendar icon, which no longer fills in the
+  # current date as the prose says, and fixed so the shot does not drift daily.
+  { action = "fill", selector = "#id_4-detection_date", value = "2026-10-01 09:30" },
+  # Focusing the field opened the picker before Tempus Dominus parsed the typed
+  # date, which only happens on change. Closing it through the icon blurs the
+  # field; reopening then shows the date selected.
+  { action = "click", selector = "[data-td-toggle='datetimepicker']" },
+  { action = "click", selector = "[data-td-toggle='datetimepicker']" },
+  { action = "wait_for", selector = ".tempus-dominus-widget.show" },
+]
+
+[[shots]]
+name = "images/incident-notification/report-an-incident-06"
+path = "/incidents/declaration"
+role = "operator_admin"
+# STATEFUL. Submits the wizard: every run adds two incidents for Operator A,
+# one per sector, logged and announced by an opening email each. Nothing
+# removes them; reload the fixture to get rid of them. They count towards
+# MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER, past which the wizard sends
+# the account back to the list instead of opening.
+# The wizard lands on the list, which keeps the search the operator shots above
+# left in the session; a fresh login shows it unfiltered.
+fresh = true
+viewport = { width = 1440, height = 550 }
+steps = [
+  { action = "click", selector = "#id_0-is_technical_the_same" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_1-regulations_0" },
+  { action = "click", selector = "#id_1-regulations_1" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#id_2-regulators_0" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "click", selector = "#sector_12" },
+  { action = "click", selector = "#sector_15" },
+  { action = "click", selector = "#wizard-next-btn" },
+  { action = "fill", selector = "#id_4-detection_date", value = "2026-10-01 09:30" },
+  { action = "click", selector = "#wizard-next-btn" },
+  # Two sectors make two incidents, and with more than one the wizard returns
+  # to the list rather than opening the first report.
+  { action = "wait_for", selector = "#incidents-table" },
+]
+# The list sorts by last update, newest first, so the two just created lead it.
+annotate = [
+  { selector = "#incidents-table tbody tr:nth-child(1) td.list-sectors li", box = true },
+  { selector = "#incidents-table tbody tr:nth-child(2) td.list-sectors li", box = true },
+]
+
+# --- Fill in a declaration (docs/security-objectives/fill-in-a-declaration.rst) ---
+#
+# The declaration screen saves each field as soon as it changes, so these shots
+# only click navigation: the objective selector, the Icon Guide and the
+# "View previous version" pills. Opening a declaration still writes a READ entry
+# to its access log, which is why none of them opens 107: dashboard-09 shows
+# that log.
+#
+# 105 is Unsubmitted, about 90 % filled, and an update of a declaration that
+# needed revision: it has objectives fully filled, partially filled, not
+# filled and still in revision, and changed answers to compare. 51 is that
+# declaration's "Revision required and sent" version.
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-01"
+# Numbered as in the list of fill-in-a-declaration.rst.
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=105"
+viewport = { width = 1440, height = 450 }
+annotate = [
+  { selector = ".card-header .row > div:nth-child(1)", box = true, arrow = "top", length = 0, label = "1" },
+  { selector = ".card-header .row > div:nth-child(3)", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = ".card-header .row > div:nth-child(5)", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = ".card-header .ms-auto .d-flex > button:first-child", box = true, arrow = "left", length = 0, label = "4" },
+  { selector = "#so_submit_button", box = true, arrow = "top", length = 0, label = "5" },
+  { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "6" },
+  { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "7" },
+  { selector = [".carousel-control-prev", ".carousel-control-next"], box = true, arrow = "bottom", length = 0, label = "8" },
+  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "9" },
+  { selector = ".carousel-item.active .me-auto", box = true, arrow = "right", length = 0, label = "10" },
+  { selector = ".carousel-item.active #score_container", box = true, arrow = "left", length = 0, label = "11" },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-02"
+# Objective 2 of 23: an unsubmitted declaration with no earlier version, so
+# no "View previous version" outlines, and some measures on with their
+# justification. The tall viewport keeps the whole slide in the capture.
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=23"
+viewport = { width = 1440, height = 2000 }
+selector = ".carousel-item.active"
+steps = [
+  { action = "click", selector = "#security_objective_selector [data-bs-slide-to='1']" },
+  { action = "wait_for", selector = "#security_objective_selector [data-bs-slide-to='1'].slide-active-container" },
+  { action = "wait_ms", value = 1000 },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-03"
+# The legend's open state is kept in localStorage, hence fresh.
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=105"
+fresh = true
+viewport = { width = 1440, height = 530 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_declaration_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-04"
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=51"
+viewport = { width = 1440, height = 450 }
+annotate = [
+  { selector = ".card-header .ms-auto button.review_comment_so_declaration", box = true },
+  { selector = "#so_status_form > div:not(.d-none)", box = true },
+  { selector = "#security_objective_selector", box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-05"
+# 28 (Passed) is the only 2025 declaration of Operator A. The search is kept
+# in the session, hence fresh.
+role = "operator_admin"
+path = "/securityobjectives/?search=2025"
+fresh = true
+selector = "#update_so_declaration .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='28']) .update_so_declaration" },
+  { action = "wait_for", selector = "#update_so_declaration.show" },
+  { action = "wait_ms", value = 400 },
+]
+
+[[shots]]
+name = "images/security-objectives/fill-in-a-declaration-06"
+role = "operator_admin"
+path = "/securityobjectives/declaration?id=105"
+selector = "#so_previous_answer .modal-content"
+steps = [
+  { action = "click", selector = ".carousel-item.active .view-previous-version" },
+  { action = "wait_for", selector = "#so_previous_answer.show" },
+  { action = "wait_ms", value = 400 },
+]
+
+# --- Review a declaration (docs/security-objectives/review-a-declaration.rst) ---
+#
+# The regulator's review inputs (objective result, review comments) are saved
+# on `change` and Send notifies the operator, so these shots only open
+# declarations and pop-ups: the result list is opened by a click, which fires
+# no `change`. Opening a declaration writes a READ entry to its access log,
+# which is why none of them opens 107: dashboard-09 shows that log.
+#
+# 67 is Under review with its objectives passed, in revision and not reviewed
+# yet. 36 is Revision required, not sent, with a review comment drafted. 51 is
+# the sent version that followed 36, and 50 the latest of four versions.
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-01"
+# Numbered as in the list of review-a-declaration.rst; the row actions are
+# those of 107, which is only pointed at, never opened.
+role = "regulator_admin"
+path = "/securityobjectives/"
+viewport = { width = 1440, height = 495 }
+annotate = [
+  { selector = "a.import_so_declaration", box = true, arrow = "top", length = 0, label = "1" },
+  { selector = "th[data-sort-field='company_name']", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = "#securityobjectives-table thead th:nth-last-child(2)", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) a[href$='declaration?id=107']", box = true, arrow = "bottom", length = 0, label = "4" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-comments-disabled", box = true, arrow = "bottom", length = 0, label = "5" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .delete_so_declaration", box = true, arrow = "bottom", length = 0, label = "6" },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-02"
+role = "regulator_admin"
+path = "/securityobjectives/"
+viewport = { width = 1440, height = 430 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-03"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+viewport = { width = 1440, height = 450 }
+annotate = [
+  { selector = ".card-header .ms-auto .d-flex > button:first-child", box = true, arrow = "left", length = 0, label = "1" },
+  { selector = "#so_status_form > div:not(.d-none)", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = "#so_send_button", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "4" },
+  { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "5" },
+  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "6" },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-04"
+# The legend's open state is kept in localStorage, hence fresh.
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+fresh = true
+viewport = { width = 1440, height = 600 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_declaration_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-05"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+# Tall enough for the whole slide: the capture stops at the viewport, and a
+# taller one leaves blank space under the table. The card body rather than the
+# slide, so the outline of the last column is not cut off at the edge.
+viewport = { width = 1440, height = 1650 }
+selector = ".card-body"
+steps = [{ action = "wait_ms", value = 1000 }]
+# The planned measures take the last two rows, so the third from last is the
+# last measure: outlining it with the header covers the whole column.
+annotate = [
+  { selector = [".carousel-item.active thead th:last-child", ".carousel-item.active tbody tr:nth-last-child(3) td:last-child"], box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-06"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=67"
+viewport = { width = 1440, height = 450 }
+steps = [{ action = "click", selector = "#so_status_form > div:not(.d-none) select" }]
+annotate = [{ selector = "#so_status_form > div:not(.d-none) select", box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-07"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=36"
+selector = "#review_comment_so_declaration > .modal-dialog > .modal-content"
+steps = [
+  # Send carries the same class; this is the comment-only icon, whose pop-up
+  # saves without sending.
+  { action = "click", selector = "button.review_comment_so_declaration[data-only-review-comment]" },
+  { action = "wait_for", selector = "#review_comment_so_declaration.show .note-editor" },
+  { action = "wait_ms", value = 400 },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-08"
+role = "regulator_admin"
+path = "/securityobjectives/"
+selector = "#review_comment_so_declaration > .modal-dialog > .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='51']) button.review_comment_so_declaration" },
+  { action = "wait_for", selector = "#review_comment_so_declaration.show .note-editor" },
+  { action = "wait_ms", value = 400 },
+]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-09"
+role = "regulator_admin"
+path = "/securityobjectives/declaration?id=51"
+# Compared with 36, the version before it.
+viewport = { width = 1440, height = 2000 }
+selector = ".carousel-item.active"
+steps = [{ action = "wait_ms", value = 1000 }]
+annotate = [{ selector = ".carousel-item.active .view-previous-version", box = true }]
+
+[[shots]]
+name = "images/security-objectives/review-a-declaration-10"
+role = "regulator_admin"
+path = "/securityobjectives/"
+selector = "#so_versions .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='50']) .custom-icon-more-options" },
+  { action = "click", selector = ".more-actions-dropdown.show .so_versions" },
+  { action = "wait_for", selector = "#so_versions.show" },
+  { action = "wait_ms", value = 400 },
+]
+
+# --- Security objectives dashboard (docs/security-objectives/dashboard.rst) ---
+#
+# The operator's dashboard. Row callouts target two fixture declarations by the
+# pk on their Access Log button: 107 (Under review) and 105 (Unsubmitted). They
+# are the two most recently updated, so they head the list — until
+# dashboard-07 duplicates one, which pushes both down and out of the cropped
+# viewports. Reload the fixture before shooting this section a second time.
+#
+# Column choices and the legend are kept in localStorage, filters and sort
+# order in the Django session — both shared by every shot of a role. Shots
+# that change any of them run `fresh`, so the next shot sees the defaults.
+
+[[shots]]
+name = "images/security-objectives/dashboard-01"
+# The Modules menu is no longer rendered on the homepage, so only the tile
+# route to the dashboard can be shown.
+path = "/"
+role = "operator_admin"
+annotate = [
+  { selector = ".card:has(a[href='/securityobjectives/'])", box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-02"
+# The numbers match the list in dashboard.rst, the row's actions numbered
+# left to right. The controls are packed too tightly for arrows, so most
+# labels sit right beside their element.
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 495 }
+annotate = [
+  { selector = "a.fw-bold[href='/securityobjectives/']", box = true, arrow = "top", length = 0, label = "1" },
+  { selector = "button.create_so_declaration", box = true, arrow = "top", length = 0, label = "2" },
+  { selector = "#search_bar_form", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = "#openFilter", box = true, arrow = "top", length = 0, label = "4" },
+  { selector = "#so_status_legend_btn", box = true, arrow = "top", length = 0, label = "5" },
+  { selector = "#securityobjectives-table thead", box = true, arrow = "top", length = 40, label = "6" },
+  { selector = "button[data-bs-target='#SOhideColumns']", box = true, arrow = "left", length = 0, label = "7" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .update_so_declaration", box = true, arrow = "bottom", length = 0, label = "8" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-comments-disabled", box = true, arrow = "bottom", length = 0, label = "9" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .copy_so_declaration", box = true, arrow = "bottom", length = 0, label = "10" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) a[href^='/securityobjectives/download/']", box = true, arrow = "bottom", length = 0, label = "11" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .delete_so_declaration", box = true, arrow = "bottom", length = 0, label = "12" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options", box = true, arrow = "bottom", length = 0, label = "13" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-03"
+path = "/securityobjectives/"
+role = "operator_admin"
+fresh = true
+viewport = { width = 1440, height = 430 }
+hide = [".tooltip"]
+steps = [
+  { action = "click", selector = "#so_status_legend_btn" },
+  { action = "wait_for", selector = "#collapseLegend.show" },
+]
+# The "Legend" title sits on the frame's top edge, outside #collapseLegend, so
+# the outline takes in both or it would strike through the title.
+annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], box = true }]
+
+[[shots]]
+name = "images/security-objectives/dashboard-04"
+# Every column an operator sees, numbered as in the column table of
+# dashboard.rst. The rows are hidden, with the pager and footer they would
+# pull up, so the labels sit in free space instead of over the data.
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 400 }
+hide = ["#securityobjectives-table tbody", "footer", "div.small:has(.pagination)"]
+annotate = [
+  { selector = "th[data-sort-field='status']", arrow = "bottom", length = 45, label = "1" },
+  { selector = "th[data-sort-field='last_update']", arrow = "bottom", length = 45, label = "2" },
+  { selector = "th[data-sort-field='submit_date']", arrow = "bottom", length = 45, label = "3" },
+  { selector = "th[data-sort-field='identifier']", arrow = "bottom", length = 45, label = "4" },
+  { selector = "th[data-sort-field='framework']", arrow = "bottom", length = 45, label = "5" },
+  { selector = "th[data-sort-field='creator']", arrow = "bottom", length = 45, label = "6" },
+  { selector = "th[data-sort-field='sectors']", arrow = "bottom", length = 45, label = "7" },
+  { selector = "th[data-sort-field='year']", arrow = "bottom", length = 45, label = "8" },
+  { selector = "#securityobjectives-table thead th:nth-last-child(2)", arrow = "bottom", length = 45, label = "9" },
+  { selector = "#securityobjectives-table thead th:last-child", arrow = "bottom", length = 45, label = "10" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-05"
+path = "/securityobjectives/"
+role = "operator_admin"
+selector = "#SOhideColumns .modal-content"
+steps = [
+  { action = "click", selector = "button[data-bs-target='#SOhideColumns']" },
+  { action = "wait_for", selector = "#SOhideColumns.show" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-06"
+# Stops at the dialog; dashboard-07 is the one that confirms.
+path = "/securityobjectives/"
+role = "operator_admin"
+selector = "#copy_so_declaration .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='105']) .copy_so_declaration" },
+  { action = "wait_for", selector = "#copy_so_declaration.show #copy-so-declaration-form" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-08"
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 495 }
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options" },
+  { action = "wait_for", selector = ".more-actions-dropdown.show" },
+]
+annotate = [
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options", box = true },
+  { selector = ".more-actions-dropdown.show .so_access_log", box = true },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-09"
+# The operator's log of 107 (Under review): CREATE, READ and SUBMIT, enough to
+# show the sort. DataTables lists the newest first and cycles asc → desc →
+# unsorted, so the first click clears the sort and the second shows the oldest
+# first.
+path = "/securityobjectives/"
+role = "operator_admin"
+selector = "#so_access_log .modal-content"
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-more-options" },
+  { action = "click", selector = ".more-actions-dropdown.show .so_access_log" },
+  # The sort control exists only once DataTables has initialised; a click on
+  # the header before that is lost.
+  { action = "wait_for", selector = "#so_access_log.show #access-log-table th:first-child .dt-column-order" },
+  { action = "click", selector = "#access-log-table thead th:first-child" },
+  { action = "click", selector = "#access-log-table thead th:first-child" },
+  { action = "wait_for", selector = "#access-log-table thead th:first-child[aria-sort='ascending']" },
+]
+
+[[shots]]
+name = "images/security-objectives/dashboard-07"
+# STATEFUL: confirms the duplicate, creating a new Unsubmitted declaration
+# (2027, Rail transport) for Operator A plus CREATE and COPY log entries. Keep
+# it last in the section: the copy heads the list and pushes 105 and 107 down.
+path = "/securityobjectives/"
+role = "operator_admin"
+viewport = { width = 1440, height = 940 }
+steps = [
+  { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='105']) .copy_so_declaration" },
+  { action = "wait_for", selector = "#copy_so_declaration.show #copy-so-declaration-form" },
+  { action = "select", selector = "#copy_so_declaration #id_year", value = "2027" },
+  { action = "click", selector = "#copy_so_declaration button.multiselect" },
+  # Sector groups open collapsed, which leaves their options unclickable.
+  { action = "click", selector = "#copy_so_declaration .multiselect-group[title='Transport'] .caret-container" },
+  { action = "click", selector = "#copy_so_declaration .multiselect-option:has(input[value='6'])" },
+  # Close the sector list: left open, it can cover the Duplicate button.
+  { action = "click", selector = "#copy_so_declaration button.multiselect" },
+  { action = "click", selector = "#copy-so-declaration-form button[type='submit']" },
+  { action = "wait_for", selector = ".alert-success" },
+]
+annotate = [
+  { selector = "#securityobjectives-table tbody tr:nth-child(1)", box = true },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='105'])", box = true },
+]
+
 # --- Not covered yet --------------------------------------------------------
 #
-# Only the getting-started pages above are scripted. Every other page owns the
-# images under docs/_static/images/<section>/<page>-NN.png, and none of them
-# are scripted here yet.
+# The getting-started, incident-notification and security-objectives pages, and
+# every administration role (platform admin, regulator admin, regulator user,
+# operator admin, observer admin), are scripted. Left out on purpose: the reporting images (the
+# module is still changing; its user guide is excluded from the build),
+# including the regulator admin reporting configuration.

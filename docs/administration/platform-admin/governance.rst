@@ -1,118 +1,262 @@
 Governance
-~~~~~~~~~~~~~~~~~~~~~~~
+----------
 
-The next section in the left panel is called **Governance**. It includes several functionalities, which are briefly explained in this chapter.
+The **Governance** section of the console is where you set up the organisations that use the platform
+and their first accounts. For a platform administrator, it lists **Django Settings**, **Entity categories**,
+**Functionalities**, **Observers**, **Regulations**, **Regulators** and **Users**.
+This page describes them in the order of the set-up (see :doc:`index`).
 
-Django Settings
-^^^^^^^^^^^^^^^^^^^^^
+Every item works the same way:
 
-You can use the **Django Settings** to check the configuration of your **SERIMA** server instance. The variables you can see here are read-only.
+- Click its name to open the list. Click **Add** next to the name, or the **Add** button at the top right of the list,
+  to create a new one; click a name in the list to open and change it.
+- To delete objects, tick them in the list, choose **Delete selected** in the **Action** drop-down and click **Run**.
+  A confirmation page lists everything that will be deleted along with them.
+- Names, labels and descriptions can be translated: the tabs above the form (**English**, **French**, **Dutch**, **German**)
+  switch between the languages of the platform. Save your changes before you leave the tab of a language,
+  as the banner at the top of the form reminds you.
+- Beside a drop-down, the pencil icon changes the selected object, the plus icon creates a new one in a pop-up,
+  the cross icon, where shown, deletes the selected object, and the eye icon displays it.
+
+.. _platform-regulators:
+
+Regulators
+~~~~~~~~~~
+
+A regulator, also known as a competent authority, supervises one or more regulations.
+The **Regulators** list shows the **Name**, **Full name** and **Description** of each of them.
 
 .. figure:: /_static/images/administration/platform-admin/governance-01.png
-   :alt: Django Settings
+   :alt: Regulators list with the Regulators entry of the sidebar and the column headers outlined
    :target: ../../_static/images/administration/platform-admin/governance-01.png
 
-Entity categories
-^^^^^^^^^^^^^^^^^^^^^
+Create a regulator
+""""""""""""""""""
 
-The Platform Admin creates the categories for the Operators. Entity categories are used for the classification of operators (depending on the terminology used in different regulations, operators, companies, and entities may be used to refer to the same thing).
+1. Click **Add regulator** and fill in the **Name** and, optionally, the **Full name** and **Description**,
+   then the **Country** and **Address**.
+2. In **E-mail address for incident notification**, enter the shared address of the regulator: it receives
+   a copy of the emails the platform sends about the incidents and security objectives declarations of the regulator.
+3. In **Functionalities**, move the optional modules the regulator may use from **Available Functionalities**
+   to **Chosen Functionalities**. Only platform administrators can change this list; regulator administrators see it read-only.
 
-Click the **Entity categories** link in the **Governance** section to go to the **Select entity category to change** screen. Here, you can see a list of categories (if any have been set up). You can create new categories by clicking the **Add Entity Category** button in the top right corner.
+   .. figure:: /_static/images/administration/platform-admin/governance-02.png
+      :alt: Change Regulator form with the contact fields and the Security Objectives and Report generation functionalities chosen
+      :target: ../../_static/images/administration/platform-admin/governance-02.png
 
-To delete a category, first select it by checking the box next to the category. Then, open the Action drop-down menu and choose the **Delete selected entity categories** option, and click **Go**.
+   .. note::
 
-.. figure:: /_static/images/administration/platform-admin/governance-02.png
-   :alt: Select entity category to change
-   :target: ../../_static/images/administration/platform-admin/governance-02.png
+      A module chosen here is open to the regulator's accounts only if their role is also chosen on the functionality
+      (see :ref:`functionalities`).
 
-There are two columns on the **Change Entity category** screen. The **Code** column on the left displays the code you assigned to the entity when you set it up. The **Label** column indicates the type of classification you want to create for different entities in the **SERIMA** system. This is also defined when you create a new entity category or modify an existing one.
+4. Add the first regulator administrator, as described below, and click **Save**.
+
+Regulator administrators
+""""""""""""""""""""""""
+
+The **Regulator users** section at the bottom of the form lists the regulator administrators.
+The other accounts of the regulator are created by these administrators, and are not shown to you.
 
 .. figure:: /_static/images/administration/platform-admin/governance-03.png
-   :alt: Change entity category
+   :alt: Regulator users section with the plus icon that creates an account outlined
    :target: ../../_static/images/administration/platform-admin/governance-03.png
+
+To add an administrator, click **Add another Regulator user**, then either:
+
+- select the account in the **User** drop-down, which lists the accounts that have no role yet;
+- or click the plus icon beside it to create the account in a pop-up, with its **First name**, **Last name**,
+  **Email address** and **Phone number**.
+
+Click **Save**: the account becomes a regulator administrator of this regulator.
+It has no password yet. Its owner chooses one with **Password forgotten?** on the login page
+(see :doc:`/getting-started/login`), then sets up two-factor authentication at the first login
+(see :doc:`/getting-started/enable-2fa`).
+
+Two boxes on each row grant export rights:
+
+- **Can export incidents** lets the administrator export the incidents of the regulator (see :ref:`incident-export`).
+  Only a platform administrator can tick it.
+- **Can export security objectives** lets the administrator export the list of security objectives declarations
+  (see :doc:`/security-objectives/review-a-declaration`).
+
+Every export is recorded in the :doc:`log entries <administration>`.
+
+To remove an administrator from the regulator, tick **Delete?** on its row and click **Save**.
+The account is not deleted, but deactivated: its owner can no longer log in.
+
+.. warning::
+
+   The red **Delete** button at the bottom of the form deletes the regulator itself, not the selected administrator.
+
+Delete a regulator
+""""""""""""""""""
+
+Tick the regulator in the list and choose **Delete selected Regulators**, or click **Delete** at the bottom of its form.
+
+.. warning::
+
+   Deleting a regulator also deletes its incident notification workflows, security objectives frameworks and
+   the rest of its configuration, and deactivates its accounts. Read the confirmation page before confirming.
+
+.. _platform-regulations:
+
+Regulations
+~~~~~~~~~~~
+
+The platform handles several regulations, each with its own incident notification workflows, set up by the regulators
+in charge of it. The **Regulations** list shows the **Label** of each regulation and its **Regulators**.
+
+To create a regulation, click **Add regulation**, enter its **Label**, move the regulators in charge of it from
+**Available Regulators** to **Chosen Regulators**, and click **Save**.
+
+.. figure:: /_static/images/administration/platform-admin/governance-04.png
+   :alt: Change Regulation form with its label and the two regulators in charge of it
+   :target: ../../_static/images/administration/platform-admin/governance-04.png
+
+A regulator administrator can build workflows and impacts only for the regulations of their regulator.
+Observers receive incidents per regulation (see `Observer regulations`_).
 
 .. _functionalities:
 
 Functionalities
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
-The **Functionalities** section lists the optional modules of the platform: **Reporting** and **Security Objective**. A module listed here is not usable yet: nobody can open it until the roles allowed to use it are chosen.
+The **Functionalities** list holds the optional modules of the platform: **Security Objective** and **Reporting**.
+It shows the **Type** of each functionality, its **Name** and the **Roles** that may use it.
 
-You can create new Functionalities by clicking the **Add Functionality** button in the top right corner. To delete a Functionality, first select it by checking the box next to the functionality. Then, open the **Action** drop-down menu and choose the **Delete selected Functionalities** option, and click **Go**.
-
-.. figure:: /_static/images/administration/platform-admin/governance-04.png
-   :alt: Select Functionality to change
-   :target: ../../_static/images/administration/platform-admin/governance-04.png
+.. figure:: /_static/images/administration/platform-admin/governance-05.png
+   :alt: Functionalities list with the Functionalities entry of the sidebar outlined, showing the Reporting and Security Objective functionalities and their roles
+   :target: ../../_static/images/administration/platform-admin/governance-05.png
 
 A functionality has:
 
-- a **type**, the module it opens (security objectives or reporting). The type cannot be translated.
-- a **name**, shown in the menu. The name can be translated.
-- **roles**, the roles allowed to use the module.
+- a **Type**, the module it opens. There can be only one functionality per type.
+- a **Name**, the label of the module in the menu of the platform, which can be translated.
+- **Roles**, the roles allowed to use the module.
 
-Who can use a functionality
-""""""""""""""""""""""""""""
+.. figure:: /_static/images/administration/platform-admin/governance-06.png
+   :alt: Change Functionality form with its type, name and the four roles chosen
+   :target: ../../_static/images/administration/platform-admin/governance-06.png
+
+Who can use a module
+""""""""""""""""""""
 
 Access is checked in two steps, in this order:
 
-1. **By role.** On the functionality, move the roles that may use it from *Available Roles* to *Chosen Roles*. Only the roles that can work with the module are offered:
+1. **By role.** On the functionality, move the roles that may use it from **Available Roles** to **Chosen Roles**.
+   Only the roles that can work with the module are accepted:
 
    - Security objectives: RegulatorAdmin, RegulatorUser, OperatorAdmin, OperatorUser.
    - Reporting: RegulatorAdmin, RegulatorUser.
 
-2. **By regulator.** Regulator users also need the functionality enabled on their regulator: edit the regulator and add the functionality to its *Chosen Functionalities* (see Regulators_). Operators have no such setting, their role is enough.
+   Any other role is refused when you save, with the message *These roles cannot access this functionality*.
 
-If a role is not chosen, the regulator setting is not checked: the module stays hidden from the menu and its pages return a "not found" error.
+2. **By regulator.** Regulator accounts also need the functionality chosen on their regulator
+   (see `Create a regulator`_). Operators have no such setting: their role is enough.
 
-A new functionality has no role chosen, so nobody can use it until roles are added.
+If a role is not chosen, the regulator setting is not checked: the module stays hidden from the menu
+and its pages return a "not found" error. A new functionality has no role chosen, so nobody can use it
+until roles are added.
 
-Observers have no access to the security objectives and reporting modules.
+Observers can use neither module. For the roles, see :doc:`/getting-started/roles-and-permissions`.
 
-Rolling out a module
-""""""""""""""""""""
+Open a module in stages
+"""""""""""""""""""""""
 
-The two steps let a module be opened in stages. For example, for security objectives:
+The two steps let you open a module in stages. For example, for security objectives:
 
 1. Choose the RegulatorAdmin and RegulatorUser roles on the functionality.
-2. Enable the functionality on each regulator that will use it.
-3. Let the regulators configure their standards.
-4. Once the configuration is done, choose the OperatorAdmin and OperatorUser roles.
+2. Choose the functionality on each regulator that will use it.
+3. Let the regulators set up their frameworks (see :doc:`/administration/regulator-admin/security-objectives`).
+4. Once they are ready, choose the OperatorAdmin and OperatorUser roles.
 
-Removing a role from the functionality hides the module again for every user with that role.
+Removing a role from the functionality hides the module again for every account with that role.
+
+.. warning::
+
+   To close a module, remove its roles; do not delete the functionality.
+
+.. _platform-entity-categories:
+
+Entity categories
+~~~~~~~~~~~~~~~~~
+
+Entity categories classify the operators, for instance as public or private.
+Regulators assign them to their operators, and the incident rules of the observers refer to them
+(see `Observer regulations`_). The list shows the **Code** and **Label** of each category.
+
+.. figure:: /_static/images/administration/platform-admin/governance-07.png
+   :alt: Entity categories list with the Entity categories entry of the sidebar and the Code and Label columns outlined
+   :target: ../../_static/images/administration/platform-admin/governance-07.png
+
+To create one, click **Add entity category**, enter its **Label**, which can be translated, and its **Code**, and click **Save**.
+
+.. tip::
+
+   Incident rules refer to entity categories by their code: changing a code afterwards stops the rules
+   that use it from matching. Keep codes short and stable, such as ``PUBLIC`` or ``PRIVATE``.
+
+.. _platform-observers:
 
 Observers
-^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~
 
-An observer is a type of regulator with limited permissions. Observers cannot edit incidents on the platform; they have read-only access and can only view incidents.
+An observer is an organisation that receives, read-only, the incidents it is entitled to by law.
+Which incidents it receives is decided by its observer regulations.
 
-As a Platform Admin, you can create an Observer either by clicking the **Add Observer** button in the top-right corner or by selecting the **Add** link in the **Governance** section. The **Change Observer** screen appears, where you can set up a new Observer.
+Create an observer
+""""""""""""""""""
 
-When creating a new Observer, provide its name, description, country, and address. Observers have no access to the security objectives and reporting modules, so an Observer has no functionalities to configure.
+1. Click **Add observer** and fill in the **Name** and, optionally, the **Full name** and **Description**,
+   then the **Country** and **Address**.
+2. In **E-mail address for incident notification**, enter the shared address of the observer:
+   it receives the emails the platform sends about the incidents the observer receives, unless the observer
+   administrator connects the observer to an RT ticketing system, which then receives them as tickets
+   (see :ref:`observer-admin-rt`).
+3. Add the first observer administrator in the **Observer users** section, as for a regulator
+   (see `Regulator administrators`_): click **Add another Observer user**, then select the account or create it
+   with the plus icon. Tick **Can export incidents** to let it export the incidents the observer receives (see :ref:`incident-export`).
 
-Then add the observer's accounts (Observer Admins) and its observer regulations (legal basis). Use the down-pointing arrows to open the dropdown menus and select a different account or regulation.
+   .. figure:: /_static/images/administration/platform-admin/governance-08.png
+      :alt: Change Observer form with its contact fields and the Observer users section outlined
+      :target: ../../_static/images/administration/platform-admin/governance-08.png
 
-If you cannot find the item you are looking for, use the **Add another Observer user** and **Add another Observer regulation** links to create new entries.
+4. Add its observer regulations, as described below, and click **Save**.
 
-.. figure:: /_static/images/administration/platform-admin/governance-06.png
-   :alt: Add another Observer user
-   :target: ../../_static/images/administration/platform-admin/governance-06.png
+The observer administrator then creates the other accounts of the observer (see :ref:`observer-admin-users`).
+Removing an administrator from the **Observer users** section deactivates the account.
 
 Observer regulations
-""""""""""""""""""""""""
+""""""""""""""""""""
 
-An observer receives only the incidents covered by its **observer regulations**. **An observer without any observer regulation receives no incidents.**
+An observer receives only the incidents covered by its observer regulations.
 
-Each observer regulation has three fields:
+.. important::
 
-- **Legal basis**: the regulation the observer regulation applies to. An observer can have only one observer regulation per legal basis.
-- **Sectors**: the sectors the observer regulation applies to. If no sector is selected, it covers every sector of the regulation, including the incidents declared without a sector.
-- **Incident rules**: a filter, written in JSON, on the entity categories of the operator that reported the incident. Set it to ``{}`` to receive every incident of the legal basis and sectors.
+   An observer without any observer regulation receives no incidents.
 
-   **To have an observer receive all incidents, add one observer regulation per legal basis, with no sector selected and the Incident rules set to** ``{}``.
+Click **Add another Observer regulation** for each regulation the observer is entitled to, and fill in:
 
-The incident rules list one or more **conditions**, which refer to entity categories by their **Code** (see `Entity categories`_). An incident is received when it matches at least one condition. To match a condition, the operator must belong to the entity category in ``include`` and must not belong to any entity category in ``exclude``.
+- **Legal basis**: the regulation. An observer can have only one observer regulation per regulation.
+- **Sectors**: the sectors covered. If none is chosen, it covers every sector of the regulation,
+  including the incidents notified without a sector.
+- **Incident rules**: a filter, written in JSON, on the entity categories of the operator that notified the incident.
+  Enter ``{}`` to receive every incident of the regulation and sectors.
 
-In the example below, the observer receives the incidents reported by operators categorised as ``PUBLIC`` **or** as ``CRITICAL_INFRA``:
+.. figure:: /_static/images/administration/platform-admin/governance-09.png
+   :alt: Observer regulations section with the legal basis, sectors and incident rules of two regulations
+   :target: ../../_static/images/administration/platform-admin/governance-09.png
+
+.. tip::
+
+   To have an observer receive every incident, add one observer regulation per regulation,
+   with no sector chosen and the incident rules set to ``{}``.
+
+The incident rules list one or more **conditions**, which refer to entity categories by their **Code**
+(see `Entity categories`_). An incident is received when it matches at least one condition. To match a condition,
+the operator must belong to every entity category listed in ``include``, and to none of those listed in ``exclude``.
+
+In the example below, the observer receives the incidents of the operators categorised as ``PUBLIC`` **or** as ``CRITICAL_INFRA``:
 
 .. code-block:: json
 
@@ -123,7 +267,8 @@ In the example below, the observer receives the incidents reported by operators 
         ]
     }
 
-In the example below, the observer receives the incidents reported by operators categorised as ``PRIVATE``, except those also categorised as ``CRITICAL_INFRA``:
+In the example below, it receives the incidents of the operators categorised as ``PRIVATE``,
+except those also categorised as ``CRITICAL_INFRA``:
 
 .. code-block:: json
 
@@ -133,98 +278,71 @@ In the example below, the observer receives the incidents reported by operators 
         ]
     }
 
-To delete an Observer, first select it by checking the box next to the observer entry. Then, open the **Action** drop-down menu and choose the **Delete selected Observers** option, and click **Go**.
-
-.. figure:: /_static/images/administration/platform-admin/governance-07.png
-   :alt: Delete selected Observers
-   :target: ../../_static/images/administration/platform-admin/governance-07.png
-
-Regulations
-^^^^^^^^^^^^^^^^^^^^^
-
-**SERIMA** is a multi-regulation platform, allowing you to create different workflows for different regulations.
-
-As a Platform Admin, you can set up new regulations either by clicking the **Add Regulation** button in the top-right corner or by selecting the **Add link** in the **Governance** section. Either way, you will be directed to the **Add Regulation** screen, where you can assign a label for the regulation and add regulators to it:
-
-.. figure:: /_static/images/administration/platform-admin/governance-08.png
-   :alt: Add Regulation
-   :target: ../../_static/images/administration/platform-admin/governance-08.png
-
-When creating a regulation, you need to add a **Label** for it (labels are displayed in the first column, as shown in the screenshot below). Then, you need to assign a regulator from the list and save your changes.
-
-To delete a regulation, first select it by checking the box next to the regulation entry. Then, open the **Action** drop-down menu and choose the **Delete selected Regulations** option, and click **Go**.
-
-.. figure:: /_static/images/administration/platform-admin/governance-09.png
-   :alt: Delete selected Regulations
-   :target: ../../_static/images/administration/platform-admin/governance-09.png
-
-Regulators
-^^^^^^^^^^^^^^^^^^^^^
-
-By following the **Regulators** link in the **Governance** section, you can check the list of Regulators set up in the system.
-As a Platform Admin, you can set up new regulators either by clicking the **Add Regulator** button in the top-right corner or by selecting the **Add** link in the Governance section.
-
-The **Add Regulator** screen appears, where you can set up a new **Regulator**. When creating a new Regulator, provide its name, description, country, address, and email address (for incident notification). Then configure the regulator’s functionalities by selecting and adding them to the **Chosen Functionalities list**. A regulator user can only use a functionality whose roles also include theirs (see :ref:`functionalities`):
-
-.. figure:: /_static/images/administration/platform-admin/governance-10.png
-   :alt: Add Regulator
-   :target: ../../_static/images/administration/platform-admin/governance-10.png
-
-Delete a regulator user
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To delete a regulator user, go to the **Regulator Users** section of the chosen regulator. **Choose a user** you want to delete (1), put a checkmark into the checkbox in the **Delete** column (2), and click **Save** (3):
-
-.. figure:: /_static/images/administration/platform-admin/governance-11.png
-   :alt: Delete a Regulator User
-   :target: ../../_static/images/administration/platform-admin/governance-11.png
-
-   **NOTE: Do NOT use the red Delete button in the lower right-hand corner! It deletes the Regulator itself.**
-
-Delete a Regulator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You have two options to delete a regulator:
-
-1.	Select the Regulator by checking the checkbox next to the regulator entry. Then, open the **Action** drop-down menu and choose the **Delete selected Regulators** option, and click **Go**.
-
-.. figure:: /_static/images/administration/platform-admin/governance-12.png
-   :alt: Delete selected Regulators
-   :target: ../../_static/images/administration/platform-admin/governance-12.png
-
-2.	Click the name of the regulator on the **Select Regulator to change** screen to open the **Change Regulator** screen. Once on the Change Regulator screen, click the red **Delete** button in the lower right-hand corner. If you have the necessary permission level, the chosen regulator will be deleted from the system.
-
+.. _platform-users:
 
 Users
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~
 
-**Platform Admins can create other Platform Admins, Regulator Admins, and Observer Admins.** If you click the Users link in the Governance section, you will be directed to the **Select User to Change** screen. This screen lists all users (Platform Admins, Regulator Admins, and Observer Admins) that the Platform Admins of your SERIMA instance have set up.
+The **Users** list shows the platform administrators, the regulator and observer administrators,
+and the accounts that have no role yet. Next to the contact details, it shows the **Regulator** or **Observer**
+of each account, its **Roles**, whether the email address is verified and two-factor authentication is activated,
+and when the account was created. Narrow the list down with the search field or the **Filter** panel:
+**By Regulators**, **By Observer** or **By Roles**.
 
-You can add new users by clicking the **Add** link in the **Governance** section or by using the **Add User** link in the top right-hand corner. The **Add User** screen appears, where you can provide basic information such as First Name, Last Name, Email Address, and Phone Number.
+.. figure:: /_static/images/administration/platform-admin/governance-10.png
+   :alt: Users list with the Reset accepted terms and Reset accepted cookies buttons and the Filter panel outlined
+   :target: ../../_static/images/administration/platform-admin/governance-10.png
 
-After creating a user, remember to add them to one of the entities (Regulators or Observers). To do this, open the Regulator or Observer where you want to link the user. For example, to add a user to an Observer, click the Observer’s name, and on the **Change Observer** screen, use the **Add another Observer user** option to link the user to the selected Observer.
+Create a platform administrator
+"""""""""""""""""""""""""""""""
 
-To create Observer users, use the **Observers** link. To create Regulator users, use the **Regulators** link in the Governance section.
+Click **Add user**, fill in the **First name**, **Last name**, **Email address** and **Phone number**, and click **Save**.
+As for the regulator administrators, the new administrator chooses a password with **Password forgotten?**
+on the login page.
 
-.. figure:: /_static/images/administration/platform-admin/governance-13.png
-   :alt: Add another Observer user
-   :target: ../../_static/images/administration/platform-admin/governance-13.png
+.. warning::
 
-In case you have many users in your **SERIMA** instance, use the **Filter** on the right. You can filter users by regulators, observers, or roles. By default, all options are displayed. To narrow the list, click the specific link you are looking for. For example, under **By Roles**, clicking **Regulator Admin** will display only the Regulator Admins in your system.
+   **Add user** always creates a platform administrator. Create the regulator and observer administrators
+   from their regulator or observer instead (see `Regulator administrators`_).
 
-.. figure:: /_static/images/administration/platform-admin/governance-14.png
-   :alt: Filter Regulator users
-   :target: ../../_static/images/administration/platform-admin/governance-14.png
+Change or deactivate an account
+"""""""""""""""""""""""""""""""
 
-Besides filtering, you can sort users by clicking the heading of the column you want to sort, either in ascending or descending order. To manage users, first select the checkbox in front of the user you want to modify, then choose the desired action from the **Action** dropdown menu.
+Click a name to open the account. You can change its contact details and, for a platform or regulator administrator,
+untick **Active** to deactivate it: its owner can no longer log in.
 
-Export selected Users
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. figure:: /_static/images/administration/platform-admin/governance-11.png
+   :alt: Change User form of a regulator administrator with the Active box and the Reset 2FA token button
+   :target: ../../_static/images/administration/platform-admin/governance-11.png
 
-Select the users you want to export by checking the box next to each relevant user. Then, open the **Action** dropdown menu, choose **Export Selected Users**, and click **Go**. The selected users will be exported to a CSV file.
+.. note::
 
-The screenshot below shows that three out of eight users have been selected. By choosing an action from the **Action** dropdown and clicking the **Go** button, the selected action is performed: for example, **resetting 2FA** or exporting the three selected users.
+   The **Delete** button of a platform or regulator administrator deactivates the account rather than deleting it,
+   and is not offered once the account has log entries.
 
-.. figure:: /_static/images/administration/platform-admin/governance-15.png
-   :alt: Action dropdown menu
-   :target: ../../_static/images/administration/platform-admin/governance-15.png
+Reset two-factor authentication
+"""""""""""""""""""""""""""""""
+
+When someone has lost access to their authentication app, click **Reset 2FA token** on their row of the list,
+or on their account. To reset several accounts at once, tick them, choose **Reset 2FA** in the **Action** drop-down
+and click **Run**. At their next login, they set up two-factor authentication again (see :doc:`/getting-started/enable-2fa`).
+You cannot reset your own: use **Account security** at the top of the console.
+
+Terms of service and cookies
+""""""""""""""""""""""""""""
+
+Two buttons at the top right of the list apply to every account of the platform, after a confirmation:
+
+- **Reset accepted terms**: every user must accept the terms of service again at their next login.
+- **Reset accepted cookies**: the cookie banner is shown again to every user.
+
+Django Settings
+~~~~~~~~~~~~~~~
+
+**Django Settings** lists the configuration of the server, read-only: the name and value of each setting.
+Most secrets, such as the keys, the database settings and the email password, are left out. The settings are changed on the server
+(see :ref:`configuration`).
+
+.. figure:: /_static/images/administration/platform-admin/governance-12.png
+   :alt: Variables Django Settings page listing setting names and their values
+   :target: ../../_static/images/administration/platform-admin/governance-12.png
