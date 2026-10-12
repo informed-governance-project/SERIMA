@@ -28,6 +28,8 @@ from .views import (
     export_incidents,
     get_form_list,
     get_incidents,
+    incident_pdf_download,
+    incident_pdf_status,
     review_workflow,
 )
 
@@ -60,6 +62,16 @@ urlpatterns = [
         "download-incident-report-pdf/<int:incident_workflow_id>",
         download_incident_report_pdf,
         name="download_incident_report_pdf",
+    ),
+    path(
+        "pdf/<uuid:task_id>/status",
+        incident_pdf_status,
+        name="incident_pdf_status",
+    ),
+    path(
+        "pdf/<uuid:task_id>/download",
+        incident_pdf_download,
+        name="incident_pdf_download",
     ),
     path(
         "delete/<int:incident_id>",
