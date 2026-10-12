@@ -131,7 +131,9 @@ Start from ``governanceplatform/config_dev.py`` and set at least:
 
 These settings are optional; the application applies a default when they are missing:
 
-- ``PATH_FOR_REPORTING_PDF`` — where generated reports and import/export files are written;
+- ``PRIVATE_FILES_ROOT`` — where generated reports, import/export files and the working files of
+  background tasks are written. It was formerly called ``PATH_FOR_REPORTING_PDF``; the former name
+  is still read, with a deprecation warning in the logs;
 - ``KALEIDO_CONCURRENCY_PER_WORKER`` — how many charts a Celery worker renders at once (default 1);
 - ``INCIDENT_RETENTION_TIME_IN_DAY`` and ``SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY`` — how long incidents
   and security objectives declarations are kept (default 1825 days, five years);

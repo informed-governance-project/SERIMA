@@ -119,7 +119,7 @@ def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow | Non
 
 
 def get_pdf_file_path(task_id: str) -> str:
-    return os.path.join(settings.PATH_FOR_REPORTING_PDF, INCIDENT_PDF_DIRECTORY, f"{task_id}.pdf")
+    return os.path.join(settings.PRIVATE_FILES_ROOT, INCIDENT_PDF_DIRECTORY, f"{task_id}.pdf")
 
 
 def populate_questions_answers(answer: Answer, preliminary_questions_answers: dict):

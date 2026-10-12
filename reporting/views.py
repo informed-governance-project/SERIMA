@@ -973,7 +973,7 @@ def import_risk_analysis(request):
             year = form.cleaned_data["year"]
             import_task = []
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".json", dir=settings.PATH_FOR_REPORTING_PDF) as tmp:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".json", dir=settings.PRIVATE_FILES_ROOT) as tmp:
                 for chunk in json_file.chunks():
                     tmp.write(chunk)
                 tmp_path = tmp.name

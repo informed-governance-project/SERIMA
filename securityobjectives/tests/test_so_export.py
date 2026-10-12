@@ -50,7 +50,7 @@ def build_filters(populate_so_db, file_format="xlsx", sectors=None):
 
 def run_export(user, filters, settings, tmp_path):
     """Run the task in-process, as CI has no broker to hand it to."""
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     export = SecurityObjectiveExport.objects.create(
         user=user,
         regulation_id=filters["regulation"],
@@ -308,7 +308,7 @@ def test_export_logs_every_declaration_and_sends_one_email(
 def test_a_failed_export_writes_no_log_and_no_email(populate_so_db, settings, tmp_path):
     regulator_admin = get_user(populate_so_db, "regadmin@reg1.lu")
     grant_export_right(regulator_admin)
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     export = SecurityObjectiveExport.objects.create(
         user=regulator_admin,
         regulation_id=populate_so_db["so_standard"][0].regulation_id,

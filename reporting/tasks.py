@@ -65,7 +65,7 @@ def generate_data(self, project_id, task_id, cleaned_data):
         return "Aborted"
 
     run_id = str(self.request.root_id)
-    base_tmp_dir = Path(settings.PATH_FOR_REPORTING_PDF)
+    base_tmp_dir = Path(settings.PRIVATE_FILES_ROOT)
     task_tmp_dir = base_tmp_dir / str(project_id) / f"tmp_files_{task_id}" / run_id
     file_path = task_tmp_dir / "data.json"
     task_tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -120,7 +120,7 @@ def generate_docx_task(self, project_id, task_id):
         return "Aborted"
 
     run_id = str(self.request.root_id)
-    base_tmp_dir = Path(settings.PATH_FOR_REPORTING_PDF)
+    base_tmp_dir = Path(settings.PRIVATE_FILES_ROOT)
     task_tmp_dir = base_tmp_dir / str(project_id) / f"tmp_files_{task_id}" / run_id
     file_path = Path(task_tmp_dir / "data.json")
 
@@ -359,7 +359,7 @@ def generate_pdf_task(self, project_id, task_id):
     if project.task_status == "ABORT" or project.task_status == "FAIL":
         return "Aborted"
     run_id = str(self.request.root_id)
-    base_tmp_dir = Path(settings.PATH_FOR_REPORTING_PDF)
+    base_tmp_dir = Path(settings.PRIVATE_FILES_ROOT)
     task_tmp_dir = base_tmp_dir / str(project_id) / f"tmp_files_{task_id}" / run_id
     docx_path = Path(task_tmp_dir / "tmp_doc.docx")
 
@@ -384,7 +384,7 @@ def save_file_task(self, project_id, task_id, user_id, filename, is_multiple_fil
     if project.task_status == "ABORT" or project.task_status == "FAIL":
         return "Aborted"
     run_id = str(self.request.root_id)
-    base_tmp_dir = Path(settings.PATH_FOR_REPORTING_PDF)
+    base_tmp_dir = Path(settings.PRIVATE_FILES_ROOT)
     task_tmp_dir = Path(base_tmp_dir / str(project_id) / f"tmp_files_{task_id}" / run_id)
     temp_file_path = next(task_tmp_dir.glob("tmp_doc.*"), None)
     if temp_file_path is None:
@@ -394,7 +394,7 @@ def save_file_task(self, project_id, task_id, user_id, filename, is_multiple_fil
     file_uuid = uuid.uuid4()
     User = get_user_model()
     user = User.objects.get(id=user_id)
-    output_dir = Path(os.path.join(settings.PATH_FOR_REPORTING_PDF, str(project_id)))
+    output_dir = Path(os.path.join(settings.PRIVATE_FILES_ROOT, str(project_id)))
     os.makedirs(output_dir, exist_ok=True)
     file_path = os.path.join(output_dir, str(file_uuid))
 
@@ -427,13 +427,13 @@ def zip_files_task(user_id, project_id, task_id, error_messages):
     User = get_user_model()
     user = User.objects.get(id=user_id)
     file_uuid = uuid.uuid4()
-    output_dir = Path(os.path.join(settings.PATH_FOR_REPORTING_PDF, str(project_id)))
+    output_dir = Path(os.path.join(settings.PRIVATE_FILES_ROOT, str(project_id)))
     output_dir.mkdir(parents=True, exist_ok=True)
 
     zip_filename = f"reports_{project.name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
     zip_path = os.path.join(output_dir, str(file_uuid))
 
-    base_tmp_dir = Path(settings.PATH_FOR_REPORTING_PDF)
+    base_tmp_dir = Path(settings.PRIVATE_FILES_ROOT)
     task_tmp_dir = Path(base_tmp_dir / str(project_id) / f"tmp_files_{task_id}")
 
     with zipfile.ZipFile(zip_path, "w") as zipf:
@@ -471,7 +471,7 @@ def cleanup_files(project_id, task_id, all_files=False):
     except Project.DoesNotExist:
         return "A new report generation is in progress for this project."
 
-    base_tmp_dir = Path(settings.PATH_FOR_REPORTING_PDF)
+    base_tmp_dir = Path(settings.PRIVATE_FILES_ROOT)
     task_tmp_dir = base_tmp_dir / str(project_id)
 
     if not task_tmp_dir.exists():

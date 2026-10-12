@@ -176,7 +176,7 @@ def test_status_reports_a_failed_task(otp_client, populate_incident_db):
 
 @pytest.mark.django_db
 def test_task_writes_the_incident_pdf(otp_client, populate_incident_db, settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident = get_operator_incident(populate_incident_db)
     task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
@@ -189,7 +189,7 @@ def test_task_writes_the_incident_pdf(otp_client, populate_incident_db, settings
 
 @pytest.mark.django_db
 def test_task_writes_the_report_pdf(otp_client, populate_incident_db, settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident_workflow = create_incident_workflow(populate_incident_db)
     task_id, args = queue_pdf(client, f"/incidents/download-incident-report-pdf/{incident_workflow.id}")
@@ -202,7 +202,7 @@ def test_task_writes_the_report_pdf(otp_client, populate_incident_db, settings, 
 
 @pytest.mark.django_db
 def test_task_schedules_the_cleanup_of_its_file(populate_incident_db, settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     incident = get_operator_incident(populate_incident_db)
     task_id = str(uuid4())
 
@@ -214,7 +214,7 @@ def test_task_schedules_the_cleanup_of_its_file(populate_incident_db, settings, 
 
 @pytest.mark.django_db
 def test_a_failed_task_writes_no_file(populate_incident_db, settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     incident = get_operator_incident(populate_incident_db)
     task_id = str(uuid4())
 
@@ -227,7 +227,7 @@ def test_a_failed_task_writes_no_file(populate_incident_db, settings, tmp_path):
 
 @pytest.mark.django_db
 def test_download_serves_the_pdf_once_and_logs_it(otp_client, populate_incident_db, settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     user = get_user(populate_incident_db, "regadmin@reg1.lu")
     client = otp_client(user)
     incident = get_operator_incident(populate_incident_db)
@@ -247,7 +247,7 @@ def test_download_serves_the_pdf_once_and_logs_it(otp_client, populate_incident_
 
 @pytest.mark.django_db
 def test_download_is_refused_to_another_user(otp_client, populate_incident_db, settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     incident = get_operator_incident(populate_incident_db)
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
@@ -261,7 +261,7 @@ def test_download_is_refused_to_another_user(otp_client, populate_incident_db, s
 
 @pytest.mark.django_db
 def test_download_is_refused_when_access_was_revoked(otp_client, populate_incident_db, settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     user = get_user(populate_incident_db, "opadmin@com1.lu")
     client = otp_client(user)
     incident = get_operator_incident(populate_incident_db)
@@ -277,13 +277,13 @@ def test_download_is_refused_when_access_was_revoked(otp_client, populate_incide
 
 
 def test_cleanup_tolerates_an_already_downloaded_file(settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
 
     cleanup_incident_pdf_file(str(uuid4()))
 
 
 def test_cleanup_removes_an_abandoned_file(settings, tmp_path):
-    settings.PATH_FOR_REPORTING_PDF = str(tmp_path)
+    settings.PRIVATE_FILES_ROOT = str(tmp_path)
     task_id = str(uuid4())
     file_path = Path(get_pdf_file_path(task_id))
     file_path.parent.mkdir(parents=True)

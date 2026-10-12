@@ -698,4 +698,4 @@ class SecurityObjectiveExport(models.Model):
         return self.filename
 
     def get_file_path(self) -> str:
-        return os.path.join(settings.PATH_FOR_REPORTING_PDF, SO_EXPORT_DIRECTORY, str(self.file_uuid))
+        return os.path.join(settings.PRIVATE_FILES_ROOT, SO_EXPORT_DIRECTORY, str(self.file_uuid))
