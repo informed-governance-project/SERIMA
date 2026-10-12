@@ -45,7 +45,7 @@ class Sector(TranslatableModel):
         verbose_name=_("Parent Sector"),
         related_name="children",
     )
-    acronym = models.CharField(verbose_name=_("Acronym"), max_length=4)
+    acronym = models.CharField(verbose_name=_("Acronym"), max_length=4, unique=True)
 
     # name of the regulator who create the object
     creator_name = models.CharField(
