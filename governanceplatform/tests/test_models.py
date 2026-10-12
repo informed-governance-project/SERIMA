@@ -1,4 +1,13 @@
+from importlib import import_module
+
+import pytest
+from django.db import IntegrityError
+
 from governanceplatform.helpers import user_in_group
+from governanceplatform.models import Sector
+
+# the renaming runs once and lives with the migration that applies it
+plan_acronym_renaming = import_module("governanceplatform.migrations.0069_unique_sector_acronym").plan_acronym_renaming
 
 
 def test_user_group(populate_db):
@@ -46,3 +55,38 @@ def test_user_functionnalities(populate_db):
             # REG2 doesn't have access to other module
             if user.regulators.first().name == "REG2":
                 assert len(user.get_module_permissions()) == 0, f"User {user.email} should have no permission"
+
+
+def test_distinct_acronyms_are_not_renamed():
+    assert plan_acronym_renaming([(1, "ENE"), (2, "TRA"), (3, "HEAL")]) == {}
+
+
+def test_the_earliest_sector_of_a_duplicated_group_keeps_its_acronym():
+    renaming = plan_acronym_renaming([(9, "ENE"), (4, "ENE")])
+
+    assert 4 not in renaming
+    assert renaming[9] == "ENE1"
+
+
+def test_a_duplicated_acronym_at_max_length_has_its_last_letter_replaced():
+    assert plan_acronym_renaming([(1, "HEAL"), (2, "HEAL")]) == {2: "HEA1"}
+
+
+def test_the_digit_goes_up_until_the_acronym_is_free():
+    renaming = plan_acronym_renaming([(1, "ENE"), (2, "ENE"), (3, "ENE"), (4, "ENE2")])
+
+    assert renaming == {2: "ENE1", 3: "ENE3"}
+
+
+@pytest.mark.django_db
+def test_two_sectors_cannot_share_an_acronym():
+    sector = Sector(acronym="ZZZ")
+    sector.set_current_language("en")
+    sector.name = "First"
+    sector.save()
+
+    duplicate = Sector(acronym="ZZZ")
+    duplicate.set_current_language("en")
+    duplicate.name = "Second"
+    with pytest.raises(IntegrityError):
+        duplicate.save()
