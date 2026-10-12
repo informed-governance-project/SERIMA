@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -78,7 +80,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
     # asectorial workflow
     incident = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
     url = "/incidents/download-pdf/" + str(incident.id)
-    test_get_with_otp(otp_client, users, authorized_users, [], url)
+    assert_pdf_request_access(otp_client, users, authorized_users, url)
 
     # Add a sector to test RegUser see the incident
     sectors = populate_incident_db["sectors"]
@@ -92,7 +94,21 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
             url = "/incidents/download-pdf/" + str(incident.id)
             authorized_users.append(regulator_user)
             ru.sectors.add(sector)
-            test_get_with_otp(otp_client, users, authorized_users, [], url)
+            assert_pdf_request_access(otp_client, users, authorized_users, url)
+
+
+def assert_pdf_request_access(otp_client, users, authorized_users, url):
+    for user in users:
+        client = otp_client(user)
+        with patch("incidents.views.generate_incident_pdf_task.delay") as delay:
+            delay.return_value.id = "task-id"
+            response = client.post(url)
+        if user in authorized_users:
+            assert response.status_code == 200, user.email
+            delay.assert_called_once()
+        else:
+            assert response.status_code in (302, 403), user.email
+            delay.assert_not_called()
 
 
 @pytest.mark.django_db
