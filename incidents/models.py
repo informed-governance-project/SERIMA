@@ -828,7 +828,7 @@ class Incident(models.Model):
     def __str__(self):
         return str(self.incident_id)
 
-    class meta:
+    class Meta:
         verbose_name_plural = _("Incident")
         verbose_name = _("Incidents")
 
@@ -877,7 +877,7 @@ class IncidentWorkflow(models.Model):
         related_name="incident_workflow",
     )
 
-    class meta:
+    class Meta:
         verbose_name_plural = _("Incident")
         verbose_name = _("Incidents")
 
@@ -1248,7 +1248,7 @@ class Answer(models.Model):
     def __str__(self):
         return self.answer or ""
 
-    class meta:
+    class Meta:
         verbose_name_plural = _("Answer")
         verbose_name = _("Answers")
 
