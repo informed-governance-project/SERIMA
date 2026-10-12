@@ -1,7 +1,6 @@
 import logging
 import os
 from collections import OrderedDict
-from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -12,11 +11,8 @@ from weasyprint.text.fonts import FontConfiguration
 
 from governanceplatform.utils.weasyprint_fetcher import RestrictedURLFetcher
 
-from .globals import REGIONAL_AREA
+from .globals import INCIDENT_PDF_DIRECTORY, REGIONAL_AREA
 from .models import Answer, Incident, IncidentWorkflow
-
-if TYPE_CHECKING:
-    from django.http import HttpRequest
 
 # Increasing weasyprint log level
 for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
@@ -24,7 +20,7 @@ for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
     logger.setLevel(logging.ERROR)
 
 
-def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow, request: HttpRequest):
+def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow | None) -> bytes:
     # TO DO : improve for more than 2 level ?
     sectors: dict[str, list[str]] = {}
     # boolean to see if it's report or incident
@@ -106,7 +102,6 @@ def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow, requ
             "report_name": report_name,
             "report_list": report_list,
         },
-        request=request,
     )
 
     htmldoc = HTML(
@@ -121,6 +116,10 @@ def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow, requ
     ]
 
     return htmldoc.write_pdf(stylesheets=stylesheets, pdf_variant="pdf/ua-1", font_config=font_config)
+
+
+def get_pdf_file_path(task_id: str) -> str:
+    return os.path.join(settings.PATH_FOR_REPORTING_PDF, INCIDENT_PDF_DIRECTORY, f"{task_id}.pdf")
 
 
 def populate_questions_answers(answer: Answer, preliminary_questions_answers: dict):
