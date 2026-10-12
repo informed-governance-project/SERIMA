@@ -8,6 +8,9 @@ except ModuleNotFoundError:
 # Marks a reference as an incident notification
 REFERENCE_PREFIX = "NI_"
 
+INCIDENT_PDF_DIRECTORY = "incident_pdf"
+INCIDENT_PDF_SESSION_KEY = "incident_pdf_tasks"
+
 
 QUESTION_TYPES = [
     ("FREETEXT", "Freetext"),
