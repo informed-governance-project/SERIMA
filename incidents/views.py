@@ -421,6 +421,7 @@ def edit_workflow(request):
     incident_workflow_id = request.GET.get("incident_workflow_id", None)
     user = request.user
     company_id = request.session.get("company_in_use")
+    incident = None
     incident_workflow = None
     if not workflow_id and not incident_id and not incident_workflow_id:
         messages.error(request, _("No incident report could be found."))
@@ -454,11 +455,11 @@ def edit_workflow(request):
 
     is_regulator_incidents = request.session.get("is_regulator_incidents", False)
 
-    if incident_id and can_edit_incident_report(user, incident, company_id):
+    if incident and can_edit_incident_report(user, incident, company_id):
         is_regulator_incident = True if incident.regulator == user.regulators.first() and is_regulator_incidents else False
 
         if incident_workflow is None:
-            incident_workflow = IncidentWorkflow.objects.filter(incident=incident_id, workflow=workflow_id).order_by("timestamp")
+            incident_workflow = IncidentWorkflow.objects.filter(incident=incident, workflow=workflow).order_by("timestamp")
             incident_workflow = incident_workflow.last()
 
         if incident_workflow:
@@ -643,7 +644,7 @@ def download_incident_report_pdf(request, incident_workflow_id: int):
             "Error generating incident PDF report",
             extra={
                 "incident_id": incident.id,
-                "incident_workflow_id": incident_workflow_id,
+                "incident_workflow_id": incident_workflow.id,
                 "user_id": user.id,
                 "company_id": company_id,
             },
@@ -696,7 +697,7 @@ def delete_incident(request, incident_id: int):
         logger.error(
             "Error deleting incident",
             extra={
-                "incident_id": incident_id,
+                "incident_id": incident.pk,
                 "user_id": user.id,
                 "company_id": company_id,
             },
