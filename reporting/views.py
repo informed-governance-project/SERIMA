@@ -105,8 +105,7 @@ def has_change_permission(request, project, action):
                 return is_user_regulator_sector
             case "download":
                 return is_user_regulator_sector
-            case _:
-                return False
+        return False
 
     if not check_conditions():
         messages.error(request, _("Forbidden"))

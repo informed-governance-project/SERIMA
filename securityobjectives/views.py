@@ -1098,8 +1098,7 @@ def has_change_permission(request, standard_answer, action):
                 )
             case "log":
                 return is_user_regulator_sector or is_standard_answer_in_user_company
-            case _:
-                return False
+        return False
 
     if not check_conditions():
         messages.error(request, _("Forbidden"))
