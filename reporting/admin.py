@@ -119,8 +119,8 @@ class ConfigurationAdmin(FunctionalityMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ("regulator",)
-        return ()
+            return ["regulator"]
+        return []
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "regulation":

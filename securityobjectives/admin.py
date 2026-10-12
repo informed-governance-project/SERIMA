@@ -108,8 +108,8 @@ class DomainAdmin(
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ("creator",)
-        return ()
+            return ["creator"]
+        return []
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
@@ -765,10 +765,10 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
 
     def get_readonly_fields(self, request, obj=None):
         if not obj:
-            return ()
+            return []
         if obj.is_in_use():
-            return ("regulator", *self.STRUCTURAL_FIELDS)
-        return ("regulator",)
+            return ["regulator", *self.STRUCTURAL_FIELDS]
+        return ["regulator"]
 
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -900,12 +900,8 @@ class MaturityLevelAdmin(
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return (
-                "standard",
-                "level",
-                "creator",
-            )
-        return ()
+            return ["standard", "level", "creator"]
+        return []
 
     def get_fields(self, request, obj=None):
         fields = super().get_fields(request, obj)
@@ -1013,8 +1009,8 @@ class SecurityObjectiveAdmin(
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ("creator",)
-        return ()
+            return ["creator"]
+        return []
 
     @admin.display(description=_("Standard"))
     def standard_display(self, obj):
@@ -1164,8 +1160,8 @@ class SecurityMeasureAdmin(
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            return ("creator", "security_objective")
-        return ()
+            return ["creator", "security_objective"]
+        return []
 
     translated_fields = ["description"]
 
