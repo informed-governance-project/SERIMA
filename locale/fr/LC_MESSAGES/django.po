@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 10:39+0200\n"
+"POT-Creation-Date: 2026-10-12 14:46+0200\n"
 "PO-Revision-Date: 2026-10-06 09:54+0000\n"
 "Last-Translator: Chris Frings <Chris.frings+RegAdmin@ilr.lu>\n"
 "Language: fr\n"
@@ -48,7 +48,7 @@ msgstr "Catégories d’entités"
 #: governanceplatform/models.py:607 incidents/admin.py:597
 #: incidents/admin.py:665 incidents/admin.py:1013 incidents/filters.py:31
 #: incidents/forms.py:841 incidents/models.py:57 incidents/models.py:334
-#: incidents/views.py:1048 reporting/admin.py:65 reporting/filters.py:31
+#: incidents/views.py:1049 reporting/admin.py:65 reporting/filters.py:31
 #: reporting/forms.py:47 reporting/forms.py:166 reporting/models.py:323
 #: reporting/models.py:497 securityobjectives/filters.py:32
 #: securityobjectives/forms.py:170 securityobjectives/forms.py:213
@@ -69,7 +69,7 @@ msgstr "Réinitialisation du 2-FA"
 #: governanceplatform/admin.py:783 governanceplatform/models.py:236
 #: governanceplatform/models.py:344 governanceplatform/models.py:558
 #: governanceplatform/models.py:561 incidents/models.py:580
-#: incidents/views.py:1047
+#: incidents/views.py:1048
 msgid "Regulators"
 msgstr "Régulateurs"
 
@@ -863,7 +863,7 @@ msgstr "Compte"
 msgid "Create account"
 msgstr "Créer un compte"
 
-#: governanceplatform/views.py:96 incidents/views.py:1045
+#: governanceplatform/views.py:96 incidents/views.py:1046
 #: reporting/globals.py:15
 msgid "Contact"
 msgstr "Contact"
@@ -990,15 +990,15 @@ msgid "Available placeholders"
 msgstr "Espaces réservés disponibles"
 
 #: incidents/admin.py:815 incidents/models.py:230
-#: securityobjectives/admin.py:1267 securityobjectives/models.py:215
+#: securityobjectives/admin.py:1263 securityobjectives/models.py:215
 msgid "Content"
 msgstr "Contenu"
 
-#: incidents/admin.py:827 securityobjectives/admin.py:1277
+#: incidents/admin.py:827 securityobjectives/admin.py:1273
 msgid "HTML preview"
 msgstr "Aperçu HTML"
 
-#: incidents/admin.py:830 securityobjectives/admin.py:1280
+#: incidents/admin.py:830 securityobjectives/admin.py:1276
 msgid "No preview yet"
 msgstr "Pas encore d'aperçu"
 
@@ -1272,7 +1272,7 @@ msgid "Impact"
 msgstr "Impact"
 
 #: incidents/models.py:86 incidents/models.py:571 incidents/models.py:868
-#: incidents/views.py:1452
+#: incidents/views.py:1453
 msgid "Impacts"
 msgstr "Impacts"
 
@@ -1487,7 +1487,7 @@ msgstr "Date de début de l'incident"
 msgid "Report timeline timezone"
 msgstr "Chronologie et fuseau horaire"
 
-#: incidents/models.py:871 incidents/views.py:1456
+#: incidents/models.py:871 incidents/views.py:1457
 msgid "Comment/Explanation"
 msgstr "Commentaire / Explication"
 
@@ -1591,62 +1591,62 @@ msgstr "Détails"
 msgid "Missing data, incident report not created."
 msgstr "Données manquantes, rapport d'incident non créé."
 
-#: incidents/views.py:345 incidents/views.py:432
+#: incidents/views.py:345 incidents/views.py:433
 msgid "Workflow not found"
 msgstr "Workflow non trouvé"
 
-#: incidents/views.py:349 incidents/views.py:435 incidents/views.py:513
-#: incidents/views.py:555 incidents/views.py:588 incidents/views.py:677
+#: incidents/views.py:349 incidents/views.py:436 incidents/views.py:514
+#: incidents/views.py:556 incidents/views.py:589 incidents/views.py:678
 msgid "Incident not found"
 msgstr "Incident non trouvé"
 
-#: incidents/views.py:353 incidents/views.py:438
+#: incidents/views.py:353 incidents/views.py:439
 msgid "The incident has been closed"
 msgstr "L'incident est clos"
 
 #: incidents/views.py:357 incidents/views.py:364 incidents/views.py:411
-#: incidents/views.py:442 incidents/views.py:452 incidents/views.py:496
-#: incidents/views.py:559 incidents/views.py:592 incidents/views.py:636
-#: incidents/views.py:681 incidents/views.py:717 reporting/views.py:112
-#: reporting/views.py:506 reporting/views.py:915 reporting/views.py:940
-#: reporting/views.py:947 reporting/views.py:1254
+#: incidents/views.py:443 incidents/views.py:453 incidents/views.py:497
+#: incidents/views.py:560 incidents/views.py:593 incidents/views.py:637
+#: incidents/views.py:682 incidents/views.py:718 reporting/views.py:111
+#: reporting/views.py:505 reporting/views.py:914 reporting/views.py:939
+#: reporting/views.py:946 reporting/views.py:1253
 #: securityobjectives/views.py:917 securityobjectives/views.py:923
-#: securityobjectives/views.py:1105
+#: securityobjectives/views.py:1104
 msgid "Forbidden"
 msgstr "Interdit"
 
-#: incidents/views.py:382 incidents/views.py:388 incidents/views.py:426
-#: incidents/views.py:449 incidents/views.py:632
+#: incidents/views.py:382 incidents/views.py:388 incidents/views.py:427
+#: incidents/views.py:450 incidents/views.py:633
 msgid "No incident report could be found."
 msgstr "Aucun rapport d'incident n'a été trouvé."
 
-#: incidents/views.py:608 incidents/views.py:652
+#: incidents/views.py:609 incidents/views.py:653
 #: securityobjectives/views.py:886
 msgid "An error occurred while generating the report."
 msgstr "Une erreur s'est produite lors de la génération du rapport."
 
-#: incidents/views.py:691
+#: incidents/views.py:692
 msgid "The incident could not be deleted."
 msgstr "L’incident ne peut être supprimé."
 
-#: incidents/views.py:694
+#: incidents/views.py:695
 msgid "The incident has been deleted."
 msgstr "L'incident a été supprimé."
 
-#: incidents/views.py:705
+#: incidents/views.py:706
 msgid "An error occurred while deleting the incident."
 msgstr "Une erreur s'est produite lors de la suppression de l'incident."
 
-#: incidents/views.py:812 incidents/views.py:910
+#: incidents/views.py:813 incidents/views.py:911
 msgid "No incidents available for export."
 msgstr "Aucun incident disponible pour l'export."
 
-#: incidents/views.py:985
+#: incidents/views.py:986
 #, python-brace-format
 msgid "[{site}] New incident mass export"
 msgstr "[{site}] Nouvel export en masse d'incidents"
 
-#: incidents/views.py:1008
+#: incidents/views.py:1009
 msgid ""
 "The daily limit of incident reports has been reached. Please try again "
 "tomorrow."
@@ -1654,25 +1654,25 @@ msgstr ""
 "Le nombre maximum de rapports d'incidents journaliers a été atteint. "
 "Veuillez réessayer demain."
 
-#: incidents/views.py:1046
+#: incidents/views.py:1047
 msgid "Legal bases"
 msgstr "Bases légales"
 
-#: incidents/views.py:1049
+#: incidents/views.py:1050
 msgid "Detection date"
 msgstr "Date de détection"
 
-#: incidents/views.py:1123
+#: incidents/views.py:1124
 msgid "Not verified"
 msgstr "Non vérifié"
 
-#: incidents/views.py:1140
+#: incidents/views.py:1141
 msgid "No incident notification workflow found for the selected criteria."
 msgstr ""
 "Aucun processus de notification d'incident n'a été trouvé pour les critères "
 "sélectionnés."
 
-#: incidents/views.py:1440
+#: incidents/views.py:1441
 msgid "Incident Timeline"
 msgstr "Chronologie de l’incident"
 
@@ -1710,7 +1710,7 @@ msgid "Project name"
 msgstr "Nom du projet"
 
 #: reporting/forms.py:147 reporting/models.py:402 reporting/models.py:492
-#: securityobjectives/admin.py:1019 securityobjectives/admin.py:1172
+#: securityobjectives/admin.py:1015 securityobjectives/admin.py:1168
 #: securityobjectives/models.py:84 securityobjectives/models.py:377
 #: securityobjectives/models.py:486
 msgid "Standard"
@@ -2229,7 +2229,7 @@ msgstr "Gouvernance"
 msgid "Filename"
 msgstr "Nom du fichier"
 
-#: reporting/views.py:410
+#: reporting/views.py:409
 msgid ""
 "Report generation is in progress for this project. Please cancel the report "
 "generation before deleting the project."
@@ -2237,60 +2237,60 @@ msgstr ""
 "La génération des rapports est en cours pour ce projet. Veuillez annuler la "
 "génération des rapports avant de supprimer le projet."
 
-#: reporting/views.py:423
+#: reporting/views.py:422
 msgid "The project has been deleted."
 msgstr "Le projet a été supprimé."
 
-#: reporting/views.py:426
+#: reporting/views.py:425
 msgid "Project not found"
 msgstr "Projet introuvable"
 
-#: reporting/views.py:440
+#: reporting/views.py:439
 msgid "No project found"
 msgstr "Aucun projet trouvé"
 
-#: reporting/views.py:446 reporting/views.py:637
+#: reporting/views.py:445 reporting/views.py:636
 msgid "Failed to start report generation. Please try again."
 msgstr "Échec du lancement de la génération des rapports. Veuillez réessayer."
 
-#: reporting/views.py:452
+#: reporting/views.py:451
 msgid "Report generation is already in progress for this project."
 msgstr "La génération des rapports est déjà en cours pour ce projet."
 
-#: reporting/views.py:457
+#: reporting/views.py:456
 msgid "Missing high risk rate threshold or ranking value"
 msgstr "Absence de seuil de risque élevé ou de valeur de classement"
 
-#: reporting/views.py:469
+#: reporting/views.py:468
 msgid "Nothing selected"
 msgstr "Rien de sélectionné"
 
-#: reporting/views.py:503
+#: reporting/views.py:502
 #, python-format
 msgid "%(sector)s forbidden"
 msgstr "%(sector)s interdit"
 
-#: reporting/views.py:519
+#: reporting/views.py:518
 msgid "No reporting data"
 msgstr "Aucune donnée disponible"
 
-#: reporting/views.py:541
+#: reporting/views.py:540
 msgid "No data found for security objectives report"
 msgstr "Aucune donnée trouvée pour le rapport sur les objectifs de sécurité"
 
-#: reporting/views.py:553
+#: reporting/views.py:552
 msgid "No data found for risk report"
 msgstr "Aucune donnée trouvée pour le rapport sur les risques"
 
-#: reporting/views.py:583
+#: reporting/views.py:582
 msgid "No report template"
 msgstr "Pas de modèle de rapport"
 
-#: reporting/views.py:599
+#: reporting/views.py:598
 msgid "annual_report"
 msgstr "rapport_annuel"
 
-#: reporting/views.py:628
+#: reporting/views.py:627
 msgid ""
 "Reports are being generated with some issues. Please check the error log in "
 "the download zip file for more details."
@@ -2299,73 +2299,73 @@ msgstr ""
 "de détails, veuillez consulter le journal des erreurs contenu dans le "
 "fichier ZIP téléchargé."
 
-#: reporting/views.py:631
+#: reporting/views.py:630
 msgid "Reports are being generated."
 msgstr "Rapports en cours de génération"
 
-#: reporting/views.py:634
+#: reporting/views.py:633
 msgid "Report is being generated."
 msgstr "Rapport en cours de génération."
 
-#: reporting/views.py:666
+#: reporting/views.py:665
 msgid "Report generation failed."
 msgstr "La génération des rapports a échoué."
 
-#: reporting/views.py:669
+#: reporting/views.py:668
 msgid "The report has been generated successfully."
 msgstr "Le rapport a été généré avec succès."
 
-#: reporting/views.py:672
+#: reporting/views.py:671
 msgid "Report generation was cancelled."
 msgstr "La génération des rapports a été annulée."
 
-#: reporting/views.py:819
+#: reporting/views.py:818
 msgid "Recommendations have been added successfully"
 msgstr "Les recommandations ont été ajoutées avec succès"
 
-#: reporting/views.py:853
+#: reporting/views.py:852
 #, python-format
 msgid "No recommendations from %s"
 msgstr "Aucune recommandations pour %s"
 
-#: reporting/views.py:859
+#: reporting/views.py:858
 #, python-format
 msgid "Recommendations have been copied from %s"
 msgstr "Les recommandations de %s ont été copiées"
 
-#: reporting/views.py:890
+#: reporting/views.py:889
 msgid "No report recommendation found"
 msgstr "Aucune recommandation trouvée"
 
-#: reporting/views.py:894
+#: reporting/views.py:893
 msgid "The report recommendation has been deleted."
 msgstr "La recommandation a été supprimée."
 
-#: reporting/views.py:955 securityobjectives/views.py:933
+#: reporting/views.py:954 securityobjectives/views.py:933
 msgid "Invalid request"
 msgstr "Requête non valide"
 
-#: reporting/views.py:1081
+#: reporting/views.py:1080
 msgid "Risk analysis successfully imported"
 msgstr "Analyse des risques importée avec succès"
 
-#: reporting/views.py:1089
+#: reporting/views.py:1088
 msgid "Failed to import risk analysis. Please try again."
 msgstr "L'import de l'analyse des risques a échoué. Veuillez réessayer."
 
-#: reporting/views.py:1223
+#: reporting/views.py:1222
 msgid "No company found"
 msgstr "Aucune entreprise trouvée"
 
-#: reporting/views.py:1232
+#: reporting/views.py:1231
 msgid "No sector found"
 msgstr "Aucun secteur trouvé"
 
-#: reporting/views.py:1241
+#: reporting/views.py:1240
 msgid "Year value is not a valid number"
 msgstr "La valeur de l'année n'est pas valide"
 
-#: reporting/views.py:1249
+#: reporting/views.py:1248
 msgid "Invalid year. Please provide a valid year."
 msgstr "Année non valide. Veuillez indiquer une année valide."
 
@@ -2449,7 +2449,7 @@ msgstr ""
 "modifiables; en revanche, la réglementation, les e-mails de notification et "
 "la liste des objectifs de sécurité ne le sont pas."
 
-#: securityobjectives/admin.py:1120
+#: securityobjectives/admin.py:1116
 msgid "Standard of security objective and maturity level must be the same"
 msgstr ""
 "Le standard des objectifs de sécurité et des niveaux de maturité doit être "
@@ -2775,15 +2775,15 @@ msgid "An error occurred while importing the declaration file."
 msgstr ""
 "Une erreur s'est produite lors de l'importation du fichier de la déclaration."
 
-#: securityobjectives/views.py:1306
+#: securityobjectives/views.py:1305
 msgid "No security objective declarations available for export."
 msgstr "Aucune déclaration des objectifs de sécurité disponible pour export."
 
-#: securityobjectives/views.py:1323
+#: securityobjectives/views.py:1322
 msgid "The export could not be started. Please try again later."
 msgstr "L'export n'a pas pu être lancé. Merci de réessayer ultérieurement."
 
-#: securityobjectives/views.py:1368
+#: securityobjectives/views.py:1367
 msgid "The export failed."
 msgstr "L'export a échoué."
 
