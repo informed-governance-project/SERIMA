@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Two sectors or sub-sectors can no longer share an acronym, as a workflow export and import matches sectors by it (#897). The upgrade renames each duplicated acronym but the earliest: it gets a "1" at the end, or in place of its last letter when it already has four characters, and a higher digit if that acronym is also taken. Every renamed acronym is printed during the migration as `sector <id>: <old> -> <new>`, so administrators can adapt it by hand
+
 ## [0.6.0] - 2026-10-06
 
 ### Added
