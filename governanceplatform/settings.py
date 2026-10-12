@@ -14,6 +14,8 @@ import logging
 import os
 import sys
 
+from governanceplatform.tools import get_private_files_root
+
 logger = logging.getLogger(__name__)
 
 DJANGO_CI = os.getenv("DJANGO_CI") == "True"
@@ -557,14 +559,11 @@ try:
 except AttributeError:
     KALEIDO_CONCURRENCY_PER_WORKER = 1
 
-# Paths for deliveries
+# Private files
 # Deliberately not MEDIA_ROOT: this holds generated reports and admin exports of
 # regulated-entity data, reachable only through the permission-checked download views,
 # and must never be statically served.
-try:
-    PATH_FOR_REPORTING_PDF = config.PATH_FOR_REPORTING_PDF
-except AttributeError:
-    PATH_FOR_REPORTING_PDF = f"{os.getcwd()}/tmp/"
+PRIVATE_FILES_ROOT = get_private_files_root(config, default=f"{os.getcwd()}/tmp/")
 # Email adress for FROM field and RETURN-PATH
 try:
     EMAIL_CONTACT_FROM = config.EMAIL_CONTACT_FROM
@@ -743,7 +742,7 @@ STORAGES = {
     "django_import_export_extensions": {
         "BACKEND": "django.core.files.storage.filesystem.FileSystemStorage",
         "OPTIONS": {
-            "location": PATH_FOR_REPORTING_PDF,
+            "location": PRIVATE_FILES_ROOT,
             # Without this the storage falls back to MEDIA_URL and publishes the absolute
             # server path in the admin. Nothing routes /media/, so the link stays inert.
             "base_url": "/media/",
