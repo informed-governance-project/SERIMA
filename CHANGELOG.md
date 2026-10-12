@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Two sectors or sub-sectors can no longer share an acronym, as a workflow export and import matches sectors by it (#897). The upgrade renames each duplicated acronym but the earliest: it gets a "1" at the end, or in place of its last letter when it already has four characters, and a higher digit if that acronym is also taken. Every renamed acronym is printed during the migration as `sector <id>: <old> -> <new>`, so administrators can adapt it by hand
+- The PDF of an incident, and of a single incident report, is now generated as a background task rather than while the page waits, so a large incident no longer ties up the web server. Clicking the download icon shows the loading spinner and the file downloads by itself once ready. Downloading a PDF now needs the Celery worker and Redis to be running: when they are not, an error message is shown instead. The file is deleted from the server as soon as it is downloaded, or after an hour if it never is
 
 ## [0.6.0] - 2026-10-06
 
