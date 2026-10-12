@@ -67,7 +67,7 @@ In CI and dev, `governanceplatform/config_dev.py` is used as fallback.
 
 Also set `PARLER_LANGUAGES` and `PARLER_DEFAULT_LANGUAGE_CODE` for translation config.
 
-**Optional values.** `settings.py` catches `AttributeError` for each of these and applies a default, so an older `config.py` still boots: `PATH_FOR_REPORTING_PDF` (where generated reports and admin import/export files are written), `SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY` (1825), `KALEIDO_CONCURRENCY_PER_WORKER` (1), `INCIDENT_RETENTION_TIME_IN_DAY` (1825), `TERMS_ACCEPTANCE_TIME_IN_DAYS` (365).
+**Optional values.** `settings.py` catches `AttributeError` for each of these and applies a default, so an older `config.py` still boots: `PRIVATE_FILES_ROOT` (where generated reports, admin import/export files and background-task working files are written; its former name `PATH_FOR_REPORTING_PDF` is still read, with a deprecation warning, by `tools.get_private_files_root`), `SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY` (1825), `KALEIDO_CONCURRENCY_PER_WORKER` (1), `INCIDENT_RETENTION_TIME_IN_DAY` (1825), `TERMS_ACCEPTANCE_TIME_IN_DAYS` (365).
 
 ## Testing
 
