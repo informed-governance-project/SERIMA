@@ -17,11 +17,14 @@ Including another URLconf
 
 from django.urls import path
 
+from governanceplatform.views import async_pdf_status
+
 from .views import (
     access_log,
     copy_declaration,
     create_so_declaration,
     declaration,
+    declaration_pdf_download,
     delete_declaration,
     download_declaration_pdf,
     download_security_objectives_export,
@@ -69,6 +72,17 @@ urlpatterns = [
         "download/<int:standard_answer_id>",
         download_declaration_pdf,
         name="download_so_declaration_pdf",
+    ),
+    path(
+        "pdf/<uuid:task_id>/status",
+        async_pdf_status,
+        {"kind": "security_objective"},
+        name="security_objective_pdf_status",
+    ),
+    path(
+        "pdf/<uuid:task_id>/download",
+        declaration_pdf_download,
+        name="security_objective_pdf_download",
     ),
     # Import SO declaction
     path("import", import_so_declaration, name="import_so_declaration"),

@@ -1,8 +1,8 @@
 import copy
 import json
 import logging
-import os
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 import openpyxl
 from celery.exceptions import CeleryError
@@ -25,9 +25,8 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django.forms.models import model_to_dict
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.text import format_lazy
@@ -36,9 +35,8 @@ from django.utils.translation import override
 from django.views.decorators.http import require_http_methods
 from django_otp.decorators import otp_required
 from kombu.exceptions import OperationalError
-from weasyprint import CSS, HTML
-from weasyprint.text.fonts import FontConfiguration
 
+from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
 from governanceplatform.helpers import (
     celery_health_check,
     get_active_company_from_session,
@@ -85,12 +83,12 @@ from .models import (
     StandardAnswer,
     StandardAnswerGroup,
 )
-from .tasks import generate_so_export_task
+from .tasks import generate_declaration_pdf_task, generate_so_export_task
 
-# Increasing weasyprint log level
-for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.ERROR)
+if TYPE_CHECKING:
+    from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -792,99 +790,52 @@ def access_log(request, standard_answer_id: int):
 
 @login_required
 @otp_required
+@require_http_methods(["POST"])
 def download_declaration_pdf(request, standard_answer_id: int):
-    user = request.user
-    standard_answer_queryset = StandardAnswer.objects.filter(pk=standard_answer_id)
-    standard_answer = get_standard_answers_with_progress(standard_answer_queryset)
+    standard_answer = StandardAnswer.objects.filter(pk=standard_answer_id).first()
+    if standard_answer is None:
+        return pdf_error_response(request, _("Declaration not found"), 404)
 
-    if not standard_answer:
+    # has_change_permission adds its own error message.
+    if not has_change_permission(request, standard_answer, "download"):
+        return JsonResponse({"messages": render_error_messages(request)}, status=403)
+
+    return queue_pdf_task(
+        request,
+        "security_objective",
+        generate_declaration_pdf_task,
+        (standard_answer.id, request.user.id, translation.get_language()),
+        {
+            "standard_answer_id": standard_answer.id,
+            "filename": f"Security_objective_declaration_{timezone.now().date()}.pdf",
+        },
+    )
+
+
+@login_required
+@otp_required
+@require_http_methods(["GET"])
+def declaration_pdf_download(request, task_id: UUID):
+    task_key = str(task_id)
+    pending_pdf = get_pdf_task(request, "security_objective", task_key)
+    forget_pdf_task(request, task_key)
+
+    standard_answer = StandardAnswer.objects.filter(pk=pending_pdf["standard_answer_id"]).first()
+    if standard_answer is None:
+        discard_pdf(task_key)
         messages.error(request, _("Declaration not found"))
-        rendered_messages = render_error_messages(request)
-        return JsonResponse({"messages": rendered_messages}, status=400)
-    try:
-        standard_answer = standard_answer.first()
-        if not has_change_permission(request, standard_answer, "download"):
-            return redirect("securityobjectives")
-        standard = standard_answer.standard
-
-        levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
-        security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
-        security_objectives = defaultdict(lambda: defaultdict(list))
-
-        for so_in_standard in security_objectives_queryset:
-            security_objective = so_in_standard.security_objective
-            security_objective.declaration_status = standard_answer.status
-            security_measures = security_objective.securitymeasure_set.all().order_by("position")
-            try:
-                so_status = SecurityObjectiveStatus.objects.get(
-                    standard_answer=standard_answer,
-                    security_objective=security_objective,
-                )
-                security_objective.status = so_status
-            except SecurityObjectiveStatus.DoesNotExist:
-                security_objective.status = None
-
-            for measure in security_measures:
-                try:
-                    sm_answer = SecurityMeasureAnswer.objects.get(
-                        standard_answer=standard_answer,
-                        security_measure=measure,
-                    )
-                    measure.is_implemented = sm_answer.is_implemented
-                    measure.justification = sm_answer.justification
-                    measure.review_comment = sm_answer.review_comment
-                except SecurityMeasureAnswer.DoesNotExist:
-                    measure.is_implemented = False
-
-                security_objective = measure.security_objective
-                maturity_level = measure.maturity_level
-                security_objectives[security_objective][maturity_level].append(measure)
-
-        security_objectives = {so: dict(levels) for so, levels in security_objectives.items()}
-        static_theme_dir = settings.STATIC_THEME_DIR
-        font_config = FontConfiguration()
-
-        column_config = standard.get_column_config()
-        column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and (
-            is_user_regulator(user) or standard_answer.status != "UNDE"
-        )
-        set_declaration_column_widths(column_config)
-
-        output_from_parsed_template = render_to_string(
-            "report/security_objectives/template.html",
-            {
-                "last_maturity_level": levels["last_level"],
-                "standard_answer": standard_answer,
-                "security_objectives": security_objectives,
-                "column_config": column_config,
-                "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
-                "score_display": standard.get_score_display_config(),
-                "actions_config": standard.get_actions_config(),
-            },
-            request=request,
-        )
-
-        htmldoc = HTML(string=output_from_parsed_template, base_url=static_theme_dir)
-
-        stylesheets = [
-            CSS(
-                os.path.join(static_theme_dir, "css/custom.css"),
-                font_config=font_config,
-            ),
-            CSS(
-                os.path.join(static_theme_dir, "css/report.css"),
-                font_config=font_config,
-            ),
-        ]
-
-        pdf_report = htmldoc.write_pdf(stylesheets=stylesheets, font_config=font_config)
-        response = HttpResponse(pdf_report, content_type="application/pdf")
-        response["Content-Disposition"] = f"attachment;filename=Security_objective_declaration_{timezone.now().date()}.pdf"
-        create_entry_log(user, standard_answer, "DOWNLOAD", request)
-        return response
-    except Exception:
-        messages.warning(request, _("An error occurred while generating the report."))
         return redirect("securityobjectives")
+
+    # Access can be revoked between the request and the download, so it is checked again
+    # rather than trusted from the moment the file was produced.
+    if not has_change_permission(request, standard_answer, "download"):
+        discard_pdf(task_key)
+        return redirect("securityobjectives")
+
+    response = serve_pdf(task_key, pending_pdf["filename"])
+    create_entry_log(request.user, standard_answer, "DOWNLOAD", request)
+
+    return response
 
 
 @login_required
