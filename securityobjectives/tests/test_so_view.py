@@ -1,4 +1,6 @@
 import json
+from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from django.urls import reverse
@@ -12,7 +14,9 @@ from governanceplatform.helpers import (
     user_in_group,
 )
 from securityobjectives.globals import SO_DECLARATION_COLUMNS
-from securityobjectives.models import SecurityMeasureAnswer, SecurityObjectiveStatus
+from securityobjectives.helpers import get_standard_answers_with_progress
+from securityobjectives.models import SecurityMeasureAnswer, SecurityObjectiveStatus, StandardAnswer
+from securityobjectives.pdf_generation import get_declaration_pdf
 
 
 @pytest.mark.django_db
@@ -101,7 +105,17 @@ def test_pdf_download_so(otp_client, populate_so_db):
     # only one Standard answers in the DB
     sa = next((u for u in sas), None)
     url = "/securityobjectives/download/" + str(sa.id)
-    test_get_with_otp(otp_client, users, authorized_users, unauthorized_user, url)
+    for user in users:
+        client = otp_client(user)
+        with patch("securityobjectives.views.generate_declaration_pdf_task.delay") as delay:
+            delay.return_value.id = str(uuid4())
+            response = client.post(url)
+        if user in authorized_users:
+            assert response.status_code == 200, user.email
+        elif user in unauthorized_user:
+            assert response.status_code == 404, user.email
+        else:
+            assert response.status_code in (302, 403), user.email
 
 
 @pytest.mark.django_db
@@ -270,7 +284,7 @@ def test_answers_are_saved_while_columns_are_hidden(otp_client, populate_so_db):
 
 
 @pytest.mark.django_db
-def test_pdf_export_works_while_columns_are_hidden(otp_client, populate_so_db):
+def test_pdf_export_works_while_columns_are_hidden(populate_so_db):
     """Hidden columns must not break the WeasyPrint export."""
     standard_answer = populate_so_db["sas"][0]
     standard = populate_so_db["so_standard"][0]
@@ -278,15 +292,9 @@ def test_pdf_export_works_while_columns_are_hidden(otp_client, populate_so_db):
     standard.show_maturity_level_column = False
     standard.save()
     operator = next(user for user in populate_so_db["users"] if user.email == "opadmin@com1.lu")
-    client = otp_client(operator)
-    session = client.session
-    session["company_in_use"] = standard_answer.submitter_company_id
-    session.save()
+    standard_answer = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer.pk)).get()
 
-    response = client.get(f"/securityobjectives/download/{standard_answer.pk}")
-
-    assert response.status_code == 200
-    assert response["Content-Type"] == "application/pdf"
+    assert get_declaration_pdf(standard_answer, operator).startswith(b"%PDF")
 
 
 @pytest.mark.django_db
@@ -404,22 +412,16 @@ def test_hiding_the_score_removes_it_entirely(otp_client, populate_so_db):
 
 
 @pytest.mark.django_db
-def test_the_pdf_export_honours_a_hidden_score(otp_client, populate_so_db):
+def test_the_pdf_export_honours_a_hidden_score(populate_so_db):
     """Hiding the score must not break WeasyPrint rendering."""
     standard_answer = populate_so_db["sas"][0]
     standard = populate_so_db["so_standard"][0]
     standard.score_display = "NONE"
     standard.save()
     operator = next(user for user in populate_so_db["users"] if user.email == "opadmin@com1.lu")
-    client = otp_client(operator)
-    session = client.session
-    session["company_in_use"] = standard_answer.submitter_company_id
-    session.save()
+    standard_answer = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer.pk)).get()
 
-    response = client.get(f"/securityobjectives/download/{standard_answer.pk}")
-
-    assert response.status_code == 200
-    assert response["Content-Type"] == "application/pdf"
+    assert get_declaration_pdf(standard_answer, operator).startswith(b"%PDF")
 
 
 @pytest.mark.django_db

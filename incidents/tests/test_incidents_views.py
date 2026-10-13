@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from django.db import connection
@@ -101,7 +102,7 @@ def assert_pdf_request_access(otp_client, users, authorized_users, url):
     for user in users:
         client = otp_client(user)
         with patch("incidents.views.generate_incident_pdf_task.delay") as delay:
-            delay.return_value.id = "task-id"
+            delay.return_value.id = str(uuid4())
             response = client.post(url)
         if user in authorized_users:
             assert response.status_code == 200, user.email

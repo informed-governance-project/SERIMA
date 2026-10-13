@@ -5,11 +5,10 @@ from uuid import uuid4
 import pytest
 from kombu.exceptions import OperationalError
 
+from governanceplatform.async_pdf import ASYNC_PDF_SESSION_KEY, get_pdf_file_path
 from governanceplatform.models import CompanyUser
-from incidents.globals import INCIDENT_PDF_SESSION_KEY
 from incidents.models import IncidentWorkflow, LogReportRead
-from incidents.pdf_generation import get_pdf_file_path
-from incidents.tasks import cleanup_incident_pdf_file, generate_incident_pdf_task
+from incidents.tasks import generate_incident_pdf_task
 
 
 def get_user(populate_incident_db, email):
@@ -32,12 +31,16 @@ def queue_pdf(client, url):
         delay.return_value.id = task_id
         response = client.post(url)
     assert response.status_code == 200
-    assert response.json() == {"task_id": task_id}
+    assert response.json() == {
+        "task_id": task_id,
+        "status_url": f"/incidents/pdf/{task_id}/status",
+        "download_url": f"/incidents/pdf/{task_id}/download",
+    }
     return task_id, delay.call_args.args
 
 
 def run_task(task_id, args):
-    with patch("incidents.tasks.cleanup_incident_pdf_file.apply_async"):
+    with patch("governanceplatform.tasks.cleanup_async_pdf_file.apply_async"):
         return generate_incident_pdf_task.apply(args=args, task_id=task_id)
 
 
@@ -45,7 +48,7 @@ def mock_result(successful=False, ready=False):
     result = MagicMock()
     result.successful.return_value = successful
     result.ready.return_value = ready
-    return patch("incidents.views.generate_incident_pdf_task.AsyncResult", return_value=result)
+    return patch("governanceplatform.views.AsyncResult", return_value=result)
 
 
 @pytest.mark.django_db
@@ -77,7 +80,7 @@ def test_a_dead_broker_reports_an_error(otp_client, populate_incident_db):
 
     assert response.status_code == 400
     assert "messages" in response.json()
-    assert INCIDENT_PDF_SESSION_KEY not in client.session
+    assert ASYNC_PDF_SESSION_KEY not in client.session
 
 
 @pytest.mark.django_db
@@ -142,7 +145,7 @@ def test_status_leaves_a_running_task_alone_when_the_stack_is_healthy(otp_client
     incident = get_operator_incident(populate_incident_db)
     task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
 
-    with mock_result(), patch("incidents.views.celery_health_check", return_value=True):
+    with mock_result(), patch("governanceplatform.views.celery_health_check", return_value=True):
         response = client.get(f"/incidents/pdf/{task_id}/status")
 
     assert response.json() == {"status": "PENDING"}
@@ -154,11 +157,11 @@ def test_status_fails_a_running_task_when_the_stack_is_down(otp_client, populate
     incident = get_operator_incident(populate_incident_db)
     task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
 
-    with mock_result(), patch("incidents.views.celery_health_check", return_value=False):
+    with mock_result(), patch("governanceplatform.views.celery_health_check", return_value=False):
         response = client.get(f"/incidents/pdf/{task_id}/status")
 
     assert response.json()["status"] == "FAILURE"
-    assert task_id not in client.session[INCIDENT_PDF_SESSION_KEY]
+    assert task_id not in client.session[ASYNC_PDF_SESSION_KEY]
 
 
 @pytest.mark.django_db
@@ -183,7 +186,7 @@ def test_task_writes_the_incident_pdf(otp_client, populate_incident_db, settings
 
     result = run_task(task_id, args)
 
-    assert result.successful()
+    assert result.successful(), result.traceback
     assert Path(get_pdf_file_path(task_id)).read_bytes().startswith(b"%PDF")
 
 
@@ -196,7 +199,7 @@ def test_task_writes_the_report_pdf(otp_client, populate_incident_db, settings, 
 
     result = run_task(task_id, args)
 
-    assert result.successful()
+    assert result.successful(), result.traceback
     assert Path(get_pdf_file_path(task_id)).read_bytes().startswith(b"%PDF")
 
 
@@ -206,9 +209,10 @@ def test_task_schedules_the_cleanup_of_its_file(populate_incident_db, settings, 
     incident = get_operator_incident(populate_incident_db)
     task_id = str(uuid4())
 
-    with patch("incidents.tasks.cleanup_incident_pdf_file.apply_async") as apply_async:
-        generate_incident_pdf_task.apply(args=(incident.id, None, "en"), task_id=task_id)
+    with patch("governanceplatform.tasks.cleanup_async_pdf_file.apply_async") as apply_async:
+        result = generate_incident_pdf_task.apply(args=(incident.id, None, "en"), task_id=task_id)
 
+    assert result.successful(), result.traceback
     apply_async.assert_called_once_with(kwargs={"task_id": task_id}, countdown=3600)
 
 
@@ -274,21 +278,3 @@ def test_download_is_refused_when_access_was_revoked(otp_client, populate_incide
     assert response.status_code == 302
     assert not Path(get_pdf_file_path(task_id)).exists()
     assert not LogReportRead.objects.filter(user=user, action="DOWNLOAD").exists()
-
-
-def test_cleanup_tolerates_an_already_downloaded_file(settings, tmp_path):
-    settings.PRIVATE_FILES_ROOT = str(tmp_path)
-
-    cleanup_incident_pdf_file(str(uuid4()))
-
-
-def test_cleanup_removes_an_abandoned_file(settings, tmp_path):
-    settings.PRIVATE_FILES_ROOT = str(tmp_path)
-    task_id = str(uuid4())
-    file_path = Path(get_pdf_file_path(task_id))
-    file_path.parent.mkdir(parents=True)
-    file_path.write_bytes(b"%PDF")
-
-    cleanup_incident_pdf_file(task_id)
-
-    assert not file_path.exists()
