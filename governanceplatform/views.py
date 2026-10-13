@@ -1,5 +1,7 @@
 from collections import OrderedDict
+from typing import TYPE_CHECKING
 
+from celery.result import AsyncResult
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -8,12 +10,15 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
 from django.core.mail import EmailMessage
 from django.db.models.functions import Now
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_http_methods
+from django_otp.decorators import otp_required
 
+from .async_pdf import forget_pdf_task, get_pdf_task
 from .context_processors import user_modules
 from .decorators import check_user_is_correct
 from .forms import (
@@ -24,8 +29,11 @@ from .forms import (
     SelectCompany,
     TermsAcceptanceForm,
 )
-from .helpers import is_user_regulator
+from .helpers import celery_health_check, is_user_regulator, render_error_messages
 from .permissions import set_operator_admin_permissions, set_operator_user_permissions
+
+if TYPE_CHECKING:
+    from uuid import UUID
 
 
 @login_required
@@ -307,3 +315,27 @@ class CustomPasswordResetView(PasswordResetView):
         context["honeypot_field_name"] = self.request.session.get("honeypot_field_name")
 
         return context
+
+
+@login_required
+@otp_required
+@check_user_is_correct
+@require_http_methods(["GET"])
+def async_pdf_status(request, task_id: UUID, kind: str):
+    """Mounted by each module under its own URLs, so the module's access rules still apply."""
+    task_key = str(task_id)
+    get_pdf_task(request, kind, task_key)
+
+    result = AsyncResult(task_key)
+
+    if result.successful():
+        return JsonResponse({"status": "SUCCESS"})
+
+    # A task whose worker or broker is gone stays PENDING forever, which would leave the
+    # spinner running.
+    if result.ready() or not celery_health_check():
+        forget_pdf_task(request, task_key)
+        messages.error(request, _("An error occurred while generating the report."))
+        return JsonResponse({"status": "FAILURE", "messages": render_error_messages(request)})
+
+    return JsonResponse({"status": "PENDING"})
