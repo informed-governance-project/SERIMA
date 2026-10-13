@@ -1,13 +1,10 @@
 import csv
 import logging
-import os
 from datetime import date
-from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 import pytz
-from celery.exceptions import CeleryError
 from django import forms
 from django.conf import settings
 from django.contrib import messages
@@ -19,7 +16,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -30,13 +27,12 @@ from django.views.decorators.http import require_http_methods
 from django_countries import countries
 from django_otp.decorators import otp_required
 from formtools.wizard.views import SessionWizardView
-from kombu.exceptions import OperationalError
 from openpyxl import Workbook
 
+from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
 from governanceplatform.decorators import check_user_is_correct, regulator_role_required
 from governanceplatform.helpers import (
     annotate_translated_field_from_related_models,
-    celery_health_check,
     get_active_company_from_session,
     is_observer_user,
     is_user_operator,
@@ -71,7 +67,6 @@ from .filters import IncidentFilter
 from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
 from .globals import (
     ALLOWED_SORT_FIELDS,
-    INCIDENT_PDF_SESSION_KEY,
     REGIONAL_AREA,
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
@@ -96,13 +91,11 @@ from .models import (
     SectorRegulationWorkflow,
     Workflow,
 )
-from .pdf_generation import get_pdf_file_path
 from .tasks import generate_incident_pdf_task
 
 if TYPE_CHECKING:
     from uuid import UUID
 
-    from django_stubs_ext import StrPromise
 
 logger = logging.getLogger(__name__)
 
@@ -589,36 +582,6 @@ def access_log(request, incident_id: int):
     return render(request, "modals/access_log.html", context)
 
 
-def pdf_error_response(request, message: StrPromise, status: int) -> JsonResponse:
-    messages.error(request, message)
-    return JsonResponse({"messages": render_error_messages(request)}, status=status)
-
-
-def queue_incident_pdf(request, incident: Incident, incident_workflow: IncidentWorkflow | None, filename: str) -> JsonResponse:
-    incident_workflow_id = incident_workflow.id if incident_workflow else None
-
-    try:
-        task = generate_incident_pdf_task.delay(incident.id, incident_workflow_id, translation.get_language())
-    except OperationalError, CeleryError, ConnectionError:
-        logger.exception(
-            "Failed to queue the incident PDF report",
-            extra={"incident_id": incident.id, "incident_workflow_id": incident_workflow_id, "user_id": request.user.id},
-        )
-        return pdf_error_response(request, _("An error occurred while generating the report."), 400)
-
-    # The session is what ties a task to the user who asked for it, so the status and
-    # download views refuse any task id that is not in it.
-    pending_pdfs = request.session.get(INCIDENT_PDF_SESSION_KEY, {})
-    pending_pdfs[task.id] = {
-        "incident_id": incident.id,
-        "incident_workflow_id": incident_workflow_id,
-        "filename": filename,
-    }
-    request.session[INCIDENT_PDF_SESSION_KEY] = pending_pdfs
-
-    return JsonResponse({"task_id": task.id})
-
-
 @login_required
 @otp_required
 @check_user_is_correct
@@ -656,30 +619,16 @@ def download_incident_report_pdf(request, incident_workflow_id: int):
     return queue_incident_pdf(request, incident, incident_workflow, filename)
 
 
-@login_required
-@otp_required
-@check_user_is_correct
-@require_http_methods(["GET"])
-def incident_pdf_status(request, task_id: UUID):
-    task_key = str(task_id)
-    if task_key not in request.session.get(INCIDENT_PDF_SESSION_KEY, {}):
-        raise Http404
+def queue_incident_pdf(request, incident: Incident, incident_workflow: IncidentWorkflow | None, filename: str) -> JsonResponse:
+    incident_workflow_id = incident_workflow.id if incident_workflow else None
 
-    result = generate_incident_pdf_task.AsyncResult(task_key)
-
-    if result.successful():
-        return JsonResponse({"status": "SUCCESS"})
-
-    # A task whose worker or broker is gone stays PENDING forever, which would leave the
-    # spinner running.
-    if result.ready() or not celery_health_check():
-        pending_pdfs = request.session[INCIDENT_PDF_SESSION_KEY]
-        pending_pdfs.pop(task_key)
-        request.session[INCIDENT_PDF_SESSION_KEY] = pending_pdfs
-        messages.error(request, _("An error occurred while generating the report."))
-        return JsonResponse({"status": "FAILURE", "messages": render_error_messages(request)})
-
-    return JsonResponse({"status": "PENDING"})
+    return queue_pdf_task(
+        request,
+        "incident",
+        generate_incident_pdf_task,
+        (incident.id, incident_workflow_id, translation.get_language()),
+        {"incident_id": incident.id, "incident_workflow_id": incident_workflow_id, "filename": filename},
+    )
 
 
 @login_required
@@ -688,31 +637,24 @@ def incident_pdf_status(request, task_id: UUID):
 @require_http_methods(["GET"])
 def incident_pdf_download(request, task_id: UUID):
     task_key = str(task_id)
-    pending_pdfs = request.session.get(INCIDENT_PDF_SESSION_KEY, {})
-    if task_key not in pending_pdfs:
-        raise Http404
-
-    pending_pdf = pending_pdfs.pop(task_key)
-    request.session[INCIDENT_PDF_SESSION_KEY] = pending_pdfs
+    pending_pdf = get_pdf_task(request, "incident", task_key)
+    forget_pdf_task(request, task_key)
 
     user = request.user
     incident = Incident.objects.filter(pk=pending_pdf["incident_id"]).first()
     incident_workflow = IncidentWorkflow.objects.filter(pk=pending_pdf["incident_workflow_id"]).first()
-    file_path = get_pdf_file_path(task_key)
 
     # Access can be revoked between the request and the download, so it is checked again
     # rather than trusted from the moment the file was produced.
     if incident is None or not can_access_incident(user, incident, request.session.get("company_in_use")):
-        Path(file_path).unlink(missing_ok=True)
+        discard_pdf(task_key)
         messages.error(request, _("Forbidden"))
         return redirect("incidents")
 
-    pdf_file = open(file_path, "rb")
-    # The open handle keeps the content readable, so nothing stays on disk while it streams.
-    os.unlink(file_path)
+    response = serve_pdf(task_key, pending_pdf["filename"])
     create_entry_log(user, incident, incident_workflow, "DOWNLOAD", request)
 
-    return FileResponse(pdf_file, as_attachment=True, filename=pending_pdf["filename"], content_type="application/pdf")
+    return response
 
 
 @login_required

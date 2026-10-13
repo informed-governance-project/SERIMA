@@ -11,7 +11,7 @@ from weasyprint.text.fonts import FontConfiguration
 
 from governanceplatform.utils.weasyprint_fetcher import RestrictedURLFetcher
 
-from .globals import INCIDENT_PDF_DIRECTORY, REGIONAL_AREA
+from .globals import REGIONAL_AREA
 from .models import Answer, Incident, IncidentWorkflow
 
 # Increasing weasyprint log level
@@ -116,10 +116,6 @@ def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow | Non
     ]
 
     return htmldoc.write_pdf(stylesheets=stylesheets, pdf_variant="pdf/ua-1", font_config=font_config)
-
-
-def get_pdf_file_path(task_id: str) -> str:
-    return os.path.join(settings.PRIVATE_FILES_ROOT, INCIDENT_PDF_DIRECTORY, f"{task_id}.pdf")
 
 
 def populate_questions_answers(answer: Answer, preliminary_questions_answers: dict):
