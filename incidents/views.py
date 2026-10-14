@@ -572,7 +572,12 @@ def access_log(request, incident_id: int):
 
     log = LogReportRead.objects.filter(incident=incident).order_by("-timestamp")
     if is_user_operator(user) or user_in_group(user, "IncidentUser"):
-        log = log.exclude(user__regulatoruser__isnull=False).exclude(user__observers__isnull=False)
+        log = (
+            log.exclude(user__regulatoruser__isnull=False)
+            .exclude(user__observers__isnull=False)
+            # A deleted user leaves user=NULL, so the role recorded at logging time is all that is left to filter on.
+            .exclude(user__isnull=True, role__in=["RegulatorAdmin", "RegulatorUser", "ObserverAdmin", "ObserverUser"])
+        )
     if is_regulator_incident:
         log = log.filter(user__regulatoruser__regulator=user.regulators.first())
     context = {

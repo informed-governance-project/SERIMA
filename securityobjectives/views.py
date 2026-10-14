@@ -783,6 +783,8 @@ def access_log(request, standard_answer_id: int):
     log = LogStandardAnswer.objects.filter(standard_answer=standard_answer).order_by("-timestamp")
     if is_user_operator(user) or user_in_group(user, "IncidentUser"):
         log = log.exclude(user__regulatoruser__isnull=False)
+        # A deleted user leaves user=NULL, so the role recorded at logging time is all that is left to filter on.
+        log = log.exclude(user__isnull=True, role__in=["RegulatorAdmin", "RegulatorUser"])
 
     context = {"log": log}
     return render(request, "modals/so_access_log.html", context=context)
