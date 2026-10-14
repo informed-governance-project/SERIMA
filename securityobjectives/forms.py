@@ -2,7 +2,7 @@ from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from governanceplatform.forms import CustomTranslatableAdminForm
+from governanceplatform.forms import CustomTranslatableAdminForm, FreeTextField
 from incidents.forms import DropdownCheckboxSelectMultiple
 
 from .models import StandardAnswer
@@ -39,7 +39,7 @@ class SecurityObjectiveAnswerForm(forms.Form):
             }
         ),
     )
-    justification = forms.CharField(
+    justification = FreeTextField(
         required=False,
         widget=forms.Textarea(
             attrs={
@@ -49,7 +49,7 @@ class SecurityObjectiveAnswerForm(forms.Form):
             }
         ),
     )
-    review_comment = forms.CharField(
+    review_comment = FreeTextField(
         required=False,
         widget=forms.Textarea(
             attrs={
@@ -106,7 +106,7 @@ class SecurityObjectiveStatusForm(forms.Form):
         ),
     )
 
-    actions = forms.CharField(
+    actions = FreeTextField(
         required=False,
         widget=forms.Textarea(
             attrs={
@@ -255,6 +255,7 @@ class ReviewForm(forms.ModelForm):
     class Meta:
         model = StandardAnswer
         fields = ["review_comment", "status"]
+        field_classes = {"review_comment": FreeTextField}
         widgets = {
             "review_comment": forms.Textarea(
                 attrs={
