@@ -16,6 +16,7 @@ from parler.forms import TranslatableModelForm
 
 from .email import Base64EmailMultiAlternatives
 from .globals import FUNCTIONALITY_ELIGIBLE_ROLES
+from .helpers import strip_control_characters
 
 User = get_user_model()
 logger = logging.getLogger("django.contrib.auth")
@@ -390,3 +391,12 @@ class FunctionalityAdminForm(CustomTranslatableAdminForm):
                 ),
             )
         return cleaned_data
+
+
+class FreeTextField(forms.CharField):
+    """A CharField that drops the invisible control characters pasted along with text from Word or PDFs."""
+
+    def to_python(self, value):
+        if isinstance(value, str):
+            value = strip_control_characters(value)
+        return super().to_python(value)
