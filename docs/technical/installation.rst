@@ -180,8 +180,8 @@ Background workers
 
 Two Celery processes must run alongside the web application, both connected to Redis:
 
-- the **worker**, which generates the reports and the security objectives exports and imports,
-  and runs the scheduled tasks;
+- the **worker**, which generates the reports, the incident and security objectives PDFs and the
+  security objectives exports and imports, and runs the scheduled tasks;
 - **beat**, which triggers the scheduled tasks.
 
 .. code-block:: bash
@@ -209,6 +209,33 @@ Run them as services, for instance with systemd:
 
 Create ``serima-celery-beat.service`` the same way, with ``celery -A celery_beat beat``,
 then enable both with ``sudo systemctl enable --now serima-celery-worker serima-celery-beat``.
+
+This single worker consumes every queue, so a report generation can make users wait for their PDFs until
+it ends. To avoid it, run one worker per queue (``interactive``, ``reports`` and ``celery``, described in
+:ref:`the Docker page <splitting-the-workers>`) with a template unit in place of the one above:
+
+.. code-block:: ini
+
+    # /etc/systemd/system/serima-celery-worker@.service
+    [Unit]
+    Description=SERIMA Celery worker for the %i queue
+    After=network.target redis-server.service postgresql.service
+
+    [Service]
+    User=<user>
+    WorkingDirectory=/home/<user>/SERIMA
+    ExecStart=/home/<user>/.local/bin/poetry run celery -A celery_worker worker -Q %i -n %i@%%h --loglevel=info
+    Restart=always
+
+    [Install]
+    WantedBy=multi-user.target
+
+.. code-block:: bash
+
+    $ sudo systemctl disable --now serima-celery-worker
+    $ sudo systemctl enable --now serima-celery-worker@interactive serima-celery-worker@reports serima-celery-worker@celery
+
+``-n`` gives each worker its own name, which Celery needs when several run on the same host.
 
 Celery beat triggers these tasks (times in the server's time zone):
 

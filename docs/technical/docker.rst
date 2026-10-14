@@ -126,6 +126,9 @@ Put the variables in a ``.env`` file next to ``docker-compose.yml`` rather than 
    * - ``CELERY_CONCURRENCY``
      - No
      - Tasks a worker runs in parallel (default 3).
+   * - ``CELERY_QUEUES``
+     - No
+     - Comma-separated queues the worker consumes; all of them when unset. See `Splitting the workers`_.
    * - ``KALEIDO_CONCURRENCY_PER_WORKER``
      - No
      - Charts a worker renders at once (default 1).
@@ -146,6 +149,48 @@ Put the variables in a ``.env`` file next to ``docker-compose.yml`` rather than 
 (see :doc:`installation`). ``MAIN_SITE`` and ``MAIN_SITE_NAME`` replace the manual **Sites** configuration.
 
 Follow the start with ``docker compose logs -f web``.
+
+
+.. _splitting-the-workers:
+
+Splitting the workers
+---------------------
+
+Celery tasks are sent to one of three queues, according to how they behave:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
+
+   * - Queue
+     - Tasks
+   * - ``interactive``
+     - Work a user is waiting for, behind a loading spinner: the incident and security objectives PDFs,
+       the security objectives exports and the risk analysis imports.
+   * - ``reports``
+     - Report generation, which runs for minutes and is the only work needing Kaleido (Chrome)
+       and LibreOffice.
+   * - ``celery``
+     - Everything else: the scheduled tasks and the removal of temporary files.
+
+The example compose file runs one worker per queue, each in its own container with its own
+``CELERY_QUEUES``, so that a report generation never makes a user wait for a PDF. Their concurrencies are
+read from ``CELERY_INTERACTIVE_CONCURRENCY`` (default 2), ``CELERY_REPORTS_CONCURRENCY`` (default 2) and
+``CELERY_DEFAULT_CONCURRENCY`` (default 1). ``docker/docker-compose.dokploy.yml`` is set up the same way.
+
+A single worker can still consume all three queues, by leaving ``CELERY_QUEUES`` unset. It saves two
+containers on a small host, but a report generation can then occupy every process of the worker, and a
+user who asks for a PDF meanwhile waits for it to end.
+
+Size the ``reports`` worker by memory: each of its processes runs a Chrome. The other two workers do not
+start one, so they stay light.
+
+Every queue needs a worker. A queue nobody consumes is reported to the user as an error rather than left
+waiting, but its tasks do not run.
+
+When moving from one worker to three, remove the former ``celery-worker`` container, with
+``docker compose up -d --remove-orphans``: left running, it keeps consuming the ``celery`` queue with the
+code it was started with.
 
 
 Reverse proxy
