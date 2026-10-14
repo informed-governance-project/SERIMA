@@ -539,13 +539,13 @@ def render_error_messages(request: HttpRequest) -> str:
     )
 
 
-def is_celery_worker_alive() -> bool:
+def is_queue_consumed(queue: str) -> bool:
+    """Whether a running worker reads this queue; one serving only other queues is no help."""
     try:
-        inspect = current_app.control.inspect()
-        response = inspect.ping()
-        return bool(response)
+        active_queues = current_app.control.inspect().active_queues()
     except Exception:
         return False
+    return any(consumed["name"] == queue for consumed_queues in (active_queues or {}).values() for consumed in consumed_queues)
 
 
 def is_redis_available() -> bool:
@@ -557,6 +557,6 @@ def is_redis_available() -> bool:
         return False
 
 
-def celery_health_check() -> bool:
-    """Whether a task queued now would actually be picked up by a worker."""
-    return is_celery_worker_alive() and is_redis_available()
+def celery_health_check(queue: str) -> bool:
+    """Whether a task queued now on this queue would actually be picked up by a worker."""
+    return is_queue_consumed(queue) and is_redis_available()
