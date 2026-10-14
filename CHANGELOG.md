@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A regulator opening an incident report from a link that named both the incident and the report, without its workflow, got a server error instead of the report editor (#905)
+- The XLSX exports of incidents and of security objectives declarations no longer fail when an answer holds invisible control characters, as text pasted from Word or a PDF often does, such as a hyphen arriving as STX (#908). These characters are now removed as the text is saved, from every free-text field of an incident notification (contact details, answers, the details added to a choice, and the regulator's review comment) and of a security objectives declaration (justifications, planned measures and review comments); tabs and line breaks are kept. Answers saved before the upgrade still hold them, so they are also removed from every export, CSV included, and a formula hidden behind such a character is now neutralised like any other
+
 ## [0.6.0] - 2026-10-06
 
 ### Added
