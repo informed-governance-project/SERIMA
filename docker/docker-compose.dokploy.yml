@@ -1,3 +1,22 @@
+x-celery-worker: &celery-worker
+  build:
+    context: ..
+    dockerfile: docker/Dockerfile
+    no_cache: true
+  env_file: .env
+  command: worker
+  # kaleido's headless chrome orphans two crashpad handlers per launch onto PID 1,
+  # which is the celery master here and never reaps them
+  init: true
+  volumes:
+    - ../../files/config/config.py:/app/governanceplatform/config.py:ro
+    - theme_data:/app/theme
+    - shared_dir:/app/tmp
+  restart: unless-stopped
+  depends_on:
+    - redis
+    - db
+
 services:
   web:
     container_name: ${SERIMA_ENVIRONMENT}-serima-web
@@ -37,25 +56,28 @@ services:
       - theme_data:/app/theme
     restart: no
 
-  celery-worker:
-    container_name: ${SERIMA_ENVIRONMENT}-serima-celery-worker
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      no_cache: true
-    env_file: .env
-    command: worker
-    # kaleido's headless chrome orphans two crashpad handlers per launch onto PID 1,
-    # which is the celery master here and never reaps them
-    init: true
-    volumes:
-      - ../../files/config/config.py:/app/governanceplatform/config.py:ro
-      - theme_data:/app/theme
-      - shared_dir:/app/tmp
-    restart: unless-stopped
-    depends_on:
-      - redis
-      - db
+  # One worker per queue, so that report generation never delays a PDF a user is
+  # waiting for (see "Splitting the workers" in docs/technical/docker.rst).
+  celery-worker-interactive:
+    <<: *celery-worker
+    container_name: ${SERIMA_ENVIRONMENT}-serima-celery-worker-interactive
+    environment:
+      CELERY_QUEUES: interactive
+      CELERY_CONCURRENCY: ${CELERY_INTERACTIVE_CONCURRENCY:-2}
+
+  celery-worker-reports:
+    <<: *celery-worker
+    container_name: ${SERIMA_ENVIRONMENT}-serima-celery-worker-reports
+    environment:
+      CELERY_QUEUES: reports
+      CELERY_CONCURRENCY: ${CELERY_REPORTS_CONCURRENCY:-2}
+
+  celery-worker-default:
+    <<: *celery-worker
+    container_name: ${SERIMA_ENVIRONMENT}-serima-celery-worker-default
+    environment:
+      CELERY_QUEUES: celery
+      CELERY_CONCURRENCY: ${CELERY_DEFAULT_CONCURRENCY:-1}
 
   celery-beat:
     container_name: ${SERIMA_ENVIRONMENT}-serima-celery-beat
@@ -71,7 +93,7 @@ services:
     depends_on:
       - redis
       - db
-      - celery-worker
+      - celery-worker-default
 
   redis:
     container_name: ${SERIMA_ENVIRONMENT}-serima-redis

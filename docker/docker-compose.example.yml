@@ -43,11 +43,17 @@ services:
       - theme:/app/theme
     restart: no
 
-  celery-worker:
-    container_name: governanceplatform-celery-worker-${SERIMA_ENVIRONMENT?:err}
+  # One worker per queue, so that report generation never delays a PDF a user is waiting
+  # for (see "Splitting the workers" in docs/technical/docker.rst). The other two workers
+  # reuse this one's definition.
+  celery-worker-interactive: &celery-worker
+    container_name: governanceplatform-celery-worker-interactive-${SERIMA_ENVIRONMENT?:err}
     image: ${SERIMA_IMAGE:-ghcr.io/informed-governance-project/serima}:${SERIMA_VERSION?:err}
     pull_policy: always
-    environment: *env
+    environment:
+      <<: *env
+      CELERY_QUEUES: interactive
+      CELERY_CONCURRENCY: ${CELERY_INTERACTIVE_CONCURRENCY:-2}
     command: worker
     # kaleido's headless chrome orphans two crashpad handlers per launch onto PID 1,
     # which is the celery master here and never reaps them
@@ -61,6 +67,22 @@ services:
       - redis
       - db
 
+  celery-worker-reports:
+    <<: *celery-worker
+    container_name: governanceplatform-celery-worker-reports-${SERIMA_ENVIRONMENT?:err}
+    environment:
+      <<: *env
+      CELERY_QUEUES: reports
+      CELERY_CONCURRENCY: ${CELERY_REPORTS_CONCURRENCY:-2}
+
+  celery-worker-default:
+    <<: *celery-worker
+    container_name: governanceplatform-celery-worker-default-${SERIMA_ENVIRONMENT?:err}
+    environment:
+      <<: *env
+      CELERY_QUEUES: celery
+      CELERY_CONCURRENCY: ${CELERY_DEFAULT_CONCURRENCY:-1}
+
   celery-beat:
     container_name: governanceplatform-celery-beat-${SERIMA_ENVIRONMENT?:err}
     image: ${SERIMA_IMAGE:-ghcr.io/informed-governance-project/serima}:${SERIMA_VERSION?:err}
@@ -73,7 +95,7 @@ services:
     depends_on:
       - redis
       - db
-      - celery-worker
+      - celery-worker-default
 
   redis:
     container_name: governanceplatform-redis-${SERIMA_ENVIRONMENT?:err}
