@@ -31,8 +31,12 @@ Services
    * - ``web``
      - The application, served by Gunicorn on port 8888. At each start it runs ``collectstatic``,
        ``migrate``, ``compilemessages`` and ``update_group_permissions``.
-   * - ``celery-worker``
-     - Generates reports and security objectives exports and imports, and runs the scheduled tasks.
+   * - ``celery-worker-interactive``
+     - Generates the incident and security objectives PDFs and exports, and the risk analysis imports.
+   * - ``celery-worker-reports``
+     - Generates the reports.
+   * - ``celery-worker-default``
+     - Runs the scheduled tasks and removes temporary files.
    * - ``celery-beat``
      - Triggers the scheduled tasks (see :doc:`installation`).
    * - ``db``
@@ -185,8 +189,9 @@ user who asks for a PDF meanwhile waits for it to end.
 Size the ``reports`` worker by memory: each of its processes runs a Chrome. The other two workers do not
 start one, so they stay light.
 
-Every queue needs a worker. A queue nobody consumes is reported to the user as an error rather than left
-waiting, but its tasks do not run.
+Every queue needs a worker. A PDF, export, import or report generation whose queue nobody consumes is
+reported to the user as an error rather than left waiting. The tasks of the ``celery`` queue, which nobody
+waits for, stay in Redis until a worker reads it.
 
 When moving from one worker to three, remove the former ``celery-worker`` container, with
 ``docker compose up -d --remove-orphans``: left running, it keeps consuming the ``celery`` queue with the

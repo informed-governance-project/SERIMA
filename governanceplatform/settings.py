@@ -574,8 +574,8 @@ CELERY_TASK_ROUTES = {
         ]
     },
 }
-# A worker reserves no task beyond the one it runs, so a long report never holds a short
-# task back while another worker sits idle.
+# Each worker process holds at most one task in reserve besides the one it runs, instead of
+# Celery's four, so a busy worker keeps few tasks away from an idle one.
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 # Redis hands an unacknowledged message out again after this delay. It must exceed the
 # longest countdown (the one-hour file cleanups) and the longest acks_late task.

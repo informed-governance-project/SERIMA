@@ -38,6 +38,7 @@ Then restart the web server and the background workers, so that they all run the
     $ sudo systemctl restart apache2.service
     $ sudo systemctl restart serima-celery-worker serima-celery-beat
 
+With one worker per queue, restart them all with ``sudo systemctl restart 'serima-celery-worker@*' serima-celery-beat``.
 Use the names of your own services if you set them up differently.
 
 
