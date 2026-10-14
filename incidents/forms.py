@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django_countries import countries
 from parler.widgets import SortedCheckboxSelectMultiple
 
+from governanceplatform.forms import FreeTextField
 from governanceplatform.helpers import (
     get_active_company_from_session,
     is_user_regulator,
@@ -418,7 +419,7 @@ class QuestionForm(forms.Form):
             )
 
             if question_type in ["ST", "MT"]:
-                self.fields[field_name + self.suffix_freetext] = forms.CharField(
+                self.fields[field_name + self.suffix_freetext] = FreeTextField(
                     required=False,
                     widget=forms.Textarea(
                         attrs={
@@ -471,7 +472,7 @@ class QuestionForm(forms.Form):
             classes = "empty_field " if not initial_data else ""
             classes += "answer-modified " if answer_modified else ""
 
-            self.fields[field_name] = forms.CharField(
+            self.fields[field_name] = FreeTextField(
                 required=question_option.is_mandatory,
                 widget=forms.Textarea(
                     attrs={
@@ -628,34 +629,34 @@ class QuestionForm(forms.Form):
 
 # the first question for preliminary notification
 class ContactForm(forms.Form):
-    company_name = forms.CharField(
+    company_name = FreeTextField(
         required=True,
         label=_("Legal Entity Name"),
         max_length=100,
         widget=forms.TextInput(attrs={"class": "company_name"}),
     )
 
-    contact_lastname = forms.CharField(
+    contact_lastname = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "contact_lastname"}),
     )
-    contact_firstname = forms.CharField(
+    contact_firstname = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "contact_firstname"}),
     )
-    contact_title = forms.CharField(
+    contact_title = FreeTextField(
         required=False,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "contact_title"}),
     )
-    contact_email = forms.CharField(
+    contact_email = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.EmailInput(attrs={"class": "contact_email"}),
     )
-    contact_telephone = forms.CharField(
+    contact_telephone = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "contact_telephone"}),
@@ -670,33 +671,33 @@ class ContactForm(forms.Form):
         ),
         initial=False,
     )
-    technical_lastname = forms.CharField(
+    technical_lastname = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "technical_lastname"}),
     )
-    technical_firstname = forms.CharField(
+    technical_firstname = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "technical_firstname"}),
     )
-    technical_title = forms.CharField(
+    technical_title = FreeTextField(
         required=False,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "technical_title"}),
     )
-    technical_email = forms.CharField(
+    technical_email = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.EmailInput(attrs={"class": "technical_email"}),
     )
-    technical_telephone = forms.CharField(
+    technical_telephone = FreeTextField(
         required=True,
         max_length=100,
         widget=forms.TextInput(attrs={"class": "technical_telephone"}),
     )
 
-    incident_reference = forms.CharField(
+    incident_reference = FreeTextField(
         max_length=255,
         required=False,
         label=_("Incident reference"),
@@ -711,7 +712,7 @@ class ContactForm(forms.Form):
             }
         ),
     )
-    complaint_reference = forms.CharField(
+    complaint_reference = FreeTextField(
         max_length=255,
         required=False,
         label=_("Complaint reference"),
@@ -976,6 +977,7 @@ class RegulatorIncidentWorkflowCommentForm(forms.ModelForm):
             "comment",
             "review_status",
         ]
+        field_classes = {"comment": FreeTextField}
 
 
 class ImpactForm(forms.Form):
