@@ -1305,7 +1305,7 @@ def security_objectives_export_status(request, export_id: int):
 
     # A queued job whose worker or broker is gone would never change status, leaving the
     # browser polling for it forever.
-    if export.task_status == "RUNNING" and not celery_health_check():
+    if export.task_status == "RUNNING" and not celery_health_check(settings.INTERACTIVE_QUEUE):
         export.task_status = "FAIL"
         export.save()
 

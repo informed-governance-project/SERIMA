@@ -333,7 +333,7 @@ def async_pdf_status(request, task_id: UUID, kind: str):
 
     # A task whose worker or broker is gone stays PENDING forever, which would leave the
     # spinner running.
-    if result.ready() or not celery_health_check():
+    if result.ready() or not celery_health_check(settings.INTERACTIVE_QUEUE):
         forget_pdf_task(request, task_key)
         messages.error(request, _("An error occurred while generating the report."))
         return JsonResponse({"status": "FAILURE", "messages": render_error_messages(request)})

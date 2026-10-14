@@ -440,7 +440,7 @@ def generate_report_project(request, report_project_id: int):
         )
         return redirect("reporting")
 
-    if not celery_health_check():
+    if not celery_health_check(settings.REPORTS_QUEUE):
         project.task_status = CELERY_TASK_STATUS[0][0]
         messages.error(request, _("Failed to start report generation. Please try again."))
         return redirect("dashboard_report_project", report_project_id=project.id)
@@ -657,7 +657,7 @@ def report_generation_status(request, report_project_id: int):
         "status": project.task_status,
     }
 
-    if not celery_health_check():
+    if not celery_health_check(settings.REPORTS_QUEUE):
         project.task_status = failure_status
         project.save()
 
