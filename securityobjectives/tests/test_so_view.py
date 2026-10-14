@@ -15,7 +15,7 @@ from governanceplatform.helpers import (
 )
 from securityobjectives.globals import SO_DECLARATION_COLUMNS
 from securityobjectives.helpers import get_standard_answers_with_progress
-from securityobjectives.models import SecurityMeasureAnswer, SecurityObjectiveStatus, StandardAnswer
+from securityobjectives.models import LogStandardAnswer, SecurityMeasureAnswer, SecurityObjectiveStatus, StandardAnswer
 from securityobjectives.pdf_generation import get_declaration_pdf
 
 
@@ -635,3 +635,32 @@ def test_hiding_the_justification_column_widens_the_others(otp_client, populate_
     header = content.split('id="declaration_table"')[1].split("<thead>")[1].split("</thead>")[0]
 
     assert "col-4" in header
+
+
+@pytest.mark.django_db
+def test_so_log_hides_deleted_regulator_user_from_operator(otp_client, populate_so_db):
+    users = populate_so_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    regulator_user = next(u for u in users if u.email == "reguser@reg1.lu")
+    standard_answer = populate_so_db["sas"][0]
+    log = LogStandardAnswer.objects.create(user=regulator_user, standard_answer=standard_answer, action="READ", role="RegulatorUser")
+    regulator_user.delete()
+
+    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.id]))
+
+    assert log not in response.context["log"]
+
+
+@pytest.mark.django_db
+def test_so_log_shows_deleted_user_name(otp_client, populate_so_db):
+    users = populate_so_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    operator_user = next(u for u in users if u.email == "opuser@com1.lu")
+    standard_answer = populate_so_db["sas"][0]
+    log = LogStandardAnswer.objects.create(user=operator_user, standard_answer=standard_answer, action="READ", role="OperatorUser")
+    operator_user.delete()
+
+    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.id]))
+
+    assert log.user_full_name
+    assert log.user_full_name in response.content.decode()

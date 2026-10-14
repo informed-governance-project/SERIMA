@@ -19,7 +19,7 @@ from incidents.access_control import (
     can_create_incident_report,
     can_edit_incident_report,
 )
-from incidents.models import Incident, IncidentWorkflow, ReportTimeline, SectorRegulation, SectorRegulationWorkflow
+from incidents.models import Incident, IncidentWorkflow, LogReportRead, ReportTimeline, SectorRegulation, SectorRegulationWorkflow
 
 
 @pytest.mark.django_db
@@ -313,6 +313,35 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
     incident = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
     url = "/incidents/access_log/" + str(incident.id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)
+
+
+@pytest.mark.django_db
+def test_incident_log_hides_deleted_regulator_user_from_operator(otp_client, populate_incident_db):
+    users = populate_incident_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    regulator_user = next(u for u in users if u.email == "reguser@reg1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    log = LogReportRead.objects.create(user=regulator_user, incident=incident, action="READ", role="RegulatorUser")
+    regulator_user.delete()
+
+    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+
+    assert log not in response.context["log"]
+
+
+@pytest.mark.django_db
+def test_incident_log_shows_deleted_user_name(otp_client, populate_incident_db):
+    users = populate_incident_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    operator_user = next(u for u in users if u.email == "opuser@com1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    log = LogReportRead.objects.create(user=operator_user, incident=incident, action="READ", role="OperatorUser")
+    operator_user.delete()
+
+    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+
+    assert log.user_full_name
+    assert log.user_full_name in response.content.decode()
 
 
 @pytest.mark.django_db
