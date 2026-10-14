@@ -967,6 +967,12 @@ def import_risk_analysis(request):
             choices=choices,
         )
         if form.is_valid():
+            # The import rewrites the operator's reporting data before its tasks are queued, so
+            # it must not start when no worker could run them.
+            if not celery_health_check(settings.INTERACTIVE_QUEUE):
+                messages.error(request, _("The risk analysis import could not be started. Please try again later."))
+                return JsonResponse({"success": False, "messages": render_error_messages(request)}, status=400)
+
             json_file = form.cleaned_data["import_file"]
             company_id = form.cleaned_data["company"]
             sector_ids = form.cleaned_data["sectors"]
@@ -1075,6 +1081,15 @@ def import_risk_analysis_status(request, group_id):
     is_ready = result.ready()
     is_failed = is_ready and not result.successful()
     rendered_messages = None
+
+    # A task whose worker or broker is gone stays pending forever, which would leave the
+    # spinner running. The tasks may still run once the worker is back, hence the advice.
+    if not is_ready and not celery_health_check(settings.INTERACTIVE_QUEUE):
+        messages.error(
+            request,
+            _("The risk analysis import has stopped progressing. Check the imported data later before importing it again."),
+        )
+        return JsonResponse({"state": "FAILURE", "messages": render_error_messages(request)})
 
     if is_ready:
         messages.success(request, _("Risk analysis successfully imported"))
