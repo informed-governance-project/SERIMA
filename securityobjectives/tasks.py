@@ -15,10 +15,9 @@ from import_export_extensions.models import ExportJob, ImportJob
 from openpyxl import Workbook
 
 from governanceplatform.globals import EXPORT
-from governanceplatform.helpers import delete_file_and_parents
+from governanceplatform.helpers import delete_file_and_parents, sanitize_spreadsheet_cell
 from governanceplatform.models import Regulation, Sector, User
 from governanceplatform.tasks import store_async_pdf
-from incidents.helpers import sanitize_spreadsheet_cell
 from securityobjectives.scripts import so_declarations_cleaning  # noqa: F401
 
 from .email import send_export_notification
