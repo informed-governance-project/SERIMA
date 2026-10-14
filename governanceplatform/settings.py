@@ -540,6 +540,47 @@ except AttributeError:
 CELERY_TASK_TRACK_STARTED = True
 CELERY_RESULT_EXTENDED = True
 
+# Tasks are queued by how they behave, so that each kind can get its own worker: a user
+# waiting on a spinner, report generation holding Kaleido and LibreOffice for minutes,
+# and everything else. A worker started without -Q consumes all three.
+# "celery" is Celery's own default name, kept so that nothing queued before an upgrade
+# is left on a queue no worker reads.
+INTERACTIVE_QUEUE = "interactive"
+REPORTS_QUEUE = "reports"
+DEFAULT_QUEUE = "celery"
+CELERY_TASK_DEFAULT_QUEUE = DEFAULT_QUEUE
+CELERY_TASK_QUEUES = {INTERACTIVE_QUEUE: {}, REPORTS_QUEUE: {}, DEFAULT_QUEUE: {}}
+CELERY_TASK_ROUTES = {
+    **{
+        task: {"queue": INTERACTIVE_QUEUE}
+        for task in [
+            "incidents.tasks.generate_incident_pdf_task",
+            "securityobjectives.tasks.generate_declaration_pdf_task",
+            "securityobjectives.tasks.generate_so_export_task",
+            "reporting.tasks.import_risk_analysis_task",
+        ]
+    },
+    # The whole generation chain, so that a report run depends on a single worker.
+    **{
+        task: {"queue": REPORTS_QUEUE}
+        for task in [
+            "reporting.tasks.generate_data",
+            "reporting.tasks.generate_docx_task",
+            "reporting.tasks.generate_pdf_task",
+            "reporting.tasks.save_file_task",
+            "reporting.tasks.zip_files_task",
+            "reporting.tasks.on_chord_error",
+            "reporting.tasks.cleanup_files",
+        ]
+    },
+}
+# A worker reserves no task beyond the one it runs, so a long report never holds a short
+# task back while another worker sits idle.
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+# Redis hands an unacknowledged message out again after this delay. It must exceed the
+# longest countdown (the one-hour file cleanups) and the longest acks_late task.
+CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timeout": 7200}
+
 try:
     CELERY_BROKER_URL = config.CELERY_BROKER_URL
     CELERY_RESULT_BACKEND = config.CELERY_RESULT_BACKEND
