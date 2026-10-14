@@ -37,6 +37,7 @@ from governanceplatform.helpers import (
     is_user_regulator,
     render_error_messages,
     render_to_string_multi_languages,
+    sanitize_spreadsheet_cell,
     sort_queryset_by_field,
     translated_queryset,
     user_in_group,
@@ -76,7 +77,6 @@ from .helpers import (
     get_workflow_categories,
     group_keys_by_index,
     is_deadline_exceeded,
-    sanitize_spreadsheet_cell,
     save_answers,
 )
 from .models import (
