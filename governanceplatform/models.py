@@ -670,3 +670,26 @@ class UserSession(AbstractBaseSession):
     class Meta:
         verbose_name = _("User session")
         verbose_name_plural = _("User sessions")
+
+
+class UserPreference(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="preferences",
+    )
+    # "<page>.<aspect>", one row per aspect so the list view (filters, sort) and the
+    # preferences endpoint (columns, legend) never overwrite each other's values.
+    key = models.CharField(max_length=64)
+    value = models.JSONField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("User preference")
+        verbose_name_plural = _("User preferences")
+        constraints = [
+            models.UniqueConstraint(fields=["user", "key"], name="unique_user_preference_key"),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.key}"
