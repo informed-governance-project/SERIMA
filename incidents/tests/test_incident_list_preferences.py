@@ -152,3 +152,39 @@ def test_the_table_carries_the_default_sort_for_the_header_arrows(otp_client, po
     html = otp_client(_user("opadmin@com1.lu")).get(reverse("incidents")).content.decode()
 
     assert re.search(r'id="incidents-table"\s+data-default-sort-field="last_update"', html)
+
+
+@pytest.mark.django_db
+def test_unticking_every_sector_turns_the_filter_off(otp_client, populate_db):
+    """The filter pop-up as a browser submits it: empty fields and no sector at all."""
+    client = otp_client(_user("opadmin@com1.lu"))
+    # Only sub-sectors and sectors without sub-sectors are offered.
+    sector_ids = [str(sector.id) for sector in populate_db["sectors"] if sector.parent][:2]
+    defaults = {"incident_id": "", "incident_status": "", "is_significative_impact": ""}
+
+    filtered = client.get(reverse("incidents"), {**defaults, "affected_sectors": sector_ids})
+    cleared = client.get(reverse("incidents"), defaults)
+
+    assert filtered.context["is_filtered"] is True
+    assert cleared.context["is_filtered"] is False
+
+
+@pytest.mark.django_db
+def test_the_impact_filter_offers_the_blank_choice_first(otp_client, populate_db):
+    html = otp_client(_user("opadmin@com1.lu")).get(reverse("incidents")).content.decode()
+
+    options = re.search(r'<select name="is_significative_impact"[^>]*>(.*?)</select>', html, re.S).group(1)
+    assert re.findall(r'<option value="([^"]*)"', options) == ["", "true", "false"]
+    assert re.search(r'<option value="" selected>---------</option>', options)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("impact, is_filtered", [("true", True), ("false", True), ("", False)])
+def test_the_impact_filter_is_active_only_on_yes_or_no(otp_client, populate_db, impact, is_filtered):
+    operator = _user("opadmin@com1.lu")
+
+    response = otp_client(operator).get(reverse("incidents"), {"is_significative_impact": impact})
+
+    assert response.context["is_filtered"] is is_filtered
+    stored = UserPreference.objects.filter(user=operator, key="incidents.filters").values_list("value", flat=True).first() or {}
+    assert ("is_significative_impact" in stored) is is_filtered
