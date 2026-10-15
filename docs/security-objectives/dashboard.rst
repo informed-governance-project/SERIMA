@@ -31,12 +31,14 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. note::
 
-      The search, the filter and the sort order are kept until you log out, even if you leave the dashboard.
+      The filter, the sort order and the number of entries per page are saved in your account:
+      they still apply after you log out and back in, on any computer or browser.
+      The search is kept only until you log out.
       If the list looks incomplete, check whether the **Filter** button shows **(Active)**.
 
 5. **Icon guide**: The book-shaped icon labeled **AZ** displays the legend above the list.
    Its first row explains the statuses shown in the **Status** column (see the table below); its second row, the action icons.
-   Click the icon again to hide the legend.
+   Click the icon again to hide the legend. The dashboard remembers whether you left the legend open or closed.
 
    .. figure:: /_static/images/security-objectives/dashboard-03.png
       :alt: Legend with the declaration statuses and the action icons
@@ -124,8 +126,8 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. note::
 
-      Your choice of columns is saved in your web browser, not in your account.
-      On another computer or browser, or after clearing your browser data, the dashboard shows all columns again.
+      Your choice of columns is saved in your account,
+      so the dashboard shows the same columns after you log in again, on any computer or browser.
 
 Points 8 to 13 are the actions of each declaration, in the order they appear in the **Actions** column.
 

@@ -45,7 +45,9 @@ Due to the complexity of the screen, its different parts will be presented one b
 
    .. note::
 
-      The search, the filter and the sort order are kept until you log out, even if you leave the dashboard.
+      The filter, the sort order and the number of entries per page are saved in your account:
+      they still apply after you log out and back in, on any computer or browser.
+      The search is kept only until you log out.
       If the list looks incomplete, check whether the **Filter** button shows **(Active)**, and click **Reset** to see all incidents again.
 
 5. **Icon guide**: The Icon guide is represented by a book-shaped icon labeled **AZ**.
@@ -57,7 +59,7 @@ Due to the complexity of the screen, its different parts will be presented one b
 
    The first part of the legend explains the icons of the **Status** column: whether the incident has a significant impact, and whether it is ongoing or closed.
    The second part explains the status of each report in the **Report** column: unsubmitted, under review, submission overdue, late submission, revision required or passed.
-   You can hide the legend by clicking the Icon guide again.
+   You can hide the legend by clicking the Icon guide again. The dashboard remembers whether you left the legend open or closed.
    How a report moves from one status to the next is described in the :doc:`fill-in-a-report` and :doc:`review-a-report` chapters.
 
 6. **Columns and sorting**: The incidents are listed in a table. The screenshot below shows every column an operator can display;
@@ -149,8 +151,8 @@ Due to the complexity of the screen, its different parts will be presented one b
 
    .. note::
 
-      Your choice of columns is saved in your web browser, not in your account.
-      On another computer or browser, or after clearing your browser data, the dashboard shows the default columns again.
+      Your choice of columns is saved in your account,
+      so the dashboard shows the same columns after you log in again, on any computer or browser.
 
    .. figure:: /_static/images/incident-notification/dashboard-05.png
       :alt: Choice of columns pop-up with the displayed columns ticked
