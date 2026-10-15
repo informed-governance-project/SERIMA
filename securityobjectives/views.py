@@ -25,7 +25,7 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django.forms.models import model_to_dict
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -37,15 +37,20 @@ from django_otp.decorators import otp_required
 from kombu.exceptions import OperationalError
 
 from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
+from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
     celery_health_check,
+    default_sort_key,
     get_active_company_from_session,
+    get_preferences,
     get_sectors_grouped,
     is_user_operator,
     is_user_regulator,
+    prune_invalid_filters,
     render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
+    update_list_params,
     user_in_group,
 )
 from governanceplatform.models import Company, Regulation, Sector
@@ -97,33 +102,11 @@ def get_security_objectives(request):
     user = request.user
     standard_answer_queryset = StandardAnswer.objects.none()
     template = "operator/so_dashboard.html"
-    search_value = request.GET.get("search", None)
-
-    if "reset_sort" in request.GET:
-        request.session.pop("so_sort_params", None)
-        return redirect("securityobjectives")
-
-    if "reset" in request.GET or search_value == "":
-        request.session.pop("so_filter_params", None)
-        return redirect("securityobjectives")
-
-    # Save filter params in user's session
-    current_filter_params = request.session.get("so_filter_params", {}).copy()
-    current_sort_params = request.session.get("so_sort_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        if key in ["sort_field", "sort_direction"]:
-            continue
-        current_filter_params[key] = values if key == "sectors" else values[0]
-
-    for key, value in request.GET.items():
-        if key in ("sort_field", "sort_direction"):
-            current_sort_params[key] = value
-
-    so_filter_params = current_filter_params
-    so_sort_params = current_sort_params
-    request.session["so_filter_params"] = so_filter_params
-    request.session["so_sort_params"] = so_sort_params
+    list_preferences = update_list_params(request, "securityobjectives", StandardAnswerFilter, ALLOWED_SORT_FIELDS)
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    so_filter_params = list_preferences.filters
+    so_sort_params = list_preferences.sort
 
     if is_user_regulator(user):
         regulator = user.regulators.first()
@@ -147,21 +130,22 @@ def get_security_objectives(request):
     standard_answer_queryset = get_standard_answers_with_progress(standard_answer_queryset)
 
     # Apply sorting
-    sort_field = so_sort_params.get("sort_field", "last_update")
-    sort_direction = so_sort_params.get("sort_direction", "desc")
+    sort_field = so_sort_params["sort_field"]
+    sort_direction = so_sort_params["sort_direction"]
     standard_answer_queryset = sort_queryset_by_field(
         standard_answer_queryset,
         sort_field,
         sort_direction,
-        "last_update",
+        default_sort_key("securityobjectives"),
         ALLOWED_SORT_FIELDS,
     )
 
     security_objective_filter = StandardAnswerFilter(so_filter_params, queryset=standard_answer_queryset)
+    prune_invalid_filters(user, "securityobjectives", list_preferences, security_objective_filter)
 
     # Filter
     so_answer_list = security_objective_filter.qs
-    per_page = so_filter_params.get("per_page", 10)
+    per_page = list_preferences.per_page
     page_number = so_filter_params.get("page")
     paginator = Paginator(so_answer_list, per_page)
     page_obj = paginator.get_page(page_number)
@@ -173,8 +157,12 @@ def get_security_objectives(request):
         "filter": security_objective_filter,
         "sort_field": sort_field,
         "sort_direction": sort_direction,
+        "default_sort_field": default_sort_key("securityobjectives"),
+        "per_page_choices": PER_PAGE_CHOICES,
         "is_filtered": bool(is_filtered),
         "can_export_security_objectives": can_export_security_objectives(user),
+        "visible_columns": list_preferences.columns,
+        "show_legend": list_preferences.legend,
     }
 
     return render(request, template, context=context)
@@ -525,6 +513,7 @@ def declaration(request):
             else ""
         ),
         "can_export_security_objectives": can_export_security_objectives(user),
+        "show_legend": get_preferences(user, "so_declaration")["legend"],
     }
 
     return render(request, "security_objectives/declaration.html", context=context)

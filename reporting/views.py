@@ -27,13 +27,18 @@ from django.utils.translation import override
 from django.views.decorators.http import require_http_methods
 from django_otp.decorators import otp_required
 
+from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
     celery_health_check,
+    default_sort_key,
+    get_list_filters,
     get_sectors_grouped,
     is_user_regulator,
+    prune_invalid_filters,
     render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
+    update_list_params,
     user_in_group,
 )
 from governanceplatform.models import Company, Regulation, Sector
@@ -131,48 +136,30 @@ def reporting(request):
     else:
         project_queryset = Project.objects.none()
 
-    search_value = request.GET.get("search", None)
-
-    if "reset_sort" in request.GET:
-        request.session.pop("reporting_sort_params", None)
-        return redirect("reporting")
-
-    if "reset" in request.GET or search_value == "":
-        request.session.pop("reporting_filter_params", None)
-        return redirect("reporting")
-
-    current_params = request.session.get("reporting_filter_params", {}).copy()
-    current_sort_params = request.session.get("reporting_sort_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        current_params[key] = values if key == "sectors" else values[0]
-
-    for key, value in request.GET.items():
-        if key in ("sort_field", "sort_direction"):
-            current_sort_params[key] = value
-
-    reporting_filter_params = current_params
-    reporting_sort_params = current_sort_params
-    request.session["reporting_filter_params"] = reporting_filter_params
-    request.session["reporting_sort_params"] = reporting_sort_params
+    list_preferences = update_list_params(request, "reporting", ProjectFilter, ALLOWED_DASHBOARD_SORT_FIELDS)
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    reporting_filter_params = list_preferences.filters
+    reporting_sort_params = list_preferences.sort
 
     # Apply sorting
-    sort_field = reporting_sort_params.get("sort_field", "updated_at")
-    sort_direction = reporting_sort_params.get("sort_direction", "desc")
+    sort_field = reporting_sort_params["sort_field"]
+    sort_direction = reporting_sort_params["sort_direction"]
 
     project_queryset = sort_queryset_by_field(
         project_queryset,
         sort_field,
         sort_direction,
-        "updated_at",
+        default_sort_key("reporting"),
         ALLOWED_DASHBOARD_SORT_FIELDS,
     )
 
     project_filter = ProjectFilter(reporting_filter_params, queryset=project_queryset)
+    prune_invalid_filters(user, "reporting", list_preferences, project_filter)
 
     project_filter_list = project_filter.qs
 
-    per_page = reporting_filter_params.get("per_page", 10)
+    per_page = list_preferences.per_page
     page_number = reporting_filter_params.get("page")
     paginator = Paginator(project_filter_list, per_page)
     page_obj = paginator.get_page(page_number)
@@ -184,9 +171,12 @@ def reporting(request):
         "filter": project_filter,
         "sort_field": sort_field,
         "sort_direction": sort_direction,
+        "default_sort_field": default_sort_key("reporting"),
+        "per_page_choices": PER_PAGE_CHOICES,
         "is_filtered": bool(is_filtered),
         "projects": page_obj,
         "projects_running": projects_running,
+        "visible_columns": list_preferences.columns,
     }
 
     return render(request, "reporting/dashboard.html", context)
@@ -201,44 +191,28 @@ def dashboard_report_project(request, report_project_id: int):
 
     company_project_qs = project.companyproject_set.all()
 
-    search_value = request.GET.get("search", None)
-
-    if "reset_sort" in request.GET:
-        request.session.pop("dashboard_project_sort_params", None)
-        return redirect("dashboard_report_project", report_project_id=project.id)
-
-    if "reset" in request.GET or search_value == "":
-        request.session.pop("dashboard_project_filter_params", None)
-        return redirect("dashboard_report_project", report_project_id=project.id)
-
-    current_params = request.session.get("dashboard_project_filter_params", {}).copy()
-    current_sort_params = request.session.get("dashboard_project_sort_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        current_params[key] = values if key in ["sector", "year"] else values[0]
-
-    for key, value in request.GET.items():
-        if key in ("sort_field", "sort_direction"):
-            current_sort_params[key] = value
-
-    dashboard_project_filter_params = current_params
-    dashboard_project_sort_params = current_sort_params
-    request.session["dashboard_project_filter_params"] = dashboard_project_filter_params
-    request.session["dashboard_project_sort_params"] = dashboard_project_sort_params
+    list_preferences = update_list_params(
+        request, "reporting_project_dashboard", CompanyProjectFilter, ALLOWED_PROJECT_DASHBOARD_SORT_FIELDS
+    )
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    dashboard_project_filter_params = list_preferences.filters
+    dashboard_project_sort_params = list_preferences.sort
 
     # Apply sorting
-    sort_field = dashboard_project_sort_params.get("sort_field", "company")
-    sort_direction = dashboard_project_sort_params.get("sort_direction", "desc")
+    sort_field = dashboard_project_sort_params["sort_field"]
+    sort_direction = dashboard_project_sort_params["sort_direction"]
 
     company_project_qs = sort_queryset_by_field(
         company_project_qs,
         sort_field,
         sort_direction,
-        "company",
+        default_sort_key("reporting_project_dashboard"),
         ALLOWED_PROJECT_DASHBOARD_SORT_FIELDS,
     )
 
     company_project_filter = CompanyProjectFilter(dashboard_project_filter_params, queryset=company_project_qs, project=project)
+    prune_invalid_filters(request.user, "reporting_project_dashboard", list_preferences, company_project_filter)
 
     company_project_filter_list = company_project_filter.qs
 
@@ -250,7 +224,7 @@ def dashboard_report_project(request, report_project_id: int):
 
     selected_status = {field: not company_project_filter_list.filter(**{field: False}).exists() for field in input_select_fields}
 
-    per_page = dashboard_project_filter_params.get("per_page", 10)
+    per_page = list_preferences.per_page
     page_number = dashboard_project_filter_params.get("page")
     paginator = Paginator(company_project_filter_list, per_page)
     page_obj = paginator.get_page(page_number)
@@ -266,6 +240,8 @@ def dashboard_report_project(request, report_project_id: int):
         "filter": company_project_filter,
         "sort_field": sort_field,
         "sort_direction": sort_direction,
+        "default_sort_field": default_sort_key("reporting_project_dashboard"),
+        "per_page_choices": PER_PAGE_CHOICES,
         "is_filtered": bool(is_filtered),
         "selected_status": selected_status,
         "project": project,
@@ -743,7 +719,7 @@ def bulk_update_company_project(request, report_project_id: int):
     value = request.POST.get("value") == "true"
 
     company_project_qs = project.companyproject_set.all()
-    dashboard_project_filter_params = request.session.get("dashboard_project_filter_params", {}).copy()
+    dashboard_project_filter_params = get_list_filters(request, "reporting_project_dashboard")
 
     company_project_filter = CompanyProjectFilter(dashboard_project_filter_params, queryset=company_project_qs, project=project)
 
@@ -784,19 +760,10 @@ def add_report_recommendations(request, company_id, sector_id, year):
         return validate_result
     company, sector, year = validate_result
 
-    redirect_url = reverse("add_report_recommendations", args=[company.id, sector.id, year])
-
-    if "reset" in request.GET:
-        request.session.pop("report_recommendations_filter_params", None)
-        return redirect(redirect_url)
-
-    current_params = request.session.get("report_recommendations_filter_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        current_params[key] = values if key == "sectors" else values[0]
-
-    filter_params = current_params
-    request.session["report_recommendations_filter_params"] = current_params
+    list_preferences = update_list_params(request, "report_recommendations", RecommendationFilter)
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    filter_params = list_preferences.filters
 
     report_recommendations = get_report_recommandations(company, year, sector)
     recommendations_ids = [rec.observation_recommendation.id for rec in report_recommendations]
@@ -804,6 +771,7 @@ def add_report_recommendations(request, company_id, sector_id, year):
     recommendations_queryset = ObservationRecommendation.objects.exclude(id__in=recommendations_ids)
 
     recommendation_filter = RecommendationFilter(filter_params, queryset=recommendations_queryset)
+    prune_invalid_filters(user, "report_recommendations", list_preferences, recommendation_filter)
 
     is_filtered = {k: v for k, v in filter_params.items()}
 

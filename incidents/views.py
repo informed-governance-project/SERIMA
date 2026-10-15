@@ -16,7 +16,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -31,17 +31,21 @@ from openpyxl import Workbook
 
 from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
 from governanceplatform.decorators import check_user_is_correct, regulator_role_required
+from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
     annotate_translated_field_from_related_models,
+    default_sort_key,
     get_active_company_from_session,
     is_observer_user,
     is_user_operator,
     is_user_regulator,
+    prune_invalid_filters,
     render_error_messages,
     render_to_string_multi_languages,
     sanitize_spreadsheet_cell,
     sort_queryset_by_field,
     translated_queryset,
+    update_list_params,
     user_in_group,
 )
 from governanceplatform.models import (
@@ -108,33 +112,12 @@ def get_incidents(request):
     user = request.user
     incidents = Incident.objects.filter(sector_regulation__isnull=False)
     html_view = "operator/incidents.html"
-    search_value = request.GET.get("search", None)
-
-    if "reset_sort" in request.GET:
-        request.session.pop("incidents_sort_params", None)
-        return redirect("incidents")
-
-    if "reset" in request.GET or search_value == "":
-        request.session.pop("incidents_filter_params", None)
-        return redirect("incidents")
-
-    # Save filter params in user's session
-    current_params = request.session.get("incidents_filter_params", {}).copy()
-    current_sort_params = request.session.get("incidents_sort_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        if key in ["sort_field", "sort_direction"]:
-            continue
-        current_params[key] = values if key == "affected_sectors" else values[0]
-
-    for key, value in request.GET.items():
-        if key in ("sort_field", "sort_direction"):
-            current_sort_params[key] = value
-
-    incidents_filter_params = current_params
-    incidents_sort_params = current_sort_params
-    request.session["incidents_filter_params"] = incidents_filter_params
-    request.session["incidents_sort_params"] = incidents_sort_params
+    preference_page = "regulator_incidents" if request.path == reverse("regulator_incidents") else "incidents"
+    list_preferences = update_list_params(request, preference_page, IncidentFilter, ALLOWED_SORT_FIELDS)
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    incidents_filter_params = list_preferences.filters
+    incidents_sort_params = list_preferences.sort
 
     if is_user_regulator(user):
         html_view = "regulator/incidents.html"
@@ -169,8 +152,8 @@ def get_incidents(request):
         incidents = incidents.filter(contact_user=user)
 
     # Apply sorting
-    sort_field = incidents_sort_params.get("sort_field", "last_update")
-    sort_direction = incidents_sort_params.get("sort_direction", "desc")
+    sort_field = incidents_sort_params["sort_field"]
+    sort_direction = incidents_sort_params["sort_direction"]
 
     if sort_field == "company_name":
         annotated_name = ALLOWED_SORT_FIELDS.get(sort_field)["field"]
@@ -219,17 +202,18 @@ def get_incidents(request):
         incidents,
         sort_field,
         sort_direction,
-        "incident_last_update",
+        default_sort_key(preference_page),
         ALLOWED_SORT_FIELDS,
     )
 
     f = IncidentFilter(incidents_filter_params, queryset=incidents)
+    prune_invalid_filters(user, preference_page, list_preferences, f)
     incident_list = f.qs.prefetch_related(
         "sector_regulation__workflows__sectorregulationworkflow_set",
         "incidentworkflow_set__workflow__sectorregulationworkflow_set",
     )
 
-    per_page = incidents_filter_params.get("per_page", 10)
+    per_page = list_preferences.per_page
     page_number = incidents_filter_params.get("page")
     paginator = Paginator(incident_list, per_page)
     page_obj = paginator.get_page(page_number)
@@ -306,10 +290,15 @@ def get_incidents(request):
             "filter": f,
             "sort_field": sort_field,
             "sort_direction": sort_direction,
+            "default_sort_field": default_sort_key(preference_page),
+            "per_page_choices": PER_PAGE_CHOICES,
             "incidents": page_obj,
             "is_filtered": bool(is_filtered),
             "is_regulator_incidents": request.session.get("is_regulator_incidents", False),
             "can_export_incidents": can_export_incidents(user),
+            "preference_page": preference_page,
+            "visible_columns": list_preferences.columns,
+            "show_legend": list_preferences.legend,
         },
     )
 
