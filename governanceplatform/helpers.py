@@ -2,19 +2,23 @@ import logging
 import os
 import secrets
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, cast
 
 import bleach
 import redis
 from bleach.css_sanitizer import CSSSanitizer
 from celery import current_app
+from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import translation
@@ -24,7 +28,16 @@ from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
-from .globals import CROCKFORD_ALPHABET, CROCKFORD_INPUT_TRANSLATION, REFERENCE_TOKEN_LENGTH
+from .globals import (
+    CROCKFORD_ALPHABET,
+    CROCKFORD_INPUT_TRANSLATION,
+    DEFAULT_PER_PAGE,
+    LIST_PREFERENCE_PAGES,
+    PER_PAGE_CHOICES,
+    REFERENCE_TOKEN_LENGTH,
+    SESSION_ONLY_LIST_PARAMS,
+)
+from .models import UserPreference
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -34,6 +47,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
     from django.template.response import TemplateResponse
     from django.utils.functional import Promise
+    from django_filters import FilterSet
 
     from .models import Company, Sector, User
 
@@ -425,10 +439,10 @@ def sort_queryset_by_field(
     qs: QuerySet,
     sort_field: str,
     sort_direction: str,
-    default_sort_field: str,
+    default_key: str,
     allowed_sort_fields: dict[str, dict[str, str]],
 ) -> QuerySet:
-
+    default_sort_field = allowed_sort_fields[default_key]["field"]
     config_field = allowed_sort_fields.get(sort_field)
     if not config_field:
         return qs.order_by(f"-{default_sort_field}")
@@ -584,3 +598,163 @@ def sanitize_spreadsheet_cell(value: object) -> object:
     if value.startswith(SPREADSHEET_FORMULA_PREFIXES):
         return f"'{value}"
     return value
+
+
+@dataclass
+class ListPreferences:
+    """A list page's state: its filters (stored ones plus the session's search and page), sort, columns and legend."""
+
+    filters: dict[str, Any]
+    # The stored sort over the page's default, so it always holds sort_field and sort_direction on a sortable page.
+    sort: dict[str, str]
+    per_page: int
+    columns: dict[str, bool]
+    legend: bool
+
+
+def default_sort_key(page: str) -> str:
+    """The sort key a sortable list page falls back to, as named in its module's ALLOWED_SORT_FIELDS."""
+    return LIST_PREFERENCE_PAGES[page]["default_sort"][0]
+
+
+def preference_key(page: str, aspect: str) -> str:
+    return f"{page}.{aspect}"
+
+
+def get_preferences(user: User, page: str) -> dict[str, Any]:
+    """Return every aspect of a list page, stored or default, in a single query."""
+    config = LIST_PREFERENCE_PAGES[page]
+    keys = {preference_key(page, aspect): aspect for aspect in config["aspects"]}
+    stored = {keys[key]: value for key, value in UserPreference.objects.filter(user=user, key__in=keys).values_list("key", "value")}
+
+    hidden_columns = config.get("hidden_columns", ())
+    columns = {column: column not in hidden_columns for column in config.get("columns", ())}
+    # Merged over the defaults so a column added after the user saved their choice still appears.
+    columns.update({column: visible for column, visible in stored.get("columns", {}).items() if column in columns})
+
+    return {
+        "filters": stored.get("filters", {}),
+        "sort": stored.get("sort", {}),
+        "columns": columns,
+        "legend": stored.get("legend", False),
+    }
+
+
+def set_preference(user: User, page: str, aspect: str, value: Any) -> None:
+    UserPreference.objects.update_or_create(user=user, key=preference_key(page, aspect), defaults={"value": value})
+
+
+def delete_preference(user: User, page: str, aspect: str) -> None:
+    UserPreference.objects.filter(user=user, key=preference_key(page, aspect)).delete()
+
+
+def clean_client_preference(page: str, aspect: str, value: Any) -> bool | dict[str, bool]:
+    """Validate a columns or legend value sent by the browser; raise ValidationError otherwise."""
+    if aspect == "legend":
+        if not isinstance(value, bool):
+            raise ValidationError(_("Invalid legend state."))
+        return value
+
+    columns = LIST_PREFERENCE_PAGES[page].get("columns", ())
+    if (
+        not isinstance(value, dict)
+        or not value
+        or any(column not in columns or not isinstance(visible, bool) for column, visible in value.items())
+    ):
+        raise ValidationError(_("Invalid choice of columns."))
+    return value
+
+
+def list_session_key(page: str) -> str:
+    return f"{page}_list_params"
+
+
+def get_list_filters(request: HttpRequest, page: str) -> dict[str, Any]:
+    """The filters a list page currently applies, for a view acting on that list without displaying it."""
+    user = cast("User", request.user)
+    return {**get_preferences(user, page)["filters"], **request.session.get(list_session_key(page), {})}
+
+
+def update_list_params(
+    request: HttpRequest,
+    page: str,
+    filterset_class: type[FilterSet],
+    allowed_sort_fields: dict[str, dict[str, str]] | None = None,
+) -> ListPreferences | HttpResponseRedirect:
+    """Apply the request's filter and sort parameters to the page's stored ones, and return the page's state.
+
+    A reset returns a redirect instead, so the reset parameter leaves the URL.
+    """
+    # Only reached from views behind login_required.
+    user = cast("User", request.user)
+    session_key = list_session_key(page)
+    session_params = request.session.get(session_key, {}).copy()
+
+    if "reset_sort" in request.GET:
+        delete_preference(user, page, "sort")
+        return redirect(request.path)
+
+    if "reset" in request.GET:
+        delete_preference(user, page, "filters")
+        request.session.pop(session_key, None)
+        return redirect(request.path)
+
+    if request.GET.get("search") == "":
+        session_params.pop("search", None)
+        request.session[session_key] = session_params
+        return redirect(request.path)
+
+    preferences = get_preferences(user, page)
+    filters = dict(preferences["filters"])
+    multi_value_filters = {
+        name
+        for name, list_filter in filterset_class.base_filters.items()
+        if issubclass(list_filter.field_class, (forms.MultipleChoiceField, forms.ModelMultipleChoiceField))
+    }
+
+    for key, values in request.GET.lists():
+        if key in SESSION_ONLY_LIST_PARAMS:
+            session_params[key] = values[0]
+        elif key == "per_page":
+            if values[0].isdigit() and int(values[0]) in PER_PAGE_CHOICES:
+                filters[key] = int(values[0])
+        elif key in filterset_class.base_filters:
+            selected = [value for value in values if value != ""]
+            if not selected:
+                filters.pop(key, None)
+            else:
+                filters[key] = selected if key in multi_value_filters else selected[0]
+
+    sort = dict(preferences["sort"])
+    if allowed_sort_fields is not None:
+        if request.GET.get("sort_field") in allowed_sort_fields:
+            sort["sort_field"] = request.GET["sort_field"]
+        if request.GET.get("sort_direction") in ("asc", "desc"):
+            sort["sort_direction"] = request.GET["sort_direction"]
+
+    if filters != preferences["filters"]:
+        set_preference(user, page, "filters", filters)
+    if sort != preferences["sort"]:
+        set_preference(user, page, "sort", sort)
+    request.session[session_key] = session_params
+
+    default_sort = LIST_PREFERENCE_PAGES[page].get("default_sort")
+    return ListPreferences(
+        filters={**filters, **session_params},
+        sort={"sort_field": default_sort[0], "sort_direction": default_sort[1], **sort} if default_sort else sort,
+        per_page=int(filters.get("per_page", DEFAULT_PER_PAGE)),
+        columns=preferences["columns"],
+        legend=preferences["legend"],
+    )
+
+
+def prune_invalid_filters(user: User, page: str, list_preferences: ListPreferences, filterset: FilterSet) -> None:
+    """Drop the stored filters the FilterSet rejects, e.g. a sector deleted since the user picked it.
+
+    django-filter already ignores an invalid field, but the value would otherwise stay stored and
+    keep flagging the form with an error at every login.
+    """
+    stored_filters = {key: value for key, value in list_preferences.filters.items() if key not in SESSION_ONLY_LIST_PARAMS}
+    invalid = stored_filters.keys() & filterset.errors.keys()
+    if invalid:
+        set_preference(user, page, "filters", {key: value for key, value in stored_filters.items() if key not in invalid})
