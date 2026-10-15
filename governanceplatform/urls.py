@@ -74,6 +74,11 @@ urlpatterns = [
         views.edit_account,
         name="edit_account",
     ),
+    path(
+        "account/preferences/<slug:page>/<slug:aspect>/",
+        views.save_list_preference,
+        name="save_list_preference",
+    ),
     # Incident notification
     path("incidents/", include("incidents.urls"), name="incidents"),
     # Report Wizard
