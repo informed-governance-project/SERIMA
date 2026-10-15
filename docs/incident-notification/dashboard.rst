@@ -33,7 +33,7 @@ Due to the complexity of the screen, its different parts will be presented one b
 
    - **Incident Reference**: Shows only the incidents whose reference contains the text you enter.
    - **Incident status**: Shows only the **Ongoing** or only the **Closed** incidents.
-   - **Significant impact**: Shows only the incidents with (**Yes**) or without (**No**) a significant impact. **Unknown**, the default, shows all incidents.
+   - **Significant impact**: Shows only the incidents with (**Yes**) or without (**No**) a significant impact.
    - **Sectors**: Shows only the incidents affecting the sectors you tick in the drop-down list.
 
    Click **Search** to apply the filter, or **Reset** to clear it.
