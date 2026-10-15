@@ -1,3 +1,4 @@
+import json
 from collections import OrderedDict
 from typing import TYPE_CHECKING
 
@@ -8,6 +9,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import PasswordResetConfirmView, PasswordResetView
+from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
 from django.db.models.functions import Now
 from django.http import Http404, JsonResponse
@@ -29,7 +31,14 @@ from .forms import (
     SelectCompany,
     TermsAcceptanceForm,
 )
-from .helpers import celery_health_check, is_user_regulator, render_error_messages
+from .globals import CLIENT_PREFERENCE_ASPECTS, LIST_PREFERENCE_PAGES
+from .helpers import (
+    celery_health_check,
+    clean_client_preference,
+    is_user_regulator,
+    render_error_messages,
+    set_preference,
+)
 from .permissions import set_operator_admin_permissions, set_operator_user_permissions
 
 if TYPE_CHECKING:
@@ -339,3 +348,24 @@ def async_pdf_status(request, task_id: UUID, kind: str):
         return JsonResponse({"status": "FAILURE", "messages": render_error_messages(request)})
 
     return JsonResponse({"status": "PENDING"})
+
+
+@login_required
+@otp_required
+@check_user_is_correct
+@require_http_methods(["POST"])
+def save_list_preference(request, page: str, aspect: str):
+    """Store a column choice or legend state sent by a list page's JavaScript."""
+    if aspect not in CLIENT_PREFERENCE_ASPECTS or aspect not in LIST_PREFERENCE_PAGES.get(page, {}).get("aspects", ()):
+        raise Http404()
+
+    try:
+        payload = json.loads(request.body)
+        if not isinstance(payload, dict):
+            raise ValidationError(_("Invalid request."))
+        value = clean_client_preference(page, aspect, payload.get("value"))
+    except ValueError, ValidationError:
+        return JsonResponse({"error": _("Invalid preference.")}, status=400)
+
+    set_preference(request.user, page, aspect, value)
+    return JsonResponse({"value": value})
