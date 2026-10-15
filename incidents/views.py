@@ -1,6 +1,7 @@
 import csv
 import logging
 from datetime import date
+from functools import partial
 from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
@@ -34,12 +35,12 @@ from governanceplatform.decorators import check_user_is_correct, regulator_role_
 from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
     annotate_translated_field_from_related_models,
+    bind_applicable_filters,
     default_sort_key,
     get_active_company_from_session,
     is_observer_user,
     is_user_operator,
     is_user_regulator,
-    prune_invalid_filters,
     render_error_messages,
     render_to_string_multi_languages,
     sanitize_spreadsheet_cell,
@@ -206,8 +207,7 @@ def get_incidents(request):
         ALLOWED_SORT_FIELDS,
     )
 
-    f = IncidentFilter(incidents_filter_params, queryset=incidents)
-    prune_invalid_filters(user, preference_page, list_preferences, f)
+    f, incidents_filter_params = bind_applicable_filters(partial(IncidentFilter, queryset=incidents), incidents_filter_params)
     incident_list = f.qs.prefetch_related(
         "sector_regulation__workflows__sectorregulationworkflow_set",
         "incidentworkflow_set__workflow__sectorregulationworkflow_set",

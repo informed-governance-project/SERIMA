@@ -1,6 +1,7 @@
 import os
 import tempfile
 import uuid
+from functools import partial
 from urllib.parse import quote as urlquote
 
 from celery import chain, chord, group
@@ -29,12 +30,12 @@ from django_otp.decorators import otp_required
 
 from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
+    bind_applicable_filters,
     celery_health_check,
     default_sort_key,
     get_list_filters,
     get_sectors_grouped,
     is_user_regulator,
-    prune_invalid_filters,
     render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
@@ -154,8 +155,9 @@ def reporting(request):
         ALLOWED_DASHBOARD_SORT_FIELDS,
     )
 
-    project_filter = ProjectFilter(reporting_filter_params, queryset=project_queryset)
-    prune_invalid_filters(user, "reporting", list_preferences, project_filter)
+    project_filter, reporting_filter_params = bind_applicable_filters(
+        partial(ProjectFilter, queryset=project_queryset), reporting_filter_params
+    )
 
     project_filter_list = project_filter.qs
 
@@ -211,8 +213,9 @@ def dashboard_report_project(request, report_project_id: int):
         ALLOWED_PROJECT_DASHBOARD_SORT_FIELDS,
     )
 
-    company_project_filter = CompanyProjectFilter(dashboard_project_filter_params, queryset=company_project_qs, project=project)
-    prune_invalid_filters(request.user, "reporting_project_dashboard", list_preferences, company_project_filter)
+    company_project_filter, dashboard_project_filter_params = bind_applicable_filters(
+        partial(CompanyProjectFilter, queryset=company_project_qs, project=project), dashboard_project_filter_params
+    )
 
     company_project_filter_list = company_project_filter.qs
 
@@ -770,8 +773,9 @@ def add_report_recommendations(request, company_id, sector_id, year):
 
     recommendations_queryset = ObservationRecommendation.objects.exclude(id__in=recommendations_ids)
 
-    recommendation_filter = RecommendationFilter(filter_params, queryset=recommendations_queryset)
-    prune_invalid_filters(user, "report_recommendations", list_preferences, recommendation_filter)
+    recommendation_filter, filter_params = bind_applicable_filters(
+        partial(RecommendationFilter, queryset=recommendations_queryset), filter_params
+    )
 
     is_filtered = {k: v for k, v in filter_params.items()}
 

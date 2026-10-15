@@ -2,6 +2,7 @@ import copy
 import json
 import logging
 from collections import defaultdict
+from functools import partial
 from typing import TYPE_CHECKING
 
 import openpyxl
@@ -39,6 +40,7 @@ from kombu.exceptions import OperationalError
 from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
 from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
+    bind_applicable_filters,
     celery_health_check,
     default_sort_key,
     get_active_company_from_session,
@@ -46,7 +48,6 @@ from governanceplatform.helpers import (
     get_sectors_grouped,
     is_user_operator,
     is_user_regulator,
-    prune_invalid_filters,
     render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
@@ -140,8 +141,9 @@ def get_security_objectives(request):
         ALLOWED_SORT_FIELDS,
     )
 
-    security_objective_filter = StandardAnswerFilter(so_filter_params, queryset=standard_answer_queryset)
-    prune_invalid_filters(user, "securityobjectives", list_preferences, security_objective_filter)
+    security_objective_filter, so_filter_params = bind_applicable_filters(
+        partial(StandardAnswerFilter, queryset=standard_answer_queryset), so_filter_params
+    )
 
     # Filter
     so_answer_list = security_objective_filter.qs

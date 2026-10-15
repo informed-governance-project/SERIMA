@@ -692,6 +692,8 @@ def update_list_params(
 
     if "reset_sort" in request.GET:
         delete_preference(user, page, "sort")
+        session_params.pop("page", None)
+        request.session[session_key] = session_params
         return redirect(request.path)
 
     if "reset" in request.GET:
@@ -701,11 +703,17 @@ def update_list_params(
 
     if request.GET.get("search") == "":
         session_params.pop("search", None)
+        session_params.pop("page", None)
         request.session[session_key] = session_params
         return redirect(request.path)
 
     preferences = get_preferences(user, page)
     filters = dict(preferences["filters"])
+    previous_search = session_params.get("search")
+    if any(key in filterset_class.base_filters and key not in SESSION_ONLY_LIST_PARAMS for key in request.GET):
+        # A filter form submission carries the whole filter set, and a multi-select left empty sends
+        # nothing at all, so the submitted filters replace the stored ones instead of merging into them.
+        filters = {key: value for key, value in filters.items() if key == "per_page"}
     multi_value_filters = {
         name
         for name, list_filter in filterset_class.base_filters.items()
@@ -732,10 +740,15 @@ def update_list_params(
         if request.GET.get("sort_direction") in ("asc", "desc"):
             sort["sort_direction"] = request.GET["sort_direction"]
 
-    if filters != preferences["filters"]:
+    filters_changed = filters != preferences["filters"]
+    sort_changed = sort != preferences["sort"]
+    if filters_changed:
         set_preference(user, page, "filters", filters)
-    if sort != preferences["sort"]:
+    if sort_changed:
         set_preference(user, page, "sort", sort)
+    if filters_changed or sort_changed or session_params.get("search") != previous_search:
+        # The previous page number belongs to the previous result set.
+        session_params.pop("page", None)
     request.session[session_key] = session_params
 
     default_sort = LIST_PREFERENCE_PAGES[page].get("default_sort")
@@ -748,13 +761,17 @@ def update_list_params(
     )
 
 
-def prune_invalid_filters(user: User, page: str, list_preferences: ListPreferences, filterset: FilterSet) -> None:
-    """Drop the stored filters the FilterSet rejects, e.g. a sector deleted since the user picked it.
+def bind_applicable_filters[F: FilterSet](
+    make_filterset: Callable[[dict[str, Any]], F], params: dict[str, Any]
+) -> tuple[F, dict[str, Any]]:
+    """Bind a list's filters, leaving out the values the page rejects, and return the filters actually applied.
 
-    django-filter already ignores an invalid field, but the value would otherwise stay stored and
-    keep flagging the form with an error at every login.
+    A stored value can be valid only elsewhere: a year declared by another company of the operator, a year of
+    another report project. It stays stored for when it applies again, but is neither applied nor reported as
+    an error here, so the list, the form and the (Active) label agree.
     """
-    stored_filters = {key: value for key, value in list_preferences.filters.items() if key not in SESSION_ONLY_LIST_PARAMS}
-    invalid = stored_filters.keys() & filterset.errors.keys()
-    if invalid:
-        set_preference(user, page, "filters", {key: value for key, value in stored_filters.items() if key not in invalid})
+    filterset = make_filterset(params)
+    if not filterset.errors:
+        return filterset, params
+    applicable = {key: value for key, value in params.items() if key not in filterset.errors}
+    return make_filterset(applicable), applicable
