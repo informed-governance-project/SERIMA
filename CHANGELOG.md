@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moving to another page of a list filtered on several values, such as two sectors, kept only one of them, and a search holding a character such as `&` was cut short there (#673)
 - A rows-per-page value other than 10, 25, 50 or 100 typed into the address of a list caused a server error; it is now ignored (#673)
 - The column chooser of the reporting dashboard labelled the author column "Autor" (#673)
+- Unticking every value of a multi-choice filter, such as the sectors, and clicking "Search" left the previous values applied until "Reset" was clicked. The "Filter" button of the incident list also showed "(Active)" after any search from the filter pop-up, even with every field left empty, as a significant impact left on "Unknown" counted as a filter; that default choice now reads "---------", like the other fields of the pop-up (#673)
+- Applying a filter, a search or a sort order while on a later page of a list kept that page number, so the new results could open on their last page instead of the first (#673)
 
 ## [0.6.0] - 2026-10-06
 
