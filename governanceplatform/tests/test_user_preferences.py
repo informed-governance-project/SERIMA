@@ -2,6 +2,7 @@
 
 import json
 import re
+from functools import partial
 
 import django_filters
 import pytest
@@ -19,8 +20,8 @@ from django_otp.plugins.otp_static.models import StaticDevice
 from governanceplatform.globals import DEFAULT_PER_PAGE, PER_PAGE_CHOICES
 from governanceplatform.helpers import (
     ListPreferences,
+    bind_applicable_filters,
     get_preferences,
-    prune_invalid_filters,
     set_preference,
     update_list_params,
 )
@@ -151,7 +152,9 @@ def test_filters_and_sort_survive_a_new_session(operator):
 
 @pytest.mark.django_db
 def test_search_and_page_last_only_for_the_session(operator):
-    preferences, request = _incidents(operator, "?search=ransomware&page=3&incident_status=CLOS")
+    _, request = _incidents(operator, "?incident_status=CLOS")
+    _incidents(operator, "?search=ransomware", session=request.session)
+    preferences, _ = _incidents(operator, "?page=3", session=request.session)
     assert preferences.filters == {"incident_status": "CLOS", "search": "ransomware", "page": "3"}
 
     same_session, _ = _incidents(operator, session=request.session)
@@ -293,7 +296,7 @@ def test_columns_and_legend_are_returned_with_the_list_state(operator):
     assert preferences.columns["reference"] is False
 
 
-# prune_invalid_filters
+# bind_applicable_filters
 
 
 class SectorFilter(django_filters.FilterSet):
@@ -305,28 +308,31 @@ class SectorFilter(django_filters.FilterSet):
 
 
 @pytest.mark.django_db
-def test_a_filter_on_deleted_data_is_dropped_from_storage(operator):
-    deleted_sector_id = Sector.objects.order_by("-id").first().id + 1000
-    set_preference(operator, "reporting", "filters", {"sectors": [str(deleted_sector_id)], "per_page": "25"})
-    preferences = _state(_list_request(operator), "reporting", SectorFilter)
-    filterset = SectorFilter(preferences.filters, queryset=Sector.objects.all())
+def test_a_rejected_filter_value_is_neither_applied_nor_reported(populate_db):
+    unknown_sector_id = str(Sector.objects.order_by("-id").first().id + 1000)
+    params = {"sectors": [unknown_sector_id], "per_page": 25, "search": "x"}
 
-    prune_invalid_filters(operator, "reporting", preferences, filterset)
+    filterset, applicable = bind_applicable_filters(partial(SectorFilter, queryset=Sector.objects.all()), params)
 
+    assert applicable == {"per_page": 25, "search": "x"}
+    assert not filterset.errors
     assert filterset.qs.count() == Sector.objects.count()
-    assert _stored(operator, "reporting.filters") == {"per_page": "25"}
 
 
 @pytest.mark.django_db
-def test_valid_filters_are_left_untouched(operator):
+def test_valid_filters_are_bound_once(populate_db):
     sector_id = str(Sector.objects.first().id)
-    set_preference(operator, "reporting", "filters", {"sectors": [sector_id]})
-    preferences = _state(_list_request(operator), "reporting", SectorFilter)
-    before = UserPreference.objects.get(user=operator, key="reporting.filters").updated_at
+    bound = []
 
-    prune_invalid_filters(operator, "reporting", preferences, SectorFilter(preferences.filters, queryset=Sector.objects.all()))
+    def make_filterset(data):
+        bound.append(data)
+        return SectorFilter(data, queryset=Sector.objects.all())
 
-    assert UserPreference.objects.get(user=operator, key="reporting.filters").updated_at == before
+    filterset, applicable = bind_applicable_filters(make_filterset, {"sectors": [sector_id]})
+
+    assert applicable == {"sectors": [sector_id]}
+    assert len(bound) == 1
+    assert not filterset.errors
 
 
 # Preferences endpoint
@@ -497,3 +503,83 @@ def test_the_current_page_size_is_marked_active():
     html = _pagination(60, per_page=25)
 
     assert re.search(r'class="dropdown-item spinner-trigger\s+active\s*"\s+href="\?per_page=25&page=1"', html)
+
+
+# Filter form submissions replace the stored filters
+
+
+@pytest.mark.django_db
+def test_unticking_every_value_of_a_multi_select_clears_it(operator):
+    _, request = _incidents(operator, "?affected_sectors=1&affected_sectors=2&incident_status=CLOS&per_page=25")
+
+    # The browser sends nothing for a multi-select left empty.
+    preferences, _ = _incidents(operator, "?incident_status=CLOS", session=request.session)
+
+    assert preferences.filters == {"incident_status": "CLOS", "per_page": 25}
+    assert _stored(operator, "incidents.filters") == {"incident_status": "CLOS", "per_page": 25}
+
+
+@pytest.mark.django_db
+def test_a_search_keeps_the_stored_filters(operator):
+    _, request = _incidents(operator, "?affected_sectors=1&affected_sectors=2")
+
+    preferences, _ = _incidents(operator, "?search=ransomware", session=request.session)
+
+    assert preferences.filters == {"affected_sectors": ["1", "2"], "search": "ransomware"}
+
+
+@pytest.mark.django_db
+def test_a_sort_or_page_size_change_keeps_the_stored_filters(operator):
+    _, request = _incidents(operator, "?affected_sectors=1&affected_sectors=2")
+
+    _incidents(operator, "?sort_field=status&sort_direction=asc", session=request.session)
+    preferences, _ = _incidents(operator, "?per_page=50&page=1", session=request.session)
+
+    assert preferences.filters["affected_sectors"] == ["1", "2"]
+
+
+# The page number restarts when the result set changes
+
+
+def _on_page_three(operator, query=""):
+    _, request = _incidents(operator, query)
+    _incidents(operator, "?page=3", session=request.session)
+    return request.session
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "query",
+    [
+        "?incident_status=CLOS",
+        "?sort_field=status&sort_direction=asc",
+        "?search=ransomware",
+        "?per_page=50&page=3",
+        "?page=3&sort_field=status",
+    ],
+)
+def test_changing_the_result_set_returns_to_the_first_page(operator, query):
+    session = _on_page_three(operator)
+
+    preferences, _ = _incidents(operator, query, session=session)
+
+    assert "page" not in preferences.filters
+
+
+@pytest.mark.django_db
+def test_an_unchanged_request_stays_on_the_page(operator):
+    session = _on_page_three(operator, "?incident_status=CLOS")
+
+    preferences, _ = _incidents(operator, "?incident_status=CLOS", session=session)
+
+    assert preferences.filters["page"] == "3"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("query", ["?reset_sort", "?search="])
+def test_a_reset_returns_to_the_first_page(operator, query):
+    session = _on_page_three(operator, "?sort_field=status&search=ransomware")
+
+    _incidents(operator, query, session=session)
+
+    assert "page" not in session["incidents_list_params"]

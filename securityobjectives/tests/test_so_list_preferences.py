@@ -7,7 +7,8 @@ from django.urls import reverse
 
 from governanceplatform.globals import LIST_PREFERENCE_PAGES
 from governanceplatform.helpers import set_preference
-from governanceplatform.models import User
+from governanceplatform.models import Functionality, User, UserPreference
+from reporting.models import Project
 
 
 def _user(email):
@@ -69,3 +70,40 @@ def test_hidden_columns_and_legend_are_rendered_by_the_server(otp_client, popula
 
     assert re.search(r'class="[^"]*\bd-none\b[^"]*"\s+data-column="year"', html)
     assert re.search(r'id="collapseLegend"\s+class="collapse\s+show\s*"', html)
+
+
+@pytest.mark.django_db
+def test_a_filter_valid_for_another_company_is_kept(otp_client, populate_so_db):
+    """The choices come from the company in use: a year only another company declared is ignored here, not deleted."""
+    operator = _user("opadmin@com1.lu")
+    set_preference(operator, "securityobjectives", "filters", {"year_of_submission": "1999"})
+
+    response = otp_client(operator).get(reverse("securityobjectives"))
+
+    assert response.status_code == 200
+    assert not response.context["filter"].errors
+    assert response.context["is_filtered"] is False
+    assert UserPreference.objects.get(user=operator, key="securityobjectives.filters").value == {"year_of_submission": "1999"}
+
+
+@pytest.mark.django_db
+def test_a_project_dashboard_filter_valid_for_another_project_is_kept(otp_client, populate_so_db):
+    """The stored filters are shared by every project, while the year choices come from the project shown."""
+    regulator = _user("regadmin@reg1.lu")
+    regulator.regulators.first().functionalities.add(Functionality.objects.get(type="reporting"))
+    project = Project.objects.create(
+        author=regulator,
+        name="Project covering 2025 only",
+        standard=populate_so_db["so_standard"][0],
+        years=[2025],
+        reference_year=2025,
+        selected_file_format="pdf",
+    )
+    set_preference(regulator, "reporting_project_dashboard", "filters", {"year": ["2023"]})
+
+    response = otp_client(regulator).get(reverse("dashboard_report_project", args=[project.pk]))
+
+    assert response.status_code == 200
+    assert not response.context["filter"].errors
+    assert response.context["is_filtered"] is False
+    assert UserPreference.objects.get(user=regulator, key="reporting_project_dashboard.filters").value == {"year": ["2023"]}

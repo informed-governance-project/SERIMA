@@ -58,14 +58,16 @@ def test_reset_clears_the_stored_filters(otp_client, populate_db):
 
 
 @pytest.mark.django_db
-def test_a_stored_filter_that_is_no_longer_valid_is_dropped(otp_client, populate_db):
+def test_a_stored_filter_rejected_here_is_ignored_but_kept(otp_client, populate_db):
     operator = _user("opadmin@com1.lu")
-    set_preference(operator, "incidents", "filters", {"incident_status": "REMOVED_STATUS", "per_page": "25"})
+    set_preference(operator, "incidents", "filters", {"incident_status": "REMOVED_STATUS", "per_page": 25})
 
     response = otp_client(operator).get(reverse("incidents"))
 
     assert response.status_code == 200
-    assert UserPreference.objects.get(user=operator, key="incidents.filters").value == {"per_page": "25"}
+    assert not response.context["filter"].errors
+    assert response.context["is_filtered"] is False
+    assert UserPreference.objects.get(user=operator, key="incidents.filters").value == {"incident_status": "REMOVED_STATUS", "per_page": 25}
 
 
 @pytest.mark.django_db
