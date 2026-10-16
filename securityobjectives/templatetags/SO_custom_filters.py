@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.utils.translation import gettext_lazy as _
 
-from securityobjectives.globals import STANDARD_ANSWER_REVIEW_STATUS
+from securityobjectives.globals import OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
 from securityobjectives.models import StandardAnswer
 
 register = template.Library()
@@ -44,9 +44,13 @@ def get_all_versions(context, standard):
         return None
 
     for item in data:
+        if not is_regulator and item["status"] not in ("PASSM", "FAILM"):
+            item["review_comment"] = None
         item["status_class"] = status_class(context, item["status"])
         item["status_icon"] = status_icon(context, item["status"])
         item["status_tooltip"] = status_tooltip(context, item["status"])
+        if not is_regulator:
+            item["status"] = OPERATOR_STATUS[item["status"]]
         item["status_color"] = status_color(item["status"])
 
     return json.dumps(data, cls=DjangoJSONEncoder)
@@ -54,6 +58,8 @@ def get_all_versions(context, standard):
 
 @register.simple_tag(takes_context=True)
 def status_class(context, value):
+    if not context["is_regulator"]:
+        value = OPERATOR_STATUS[value]
     if value == "PASS":
         if context["is_regulator"]:
             return "border border-passed border-2"
@@ -84,6 +90,8 @@ def status_color(value):
 
 @register.simple_tag(takes_context=True)
 def status_icon(context, value):
+    if not context["is_regulator"]:
+        value = OPERATOR_STATUS[value]
     if value == "PASS":
         if context["is_regulator"]:
             return "custom-icon-passed"
@@ -108,10 +116,8 @@ def status_icon(context, value):
 @register.simple_tag(takes_context=True)
 def status_tooltip(context, value):
     STANDARD_ANSWER_REVIEW_STATUS_DICT = dict(STANDARD_ANSWER_REVIEW_STATUS)
-    if value == "PASSM" and not context["is_regulator"]:
-        value = "PASS"
-    if value == "FAILM" and not context["is_regulator"]:
-        value = "FAIL"
+    if not context["is_regulator"]:
+        value = OPERATOR_STATUS[value]
     return STANDARD_ANSWER_REVIEW_STATUS_DICT.get(value)
 
 

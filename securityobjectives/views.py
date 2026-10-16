@@ -67,6 +67,7 @@ from .forms import (
 from .globals import ALLOWED_SORT_FIELDS, STANDARD_ANSWER_REVIEW_STATUS
 from .helpers import (
     can_export_security_objectives,
+    can_see_review_comments,
     get_exportable_standard_answers,
     get_scoped_standard_answers,
     get_standard_answers_with_progress,
@@ -159,7 +160,9 @@ def get_security_objectives(request):
         ALLOWED_SORT_FIELDS,
     )
 
-    security_objective_filter = StandardAnswerFilter(so_filter_params, queryset=standard_answer_queryset)
+    security_objective_filter = StandardAnswerFilter(
+        so_filter_params, queryset=standard_answer_queryset, is_regulator=is_user_regulator(user)
+    )
 
     # Filter
     so_answer_list = security_objective_filter.qs
@@ -404,6 +407,9 @@ def declaration(request):
                         status=404,
                     )
 
+    show_review_comments = can_see_review_comments(user, standard_answer)
+    measure_answer_fields = ["justification", "is_implemented"] + (["review_comment"] if show_review_comments else [])
+
     # Previous version of this declaration (prior StandardAnswer in the same
     # group), used to flag SecurityMeasure rows whose answer has since changed.
     previous_standard_answer = (
@@ -466,7 +472,7 @@ def declaration(request):
                 )
                 initial = model_to_dict(
                     sm_answer,
-                    fields=["justification", "is_implemented", "review_comment"],
+                    fields=measure_answer_fields,
                 )
             except SecurityMeasureAnswer.DoesNotExist:
                 initial = {}
@@ -481,7 +487,7 @@ def declaration(request):
             measure.answer_modified = previous_standard_answer is not None and (
                 bool(initial.get("is_implemented")) != (previous_sma.is_implemented if previous_sma else False)
                 or (initial.get("justification") or "") != (previous_sma.justification if previous_sma else "")
-                or (initial.get("review_comment") or "") != (previous_sma.review_comment if previous_sma else "")
+                or (show_review_comments and (initial.get("review_comment") or "") != (previous_sma.review_comment if previous_sma else ""))
             )
             if measure.answer_modified:
                 measure.previous_answer = {
@@ -504,11 +510,7 @@ def declaration(request):
     standard_answer.ready_to_send = declaration_is_ready_to(standard_answer)["send"]
 
     column_config = standard.get_column_config()
-    # Rule: the review comment column is for regulators, or once the
-    # declaration has left the operator's hands.
-    column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and (
-        is_user_regulator(user) or bool(standard_answer.review_comment) or standard_answer.status != "UNDE"
-    )
+    column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and show_review_comments
     set_declaration_column_widths(column_config)
 
     context = {
@@ -1094,7 +1096,7 @@ def has_change_permission(request, standard_answer, action):
                 return (is_standard_answer_in_user_company and standard_answer.status == "UNDE") or (is_user_regulator_sector)
             case "review_comment":
                 return (is_user_regulator_sector and standard_answer.status != "UNDE") or (
-                    is_standard_answer_in_user_company and standard_answer.review_comment
+                    is_standard_answer_in_user_company and standard_answer.review_comment and standard_answer.is_review_sent
                 )
             case "log":
                 return is_user_regulator_sector or is_standard_answer_in_user_company

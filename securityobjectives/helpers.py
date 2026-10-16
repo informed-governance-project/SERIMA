@@ -14,6 +14,8 @@ from django.db.models import (
     When,
 )
 
+from governanceplatform.helpers import is_user_regulator
+
 from .globals import SO_COLUMN_GRID_TOTAL, SO_DECLARATION_COLUMNS
 from .models import StandardAnswer
 
@@ -83,6 +85,20 @@ def get_standard_answers_with_progress(standard_answer_queryset: QuerySet[Standa
             ),
         ),
     )
+
+
+def can_see_review_comments(user: User, standard_answer: StandardAnswer) -> bool:
+    """Whether the user may read the review comments of the declaration.
+
+    An operator reads them once the review is sent, or on a new version, which carries the
+    comments of the review sent on the version it was copied from. While the regulator
+    reviews, the comments are a draft.
+    """
+    if is_user_regulator(user):
+        return True
+    if standard_answer.is_review_in_progress:
+        return False
+    return bool(standard_answer.review_comment) or standard_answer.status != "UNDE"
 
 
 def can_export_security_objectives(user: User) -> bool:
