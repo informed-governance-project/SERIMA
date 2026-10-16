@@ -12,6 +12,17 @@ STANDARD_ANSWER_REVIEW_STATUS = [
     ("FAILM", _("Revision required and sent")),
 ]
 
+# The status an operator sees for each stored status. PASS and FAIL are the regulator's
+# verdict while the review is in progress, so the operator learns it only once it is sent.
+OPERATOR_STATUS = {
+    "UNDE": "UNDE",
+    "DELIV": "DELIV",
+    "PASS": "DELIV",
+    "FAIL": "DELIV",
+    "PASSM": "PASS",
+    "FAILM": "FAIL",
+}
+
 SO_EMAIL_VARIABLES = [
     ("#SO_REFERENCE#", "group_id"),
 ]
