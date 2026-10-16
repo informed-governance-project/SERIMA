@@ -1,9 +1,11 @@
 import json
+import re
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
 
 from conftest import (
     list_admin_add_urls,
@@ -17,6 +19,7 @@ from securityobjectives.globals import SO_DECLARATION_COLUMNS
 from securityobjectives.helpers import get_standard_answers_with_progress
 from securityobjectives.models import LogStandardAnswer, SecurityMeasureAnswer, SecurityObjectiveStatus, StandardAnswer
 from securityobjectives.pdf_generation import get_declaration_pdf
+from securityobjectives.templatetags.SO_custom_filters import get_all_versions, status_tooltip
 
 
 @pytest.mark.django_db
@@ -303,6 +306,8 @@ def test_hiding_a_column_widens_the_remaining_columns_in_the_rendered_table(otp_
     standard = populate_so_db["so_standard"][0]
     standard.show_evidence_column = False
     standard.save()
+    # An operator sees the review comment column once the review is sent.
+    StandardAnswer.objects.filter(pk=populate_so_db["sas"][0].pk).update(status="PASSM")
     client, url = _declaration_as_operator(otp_client, populate_so_db)
 
     content = client.get(url).content.decode()
@@ -664,3 +669,225 @@ def test_so_log_shows_deleted_user_name(otp_client, populate_so_db):
 
     assert log.user_full_name
     assert log.user_full_name in response.content.decode()
+
+
+def _dashboard_with_status(otp_client, populate_so_db, email, stored_status, status_filter):
+    declaration = populate_so_db["sas"][0]
+    StandardAnswer.objects.filter(pk=declaration.pk).update(status=stored_status)
+    user = next(u for u in populate_so_db["users"] if u.email == email)
+    return otp_client(user).get(reverse("securityobjectives"), {"status": status_filter}), declaration
+
+
+@pytest.mark.django_db
+def test_operator_status_filter_offers_only_the_statuses_operators_see(otp_client, populate_so_db):
+    response, _ = _dashboard_with_status(otp_client, populate_so_db, "opadmin@com1.lu", "UNDE", "")
+
+    choices = [code for code, _ in response.context["filter"].form.fields["status"].choices if code]
+    assert choices == ["UNDE", "DELIV", "PASS", "FAIL"]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("stored_status", "status_filter"),
+    [("PASSM", "PASS"), ("FAILM", "FAIL"), ("PASS", "DELIV"), ("FAIL", "DELIV")],
+)
+def test_operator_status_filter_matches_the_status_operators_see(otp_client, populate_so_db, stored_status, status_filter):
+    response, declaration = _dashboard_with_status(otp_client, populate_so_db, "opadmin@com1.lu", stored_status, status_filter)
+
+    assert [sa.pk for sa in response.context["standard_answers"]] == [declaration.pk]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("stored_status", "status_filter"), [("PASS", "PASS"), ("FAIL", "FAIL")])
+def test_operator_status_filter_hides_an_unsent_verdict(otp_client, populate_so_db, stored_status, status_filter):
+    response, _ = _dashboard_with_status(otp_client, populate_so_db, "opadmin@com1.lu", stored_status, status_filter)
+
+    assert list(response.context["standard_answers"]) == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("stored_status", "shown"),
+    [("PASS", "Under review"), ("FAIL", "Under review"), ("PASSM", "Passed"), ("FAILM", "Revision required")],
+)
+def test_operator_sees_a_verdict_only_once_sent(otp_client, populate_so_db, stored_status, shown):
+    response, declaration = _dashboard_with_status(otp_client, populate_so_db, "opadmin@com1.lu", stored_status, "")
+    StandardAnswer.objects.filter(pk=declaration.pk).update(submit_date=timezone.now())
+    context = {"is_regulator": False}
+
+    assert status_tooltip(context, stored_status) == shown
+    assert [version["status_tooltip"] for version in json.loads(get_all_versions(context, declaration))] == [shown]
+
+
+@pytest.mark.django_db
+def test_regulator_sees_the_unsent_verdict(populate_so_db):
+    assert status_tooltip({"is_regulator": True}, "PASS") == "Passed"
+
+
+@pytest.mark.django_db
+def test_regulator_status_filter_tells_sent_reviews_apart(otp_client, populate_so_db):
+    response, _ = _dashboard_with_status(otp_client, populate_so_db, "regadmin@reg1.lu", "PASSM", "PASS")
+
+    choices = [code for code, _ in response.context["filter"].form.fields["status"].choices if code]
+    assert "PASSM" in choices and "FAILM" in choices
+    assert list(response.context["standard_answers"]) == []
+
+    response, declaration = _dashboard_with_status(otp_client, populate_so_db, "regadmin@reg1.lu", "PASSM", "PASSM")
+    assert [sa.pk for sa in response.context["standard_answers"]] == [declaration.pk]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("stored_status", "verdict_shown"),
+    [("PASS", False), ("FAIL", False), ("PASSM", True), ("FAILM", True)],
+)
+def test_operator_declaration_shows_objective_verdicts_only_once_sent(otp_client, populate_so_db, stored_status, verdict_shown):
+    """A substring test such as `status in ",PASSM,FAILM,"` also matches PASS and FAIL."""
+    declaration = populate_so_db["sas"][0]
+    StandardAnswer.objects.filter(pk=declaration.pk).update(status=stored_status)
+    SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status=stored_status[:4])
+    operator = next(u for u in populate_so_db["users"] if u.email == "opadmin@com1.lu")
+
+    response = otp_client(operator).get(reverse("so_declaration"), {"id": declaration.pk})
+
+    html = response.content.decode()
+    assert ("border-passed" in html or "border-failed" in html) is verdict_shown
+
+
+MEASURE_COMMENT = "Measure comment from the regulator"
+DECLARATION_COMMENT = "Declaration comment from the regulator"
+REVIEW_IN_PROGRESS = ["DELIV", "PASS", "FAIL"]
+REVIEW_SENT = ["PASSM", "FAILM"]
+
+
+def _reviewed_declaration(populate_so_db, stored_status):
+    declaration = populate_so_db["sas"][0]
+    StandardAnswer.objects.filter(pk=declaration.pk).update(
+        status=stored_status, review_comment=DECLARATION_COMMENT, submit_date=timezone.now()
+    )
+    SecurityMeasureAnswer.objects.filter(standard_answer=declaration).update(review_comment=MEASURE_COMMENT)
+    declaration.refresh_from_db()
+    return declaration
+
+
+def _operator(populate_so_db):
+    return next(u for u in populate_so_db["users"] if u.email == "opadmin@com1.lu")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("stored_status", "allowed"), [(s, False) for s in REVIEW_IN_PROGRESS] + [(s, True) for s in REVIEW_SENT])
+def test_operator_reads_the_review_comment_only_once_sent(otp_client, populate_so_db, stored_status, allowed):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+
+    response = otp_client(_operator(populate_so_db)).get(reverse("review_comment_so_declaration", args=[declaration.pk]))
+
+    assert (response.status_code == 200) is allowed
+    assert (DECLARATION_COMMENT in response.content.decode()) is allowed
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("stored_status", "shown"), [(s, False) for s in REVIEW_IN_PROGRESS] + [(s, True) for s in REVIEW_SENT])
+def test_operator_version_history_holds_the_review_comment_only_once_sent(populate_so_db, stored_status, shown):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+
+    versions = json.loads(get_all_versions({"is_regulator": False}, declaration))
+
+    assert (versions[0]["review_comment"] == DECLARATION_COMMENT) is shown
+
+
+@pytest.mark.django_db
+def test_regulator_version_history_holds_the_draft_review_comment(populate_so_db):
+    declaration = _reviewed_declaration(populate_so_db, "PASS")
+
+    versions = json.loads(get_all_versions({"is_regulator": True}, declaration))
+
+    assert versions[0]["review_comment"] == DECLARATION_COMMENT
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("stored_status", "shown"), [(s, False) for s in REVIEW_IN_PROGRESS] + [(s, True) for s in REVIEW_SENT])
+def test_operator_declaration_shows_measure_comments_only_once_sent(otp_client, populate_so_db, stored_status, shown):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+
+    response = otp_client(_operator(populate_so_db)).get(reverse("so_declaration"), {"id": declaration.pk})
+
+    assert (MEASURE_COMMENT in response.content.decode()) is shown
+
+
+@pytest.mark.django_db
+def test_regulator_declaration_shows_draft_measure_comments(otp_client, populate_so_db):
+    declaration = _reviewed_declaration(populate_so_db, "PASS")
+    regulator = next(u for u in populate_so_db["users"] if u.email == "regadmin@reg1.lu")
+
+    response = otp_client(regulator).get(reverse("so_declaration"), {"id": declaration.pk})
+
+    assert MEASURE_COMMENT in response.content.decode()
+
+
+def _pdf_html(declaration, user):
+    declaration = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=declaration.pk)).get()
+    with patch("securityobjectives.pdf_generation.HTML") as html:
+        get_declaration_pdf(declaration, user)
+    return html.call_args.kwargs["string"]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("stored_status", "comments_shown", "cover_status"),
+    [(s, False, "Under review") for s in REVIEW_IN_PROGRESS] + [("PASSM", True, "Passed"), ("FAILM", True, "Revision required")],
+)
+def test_operator_pdf_hides_the_review_until_sent(populate_so_db, stored_status, comments_shown, cover_status):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+
+    rendered = _pdf_html(declaration, _operator(populate_so_db))
+
+    assert (MEASURE_COMMENT in rendered) is comments_shown
+    assert re.search(rf"Review status\s*:\s*</span>\s*{cover_status}\s*<", rendered)
+
+
+@pytest.mark.django_db
+def test_regulator_pdf_shows_the_draft_review(populate_so_db):
+    declaration = _reviewed_declaration(populate_so_db, "PASS")
+    regulator = next(u for u in populate_so_db["users"] if u.email == "regadmin@reg1.lu")
+
+    rendered = _pdf_html(declaration, regulator)
+
+    assert MEASURE_COMMENT in rendered
+    assert re.search(r"Review status\s*:\s*</span>\s*Passed\s*<", rendered)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("email", ["opadmin@com1.lu", "regadmin@reg1.lu"])
+def test_dashboard_pdf_button_uses_the_async_download(otp_client, populate_so_db, email):
+    """The download view starts a task and answers JSON, which a plain fetch would save as the PDF."""
+    declaration = populate_so_db["sas"][0]
+    user = next(u for u in populate_so_db["users"] if u.email == email)
+
+    html = otp_client(user).get(reverse("securityobjectives")).content.decode()
+
+    pdf_url = reverse("download_so_declaration_pdf", args=[declaration.pk])
+    assert re.search(rf'<a class="[^"]*\bjs-async-pdf\b[^"]*"\s+href="{re.escape(pdf_url)}"', html)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("stored_status", "shown"), [(s, False) for s in REVIEW_IN_PROGRESS] + [(s, True) for s in REVIEW_SENT])
+def test_operator_pdf_shows_objective_statuses_only_once_sent(populate_so_db, stored_status, shown):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+    SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status="PASS")
+
+    rendered = _pdf_html(declaration, _operator(populate_so_db))
+
+    assert ("[Passed]" in rendered) is shown
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("stored_status", REVIEW_IN_PROGRESS + REVIEW_SENT)
+def test_regulator_pdf_shows_objective_statuses(populate_so_db, stored_status):
+    """The task renders without a request, so the role must come from the user passed in, not a context processor."""
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+    SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status="PASS")
+    regulator = next(u for u in populate_so_db["users"] if u.email == "regadmin@reg1.lu")
+
+    rendered = _pdf_html(declaration, regulator)
+
+    assert "[Passed]" in rendered
