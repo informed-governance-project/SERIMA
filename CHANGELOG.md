@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The column chooser of the reporting dashboard labelled the author column "Autor" (#673)
 - Unticking every value of a multi-choice filter, such as the sectors, and clicking "Search" left the previous values applied until "Reset" was clicked. The "Filter" button of the incident list also showed "(Active)" after any search from the filter pop-up, even with every field left empty, as a significant impact left on "Unknown" counted as a filter; that default choice now reads "---------", like the other fields of the pop-up (#673)
 - Applying a filter, a search or a sort order while on a later page of a list kept that page number, so the new results could open on their last page instead of the first (#673)
+- An operator could see the regulator's review of a security objectives declaration before it was sent: the verdict, on the dashboard, in the version history, on each objective of the declaration and on the cover of its PDF, and the review comments, on the declaration as a whole and on each security measure, both on the page and in the PDF. Until the review is sent, the operator now sees the declaration as "Under review", without verdict or comments. The operator's status filter now offers the four statuses operators see (Unsubmitted, Under review, Passed and Revision required), and "Passed" and "Revision required" now find the declarations whose review was sent, which they used to miss. Regulators still filter on every status (#910)
 
 ## [0.6.0] - 2026-10-06
 
