@@ -535,6 +535,14 @@ class StandardAnswer(models.Model):
     group = models.ForeignKey(StandardAnswerGroup, on_delete=models.CASCADE, verbose_name=_("Group"))
 
     @property
+    def is_review_sent(self) -> bool:
+        return self.status in ("PASSM", "FAILM")
+
+    @property
+    def is_review_in_progress(self) -> bool:
+        return self.status in ("DELIV", "PASS", "FAIL")
+
+    @property
     def has_failed_objectives(self) -> bool:
         return SecurityObjectiveStatus.objects.filter(standard_answer=self, status="FAIL").exists()
 
