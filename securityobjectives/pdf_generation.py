@@ -12,7 +12,8 @@ from weasyprint.text.fonts import FontConfiguration
 from governanceplatform.helpers import is_user_regulator
 from governanceplatform.utils.weasyprint_fetcher import RestrictedURLFetcher
 
-from .helpers import set_declaration_column_widths
+from .globals import OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
+from .helpers import can_see_review_comments, set_declaration_column_widths
 from .models import MaturityLevel, SecurityMeasureAnswer, SecurityObjectiveStatus
 
 if TYPE_CHECKING:
@@ -25,15 +26,25 @@ for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
     logging.getLogger(logger_name).setLevel(logging.ERROR)
 
 
+def get_review_status_label(standard_answer: StandardAnswer, user: User) -> str:
+    """The review status on the cover, which does not say whether the review was sent."""
+    status = standard_answer.status
+    if not is_user_regulator(user):
+        status = OPERATOR_STATUS[status]
+    status = {"PASSM": "PASS", "FAILM": "FAIL"}.get(status, status)
+    return dict(STANDARD_ANSWER_REVIEW_STATUS)[status]
+
+
 def get_declaration_pdf(standard_answer: StandardAnswer, user: User) -> bytes:
     """
-    Renders a declaration as the given user sees it: the review comments are shown to a
-    regulator, but to an operator only once the declaration has been submitted.
+    Renders a declaration as the given user sees it: an operator gets neither the review
+    comments nor the verdict while the regulator is still reviewing.
 
     The standard answer must come from get_standard_answers_with_progress, whose
     annotations the template reads.
     """
     standard = standard_answer.standard
+    show_review_comments = can_see_review_comments(user, standard_answer)
 
     levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
     security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
@@ -60,7 +71,7 @@ def get_declaration_pdf(standard_answer: StandardAnswer, user: User) -> bytes:
                 )
                 measure.is_implemented = sm_answer.is_implemented
                 measure.justification = sm_answer.justification
-                measure.review_comment = sm_answer.review_comment
+                measure.review_comment = sm_answer.review_comment if show_review_comments else None
             except SecurityMeasureAnswer.DoesNotExist:
                 measure.is_implemented = False
 
@@ -73,9 +84,7 @@ def get_declaration_pdf(standard_answer: StandardAnswer, user: User) -> bytes:
     font_config = FontConfiguration()
 
     column_config = standard.get_column_config()
-    column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and (
-        is_user_regulator(user) or standard_answer.status != "UNDE"
-    )
+    column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and show_review_comments
     set_declaration_column_widths(column_config)
 
     output_from_parsed_template = render_to_string(
@@ -83,6 +92,8 @@ def get_declaration_pdf(standard_answer: StandardAnswer, user: User) -> bytes:
         {
             "last_maturity_level": levels["last_level"],
             "standard_answer": standard_answer,
+            "review_status": get_review_status_label(standard_answer, user),
+            "show_objective_status": is_user_regulator(user) or standard_answer.is_review_sent,
             "security_objectives": security_objectives,
             "column_config": column_config,
             "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
