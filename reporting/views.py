@@ -521,7 +521,7 @@ def generate_report_project(request, report_project_id: int):
 
         security_objectives_declaration = StandardAnswer.objects.filter(
             submitter_company=company,
-            sectors=sector,
+            submitter_company__sectors=sector,
             year_of_submission=year,
             status="PASSM",
         ).order_by("submit_date")
