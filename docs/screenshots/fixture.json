@@ -19464,10 +19464,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2023,
    "review_comment": null,
-   "group": 11,
-   "sectors": [
-    12
-   ]
+   "group": 11
   }
  },
  {
@@ -19487,10 +19484,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2024,
    "review_comment": null,
-   "group": 12,
-   "sectors": [
-    10
-   ]
+   "group": 12
   }
  },
  {
@@ -19510,10 +19504,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2025,
    "review_comment": "<p>Accepted. The planned measures look appropriate.</p>",
-   "group": 16,
-   "sectors": [
-    3
-   ]
+   "group": 16
   }
  },
  {
@@ -19533,10 +19524,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2024,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 17,
-   "sectors": [
-    3
-   ]
+   "group": 17
   }
  },
  {
@@ -19556,10 +19544,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 18,
-   "sectors": [
-    10
-   ]
+   "group": 18
   }
  },
  {
@@ -19579,10 +19564,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2027,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 20,
-   "sectors": [
-    13
-   ]
+   "group": 20
   }
  },
  {
@@ -19602,11 +19584,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2024,
    "review_comment": "<p>Accepted. The planned measures look appropriate.</p>",
-   "group": 22,
-   "sectors": [
-    2,
-    3
-   ]
+   "group": 22
   }
  },
  {
@@ -19626,10 +19604,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -19649,10 +19624,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2023,
    "review_comment": null,
-   "group": 28,
-   "sectors": [
-    3
-   ]
+   "group": 28
   }
  },
  {
@@ -19672,10 +19644,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2023,
    "review_comment": null,
-   "group": 29,
-   "sectors": [
-    3
-   ]
+   "group": 29
   }
  },
  {
@@ -19695,10 +19664,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 30,
-   "sectors": [
-    12
-   ]
+   "group": 30
   }
  },
  {
@@ -19718,10 +19684,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19741,10 +19704,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Accepted. The planned measures look appropriate.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19764,10 +19724,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19787,10 +19744,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19810,10 +19764,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19833,10 +19784,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -19856,10 +19804,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19879,10 +19824,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -19902,10 +19844,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19925,10 +19864,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19948,10 +19884,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19971,10 +19904,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19994,10 +19924,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20017,10 +19944,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20040,10 +19964,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20063,10 +19984,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20086,10 +20004,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20109,10 +20024,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -20132,10 +20044,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -20155,10 +20064,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20178,10 +20084,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20201,10 +20104,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20224,10 +20124,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -20247,10 +20144,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20270,10 +20164,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -20293,10 +20184,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
