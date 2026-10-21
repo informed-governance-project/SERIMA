@@ -30,7 +30,9 @@ class YearChoiceFilter(django_filters.ChoiceFilter):
 class StandardAnswerFilter(django_filters.FilterSet):
     year_of_submission = YearChoiceFilter()
     status = django_filters.ChoiceFilter(choices=STANDARD_ANSWER_REVIEW_STATUS, method="filter_status", label=_("Status"))
-    sectors = django_filters.MultipleChoiceFilter(widget=DropdownCheckboxSelectMultiple(), label=_("Sectors"))
+    sectors = django_filters.MultipleChoiceFilter(
+        field_name="submitter_company__sectors", widget=DropdownCheckboxSelectMultiple(), label=_("Sectors")
+    )
     search = django_filters.CharFilter(method="filter_search", label=_("Search"))
 
     class Meta:
@@ -41,7 +43,6 @@ class StandardAnswerFilter(django_filters.FilterSet):
             "submitter_user",
             "submitter_company",
             "year_of_submission",
-            "sectors",
         ]
 
     def __init__(self, *args, is_regulator: bool = False, **kwargs):
@@ -62,8 +63,11 @@ class StandardAnswerFilter(django_filters.FilterSet):
 
         years = set(self.queryset.values_list("year_of_submission", flat=True))
         self.filters["year_of_submission"].extra["choices"] = [(year, year) for year in sorted(years)]
-        grouped_choices = get_sectors_grouped(Sector.objects.all())
-        self.filters["sectors"].field.choices = grouped_choices
+        if is_regulator:
+            self.filters["sectors"].field.choices = get_sectors_grouped(Sector.objects.all())
+        else:
+            # Operators do not see the sector their regulator placed them in (#911).
+            del self.filters["sectors"]
 
     def filter_status(self, queryset, name, value):
         if self.is_regulator:
@@ -77,6 +81,6 @@ class StandardAnswerFilter(django_filters.FilterSet):
             | Q(creator_name__icontains=value)
             | Q(submitter_company__name__icontains=value)
             | Q(year_of_submission__icontains=value)
-            | Q(sectors__translations__name__icontains=value)
+            | Q(submitter_company__sectors__translations__name__icontains=value)
             | group_id_matches(value)
         ).distinct()
