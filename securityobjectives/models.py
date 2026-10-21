@@ -4,12 +4,13 @@ import uuid
 from colorfield.fields import ColorField
 from django.conf import settings
 from django.db import models, transaction
-from django.db.models import Deferrable
+from django.db.models import Deferrable, QuerySet
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel, TranslatedFields
 
 from governanceplatform.helpers import build_crockford_token
+from governanceplatform.models import Sector
 
 from .globals import (
     REFERENCE_PREFIX,
@@ -530,7 +531,6 @@ class StandardAnswer(models.Model):
     )
     # the year for the one
     year_of_submission = models.PositiveIntegerField(verbose_name=_("Year of submission"))
-    sectors = models.ManyToManyField("governanceplatform.sector", verbose_name=_("Sectors"))
     review_comment = models.TextField(blank=True, default=None, null=True, verbose_name=_("Review comment"))
     group = models.ForeignKey(StandardAnswerGroup, on_delete=models.CASCADE, verbose_name=_("Group"))
 
@@ -546,11 +546,18 @@ class StandardAnswer(models.Model):
     def has_failed_objectives(self) -> bool:
         return SecurityObjectiveStatus.objects.filter(standard_answer=self, status="FAIL").exists()
 
+    # The sectors are those the regulator assigned to the company, read live, so a change in
+    # the backend reaches every declaration of the company (#911).
+    def get_sectors(self) -> QuerySet[Sector]:
+        if self.submitter_company is None:
+            return Sector.objects.none()
+        return self.submitter_company.sectors.all()
+
     def get_root_sectors(self):
-        return list({sector.parent for sector in self.sectors.all()})
+        return list({sector.parent for sector in self.get_sectors()})
 
     def get_no_childrens_sectors(self):
-        return list(self.sectors.filter(parent__isnull=True))
+        return list(self.get_sectors().filter(parent__isnull=True))
 
     def __str__(self):
         return str(self.group.group_id) if self.group else str(self.id)
