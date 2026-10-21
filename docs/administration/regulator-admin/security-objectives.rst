@@ -64,7 +64,7 @@ As for incident emails, one email is sent in all languages: the content in the d
 followed by each translation that differs from it.
 
 The emails are sent to the users of the operator, to your regulator's address for incident notification,
-to your regulator administrators, and to the regulator users in charge of the sectors of the declaration.
+to your regulator administrators, and to the regulator users in charge of the sectors of the operator.
 
 Standards
 ~~~~~~~~~

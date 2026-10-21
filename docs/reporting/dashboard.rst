@@ -16,7 +16,7 @@ Due to the complexity of the screen, its different parts will be presented one b
    :alt: Import risk analysis
    :target: ../_static/images/reporting/dashboard-02.png
 
-3.	**Import security objectives**: you can import a security objective to your reports. Clicking this link opens the **Import Security Objectives Statement** pop-up window. From here, you can upload a Security Objectives Statement as an Excel file by selecting the relevant company, sector(s), evaluation framework, and year. Once the required information has been provided, you can proceed with the import.
+3.	**Import security objectives**: you can import a security objective to your reports. Clicking this link opens the **Import Security Objectives Statement** pop-up window. From here, you can upload a Security Objectives Statement as an Excel file by selecting the relevant company, evaluation framework, and year. The statement covers the sectors of the company. Once the required information has been provided, you can proceed with the import.
 
 .. figure:: /_static/images/reporting/dashboard-03.png
    :alt: Import security objectives

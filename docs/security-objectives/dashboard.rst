@@ -23,10 +23,10 @@ Its parts are numbered in the screenshot below and described one by one.
 2. **New submission**: This red button opens the **Create a new security objectives statement** pop-up.
    The new declaration is then filled in as described in :doc:`fill-in-a-declaration`.
 
-3. **Search**: Finds declarations by the text you enter, looked up in the identifier, the framework, the creator, the operator, the year and the sectors.
+3. **Search**: Finds declarations by the text you enter, looked up in the identifier, the framework, the creator, the operator, the year and, for regulators, the sectors.
 
 4. **Filter**: Opens a panel to narrow the list down by **Standard** (the evaluation framework), **Year of submission**,
-   **Sectors**, **Status** and **Submitter** (the person who submitted the declaration).
+   **Sectors** (regulators only), **Status** and **Submitter** (the person who submitted the declaration).
    Click **Search** to apply the filter, or **Reset** to clear it. While a filter is applied, the **Filter** button shows the label **(Active)**.
 
    .. note::
@@ -66,7 +66,7 @@ Its parts are numbered in the screenshot below and described one by one.
    the table after it describes them.
 
    .. figure:: /_static/images/security-objectives/dashboard-04.png
-      :alt: Header of the declarations list with its ten columns numbered
+      :alt: Header of the declarations list with its nine columns numbered
       :target: ../_static/images/security-objectives/dashboard-04.png
 
    .. list-table::
@@ -95,15 +95,12 @@ Its parts are numbered in the screenshot below and described one by one.
         - Creator
         - Operators only: the person who created the declaration. Regulators see the **Company** instead.
       * - 7
-        - Sectors
-        - The sectors the declaration covers.
-      * - 8
         - Year
         - The year the declaration is for.
-      * - 9
+      * - 8
         - Progress
         - How much of the declaration has been filled in. At 100 %, an unsubmitted declaration shows a **Submit** button here instead.
-      * - 10
+      * - 9
         - Actions
         - The actions on the declaration, described in points 8 to 13.
 
@@ -139,8 +136,8 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
 9. **Review comment**: The speech bubble opens the regulator's comment on the declaration.
    It is greyed out until the regulator has sent the result of the review with a comment.
 
-10. **Duplicate**: Copies the declaration, with all its answers, to another year and sector, which saves filling in a similar declaration from scratch.
-    In the **Duplicate the selected security objectives statement to** pop-up, select the **year** and the **sectors**, then click **Duplicate**.
+10. **Duplicate**: Copies the declaration, with all its answers, to another year, which saves filling in a similar declaration from scratch.
+    In the **Duplicate the selected security objectives statement to** pop-up, select the **year**, then click **Duplicate**.
 
     .. figure:: /_static/images/security-objectives/dashboard-06.png
        :alt: Duplicate the selected security objectives statement pop-up

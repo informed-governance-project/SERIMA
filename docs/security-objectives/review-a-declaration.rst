@@ -4,7 +4,9 @@ Review a declaration
 As a regulator, you review the declarations operators submit against your frameworks. You go through the declaration
 objective by objective, accept each objective or ask for its revision, comment where needed, then send the result
 to the operator. Regulator administrators see all the declarations made to their regulator; regulator users see those
-of the sectors assigned to them (see :doc:`/getting-started/roles-and-permissions`).
+of the operators in the sectors assigned to them (see :doc:`/getting-started/roles-and-permissions`).
+The sectors of a declaration are those of its operator, set in the operator's configuration
+(see :ref:`regulator-operators`).
 
 The operator's side of the cycle is described in :doc:`fill-in-a-declaration`.
 
@@ -23,15 +25,19 @@ The dashboard works as described in :doc:`dashboard`, with the differences numbe
 2. **Company**: Replaces the **Creator** column: the operator that submitted the declaration.
    In the **Filter** panel, **Submitter** selects an operator rather than a person.
 
-3. **Progress**: The share of the objectives you have reviewed. Once all are reviewed, a **Send** button
+3. **Sectors**: A column operators do not have: the sectors of the operator, set in its configuration
+   (see :ref:`regulator-operators`). You can sort the list by it, the **Search** also looks in it, and the **Filter** panel
+   has a **Sectors** field.
+
+4. **Progress**: The share of the objectives you have reviewed. Once all are reviewed, a **Send** button
    replaces the bar until you send the result (see `Send the result`_).
 
-4. **Review**: The pencil icon opens the declaration for review.
+5. **Review**: The pencil icon opens the declaration for review.
 
-5. **Review comment**: Greyed out until every objective is reviewed. It then opens the **Review** pop-up, where you write
+6. **Review comment**: Greyed out until every objective is reviewed. It then opens the **Review** pop-up, where you write
    your comment and send the result; once the result is sent, it shows your comment read-only.
 
-6. **Delete**: Deletes the declaration.
+7. **Delete**: Deletes the declaration.
 
    .. warning::
 
@@ -179,7 +185,7 @@ The platform takes you back to the dashboard with the message **The security obj
 The status becomes **Passed and sent** or **Revision required and sent**, and the operator sees it as **Passed** or
 **Revision required**, with your comment (see :doc:`fill-in-a-declaration`). If the framework has an email for status change
 (see :doc:`/administration/regulator-admin/security-objectives`), it is sent to the users of the operator, to your
-regulator's notification address, and to the regulator users of the declaration's sectors and the regulator administrators.
+regulator's notification address, and to the regulator users of the operator's sectors and the regulator administrators.
 
 .. important::
 
@@ -194,7 +200,7 @@ regulator's notification address, and to the regulator users of the declaration'
 .. note::
 
    A declaration **Passed and sent** is the one the reporting module counts as the security objectives
-   of the operator for its year and sectors.
+   of the operator for its year, in each of the operator's sectors.
 
 Review an updated version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -230,12 +236,12 @@ Import a declaration
 When an operator gives you its declaration as an Excel file rather than through the platform, import it:
 
 1. Click **Import** in the top-right corner of the module.
-2. In the **Import Security Objectives Statement** pop-up, select the file, then the **Company**, the **Sectors**,
-   the **Evaluation Framework** and the **Year** of the declaration.
+2. In the **Import Security Objectives Statement** pop-up, select the file, then the **Company**,
+   the **Evaluation Framework** and the **Year** of the declaration. The declaration covers the sectors of the company.
 3. Click **Import**.
 
 The declaration is created with the status **Under review** and today's submission date, in the name of an administrator
-of the company, and you review it like any other. Regulator users can import only for the companies and sectors assigned to them.
+of the company, and you review it like any other. Regulator users can import only for the companies in the sectors assigned to them.
 
 .. important::
 

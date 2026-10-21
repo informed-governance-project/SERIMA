@@ -27,7 +27,7 @@ Create a declaration
 ~~~~~~~~~~~~~~~~~~~~
 
 Click **New submission** on the :doc:`dashboard`. In the **Create a new security objectives statement** pop-up,
-select the **Evaluation Framework**, the **Year** and one or more **Sectors**, then click **Create**.
+select the **Evaluation Framework** and the **Year**, then click **Create**.
 The new declaration opens straight away, with the status **Unsubmitted**.
 
 To come back to it later, click its **Edit** icon (pencil) in the **Actions** column of the dashboard.
@@ -53,26 +53,24 @@ The declaration shows one security objective at a time. Its parts are numbered i
    The profile icon beside them opens the **Profile** pop-up, with the name, email and phone number of the person
    who created the declaration.
 
-3. **Sectors**: The sectors the declaration covers.
-
-4. **Review comment**: The speech bubble opens the regulator's comment on the whole declaration.
+3. **Review comment**: The speech bubble opens the regulator's comment on the whole declaration.
    It is greyed out until the regulator has sent the result of the review with a comment.
 
-5. **Submit**: Sends the declaration to the regulator (see `Submit the declaration`_). It is shown only while the declaration is unsubmitted.
+4. **Submit**: Sends the declaration to the regulator (see `Submit the declaration`_). It is shown only while the declaration is unsubmitted.
 
-6. **Close**: Brings you back to the dashboard.
+5. **Close**: Brings you back to the dashboard.
 
-7. **Objective selector**: One button for each security objective of the framework, in the framework's order.
+6. **Objective selector**: One button for each security objective of the framework, in the framework's order.
    Click a button to open that objective. The shape and colour of each button tell you how far the objective is filled in
    (see `Follow your progress`_). The selector is shown on wide screens only.
 
-8. **Previous** and **next** arrows: Move to the previous or the next objective.
+7. **Previous** and **next** arrows: Move to the previous or the next objective.
 
-9. **Icon Guide**: Shows the legend of the selector and of the maturity levels. Click it again to hide it.
+8. **Icon Guide**: Shows the legend of the selector and of the maturity levels. Click it again to hide it.
 
-10. **Objective**: The code, name and description of the objective displayed.
+9. **Objective**: The code, name and description of the objective displayed.
 
-11. **Score**: The score of the objective (see `Follow your progress`_).
+10. **Score**: The score of the objective (see `Follow your progress`_).
 
 .. important::
 
