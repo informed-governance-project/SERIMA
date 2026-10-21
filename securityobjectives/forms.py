@@ -164,22 +164,15 @@ class SelectSOStandardForm(forms.Form):
         initial=timezone.now().year,
         label=_("Year"),
     )
-    sectors = forms.MultipleChoiceField(
-        required=True,
-        widget=DropdownCheckboxSelectMultiple(),
-        label=_("Sectors"),
-    )
 
     def __init__(self, *args, **kwargs):
         initial = kwargs.pop("initial", None)
         super().__init__(*args, **kwargs)
         if initial:
             self.fields["so_standard"].choices = initial["standard_list"]
-            self.fields["sectors"].choices = initial["sectors_list"]
         else:
             self.fields["so_standard"].disabled = True
             self.fields["year"].disabled = True
-            self.fields["sectors"].disabled = True
 
 
 class ImportSOForm(forms.Form):
@@ -207,22 +200,15 @@ class ImportSOForm(forms.Form):
         label=_("Year"),
     )
 
-    sectors = forms.MultipleChoiceField(
-        required=True,
-        widget=DropdownCheckboxSelectMultiple(),
-        label=_("Sectors"),
-    )
-
     def __init__(self, *args, **kwargs):
         choices = kwargs.pop("choices", {})
         super().__init__(*args, **kwargs)
 
-        if choices.get("standard") and choices.get("company") and choices.get("sectors"):
+        if choices.get("standard") and choices.get("company"):
             self.fields["standard"].choices = choices["standard"]
             self.fields["company"].choices = choices["company"]
-            self.fields["sectors"].choices = choices["sectors"]
         else:
-            for field_name in ["standard", "company", "year", "sectors"]:
+            for field_name in ["standard", "company", "year"]:
                 self.fields[field_name].disabled = True
 
 
@@ -234,21 +220,6 @@ class CopySOForm(forms.Form):
         initial=timezone.now().year,
         label=_("Year"),
     )
-
-    sectors = forms.MultipleChoiceField(
-        required=True,
-        widget=DropdownCheckboxSelectMultiple(),
-        label=_("Sectors"),
-    )
-
-    def __init__(self, *args, **kwargs):
-        initial = kwargs.pop("initial", None)
-        super().__init__(*args, **kwargs)
-        if initial["sectors"]:
-            self.fields["sectors"].choices = initial["sectors"]
-        else:
-            self.fields["year"].disabled = True
-            self.fields["sectors"].disabled = True
 
 
 class ReviewForm(forms.ModelForm):
