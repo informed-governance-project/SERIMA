@@ -1845,15 +1845,14 @@ viewport = { width = 1440, height = 450 }
 annotate = [
   { selector = ".card-header .row > div:nth-child(1)", box = true, arrow = "top", length = 0, label = "1" },
   { selector = ".card-header .row > div:nth-child(3)", box = true, arrow = "top", length = 0, label = "2" },
-  { selector = ".card-header .row > div:nth-child(5)", box = true, arrow = "top", length = 0, label = "3" },
-  { selector = ".card-header .ms-auto .d-flex > button:first-child", box = true, arrow = "left", length = 0, label = "4" },
-  { selector = "#so_submit_button", box = true, arrow = "top", length = 0, label = "5" },
-  { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "6" },
-  { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "7" },
-  { selector = [".carousel-control-prev", ".carousel-control-next"], box = true, arrow = "bottom", length = 0, label = "8" },
-  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "9" },
-  { selector = ".carousel-item.active .me-auto", box = true, arrow = "right", length = 0, label = "10" },
-  { selector = ".carousel-item.active #score_container", box = true, arrow = "left", length = 0, label = "11" },
+  { selector = ".card-header .ms-auto .d-flex > button:first-child", box = true, arrow = "left", length = 0, label = "3" },
+  { selector = "#so_submit_button", box = true, arrow = "top", length = 0, label = "4" },
+  { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "5" },
+  { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "6" },
+  { selector = [".carousel-control-prev", ".carousel-control-next"], box = true, arrow = "bottom", length = 0, label = "7" },
+  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "8" },
+  { selector = ".carousel-item.active .me-auto", box = true, arrow = "right", length = 0, label = "9" },
+  { selector = ".carousel-item.active #score_container", box = true, arrow = "left", length = 0, label = "10" },
 ]
 
 [[shots]]
@@ -1943,10 +1942,11 @@ viewport = { width = 1440, height = 495 }
 annotate = [
   { selector = "a.import_so_declaration", box = true, arrow = "top", length = 0, label = "1" },
   { selector = "th[data-sort-field='company_name']", box = true, arrow = "top", length = 0, label = "2" },
-  { selector = "#securityobjectives-table thead th:nth-last-child(2)", box = true, arrow = "top", length = 0, label = "3" },
-  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) a[href$='declaration?id=107']", box = true, arrow = "bottom", length = 0, label = "4" },
-  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-comments-disabled", box = true, arrow = "bottom", length = 0, label = "5" },
-  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .delete_so_declaration", box = true, arrow = "bottom", length = 0, label = "6" },
+  { selector = "th[data-sort-field='sectors']", box = true, arrow = "top", length = 0, label = "3" },
+  { selector = "#securityobjectives-table thead th:nth-last-child(2)", box = true, arrow = "top", length = 0, label = "4" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) a[href$='declaration?id=107']", box = true, arrow = "bottom", length = 0, label = "5" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .custom-icon-comments-disabled", box = true, arrow = "bottom", length = 0, label = "6" },
+  { selector = "tr:has(.so_access_log[data-standard-answer-id='107']) .delete_so_declaration", box = true, arrow = "bottom", length = 0, label = "7" },
 ]
 
 [[shots]]
@@ -2136,10 +2136,9 @@ annotate = [
   { selector = "th[data-sort-field='identifier']", arrow = "bottom", length = 45, label = "4" },
   { selector = "th[data-sort-field='framework']", arrow = "bottom", length = 45, label = "5" },
   { selector = "th[data-sort-field='creator']", arrow = "bottom", length = 45, label = "6" },
-  { selector = "th[data-sort-field='sectors']", arrow = "bottom", length = 45, label = "7" },
-  { selector = "th[data-sort-field='year']", arrow = "bottom", length = 45, label = "8" },
-  { selector = "#securityobjectives-table thead th:nth-last-child(2)", arrow = "bottom", length = 45, label = "9" },
-  { selector = "#securityobjectives-table thead th:last-child", arrow = "bottom", length = 45, label = "10" },
+  { selector = "th[data-sort-field='year']", arrow = "bottom", length = 45, label = "7" },
+  { selector = "#securityobjectives-table thead th:nth-last-child(2)", arrow = "bottom", length = 45, label = "8" },
+  { selector = "#securityobjectives-table thead th:last-child", arrow = "bottom", length = 45, label = "9" },
 ]
 
 [[shots]]
@@ -2200,7 +2199,7 @@ steps = [
 [[shots]]
 name = "images/security-objectives/dashboard-07"
 # STATEFUL: confirms the duplicate, creating a new Unsubmitted declaration
-# (2027, Rail transport) for Operator A plus CREATE and COPY log entries. Keep
+# (2027) for Operator A plus CREATE and COPY log entries. Keep
 # it last in the section: the copy heads the list and pushes 105 and 107 down.
 path = "/securityobjectives/"
 role = "operator_admin"
@@ -2209,12 +2208,6 @@ steps = [
   { action = "click", selector = "tr:has(.so_access_log[data-standard-answer-id='105']) .copy_so_declaration" },
   { action = "wait_for", selector = "#copy_so_declaration.show #copy-so-declaration-form" },
   { action = "select", selector = "#copy_so_declaration #id_year", value = "2027" },
-  { action = "click", selector = "#copy_so_declaration button.multiselect" },
-  # Sector groups open collapsed, which leaves their options unclickable.
-  { action = "click", selector = "#copy_so_declaration .multiselect-group[title='Transport'] .caret-container" },
-  { action = "click", selector = "#copy_so_declaration .multiselect-option:has(input[value='6'])" },
-  # Close the sector list: left open, it can cover the Duplicate button.
-  { action = "click", selector = "#copy_so_declaration button.multiselect" },
   { action = "click", selector = "#copy-so-declaration-form button[type='submit']" },
   { action = "wait_for", selector = ".alert-success" },
 ]
