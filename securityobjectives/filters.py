@@ -75,12 +75,14 @@ class StandardAnswerFilter(django_filters.FilterSet):
         return queryset.filter(status__in=[stored for stored, shown in OPERATOR_STATUS.items() if shown == value])
 
     def filter_search(self, queryset, name, value):
-        return queryset.filter(
+        matches = (
             Q(standard__translations__label__icontains=value)
             | Q(standard__translations__description__icontains=value)
             | Q(creator_name__icontains=value)
             | Q(submitter_company__name__icontains=value)
             | Q(year_of_submission__icontains=value)
-            | Q(submitter_company__sectors__translations__name__icontains=value)
             | group_id_matches(value)
-        ).distinct()
+        )
+        if self.is_regulator:
+            matches |= Q(submitter_company__sectors__translations__name__icontains=value)
+        return queryset.filter(matches).distinct()
