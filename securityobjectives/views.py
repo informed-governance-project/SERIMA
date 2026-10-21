@@ -50,7 +50,7 @@ from governanceplatform.helpers import (
     sort_queryset_by_field,
     user_in_group,
 )
-from governanceplatform.models import Company, Regulation, Sector
+from governanceplatform.models import Company, Regulation, Sector, User
 from reporting.models import CompanyProject
 
 from .email import send_email
@@ -64,7 +64,7 @@ from .forms import (
     SecurityObjectiveStatusForm,
     SelectSOStandardForm,
 )
-from .globals import ALLOWED_SORT_FIELDS, STANDARD_ANSWER_REVIEW_STATUS
+from .globals import ALLOWED_SORT_FIELDS, OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
 from .helpers import (
     can_export_security_objectives,
     can_see_review_comments,
@@ -792,6 +792,15 @@ def access_log(request, standard_answer_id: int):
     return render(request, "modals/so_access_log.html", context=context)
 
 
+def get_review_status_label(standard_answer: StandardAnswer, user: User) -> str:
+    """The review status on the cover, which does not say whether the review was sent."""
+    status = standard_answer.status
+    if not is_user_regulator(user):
+        status = OPERATOR_STATUS[status]
+    status = {"PASSM": "PASS", "FAILM": "FAIL"}.get(status, status)
+    return dict(STANDARD_ANSWER_REVIEW_STATUS)[status]
+
+
 @login_required
 @otp_required
 def download_declaration_pdf(request, standard_answer_id: int):
@@ -808,6 +817,7 @@ def download_declaration_pdf(request, standard_answer_id: int):
         if not has_change_permission(request, standard_answer, "download"):
             return redirect("securityobjectives")
         standard = standard_answer.standard
+        show_review_comments = can_see_review_comments(user, standard_answer)
 
         levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
         security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
@@ -834,7 +844,7 @@ def download_declaration_pdf(request, standard_answer_id: int):
                     )
                     measure.is_implemented = sm_answer.is_implemented
                     measure.justification = sm_answer.justification
-                    measure.review_comment = sm_answer.review_comment
+                    measure.review_comment = sm_answer.review_comment if show_review_comments else None
                 except SecurityMeasureAnswer.DoesNotExist:
                     measure.is_implemented = False
 
@@ -847,9 +857,7 @@ def download_declaration_pdf(request, standard_answer_id: int):
         font_config = FontConfiguration()
 
         column_config = standard.get_column_config()
-        column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and (
-            is_user_regulator(user) or standard_answer.status != "UNDE"
-        )
+        column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and show_review_comments
         set_declaration_column_widths(column_config)
 
         output_from_parsed_template = render_to_string(
@@ -857,6 +865,8 @@ def download_declaration_pdf(request, standard_answer_id: int):
             {
                 "last_maturity_level": levels["last_level"],
                 "standard_answer": standard_answer,
+                "review_status": get_review_status_label(standard_answer, user),
+                "show_objective_status": is_user_regulator(user) or standard_answer.is_review_sent,
                 "security_objectives": security_objectives,
                 "column_config": column_config,
                 "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
