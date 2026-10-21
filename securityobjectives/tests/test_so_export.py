@@ -32,7 +32,7 @@ def load_export_workbook(export):
 
 def selectable_sectors(declaration):
     """The picker offers leaf sectors only, as the dashboard filter does."""
-    return declaration.sectors.filter(parent__isnull=False)
+    return declaration.get_sectors().filter(parent__isnull=False)
 
 
 def build_filters(populate_so_db, file_format="xlsx", sectors=None):
@@ -288,7 +288,6 @@ def test_export_logs_every_declaration_and_sends_one_email(
         submitter_company=first.submitter_company,
         creator_name=first.creator_name,
         creator_company_name=first.creator_company_name,
-        sectors=list(first.sectors.all()),
         group=create_standard_answer_group(company=first.submitter_company),
         status=first.status,
         year_of_submission=first.year_of_submission,
