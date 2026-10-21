@@ -56,7 +56,7 @@ def get_export_rows(queryset) -> list[list]:
             declaration.group.group_id if declaration.group else "",
             declaration.standard.label if declaration.standard else "",
             declaration.creator_company_name,
-            ", ".join(sector.get_safe_translation() for sector in declaration.sectors.all()),
+            ", ".join(sector.get_safe_translation() for sector in declaration.get_sectors()),
             declaration.year_of_submission,
             # floatformat rather than an f-string, because the dashboard rounds halves up
             # and Python rounds them to even.

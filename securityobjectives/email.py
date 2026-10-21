@@ -44,7 +44,7 @@ def send_email(email, standard_answer):
         regulator_users_sectored = RegulatorUser.objects.filter(
             Q(
                 regulator=standard_answer.standard.regulator,
-                sectors__in=standard_answer.sectors.all(),
+                sectors__in=standard_answer.get_sectors(),
             )
             | Q(
                 is_regulator_administrator=True,

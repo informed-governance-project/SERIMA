@@ -68,6 +68,7 @@ from .globals import ALLOWED_SORT_FIELDS, OPERATOR_STATUS, STANDARD_ANSWER_REVIE
 from .helpers import (
     can_export_security_objectives,
     can_see_review_comments,
+    filter_by_company_sectors,
     get_exportable_standard_answers,
     get_scoped_standard_answers,
     get_standard_answers_with_progress,
@@ -133,7 +134,9 @@ def get_security_objectives(request):
         template = "regulator/so_dashboard.html"
         is_regulator_admin = user_in_group(user, "RegulatorAdmin")
         if not is_regulator_admin:
-            standard_answer_queryset = StandardAnswer.objects.filter(standard__regulator=regulator, sectors__in=user.get_sectors().all())
+            standard_answer_queryset = filter_by_company_sectors(
+                StandardAnswer.objects.filter(standard__regulator=regulator), user.get_sectors().all()
+            )
         if is_regulator_admin:
             standard_answer_queryset = StandardAnswer.objects.filter(standard__regulator=regulator)
 
@@ -192,17 +195,15 @@ def create_so_declaration(request):
         (standard.id, str(standard)) for standard in Standard.objects.filter(active=True, security_objectives_set__isnull=False).distinct()
     ]
 
-    sector_list = get_sectors_grouped(Sector.objects.all())
-    if not standard_list or not sector_list:
+    if not standard_list:
         messages.error(request, _("No data available"))
 
-    initial = {"standard_list": standard_list, "sectors_list": sector_list}
+    initial = {"standard_list": standard_list}
     if request.method == "POST":
         form = SelectSOStandardForm(request.POST, initial=initial)
         if form.is_valid():
             so_standard_id = form.cleaned_data["so_standard"]
             year = form.cleaned_data["year"]
-            sectors = form.cleaned_data["sectors"]
             try:
                 standard = Standard.objects.get(pk=so_standard_id)
                 user = request.user
@@ -218,7 +219,6 @@ def create_so_declaration(request):
                     group=sag,
                 )
                 new_standard_answer.save()
-                new_standard_answer.sectors.set(sectors)
                 create_entry_log(user, new_standard_answer, "CREATE", request)
                 return redirect(f"{reverse('so_declaration')}?id={new_standard_answer.id}")
             except Standard.DoesNotExist:
@@ -538,10 +538,6 @@ def declaration(request):
 @otp_required
 def copy_declaration(request, group_id: int):
     user = request.user
-    sector_list = get_sectors_grouped(Sector.objects.all())
-    initial = {"sectors": sector_list}
-    if not sector_list:
-        messages.error(request, _("No sectors data available"))
 
     # get the last standard from the group
     original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-last_update").first()
@@ -553,10 +549,9 @@ def copy_declaration(request, group_id: int):
         return JsonResponse({"error": "Forbidden"}, status=403)
 
     if request.method == "POST":
-        form = CopySOForm(request.POST, initial=initial)
+        form = CopySOForm(request.POST)
         if form.is_valid():
             year = form.cleaned_data["year"]
-            sectors = form.cleaned_data["sectors"]
             original_standard_answer_dict = {
                 "standard": original_standard_answer.standard,
                 "submitter_company": original_standard_answer.submitter_company,
@@ -573,7 +568,6 @@ def copy_declaration(request, group_id: int):
                 group=sag,
             )
             new_standard_answer.save()
-            new_standard_answer.sectors.set(sectors)
             create_entry_log(user, new_standard_answer, "CREATE", request)
             create_entry_log(user, original_standard_answer, "COPY", request)
 
@@ -625,7 +619,7 @@ def copy_declaration(request, group_id: int):
 
         return redirect("securityobjectives")
 
-    form = CopySOForm(initial=initial)
+    form = CopySOForm()
     context = {"form": form, "group_id": group_id}
     return render(request, "modals/copy_so_declaration.html", context=context)
 
@@ -735,7 +729,7 @@ def review_comment_declaration(request, standard_answer_id: int):
                 )
 
             company = standard_answer.submitter_company
-            sectors = standard_answer.sectors.all()
+            sectors = standard_answer.get_sectors()
             year = standard_answer.year_of_submission
             for sector in sectors:
                 has_security_objectives = security_objective_exists(company, year, sector)
@@ -909,10 +903,6 @@ def import_so_declaration(request):
     if not standard_list:
         messages.error(request, _("No data available"))
 
-    sectors_queryset = user.get_sectors().all() if user_in_group(user, "RegulatorUser") else Sector.objects.all()
-
-    sector_list = get_sectors_grouped(sectors_queryset)
-
     companies_queryset = (
         Company.objects.filter(sectors__in=user.get_sectors().values_list("id", flat=True)).distinct()
         if user_in_group(user, "RegulatorUser")
@@ -929,12 +919,6 @@ def import_so_declaration(request):
                 messages.error(request, _("Forbidden"))
             initial["company"] = company_id
 
-        if "sector_id" in request.GET:
-            sector_id = int(request.GET.get("sector_id"))
-            if not sectors_queryset.filter(id=sector_id).exists():
-                messages.error(request, _("Forbidden"))
-            initial["sectors"] = sector_id
-
         if "year" in request.GET:
             initial["year"] = int(request.GET.get("year"))
 
@@ -947,7 +931,6 @@ def import_so_declaration(request):
     choices = {
         "standard": standard_list,
         "company": company_list,
-        "sectors": sector_list,
     }
 
     if request.method == "POST":
@@ -970,7 +953,6 @@ def import_so_declaration(request):
             standard_id = form.cleaned_data["standard"]
             company_id = form.cleaned_data["company"]
             year = form.cleaned_data["year"]
-            sectors = form.cleaned_data["sectors"]
 
             try:
                 standard = Standard.objects.get(pk=standard_id)
@@ -983,11 +965,6 @@ def import_so_declaration(request):
                         request,
                         _("No users for this company"),
                     )
-                    return safe_redirect_to_referer(request, "securityobjectives")
-
-                valid_sectors = [sector for sector in Sector.objects.filter(id__in=sectors)]
-
-                if not valid_sectors:
                     return safe_redirect_to_referer(request, "securityobjectives")
 
                 group = StandardAnswerGroup.objects.create(company=company)
@@ -1004,7 +981,6 @@ def import_so_declaration(request):
                     group=group,
                 )
                 new_standard_answer.save()
-                new_standard_answer.sectors.set(valid_sectors)
 
             except Standard.DoesNotExist, Company.DoesNotExist:
                 messages.error(
@@ -1084,7 +1060,7 @@ def has_change_permission(request, standard_answer, action):
         user_sectors = user.get_sectors().all()
         user_company = get_active_company_from_session(request)
         is_standard_answer_in_user_company = is_user_operator(user) and standard_answer.submitter_company == user_company
-        standard_sectors = standard_answer.sectors.all()
+        standard_sectors = standard_answer.get_sectors()
         is_user_regulator_sector = (
             user_in_group(user, "RegulatorAdmin") and standard_answer.standard.regulator == user.regulators.first()
         ) or (
@@ -1446,12 +1422,6 @@ def duplicate_standard_answer(original):
     new_obj.status = "UNDE"
     new_obj.submit_date = None
     new_obj.last_update = timezone.now()
-    new_obj.save()
-
-    # Copy M2M (sectors)
-    for field in original._meta.many_to_many:
-        source_m2m = getattr(original, field.name).all()
-        getattr(new_obj, field.name).set(source_m2m)
     new_obj.save()
 
     # Copy SecurityMeasureAmswer
