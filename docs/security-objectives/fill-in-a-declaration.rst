@@ -84,7 +84,7 @@ Fill in an objective
 Each objective is a table with one row per security measure, grouped by maturity level, and a **Planned Measures** field below it.
 
 .. figure:: /_static/images/security-objectives/fill-in-a-declaration-02.png
-   :alt: Security objective with its measures grouped by maturity level, two measures implemented with their justification, and the Planned Measures field
+   :alt: Security objective with its measures grouped by maturity level, two measures implemented with their justification, one not implemented with the reason why, and the Planned Measures field
    :target: ../_static/images/security-objectives/fill-in-a-declaration-02.png
 
 The columns are:
@@ -93,7 +93,7 @@ The columns are:
 - **Security Measure**: The measure to put in place.
 - **Evidence**: The evidence the regulator expects to see for that measure. You cannot edit it.
 - **Measure Implemented?**: A switch to turn on for each measure that is in place.
-- **Justification**: How the measure is implemented, and where the evidence can be found.
+- **Justification**: How the measure is implemented, and where the evidence can be found, or why it is not implemented.
 - **Review comment**: The regulator's comment on the measure. You cannot edit it. The column appears once
   the declaration has been submitted, or when the regulator has already commented on an earlier version.
 
@@ -108,8 +108,8 @@ To fill in an objective:
 2. Write a **Justification** for each measure you have turned on.
 
    When the framework makes the justification mandatory, the field of a measure turned on without one is outlined
-   in red, with the placeholder **Justification required**. Do not write a justification for a measure that is off:
-   the objective would stay partially filled.
+   in red, with the placeholder **Justification required**. For a measure that is off, the justification is optional:
+   you can use it to explain why the measure is not implemented.
 
 3. Describe in **Planned Measures** the measures you have in place and plan to take, with a schedule of their stages.
 
@@ -138,8 +138,8 @@ and, below it, the number and name of each maturity level of the framework.
      - No measure of the objective has been answered yet.
    * - Orange triangle
      - Partially filled
-     - The objective is started but not complete: a justification or the planned measures are missing,
-       or a justification was written for a measure that is off.
+     - The objective is started but not complete: a measure turned on has no justification, or the planned
+       measures are missing.
    * - Green circle
      - Fully filled
      - Everything the framework requires for the objective is filled in. On a submitted declaration, the legend reads

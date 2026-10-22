@@ -20225,6 +20225,18 @@
  },
  {
   "model": "securityobjectives.securitymeasureanswer",
+  "pk": 3932,
+  "fields": {
+   "security_measure_notification_date": "2026-02-13T13:41:18.512Z",
+   "standard_answer": 23,
+   "security_measure": 1755,
+   "justification": "Not implemented yet: the risk management methodology was adopted this year, and its first periodic review is planned for next year.",
+   "is_implemented": false,
+   "review_comment": ""
+  }
+ },
+ {
+  "model": "securityobjectives.securitymeasureanswer",
   "pk": 746,
   "fields": {
    "security_measure_notification_date": "2026-02-13T13:41:39.864Z",
