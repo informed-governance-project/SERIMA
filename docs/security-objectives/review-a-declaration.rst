@@ -153,11 +153,11 @@ For each objective of the declaration:
    **All passed** and **All revision required** give every objective of the declaration that result at once.
    When most objectives are fine, select **All passed**, then change the few that need revision.
 
-.. warning::
+.. note::
 
-   The operator sees your work as you save it, before you send anything: the results of the objectives and
-   your comments on measures in the declaration, and the status **Passed** or **Revision required** once every
-   objective is reviewed. Only your comment on the declaration, and the email, wait until you send the result.
+   The operator sees nothing of your review until you send the result. Until then, the declaration stays
+   **Under review** for them, on the dashboard, in the declaration and in its PDF, without the results of the objectives
+   or your comments. You can change your results and comments freely until you send them.
 
 Comment on the declaration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

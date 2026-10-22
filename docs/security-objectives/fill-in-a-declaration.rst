@@ -95,7 +95,8 @@ The columns are:
 - **Measure Implemented?**: A switch to turn on for each measure that is in place.
 - **Justification**: How the measure is implemented, and where the evidence can be found, or why it is not implemented.
 - **Review comment**: The regulator's comment on the measure. You cannot edit it. The column appears once
-  the declaration has been submitted, or when the regulator has already commented on an earlier version.
+  the regulator has sent the result of the review, or in a new version when the regulator commented on the earlier one.
+  It is hidden while the declaration is **Under review**.
 
 To fill in an objective:
 
@@ -168,6 +169,8 @@ The **Submit** button becomes available once every objective is fully filled, an
 
 Once submitted, the declaration is listed with the status **Under review** and its submission date, with the message
 **The security objectives declaration has been submitted.** If the regulator has set one up, a confirmation email is sent.
+The declaration stays **Under review** until the regulator sends the result of the review: you do not see the
+regulator's results or comments before.
 
 .. warning::
 
@@ -189,6 +192,9 @@ then **Review** in the pop-up: the declaration opens read-only.
 - In the objective selector, the objectives accepted are green, and those needing revision are red squares.
 - The **Review comment** icon, now marked with a blue dot, opens the regulator's comment on the declaration.
   The regulator can also comment on single measures, in the **Review comment** column.
+
+The PDF of the declaration, downloaded from the :doc:`dashboard`, also shows the result of each objective and the
+comments on the measures once the result is sent.
 
 .. _update-a-declaration:
 
