@@ -1179,13 +1179,9 @@ def get_completion_objective(security_objective, standard_answer):
     at_first_level = Q(security_measure__maturity_level__level=first_maturity_level)
 
     if justification_mandatory:
-        is_completed_condition = (
-            Q(is_implemented=True, justification__gt="") | Q(is_implemented=False, justification="", review_comment__gt="") | at_first_level
-        )
-        # Implemented without a reason, or a reason given without implementing it.
-        is_partially_condition = (
-            (Q(is_implemented=True) & Q(justification="")) | (~Q(is_implemented=True) & Q(justification__gt=""))
-        ) & ~at_first_level
+        is_completed_condition = Q(is_implemented=True, justification__gt="") | Q(is_implemented=False) | at_first_level
+        # Implemented without saying how; explaining why a measure is not implemented is a valid answer.
+        is_partially_condition = Q(is_implemented=True, justification="") & ~at_first_level
     else:
         is_completed_condition = Q(is_implemented=True) | Q(is_implemented=False, review_comment__gt="") | at_first_level
         is_partially_condition = None
