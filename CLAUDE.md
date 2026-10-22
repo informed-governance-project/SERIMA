@@ -306,6 +306,18 @@ Rules:
 - When a version is released, rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and add a fresh empty `[Unreleased]` block above it. Also add the comparison link at the bottom of the file.
 - Omit pure chore entries (dependency bumps, translation updates, theme submodule bumps) unless they affect end-users.
 
+## Documentation
+
+The user guide lives in `docs/` (Sphinx, reStructuredText), one folder per module: `getting-started/`, `incident-notification/`, `security-objectives/`, `reporting/`, `administration/`, `technical/`.
+
+**For every new feature or behaviour change, check the docs.** Search `docs/` for the pages that describe the behaviour you touched (statuses, who sees what, buttons, filters, emails, settings) and update them in the same PR as the code. A page that now states something false is worse than a missing one. Look at both roles' pages: a change to what operators see is usually also described in the regulator's guide, and the reverse.
+
+```bash
+poetry run sphinx-build -q -b html docs /tmp/docs-build   # must build without warnings
+```
+
+Screenshots are not edited by hand: `docs/screenshots/shots.toml` defines them and `make screenshots` regenerates them (see `docs/screenshots/README.md`). When a change alters a screen shown in the docs, say which shots need regenerating.
+
 ## CI/CD
 
 GitHub Actions workflows:
