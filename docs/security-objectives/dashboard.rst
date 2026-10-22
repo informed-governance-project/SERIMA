@@ -1,5 +1,5 @@
 Dashboard
-----------------------------------
+---------------------------------
 
 The **Security Objectives** module is a self-assessment tool: you declare how your organisation meets the security objectives
 of your regulator's framework, and provide evidence of the security measures in place.
