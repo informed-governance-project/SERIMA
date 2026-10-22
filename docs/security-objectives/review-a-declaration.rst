@@ -97,7 +97,7 @@ the name, email and phone number of the person who created the declaration. The 
 6. **Icon Guide**: Shows the legend of the selector and of the maturity levels.
 
    .. figure:: /_static/images/security-objectives/review-a-declaration-04.png
-      :alt: Legend of the objective selector with Not reviewed, Review passed and Review required, and the maturity levels
+      :alt: Legend of the objective selector with Not reviewed, Review passed and Revision required, and the maturity levels
       :target: ../_static/images/security-objectives/review-a-declaration-04.png
 
    .. list-table::
@@ -114,7 +114,7 @@ the name, email and phone number of the person who created the declaration. The 
         - Review passed
         - You accepted the objective.
       * - Red square
-        - Review required
+        - Revision required
         - You asked for the revision of the objective.
 
 .. important::

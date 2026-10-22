@@ -145,7 +145,7 @@ and, below it, the number and name of each maturity level of the framework.
      - Everything the framework requires for the objective is filled in. On a submitted declaration, the legend reads
        **Review passed**: the regulator accepted the objective.
    * - Red square
-     - Review required
+     - Revision required
      - The regulator asked for changes to the objective (see `Update a declaration`_).
 
 The **score** of an objective adds up, for each maturity level above the lowest, the share of that level's measures
