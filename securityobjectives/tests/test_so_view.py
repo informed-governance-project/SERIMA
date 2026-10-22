@@ -501,6 +501,27 @@ def test_a_blank_justification_leaves_the_objective_incomplete_by_default(popula
 
 
 @pytest.mark.django_db
+def test_a_justification_on_an_unimplemented_measure_completes_the_objective(populate_so_db):
+    """Explaining why a measure is not implemented is a valid answer (#920)."""
+    from securityobjectives.views import get_completion_objective
+
+    standard_answer = populate_so_db["sas"][0]
+    standard = standard_answer.standard
+    standard.actions_mandatory = False
+    standard.save()
+    objective = populate_so_db["so_security_objectives"][0]
+    SecurityMeasureAnswer.objects.filter(standard_answer=standard_answer).update(
+        is_implemented=False,
+        justification="Not applicable to our infrastructure.",
+    )
+
+    state = get_completion_objective(objective, standard_answer)
+
+    assert state["is_completed"] is True
+    assert state["is_partially"] is False
+
+
+@pytest.mark.django_db
 def test_an_optional_justification_completes_the_objective_when_blank(populate_so_db):
     """With justification optional, ticking the measures is a complete answer."""
     from securityobjectives.views import get_completion_objective
