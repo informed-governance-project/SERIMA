@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Security objectives email templates accept three more placeholders: `#SO_STATUS#` for the status of the declaration as the operator sees it (Under review, Passed or Revision required), `#SO_REVIEW_COMMENT_ADDED#` for a notice when the review sent carries a comment, without the comment itself, and `#PUBLIC_URL#` for the address of the platform. As for incident emails, an "Available placeholders" button above the content field lists them (#912)
+
 ### Changed
 
 - The sectors of a security objectives declaration are now those the regulator assigned to the operator in the backend, instead of being picked by the operator from a list that did not match the evaluation framework (#911). The operator no longer chooses sectors when starting or duplicating a declaration, nor does the regulator when importing one, and operators no longer see the sectors anywhere in the module: not on the dashboard (column, column selector, filter and search), on the declaration or on the cover of its PDF; regulators still do. A change to the operator's sectors in the backend applies at once to all its declarations, both for which regulator users see them and for the reporting projects they feed. The sectors operators picked on existing declarations are discarded on upgrade
