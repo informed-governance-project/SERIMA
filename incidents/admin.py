@@ -12,7 +12,6 @@ from django.forms.models import model_to_dict
 from django.http import Http404, JsonResponse
 from django.urls import path
 from django.utils import timezone
-from django.utils.functional import lazy
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
@@ -34,7 +33,7 @@ from governanceplatform.helpers import (
     translated_queryset,
     user_in_group,
 )
-from governanceplatform.mixins import PermissionMixin
+from governanceplatform.mixins import EmailPlaceholdersMixin, PermissionMixin
 from governanceplatform.models import Regulation, Regulator, Sector, User
 from governanceplatform.settings import (
     LOG_RETENTION_TIME_IN_DAY,
@@ -783,16 +782,9 @@ class EmailTypeListFilter(SimpleListFilter):
         return queryset.filter(pk__in=emails_ids)
 
 
-def email_placeholders_button() -> str:
-    """Opens the dialog listing INCIDENT_EMAIL_PLACEHOLDERS, which the change form renders from the registry."""
-    return format_html(
-        '<button type="button" class="button" data-placeholders-help-open>{}</button>',
-        _("Available placeholders"),
-    )
-
-
 @admin.register(Email, site=admin_site)
-class EmailAdmin(CustomTranslatableAdmin):
+class EmailAdmin(EmailPlaceholdersMixin, CustomTranslatableAdmin):
+    email_placeholders = INCIDENT_EMAIL_PLACEHOLDERS
     list_display = [
         "name",
         "subject_display",
@@ -815,14 +807,9 @@ class EmailAdmin(CustomTranslatableAdmin):
             _("Content"),
             {
                 "fields": ("content", "html_preview"),
-                "description": lazy(email_placeholders_button, str)(),
             },
         ),
     )
-
-    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
-        context["email_placeholders"] = INCIDENT_EMAIL_PLACEHOLDERS
-        return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
     @admin.display(description=_("HTML preview"))
     def html_preview(self, obj):
