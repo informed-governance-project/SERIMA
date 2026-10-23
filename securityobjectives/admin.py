@@ -28,6 +28,7 @@ from governanceplatform.helpers import (
     sanitize_html,
 )
 from governanceplatform.mixins import (
+    EmailPlaceholdersMixin,
     FunctionalityMixin,
     PermissionMixin,
     TranslationUpdateMixin,
@@ -35,6 +36,7 @@ from governanceplatform.mixins import (
 from governanceplatform.models import Regulation, User
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 from governanceplatform.widgets import TranslatedNameWidget
+from securityobjectives.email import SO_EMAIL_PLACEHOLDERS
 from securityobjectives.globals import SO_ACTIONS_LABEL, SO_DECLARATION_COLUMNS
 from securityobjectives.models import (
     Domain,
@@ -1233,6 +1235,7 @@ class SOEmailResource(TranslationUpdateMixin, resources.ModelResource):
 
 @admin.register(SecurityObjectiveEmail, site=admin_site)
 class SOEmailAdmin(
+    EmailPlaceholdersMixin,
     FunctionalityMixin,
     PermissionMixin,
     CreatorMixin,
@@ -1267,6 +1270,7 @@ class SOEmailAdmin(
         ),
     )
     resource_class = SOEmailResource
+    email_placeholders = SO_EMAIL_PLACEHOLDERS
     should_escape_html = False
     list_filter = ["name", "translations__subject", "creator"]
 

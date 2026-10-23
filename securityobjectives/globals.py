@@ -23,10 +23,6 @@ OPERATOR_STATUS = {
     "FAILM": "FAIL",
 }
 
-SO_EMAIL_VARIABLES = [
-    ("#SO_REFERENCE#", "group_id"),
-]
-
 # Internal state of the export job, polled by the browser and never shown to a user.
 SO_EXPORT_STATUS = [
     ("RUNNING", "Running"),

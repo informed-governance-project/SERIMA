@@ -1,14 +1,26 @@
-from datetime import date
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db.models import Q
 from django.utils import translation
+from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
-from governanceplatform.email import send_html_email
+from governanceplatform.email import (
+    COMMENT_ADDED_NOTICE,
+    PUBLIC_URL_PLACEHOLDER,
+    EmailPlaceholder,
+    replace_placeholders,
+    send_html_email,
+)
 from governanceplatform.helpers import render_to_string_multi_languages
 from governanceplatform.models import CompanyUser, RegulatorUser
-from securityobjectives.globals import SO_EMAIL_VARIABLES
+from securityobjectives.globals import OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
+
+if TYPE_CHECKING:
+    from django.utils.functional import Promise
+
+    from .models import StandardAnswer
 
 
 def send_email(email, standard_answer):
@@ -90,19 +102,31 @@ def send_export_notification(regulator, regulation, sector_ids):
     send_html_email(subject, html_content, sorted(recipient_list))
 
 
-# replace the variables in globals.py by the right value
-def replace_email_variables(content, standard_answer):
-    modify_content = content
-    for _i, (variable, key) in enumerate(SO_EMAIL_VARIABLES):
-        if variable == "#SO_REFERENCE#":
-            group_id = standard_answer.group.group_id
-            if not group_id:
-                var_txt = ""
-            else:
-                var_txt = group_id
-        else:
-            var_txt = getattr(standard_answer, key) if getattr(standard_answer, key) is not None else ""
-            if isinstance(var_txt, date):
-                var_txt = getattr(standard_answer, key).strftime("%Y-%m-%d")
-        modify_content = modify_content.replace(variable, var_txt)
-    return modify_content
+def _resolve_status(standard_answer: StandardAnswer) -> str | Promise:
+    # The status the operator sees: PASS and FAIL stay "Under review" until the review is sent.
+    return dict(STANDARD_ANSWER_REVIEW_STATUS)[OPERATOR_STATUS[standard_answer.status]]
+
+
+def _resolve_review_comment_added(standard_answer: StandardAnswer) -> str | Promise:
+    # The operator reads the review comment only once the review is sent, so the email does not announce it before.
+    return COMMENT_ADDED_NOTICE if standard_answer.is_review_sent and standard_answer.review_comment else ""
+
+
+# The placeholders usable in the security objective email templates of the admin interface.
+# Adding a new one is a single entry here: the admin help dialog and the substitution both read from this list.
+
+SO_EMAIL_PLACEHOLDERS = [
+    PUBLIC_URL_PLACEHOLDER,
+    EmailPlaceholder("#SO_REFERENCE#", _("Reference of the declaration"), lambda standard_answer: standard_answer.group.group_id),
+    EmailPlaceholder("#SO_STATUS#", _("Status of the declaration"), _resolve_status),
+    EmailPlaceholder(
+        "#SO_REVIEW_COMMENT_ADDED#",
+        # Same lazy string the resolver returns, so what the admin advertises cannot drift from what is sent.
+        format_lazy('"{}" — {}', COMMENT_ADDED_NOTICE, _("empty until the review is sent with a comment")),
+        _resolve_review_comment_added,
+    ),
+]
+
+
+def replace_email_variables(content: str, standard_answer: StandardAnswer) -> str:
+    return replace_placeholders(content, SO_EMAIL_PLACEHOLDERS, standard_answer)
