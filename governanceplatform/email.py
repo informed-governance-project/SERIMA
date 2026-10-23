@@ -1,13 +1,50 @@
 # governanceplatform/mail.py
 import logging
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.utils.encoding import force_bytes, force_str
+from django.utils.translation import gettext_lazy as _
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from django.utils.functional import Promise
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class EmailPlaceholder:
+    """A token a regulator can type in an email template, and how to resolve it against what the email is about.
+
+    Each module keeps its own list of placeholders: the admin help dialog and the substitution both read from it.
+    """
+
+    token: str
+    description: str | Promise
+    resolve: Callable[[Any], Any]
+
+    def render(self, context: Any) -> str:
+        value = self.resolve(context)
+        return "" if value is None else str(value)
+
+
+def replace_placeholders(content: str, placeholders: Sequence[EmailPlaceholder], context: Any) -> str:
+    for placeholder in placeholders:
+        if placeholder.token in content:
+            content = content.replace(placeholder.token, placeholder.render(context))
+    return content
+
+
+PUBLIC_URL_PLACEHOLDER = EmailPlaceholder("#PUBLIC_URL#", _("Address of the platform"), lambda context: settings.PUBLIC_URL)
+
+# Says a review comment exists without carrying it, so its content stays in the platform (#856).
+COMMENT_ADDED_NOTICE = _("New comment added")
 
 
 class Base64EmailMultiAlternatives(EmailMultiAlternatives):
