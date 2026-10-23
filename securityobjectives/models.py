@@ -214,7 +214,6 @@ class SecurityObjectiveEmail(TranslatableModel, models.Model):
         ),
         content=models.TextField(
             verbose_name=_("Content"),
-            help_text=_("""Available placeholders: #SO_REFERENCE#"""),
         ),
     )
     name = models.CharField(verbose_name=_("Name"), max_length=255)
