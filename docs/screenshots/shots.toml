@@ -1558,7 +1558,7 @@ role = "regulator_admin"
 path = "/admin/securityobjectives/securityobjectiveemail/2/change/"
 selector = "#content"
 hide = [".submit-row"]
-annotate = [{ selector = "#id_content_helptext", box = true }]
+annotate = [{ selector = "button[data-placeholders-help-open]", box = true }]
 
 [[shots]]
 name = "images/administration/regulator-admin/security-objectives-02"
