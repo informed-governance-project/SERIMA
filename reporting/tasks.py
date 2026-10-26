@@ -1,5 +1,5 @@
 import base64
-import datetime
+import datetime as dt
 import json
 import logging
 import os
@@ -52,7 +52,7 @@ def generate_data(self, project_id, task_id, cleaned_data):
             return float(obj)
         if isinstance(obj, uuid.UUID):
             return str(obj)
-        if isinstance(obj, (datetime.datetime, datetime.date)):
+        if isinstance(obj, (dt.datetime, dt.date)):
             return obj.isoformat()
         return str(obj)
 
@@ -261,7 +261,7 @@ def generate_docx_task(self, project_id, task_id):
             "top_ranking": data["top_ranking"],
             "report_recommendations": report_recommendations,
             "report_observations": data["company_reporting"]["comment"],
-            "publication_date": formats.date_format(datetime.date.today(), format="d F Y"),
+            "publication_date": formats.date_format(dt.date.today(), format="d F Y"),
         }
         for chart_name, chart_data in data["charts"].items():
             chart_bytes = BytesIO(base64.b64decode(chart_data))
@@ -430,7 +430,7 @@ def zip_files_task(user_id, project_id, task_id, error_messages):
     output_dir = Path(os.path.join(settings.PATH_FOR_REPORTING_PDF, str(project_id)))
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    zip_filename = f"reports_{project.name}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    zip_filename = f"reports_{project.name}_{dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
     zip_path = os.path.join(output_dir, str(file_uuid))
 
     base_tmp_dir = Path(settings.PATH_FOR_REPORTING_PDF)
