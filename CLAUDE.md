@@ -34,7 +34,7 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | Colour fields | django-colorfield | >=0.14.0,<0.15 |
 | Frontend | Bootstrap 5 + bootstrap-icons | ^5.3.8 / ^1.13.1 |
 | JS build | Node.js + npm | 24.x / 11.x |
-| Lint & format | ruff | ^0.16.1 |
+| Lint & format | ruff | ^0.17.2 |
 | Type checking | mypy | <3.0.0 |
 | Testing | pytest-django | ^4.11.1 |
 
@@ -212,7 +212,7 @@ The generated schema is therefore empty (`paths: {}`), and so is the committed `
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
 - **Python style**: ruff format (`[tool.ruff]` in pyproject.toml — line length 140, target `py314`, `migrations/` excluded)
-- **Linting**: ruff (`[tool.ruff.lint]` — includes import sorting via `I`, so no separate isort step)
+- **Linting**: ruff (`[tool.ruff.lint]` — includes import sorting via `I`, so no separate isort step). `ICN` enforces conventional import aliases: write `import datetime as dt`, not `import datetime`
 
 ```bash
 poetry run ruff check --fix .   # lint + autofix, includes import sorting
