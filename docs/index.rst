@@ -21,12 +21,8 @@ SERIMA
         :alt: Workflow
 
     .. image:: https://readthedocs.org/projects/serima/badge/?version=latest
-        :target: https://serima.readthedocs.io/en/latest/?badge=latest
+        :target: https://serima.readthedocs.io/latest/?badge=latest
         :alt: Documentation Status
-
-    .. image:: https://weblate.nc3.lu/widget/serima/svg-badge.svg
-        :target: https://weblate.nc3.lu/widget/serima/svg-badge.svg
-        :alt: Translation status
 
 
 .. toctree::

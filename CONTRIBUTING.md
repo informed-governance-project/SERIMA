@@ -22,7 +22,7 @@ $ poetry run pre-commit install
 $ poetry run pre-commit run --all-files
 ```
 
-The [Development page](https://serima.readthedocs.io/en/latest/technical/development.html)
+The [Development page](https://serima.readthedocs.io/latest/technical/development.html)
 of the technical guide covers the rest: the configuration, running the
 application and the tests, the code quality checks and the useful commands.
 
