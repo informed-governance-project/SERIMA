@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-27
+
 ### Added
 
 - Security objectives email templates accept three more placeholders: `#SO_STATUS#` for the status of the declaration as the operator sees it (Under review, Passed or Revision required), `#SO_REVIEW_COMMENT_ADDED#` for a notice when the review sent carries a comment, without the comment itself, and `#PUBLIC_URL#` for the address of the platform. As for incident emails, an "Available placeholders" button above the content field lists them (#912)
@@ -781,6 +783,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.6.1]: https://github.com/informed-governance-project/SERIMA/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.18...v0.6.0
 [0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
 [0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17
