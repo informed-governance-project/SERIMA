@@ -14,11 +14,14 @@ from django.db.models import (
     When,
 )
 
+from governanceplatform.helpers import is_user_regulator
+from governanceplatform.models import Company
+
 from .globals import SO_COLUMN_GRID_TOTAL, SO_DECLARATION_COLUMNS
 from .models import StandardAnswer
 
 if TYPE_CHECKING:
-    from governanceplatform.models import Company, Sector, User
+    from governanceplatform.models import Sector, User
 
 
 def security_objective_exists(company: Company, year: int | None = None, sector: Sector | None = None) -> bool:
@@ -26,7 +29,19 @@ def security_objective_exists(company: Company, year: int | None = None, sector:
     if not (year and sector):
         return False
 
-    return company.standardanswer_set.filter(year_of_submission=year, sectors__in=[sector.id], status="PASSM").exists()
+    return (
+        company.sectors.filter(id=sector.id).exists()
+        and company.standardanswer_set.filter(year_of_submission=year, status="PASSM").exists()
+    )
+
+
+def filter_by_company_sectors(queryset: QuerySet[StandardAnswer], sectors) -> QuerySet[StandardAnswer]:
+    """The declarations of the companies the regulator placed in one of the sectors.
+
+    Matched through a subquery rather than a join, so a company in several of the sectors
+    does not repeat its declarations.
+    """
+    return queryset.filter(submitter_company__in=Company.objects.filter(sectors__in=sectors))
 
 
 def set_declaration_column_widths(column_config: dict[str, dict[str, str | bool | int]]) -> dict[str, dict[str, str | bool | int]]:
@@ -85,6 +100,20 @@ def get_standard_answers_with_progress(standard_answer_queryset: QuerySet[Standa
     )
 
 
+def can_see_review_comments(user: User, standard_answer: StandardAnswer) -> bool:
+    """Whether the user may read the review comments of the declaration.
+
+    An operator reads them once the review is sent, or on a new version, which carries the
+    comments of the review sent on the version it was copied from. While the regulator
+    reviews, the comments are a draft.
+    """
+    if is_user_regulator(user):
+        return True
+    if standard_answer.is_review_in_progress:
+        return False
+    return bool(standard_answer.review_comment) or standard_answer.status != "UNDE"
+
+
 def can_export_security_objectives(user: User) -> bool:
     """Whether the regulator administrator granted this user the declaration export right.
 
@@ -120,7 +149,7 @@ def get_scoped_standard_answers(user: User) -> QuerySet[StandardAnswer]:
     queryset = StandardAnswer.objects.filter(standard__regulator=regulator)
 
     if not user.in_group("RegulatorAdmin"):
-        queryset = queryset.filter(sectors__in=user.get_sectors().all())
+        queryset = filter_by_company_sectors(queryset, user.get_sectors().all())
 
     queryset = queryset.exclude(status="UNDE")
 
@@ -141,12 +170,12 @@ def get_exportable_standard_answers(user: User, filters: dict) -> QuerySet[Stand
         standard_id__in=filters["standards"],
         year_of_submission__in=filters["years"],
         status__in=filters["statuses"],
-        sectors__id__in=get_export_sector_ids(user, filters["sectors"]),
     )
+    queryset = filter_by_company_sectors(queryset, get_export_sector_ids(user, filters["sectors"]))
 
     return (
         get_standard_answers_with_progress(queryset)
         .select_related("standard", "group", "submitter_company")
-        .prefetch_related("sectors")
+        .prefetch_related("submitter_company__sectors")
         .distinct()
     )

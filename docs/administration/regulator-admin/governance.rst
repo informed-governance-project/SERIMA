@@ -176,7 +176,9 @@ To create one, click **Add Operator**, then fill in:
 - **Configuration information**: its **Acronym**, unique, of up to ten characters.
 - **Entity categories**: the categories of the operator. The incident rules of the observers refer to them
   (see :ref:`platform-observers`).
-- **Sectors**: the sectors the operator is active in.
+- **Sectors**: the sectors the operator is active in. They are also the sectors of all its security objectives
+  declarations, which decide the regulator users who see them and the reporting projects they count in.
+  A change applies at once to every declaration of the operator, including those already submitted.
 
 Click **Save**.
 

@@ -276,3 +276,24 @@ def test_safe_redirect_to_referer_falls_back_without_referer(referer_request):
     response = helpers.safe_redirect_to_referer(referer_request(), "securityobjectives")
 
     assert response.url == reverse("securityobjectives")
+
+
+@pytest.mark.parametrize("prefix", ["=", "+", "-", "@", "\t", "\r", "\n"])
+def test_sanitize_spreadsheet_cell_neutralizes_formula_prefixes(prefix):
+    value = f"{prefix}dangerous"
+
+    assert helpers.sanitize_spreadsheet_cell(value) == f"'{value}"
+
+
+@pytest.mark.parametrize("value", ["ordinary text", "", None, 42])
+def test_sanitize_spreadsheet_cell_preserves_safe_values(value):
+    assert helpers.sanitize_spreadsheet_cell(value) == value
+
+
+@pytest.mark.parametrize("control_char", ["\x00", "\x01", "\x08", "\x0b", "\x0c", "\x1f"])
+def test_sanitize_spreadsheet_cell_strips_characters_openpyxl_rejects(control_char):
+    assert helpers.sanitize_spreadsheet_cell(f"line one{control_char}line two") == "line oneline two"
+
+
+def test_sanitize_spreadsheet_cell_neutralizes_formula_hidden_behind_control_character():
+    assert helpers.sanitize_spreadsheet_cell("\x0b=HYPERLINK()") == "'=HYPERLINK()"

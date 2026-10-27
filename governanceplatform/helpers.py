@@ -22,6 +22,7 @@ from django.utils.html import format_html
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
 from .globals import CROCKFORD_ALPHABET, CROCKFORD_INPUT_TRANSLATION, REFERENCE_TOKEN_LENGTH
 
@@ -560,3 +561,26 @@ def is_redis_available() -> bool:
 def celery_health_check() -> bool:
     """Whether a task queued now would actually be picked up by a worker."""
     return is_celery_worker_alive() and is_redis_available()
+
+
+def strip_control_characters(value: str) -> str:
+    """Remove the control characters that XML, and so openpyxl, refuses; tab, line feed and carriage return are kept.
+
+    Text pasted from Word or PDFs carries them invisibly, e.g. a PDF hyphen arriving as STX (\\x02).
+    """
+    return ILLEGAL_CHARACTERS_RE.sub("", value)
+
+
+SPREADSHEET_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
+
+
+def sanitize_spreadsheet_cell(value: object) -> object:
+    """Prevent spreadsheet applications from interpreting exported text as a formula."""
+    if not isinstance(value, str):
+        return value
+    # Text saved before the forms stripped control characters still holds them. Strip them first so they
+    # cannot hide a formula prefix either.
+    value = strip_control_characters(value)
+    if value.startswith(SPREADSHEET_FORMULA_PREFIXES):
+        return f"'{value}"
+    return value

@@ -27,7 +27,7 @@ Create a declaration
 ~~~~~~~~~~~~~~~~~~~~
 
 Click **New submission** on the :doc:`dashboard`. In the **Create a new security objectives statement** pop-up,
-select the **Evaluation Framework**, the **Year** and one or more **Sectors**, then click **Create**.
+select the **Evaluation Framework** and the **Year**, then click **Create**.
 The new declaration opens straight away, with the status **Unsubmitted**.
 
 To come back to it later, click its **Edit** icon (pencil) in the **Actions** column of the dashboard.
@@ -53,26 +53,24 @@ The declaration shows one security objective at a time. Its parts are numbered i
    The profile icon beside them opens the **Profile** pop-up, with the name, email and phone number of the person
    who created the declaration.
 
-3. **Sectors**: The sectors the declaration covers.
-
-4. **Review comment**: The speech bubble opens the regulator's comment on the whole declaration.
+3. **Review comment**: The speech bubble opens the regulator's comment on the whole declaration.
    It is greyed out until the regulator has sent the result of the review with a comment.
 
-5. **Submit**: Sends the declaration to the regulator (see `Submit the declaration`_). It is shown only while the declaration is unsubmitted.
+4. **Submit**: Sends the declaration to the regulator (see `Submit the declaration`_). It is shown only while the declaration is unsubmitted.
 
-6. **Close**: Brings you back to the dashboard.
+5. **Close**: Brings you back to the dashboard.
 
-7. **Objective selector**: One button for each security objective of the framework, in the framework's order.
+6. **Objective selector**: One button for each security objective of the framework, in the framework's order.
    Click a button to open that objective. The shape and colour of each button tell you how far the objective is filled in
    (see `Follow your progress`_). The selector is shown on wide screens only.
 
-8. **Previous** and **next** arrows: Move to the previous or the next objective.
+7. **Previous** and **next** arrows: Move to the previous or the next objective.
 
-9. **Icon Guide**: Shows the legend of the selector and of the maturity levels. Click it again to hide it.
+8. **Icon Guide**: Shows the legend of the selector and of the maturity levels. Click it again to hide it.
 
-10. **Objective**: The code, name and description of the objective displayed.
+9. **Objective**: The code, name and description of the objective displayed.
 
-11. **Score**: The score of the objective (see `Follow your progress`_).
+10. **Score**: The score of the objective (see `Follow your progress`_).
 
 .. important::
 
@@ -86,7 +84,7 @@ Fill in an objective
 Each objective is a table with one row per security measure, grouped by maturity level, and a **Planned Measures** field below it.
 
 .. figure:: /_static/images/security-objectives/fill-in-a-declaration-02.png
-   :alt: Security objective with its measures grouped by maturity level, two measures implemented with their justification, and the Planned Measures field
+   :alt: Security objective with its measures grouped by maturity level, two measures implemented with their justification, one not implemented with the reason why, and the Planned Measures field
    :target: ../_static/images/security-objectives/fill-in-a-declaration-02.png
 
 The columns are:
@@ -95,9 +93,10 @@ The columns are:
 - **Security Measure**: The measure to put in place.
 - **Evidence**: The evidence the regulator expects to see for that measure. You cannot edit it.
 - **Measure Implemented?**: A switch to turn on for each measure that is in place.
-- **Justification**: How the measure is implemented, and where the evidence can be found.
+- **Justification**: How the measure is implemented, and where the evidence can be found, or why it is not implemented.
 - **Review comment**: The regulator's comment on the measure. You cannot edit it. The column appears once
-  the declaration has been submitted, or when the regulator has already commented on an earlier version.
+  the regulator has sent the result of the review, or in a new version when the regulator commented on the earlier one.
+  It is hidden while the declaration is **Under review**.
 
 To fill in an objective:
 
@@ -110,8 +109,8 @@ To fill in an objective:
 2. Write a **Justification** for each measure you have turned on.
 
    When the framework makes the justification mandatory, the field of a measure turned on without one is outlined
-   in red, with the placeholder **Justification required**. Do not write a justification for a measure that is off:
-   the objective would stay partially filled.
+   in red, with the placeholder **Justification required**. For a measure that is off, the justification is optional:
+   you can use it to explain why the measure is not implemented.
 
 3. Describe in **Planned Measures** the measures you have in place and plan to take, with a schedule of their stages.
 
@@ -140,14 +139,14 @@ and, below it, the number and name of each maturity level of the framework.
      - No measure of the objective has been answered yet.
    * - Orange triangle
      - Partially filled
-     - The objective is started but not complete: a justification or the planned measures are missing,
-       or a justification was written for a measure that is off.
+     - The objective is started but not complete: a measure turned on has no justification, or the planned
+       measures are missing.
    * - Green circle
      - Fully filled
      - Everything the framework requires for the objective is filled in. On a submitted declaration, the legend reads
        **Review passed**: the regulator accepted the objective.
    * - Red square
-     - Review required
+     - Revision required
      - The regulator asked for changes to the objective (see `Update a declaration`_).
 
 The **score** of an objective adds up, for each maturity level above the lowest, the share of that level's measures
@@ -170,6 +169,8 @@ The **Submit** button becomes available once every objective is fully filled, an
 
 Once submitted, the declaration is listed with the status **Under review** and its submission date, with the message
 **The security objectives declaration has been submitted.** If the regulator has set one up, a confirmation email is sent.
+The declaration stays **Under review** until the regulator sends the result of the review: you do not see the
+regulator's results or comments before.
 
 .. warning::
 
@@ -191,6 +192,9 @@ then **Review** in the pop-up: the declaration opens read-only.
 - In the objective selector, the objectives accepted are green, and those needing revision are red squares.
 - The **Review comment** icon, now marked with a blue dot, opens the regulator's comment on the declaration.
   The regulator can also comment on single measures, in the **Review comment** column.
+
+The PDF of the declaration, downloaded from the :doc:`dashboard`, also shows the result of each objective and the
+comments on the measures once the result is sent.
 
 .. _update-a-declaration:
 

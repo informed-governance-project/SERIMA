@@ -6,7 +6,7 @@ from governanceplatform.helpers import get_sectors_grouped, normalize_reference
 from governanceplatform.models import Company, Sector, User
 from incidents.forms import DropdownCheckboxSelectMultiple
 
-from .globals import REFERENCE_PREFIX
+from .globals import OPERATOR_STATUS, REFERENCE_PREFIX, STANDARD_ANSWER_REVIEW_STATUS
 from .models import StandardAnswer
 
 
@@ -29,7 +29,10 @@ class YearChoiceFilter(django_filters.ChoiceFilter):
 
 class StandardAnswerFilter(django_filters.FilterSet):
     year_of_submission = YearChoiceFilter()
-    sectors = django_filters.MultipleChoiceFilter(widget=DropdownCheckboxSelectMultiple(), label=_("Sectors"))
+    status = django_filters.ChoiceFilter(choices=STANDARD_ANSWER_REVIEW_STATUS, method="filter_status", label=_("Status"))
+    sectors = django_filters.MultipleChoiceFilter(
+        field_name="submitter_company__sectors", widget=DropdownCheckboxSelectMultiple(), label=_("Sectors")
+    )
     search = django_filters.CharFilter(method="filter_search", label=_("Search"))
 
     class Meta:
@@ -40,12 +43,16 @@ class StandardAnswerFilter(django_filters.FilterSet):
             "submitter_user",
             "submitter_company",
             "year_of_submission",
-            "sectors",
         ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, is_regulator: bool = False, **kwargs):
         queryset = kwargs.get("queryset", StandardAnswer.objects.none())
         super().__init__(*args, **kwargs)
+        self.is_regulator = is_regulator
+        if not is_regulator:
+            self.filters["status"].extra["choices"] = [
+                (code, label) for code, label in STANDARD_ANSWER_REVIEW_STATUS if code in OPERATOR_STATUS.values()
+            ]
         submitter_user_ids = set(queryset.values_list("submitter_user", flat=True))
 
         submitter_companies_ids = set(queryset.values_list("submitter_company", flat=True))
@@ -56,16 +63,26 @@ class StandardAnswerFilter(django_filters.FilterSet):
 
         years = set(self.queryset.values_list("year_of_submission", flat=True))
         self.filters["year_of_submission"].extra["choices"] = [(year, year) for year in sorted(years)]
-        grouped_choices = get_sectors_grouped(Sector.objects.all())
-        self.filters["sectors"].field.choices = grouped_choices
+        if is_regulator:
+            self.filters["sectors"].field.choices = get_sectors_grouped(Sector.objects.all())
+        else:
+            # Operators do not see the sector their regulator placed them in (#911).
+            del self.filters["sectors"]
+
+    def filter_status(self, queryset, name, value):
+        if self.is_regulator:
+            return queryset.filter(status=value)
+        return queryset.filter(status__in=[stored for stored, shown in OPERATOR_STATUS.items() if shown == value])
 
     def filter_search(self, queryset, name, value):
-        return queryset.filter(
+        matches = (
             Q(standard__translations__label__icontains=value)
             | Q(standard__translations__description__icontains=value)
             | Q(creator_name__icontains=value)
             | Q(submitter_company__name__icontains=value)
             | Q(year_of_submission__icontains=value)
-            | Q(sectors__translations__name__icontains=value)
             | group_id_matches(value)
-        ).distinct()
+        )
+        if self.is_regulator:
+            matches |= Q(submitter_company__sectors__translations__name__icontains=value)
+        return queryset.filter(matches).distinct()

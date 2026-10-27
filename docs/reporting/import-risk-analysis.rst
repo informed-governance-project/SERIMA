@@ -24,7 +24,7 @@ Import Security Objectives
 
 You can import security objectives in two ways.
 
-1.	You can choose a table cell (the relevant column of the operator for a certain year), where you can see a red cross icon. Once you click the icon, the **Import Security Objectives Statement** popup window appears. In this case, the chosen operator, sectors, and other fields will be pre-selected.
+1.	You can choose a table cell (the relevant column of the operator for a certain year), where you can see a red cross icon. Once you click the icon, the **Import Security Objectives Statement** popup window appears. In this case, the operator, the evaluation framework and the year will be pre-selected.
 
 2.	You can use the link **Import security objectives** above the report table. In this case, the **Import Security Objectives Statement** popup window appears, but the fields will not be pre-selected (you can import security objectives for any of the operators).
 

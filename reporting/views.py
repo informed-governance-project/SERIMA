@@ -105,8 +105,7 @@ def has_change_permission(request, project, action):
                 return is_user_regulator_sector
             case "download":
                 return is_user_regulator_sector
-            case _:
-                return False
+        return False
 
     if not check_conditions():
         messages.error(request, _("Forbidden"))
@@ -522,7 +521,7 @@ def generate_report_project(request, report_project_id: int):
 
         security_objectives_declaration = StandardAnswer.objects.filter(
             submitter_company=company,
-            sectors=sector,
+            submitter_company__sectors=sector,
             year_of_submission=year,
             status="PASSM",
         ).order_by("submit_date")

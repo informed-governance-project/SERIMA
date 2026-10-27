@@ -56,15 +56,34 @@ A template has:
   the **HTML preview** below it shows how it is formatted, once saved.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-01.png
-   :alt: Change Email template form with its name, subject, content, available placeholder and HTML preview
+   :alt: Change Email template form with its name, subject, content, the Available placeholders button and HTML preview
    :target: ../../_static/images/administration/regulator-admin/security-objectives-01.png
 
-The only placeholder is ``#SO_REFERENCE#``, replaced by the identifier of the declaration, in the subject or the content.
+Click **Available placeholders** to list the placeholders you can type in the subject or the content.
+Each one is replaced by its value when the email is sent.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 35 65
+
+   * - Placeholder
+     - Replaced by
+   * - ``#PUBLIC_URL#``
+     - The address of the platform.
+   * - ``#SO_REFERENCE#``
+     - The reference of the declaration.
+   * - ``#SO_STATUS#``
+     - The status of the declaration, as the operator sees it: **Under review** once submitted and while you review it,
+       then **Passed** or **Revision required** once you send the review.
+   * - ``#SO_REVIEW_COMMENT_ADDED#``
+     - "New comment added" when the review you sent carries a comment, otherwise nothing.
+       The comment itself is never included, so it stays in the platform.
+
 As for incident emails, one email is sent in all languages: the content in the default language of the platform comes first,
 followed by each translation that differs from it.
 
 The emails are sent to the users of the operator, to your regulator's address for incident notification,
-to your regulator administrators, and to the regulator users in charge of the sectors of the declaration.
+to your regulator administrators, and to the regulator users in charge of the sectors of the operator.
 
 Standards
 ~~~~~~~~~

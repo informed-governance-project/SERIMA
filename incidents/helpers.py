@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING, Any
 import pytz
 from django.utils import timezone
 
-from governanceplatform.helpers import get_active_company_from_session, is_observer_user, is_user_operator, is_user_regulator
+from governanceplatform.helpers import (
+    get_active_company_from_session,
+    is_observer_user,
+    is_user_operator,
+    is_user_regulator,
+)
 
 from .models import (
     Answer,
@@ -29,15 +34,6 @@ if TYPE_CHECKING:
     from pytz.tzinfo import BaseTzInfo
 
     from governanceplatform.models import User
-
-SPREADSHEET_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
-
-
-def sanitize_spreadsheet_cell(value: object) -> object:
-    """Prevent spreadsheet applications from interpreting exported text as a formula."""
-    if isinstance(value, str) and value.startswith(SPREADSHEET_FORMULA_PREFIXES):
-        return f"'{value}"
-    return value
 
 
 def is_deadline_exceeded(report: Workflow, incident: Incident) -> str:

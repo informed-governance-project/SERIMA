@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-27
+
+### Added
+
+- Security objectives email templates accept three more placeholders: `#SO_STATUS#` for the status of the declaration as the operator sees it (Under review, Passed or Revision required), `#SO_REVIEW_COMMENT_ADDED#` for a notice when the review sent carries a comment, without the comment itself, and `#PUBLIC_URL#` for the address of the platform. As for incident emails, an "Available placeholders" button above the content field lists them (#912)
+
+### Changed
+
+- The sectors of a security objectives declaration are now those the regulator assigned to the operator in the backend, instead of being picked by the operator from a list that did not match the evaluation framework (#911). The operator no longer chooses sectors when starting or duplicating a declaration, nor does the regulator when importing one, and operators no longer see the sectors anywhere in the module: not on the dashboard (column, column selector, filter and search), on the declaration or on the cover of its PDF; regulators still do. A change to the operator's sectors in the backend applies at once to all its declarations, both for which regulator users see them and for the reporting projects they feed. The sectors operators picked on existing declarations are discarded on upgrade
+- On a security objectives declaration, the justification and review comment fields of each security measure now grow with their text instead of showing two lines, up to a maximum height beyond which they scroll
+- On the security objectives dashboard, the button that opens a submitted declaration without changing it is now "View" instead of "Review", both in the dialog that offers to view or update a declaration, now titled "View or update security objectives statement", and in the version history (#919)
+- On a security objectives declaration, the legend now names the status of an objective that must be corrected "Revision required" instead of "Review required", as the dashboard already did (#922)
+
+### Fixed
+
+- A regulator opening an incident report from a link that named both the incident and the report, without its workflow, got a server error instead of the report editor (#905)
+- The XLSX exports of incidents and of security objectives declarations no longer fail when an answer holds invisible control characters, as text pasted from Word or a PDF often does, such as a hyphen arriving as STX (#908). These characters are now removed as the text is saved, from every free-text field of an incident notification (contact details, answers, the details added to a choice, and the regulator's review comment) and of a security objectives declaration (justifications, planned measures and review comments); tabs and line breaks are kept. Answers saved before the upgrade still hold them, so they are also removed from every export, CSV included, and a formula hidden behind such a character is now neutralised like any other
+- An operator could see the regulator's review of a security objectives declaration before it was sent: the verdict, on the dashboard, in the version history, on each objective of the declaration and on the cover of its PDF, and the review comments, on the declaration as a whole and on each security measure, both on the page and in the PDF. Until the review is sent, the operator now sees the declaration as "Under review", without verdict or comments. The operator's status filter now offers the four statuses operators see (Unsubmitted, Under review, Passed and Revision required), and "Passed" and "Revision required" now find the declarations whose review was sent, which they used to miss. Regulators still filter on every status (#910)
+- A security measure left unimplemented but given a justification counted as not completely filled out, so the declaration could not be submitted until the justification was removed. Explaining why a measure is not implemented is now a valid answer (#920)
+- In the incident notification wizard, the error message of an unanswered question was covered by the question's tooltip. The tooltip of a field in error now only shows once the user interacts with the field (#904)
+- In the incident notification wizard, clicking "Next" with a required question left empty did not always lead to that question or show a message. Multiple-answer questions, the Sectors step, and required questions shown after picking the answer that opens them are now checked before the step is sent, and the "Please select at least one option." message is shown even when the question is outside the visible part of the page (#906)
+- The loading wheel kept spinning after a regulator saved a review comment on a security objectives declaration (#921)
+
 ## [0.6.0] - 2026-10-06
 
 ### Added
@@ -760,6 +783,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.6.1]: https://github.com/informed-governance-project/SERIMA/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.18...v0.6.0
 [0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
 [0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17

@@ -16,7 +16,7 @@ from incidents.access_control import (
     can_create_incident_report,
     can_edit_incident_report,
 )
-from incidents.models import Incident, SectorRegulation, SectorRegulationWorkflow
+from incidents.models import Incident, IncidentWorkflow, ReportTimeline, SectorRegulation, SectorRegulationWorkflow
 
 
 @pytest.mark.django_db
@@ -416,3 +416,22 @@ def test_declaration_wizard_detection_date_step_defaults_to_platform_timezone_wh
     form = response.context["wizard"]["form"]
     assert response.context["wizard"]["steps"].current == "4"
     assert form["incident_timezone"].value() == TIME_ZONE
+
+
+@pytest.mark.django_db
+def test_regulator_edits_report_with_incident_id_but_no_workflow_id(otp_client, populate_incident_db):
+    """
+    A regulator opening a report by incident_workflow_id must reach the editor even when incident_id is also in the URL
+    """
+    users = populate_incident_db["users"]
+    regulator_admin = next(u for u in users if u.email == "regadmin@reg1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "RRR-SSS-SSS-0001-2005")
+    incident_workflow = IncidentWorkflow.objects.create(
+        incident=incident, workflow=populate_incident_db["incidents_reports"][0], report_timeline=ReportTimeline.objects.create()
+    )
+
+    response = otp_client(regulator_admin).get(
+        reverse("edit_workflow"), {"incident_id": incident.id, "incident_workflow_id": incident_workflow.id}
+    )
+
+    assert response.status_code == 200

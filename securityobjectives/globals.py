@@ -12,9 +12,16 @@ STANDARD_ANSWER_REVIEW_STATUS = [
     ("FAILM", _("Revision required and sent")),
 ]
 
-SO_EMAIL_VARIABLES = [
-    ("#SO_REFERENCE#", "group_id"),
-]
+# The status an operator sees for each stored status. PASS and FAIL are the regulator's
+# verdict while the review is in progress, so the operator learns it only once it is sent.
+OPERATOR_STATUS = {
+    "UNDE": "UNDE",
+    "DELIV": "DELIV",
+    "PASS": "DELIV",
+    "FAIL": "DELIV",
+    "PASSM": "PASS",
+    "FAILM": "FAIL",
+}
 
 # Internal state of the export job, polled by the browser and never shown to a user.
 SO_EXPORT_STATUS = [
@@ -68,7 +75,7 @@ ALLOWED_SORT_FIELDS = {
         "type": "string",
     },
     "sectors": {
-        "field": "sectors__translations__name",
+        "field": "submitter_company__sectors__translations__name",
         "type": "string",
     },
     "year": {

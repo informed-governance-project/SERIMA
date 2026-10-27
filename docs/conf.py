@@ -22,7 +22,7 @@ copyright = "2023-2026 Luxembourg House of Cybersecurity"
 author = "NC3 Team <info@nc3.lu>"
 
 # The full version, including alpha/beta/rc tags
-release = "0.6.0"
+release = "0.6.1"
 
 
 # -- General configuration ---------------------------------------------------
@@ -84,13 +84,16 @@ html_theme_options = {
     "style_nav_header_background": "#e40521",
     "prev_next_buttons_location": "both",
     "version_selector": False,
+    "vcs_pageview_mode": "edit",
 }
+# Tags and pull-request builds have no branch to edit, so their "Edit on GitHub" link falls back to dev.
+github_version = os.environ.get("READTHEDOCS_GIT_IDENTIFIER", "dev") if os.environ.get("READTHEDOCS_VERSION_TYPE") == "branch" else "dev"
 # sphinx_rtd_theme takes the GitHub link from the context, not from a theme option.
 html_context = {
     "display_github": True,
     "github_user": "informed-governance-project",
     "github_repo": "SERIMA",
-    "github_version": "dev",
+    "github_version": github_version,
     "conf_py_path": "/docs/",
 }
 
