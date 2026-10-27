@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-26 09:01+0100\n"
-"PO-Revision-Date: 2026-10-21 09:26+0000\n"
+"PO-Revision-Date: 2026-10-27 13:06+0000\n"
 "Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -2457,15 +2457,15 @@ msgstr "Sicherheitsziele exportieren"
 
 #: securityobjectives/email.py:120
 msgid "Reference of the declaration"
-msgstr ""
+msgstr "Referenz der Einreichung"
 
 #: securityobjectives/email.py:121
 msgid "Status of the declaration"
-msgstr ""
+msgstr "Status der Einreichung"
 
 #: securityobjectives/email.py:125
 msgid "empty until the review is sent with a comment"
-msgstr ""
+msgstr "leer, bis die Prüfung mit einem Kommentar gesendet wurde"
 
 #: securityobjectives/forms.py:28
 msgid ""
