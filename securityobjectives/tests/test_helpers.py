@@ -5,11 +5,20 @@ this, so a wrong year or sector argument would silently mark companies as having
 declared nothing.
 """
 
+from types import SimpleNamespace
+
 import pytest
 
 from governanceplatform.models import Sector
 from securityobjectives.globals import SO_COLUMN_GRID_TOTAL
-from securityobjectives.helpers import security_objective_exists, set_declaration_column_widths
+from securityobjectives.helpers import (
+    get_domain_symbol,
+    get_objective_symbol,
+    is_objective_open,
+    security_objective_exists,
+    set_declaration_column_widths,
+)
+from securityobjectives.models import StandardAnswer
 
 
 @pytest.fixture
@@ -148,3 +157,94 @@ def test_visible_columns_always_span_the_full_grid(hidden):
     spanned = sum(column["width"] for column in config.values() if column["visible"])
 
     assert spanned == SO_COLUMN_GRID_TOTAL
+
+
+@pytest.mark.parametrize(
+    ("symbols", "expected"),
+    [
+        (["passed", "failed", "partially"], "failed"),
+        (["passed", "passed"], "passed"),
+        (["outline-uninitiated", "outline-uninitiated"], "outline-uninitiated"),
+        (["passed", "outline-uninitiated"], "partially"),
+        (["partially", "outline-uninitiated"], "partially"),
+    ],
+)
+def test_operator_domain_symbol_follows_the_first_matching_rule(symbols, expected):
+    assert get_domain_symbol(symbols, is_regulator=False) == expected
+
+
+@pytest.mark.parametrize(
+    ("symbols", "expected"),
+    [
+        (["passed", "partially"], "partially"),
+        (["passed", "failed"], "failed"),
+        (["passed", "passed"], "passed"),
+    ],
+)
+def test_regulator_domain_symbol_follows_the_first_matching_rule(symbols, expected):
+    assert get_domain_symbol(symbols, is_regulator=True) == expected
+
+
+def test_regulator_domain_stays_not_reviewed_until_its_review_is_complete():
+    """A revision already required in the domain must not hide the objectives left to review."""
+    assert get_domain_symbol(["failed", "partially"], is_regulator=True) == "partially"
+
+
+@pytest.mark.parametrize(
+    ("symbol", "is_regulator", "expected"),
+    [
+        ("passed", False, False),
+        ("partially", False, True),
+        ("outline-uninitiated", False, True),
+        ("failed", False, True),
+        ("partially", True, True),
+        ("passed", True, False),
+        ("failed", True, False),
+    ],
+)
+def test_objective_is_open_until_filled_or_reviewed(symbol, is_regulator, expected):
+    assert is_objective_open(symbol, is_regulator) is expected
+
+
+def _objective(review_status=None, completed=False, partially=False):
+    """The attributes the declaration view sets on each objective before it is drawn."""
+    objective = SimpleNamespace(completion_state={"is_completed": completed, "is_partially": partially})
+    if review_status:
+        objective.status = SimpleNamespace(status=review_status)
+    return objective
+
+
+@pytest.mark.parametrize(
+    ("objective", "expected"),
+    [
+        (_objective(completed=True), "passed"),
+        (_objective(partially=True), "partially"),
+        (_objective(), "outline-uninitiated"),
+        (_objective("NOT_REVIEWED", completed=True), "passed"),
+    ],
+)
+def test_operator_bullet_follows_the_filling_of_a_draft(objective, expected):
+    assert get_objective_symbol(objective, StandardAnswer(status="UNDE"), is_regulator=False) == expected
+
+
+@pytest.mark.parametrize(("review_status", "expected"), [("PASS", "passed"), ("FAIL", "failed")])
+def test_operator_bullet_keeps_the_verdict_on_a_new_version(review_status, expected):
+    """An objective the regulator already judged shows that verdict, not its filling."""
+    assert get_objective_symbol(_objective(review_status, completed=True), StandardAnswer(status="UNDE"), is_regulator=False) == expected
+
+
+def test_operator_bullet_follows_the_filling_while_the_review_is_in_progress():
+    """The verdict reaches the operator only once the review is sent."""
+    assert get_objective_symbol(_objective("FAIL", completed=True), StandardAnswer(status="DELIV"), is_regulator=False) == "passed"
+
+
+@pytest.mark.parametrize(("review_status", "expected"), [("PASS", "passed"), ("FAIL", "failed"), ("NOT_REVIEWED", "partially")])
+def test_regulator_bullet_shows_the_review(review_status, expected):
+    assert get_objective_symbol(_objective(review_status, completed=True), StandardAnswer(status="DELIV"), is_regulator=True) == expected
+
+
+@pytest.mark.parametrize(("stored_status", "review_status", "expected"), [("PASSM", "PASS", "passed"), ("FAILM", "FAIL", "failed")])
+def test_operator_bullet_shows_the_verdict_once_the_review_is_sent(stored_status, review_status, expected):
+    objective = _objective(review_status, completed=False)
+
+    assert get_objective_symbol(objective, StandardAnswer(status=stored_status), is_regulator=False) == expected
