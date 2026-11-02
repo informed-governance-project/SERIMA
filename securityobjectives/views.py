@@ -1086,7 +1086,10 @@ def has_change_permission(request, standard_answer, action):
                 return (is_user_regulator_sector and standard_answer.status != "UNDE") or (is_standard_answer_in_user_company)
             case "submit":
                 return (
-                    is_standard_answer_in_user_company and standard_answer.status == "UNDE" and standard_answer.answered_percentage == 100
+                    is_standard_answer_in_user_company
+                    and standard_answer.status == "UNDE"
+                    and standard_answer.answered_percentage == 100
+                    and not standard_answer.has_failed_objectives
                 )
             case "copy":
                 return is_standard_answer_in_user_company and standard_answer.standard is not None and standard_answer.standard.active
@@ -1411,8 +1414,7 @@ def get_standard_answer_status(standard_answer):
 def declaration_is_ready_to(standard_answer):
     try:
         declaration = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer.pk)).first()
-        has_failed_so = declaration.securityobjectivestatus_set.filter(status="FAIL").exists()
-        submit = declaration.answered_percentage == 100 and not has_failed_so
+        submit = declaration.answered_percentage == 100 and not declaration.has_failed_objectives
         send = declaration.reviewed_percentage == 100
     except Exception:
         submit = False
