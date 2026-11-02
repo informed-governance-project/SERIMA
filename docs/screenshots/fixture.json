@@ -14335,7 +14335,7 @@
   "pk": 9,
   "fields": {
    "language_code": "en",
-   "label": "D1: Governance and risk management",
+   "label": "Governance and risk management",
    "master": 9
   }
  },
@@ -14344,7 +14344,7 @@
   "pk": 10,
   "fields": {
    "language_code": "en",
-   "label": "D2: Human resources security",
+   "label": "Human resources security",
    "master": 10
   }
  },
@@ -14353,7 +14353,7 @@
   "pk": 11,
   "fields": {
    "language_code": "en",
-   "label": "D3: Security of systems and facilities",
+   "label": "Security of systems and facilities",
    "master": 11
   }
  },
@@ -14362,7 +14362,7 @@
   "pk": 12,
   "fields": {
    "language_code": "en",
-   "label": "D4: Operations management",
+   "label": "Operations management",
    "master": 12
   }
  },
@@ -14371,7 +14371,7 @@
   "pk": 13,
   "fields": {
    "language_code": "en",
-   "label": "D5: Incident management",
+   "label": "Incident management",
    "master": 13
   }
  },
@@ -14380,7 +14380,7 @@
   "pk": 14,
   "fields": {
    "language_code": "en",
-   "label": "D6: Business continuity management",
+   "label": "Business continuity management",
    "master": 14
   }
  },
@@ -14389,7 +14389,7 @@
   "pk": 15,
   "fields": {
    "language_code": "en",
-   "label": "D7: Monitoring, auditing and testing",
+   "label": "Monitoring, auditing and testing",
    "master": 15
   }
  },
@@ -14776,7 +14776,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 88,
   "fields": {
-   "unique_code": "SFA_D_SO01",
+   "unique_code": "SO01",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14787,7 +14787,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 89,
   "fields": {
-   "unique_code": "SFA_D_SO02",
+   "unique_code": "SO02",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14798,7 +14798,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 90,
   "fields": {
-   "unique_code": "SFA_D_SO03",
+   "unique_code": "SO03",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14809,7 +14809,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 91,
   "fields": {
-   "unique_code": "SFA_D_SO04",
+   "unique_code": "SO04",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14820,7 +14820,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 92,
   "fields": {
-   "unique_code": "SFA_D_SO05",
+   "unique_code": "SO05",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14831,7 +14831,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 93,
   "fields": {
-   "unique_code": "SFA_D_SO06",
+   "unique_code": "SO06",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14842,7 +14842,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 94,
   "fields": {
-   "unique_code": "SFA_D_SO07",
+   "unique_code": "SO07",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14853,7 +14853,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 95,
   "fields": {
-   "unique_code": "SFA_D_SO08",
+   "unique_code": "SO08",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14864,7 +14864,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 96,
   "fields": {
-   "unique_code": "SFA_D_SO09",
+   "unique_code": "SO09",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14875,7 +14875,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 97,
   "fields": {
-   "unique_code": "SFA_D_SO10",
+   "unique_code": "SO10",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14886,7 +14886,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 98,
   "fields": {
-   "unique_code": "SFA_D_SO11",
+   "unique_code": "SO11",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14897,7 +14897,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 99,
   "fields": {
-   "unique_code": "SFA_D_SO12",
+   "unique_code": "SO12",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14908,7 +14908,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 100,
   "fields": {
-   "unique_code": "SFA_D_SO13",
+   "unique_code": "SO13",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14919,7 +14919,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 101,
   "fields": {
-   "unique_code": "SFA_D_SO14",
+   "unique_code": "SO14",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14930,7 +14930,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 102,
   "fields": {
-   "unique_code": "SFA_D_SO15",
+   "unique_code": "SO15",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14941,7 +14941,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 103,
   "fields": {
-   "unique_code": "SFA_D_SO16",
+   "unique_code": "SO16",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14952,7 +14952,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 104,
   "fields": {
-   "unique_code": "SFA_D_SO17",
+   "unique_code": "SO17",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14963,7 +14963,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 105,
   "fields": {
-   "unique_code": "SFA_D_SO18",
+   "unique_code": "SO18",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14974,7 +14974,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 106,
   "fields": {
-   "unique_code": "SFA_D_SO19",
+   "unique_code": "SO19",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14985,7 +14985,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 107,
   "fields": {
-   "unique_code": "SFA_D_SO20",
+   "unique_code": "SO20",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14996,7 +14996,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 108,
   "fields": {
-   "unique_code": "SFA_D_SO21",
+   "unique_code": "SO21",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15018,7 +15018,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 110,
   "fields": {
-   "unique_code": "SFA_D_SO23",
+   "unique_code": "SO23",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15029,7 +15029,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 111,
   "fields": {
-   "unique_code": "SFA_D_SO24",
+   "unique_code": "SO24",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15040,7 +15040,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 112,
   "fields": {
-   "unique_code": "SFA_D_SO25",
+   "unique_code": "SO25",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15051,7 +15051,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 113,
   "fields": {
-   "unique_code": "SFA_D_SO26",
+   "unique_code": "SO26",
    "is_archived": false,
    "domain": 15,
    "creator_name": "Regulator A",
@@ -15062,7 +15062,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 114,
   "fields": {
-   "unique_code": "SFA_D_SO27",
+   "unique_code": "SO27",
    "is_archived": false,
    "domain": 15,
    "creator_name": "Regulator A",
@@ -15073,7 +15073,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 115,
   "fields": {
-   "unique_code": "SFA_D_SO28",
+   "unique_code": "SO28",
    "is_archived": false,
    "domain": 16,
    "creator_name": "Regulator A",
@@ -15084,7 +15084,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 116,
   "fields": {
-   "unique_code": "SFA_D_SO29",
+   "unique_code": "SO29",
    "is_archived": false,
    "domain": 16,
    "creator_name": "Regulator A",

@@ -41,7 +41,8 @@ To come back to it later, click its **Edit** icon (pencil) in the **Actions** co
 The declaration screen
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The declaration shows one security objective at a time. Its parts are numbered in the screenshot below and described one by one.
+The declaration shows one security objective at a time. It opens on the first objective not fully filled in yet.
+Its parts are numbered in the screenshot below and described one by one.
 
 .. figure:: /_static/images/security-objectives/fill-in-a-declaration-01.png
    :alt: Declaration screen with its parts numbered
@@ -60,17 +61,36 @@ The declaration shows one security objective at a time. Its parts are numbered i
 
 5. **Close**: Brings you back to the dashboard.
 
-6. **Objective selector**: One button for each security objective of the framework, in the framework's order.
-   Click a button to open that objective. The shape and colour of each button tell you how far the objective is filled in
-   (see `Follow your progress`_). The selector is shown on wide screens only.
+6. **Objective selector**: One button for each security objective of the framework, grouped by domain (D1, D2…)
+   in the framework's order. Click a button to open that objective. The shape and colour of each button tell you how far
+   the objective is filled in (see `Follow your progress`_). The selector is shown on wide screens only.
 
-7. **Previous** and **next** arrows: Move to the previous or the next objective.
+   When the selector is too narrow for every button, only the domain you are in shows its buttons, inside a dark
+   border. The other domains show their code and one symbol for the whole domain:
 
-8. **Icon Guide**: Shows the legend of the selector and of the maturity levels. Click it again to hide it.
+   - a red square if at least one of its objectives requires a revision;
+   - a green circle if all its objectives are fully filled;
+   - an empty circle if none of its objectives is started;
+   - an orange triangle otherwise.
 
-9. **Objective**: The code, name and description of the objective displayed.
+   Point at a domain to see its name and how many of its objectives are in each state. Click it to open its first
+   objective not fully filled. If the domain you are in still does not fit, its buttons are split into pages of the
+   same size, with arrows on each side to turn the page. The numbers of the objectives on the page shown appear under
+   the domain code, for example 9–18.
 
-10. **Score**: The score of the objective (see `Follow your progress`_).
+7. **Previous** and **next** arrows: Move to the previous or the next objective, from one domain to the next.
+
+8. **Table of contents**: Opens a panel with the number of objectives in each state for the whole declaration,
+   and every domain with its objectives and their state, and how many of them are fully filled. Click a domain
+   to list its objectives, and an objective
+   to open it. The table of contents is available on every screen size.
+
+9. **Icon Guide**: Shows the legend of the selector and of the maturity levels. Click it again to hide it.
+
+10. **Objective**: The domain of the objective and its place in that domain, then the code, name and description
+    of the objective displayed.
+
+11. **Score**: The score of the objective (see `Follow your progress`_).
 
 .. important::
 

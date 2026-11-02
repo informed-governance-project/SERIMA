@@ -76,11 +76,11 @@ Open a declaration
 ~~~~~~~~~~~~~~~~~~
 
 Click the **Review** icon (pencil) of the declaration. It opens on the declaration screen described in
-:ref:`declaration-screen`, where the operator's answers are read-only. The profile icon beside **Company** gives you
+:ref:`declaration-screen`, where the operator's answers are read-only, on the first objective you have not reviewed yet. The profile icon beside **Company** gives you
 the name, email and phone number of the person who created the declaration. The parts specific to your review are numbered below.
 
 .. figure:: /_static/images/security-objectives/review-a-declaration-03.png
-   :alt: Declaration under review with the review comment icon, the objective result, Send, Close, the objective selector and the Icon Guide numbered
+   :alt: Declaration under review with the review comment icon, the objective result, Send, Close, the objective selector, the table of contents and the Icon Guide numbered
    :target: ../_static/images/security-objectives/review-a-declaration-03.png
 
 1. **Review comment**: Opens the **Review** pop-up, to write your comment on the whole declaration (see `Comment on the declaration`_).
@@ -92,9 +92,22 @@ the name, email and phone number of the person who created the declaration. The 
 
 4. **Close**: Brings you back to the dashboard.
 
-5. **Objective selector**: One button per objective, showing your result for it. Click a button to open that objective.
+5. **Objective selector**: One button per objective, grouped by domain, showing your result for it. Click a button
+   to open that objective. When the selector is too narrow for every button, the other domains show their code and
+   one symbol for the whole domain:
 
-6. **Icon Guide**: Shows the legend of the selector and of the maturity levels.
+   - an orange triangle while at least one of its objectives is not reviewed, even if another one already
+     requires a revision;
+   - a red square once all its objectives are reviewed and at least one requires a revision;
+   - a green circle when all its objectives passed.
+
+   Point at a domain to see its name and how many of its objectives are in each state. Click it to open its first
+   objective not reviewed.
+
+6. **Table of contents**: Opens a panel with the number of objectives in each state, and every domain with its
+   objectives, your result for each, and how many of them you have reviewed. Click an objective to open it.
+
+7. **Icon Guide**: Shows the legend of the selector and of the maturity levels.
 
    .. figure:: /_static/images/security-objectives/review-a-declaration-04.png
       :alt: Legend of the objective selector with Not reviewed, Review passed and Revision required, and the maturity levels
