@@ -14,6 +14,7 @@ from django.db.models import (
     BooleanField,
     Case,
     Count,
+    F,
     FloatField,
     Max,
     Min,
@@ -66,6 +67,7 @@ from .forms import (
 )
 from .globals import ALLOWED_SORT_FIELDS, OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
 from .helpers import (
+    build_objective_navigation,
     can_export_security_objectives,
     can_see_review_comments,
     filter_by_company_sectors,
@@ -259,7 +261,16 @@ def declaration(request):
 
     standard = standard_answer.standard
 
-    security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
+    # The selector groups the objectives by domain, so its numbers follow the domains first.
+    security_objectives_queryset = (
+        standard.security_objectives_set.select_related("security_objective__domain")
+        .prefetch_related("security_objective__domain__translations")
+        .order_by(
+            F("security_objective__domain__position").asc(nulls_last=True),
+            "security_objective__domain_id",
+            "position",
+        )
+    )
 
     levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
 
@@ -516,6 +527,7 @@ def declaration(request):
     context = {
         "last_maturity_level": levels["last_level"],
         "security_objectives": security_objectives,
+        "navigation": build_objective_navigation(list(security_objectives), standard_answer, is_user_regulator(user)),
         "standard_answer": standard_answer,
         "column_config": column_config,
         "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
