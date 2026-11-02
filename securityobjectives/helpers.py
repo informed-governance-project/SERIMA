@@ -1,8 +1,10 @@
+from itertools import groupby
 from typing import TYPE_CHECKING
 
 from django.db.models import (
     Case,
     Count,
+    Exists,
     ExpressionWrapper,
     F,
     FloatField,
@@ -13,15 +15,18 @@ from django.db.models import (
     Value,
     When,
 )
+from django.utils.translation import gettext_lazy as _
 
 from governanceplatform.helpers import is_user_regulator
 from governanceplatform.models import Company
 
 from .globals import SO_COLUMN_GRID_TOTAL, SO_DECLARATION_COLUMNS
-from .models import StandardAnswer
+from .models import SecurityObjectiveStatus, StandardAnswer
 
 if TYPE_CHECKING:
     from governanceplatform.models import Sector, User
+
+    from .models import SecurityObjective
 
 
 def security_objective_exists(company: Company, year: int | None = None, sector: Sector | None = None) -> bool:
@@ -69,6 +74,9 @@ def set_declaration_column_widths(column_config: dict[str, dict[str, str | bool 
 
 def get_standard_answers_with_progress(standard_answer_queryset: QuerySet[StandardAnswer]) -> QuerySet[StandardAnswer]:
     return standard_answer_queryset.annotate(
+        # A new version keeps the verdicts of the review it was copied from, so an objective can
+        # be fully filled and still wait for the revision the regulator asked for.
+        has_failed_objectives=Exists(SecurityObjectiveStatus.objects.filter(standard_answer=OuterRef("pk"), status="FAIL")),
         total_security_objectives=Count(
             "standard__security_objectives",
             distinct=True,
@@ -179,3 +187,127 @@ def get_exportable_standard_answers(user: User, filters: dict) -> QuerySet[Stand
         .prefetch_related("submitter_company__sectors")
         .distinct()
     )
+
+
+def get_objective_symbol(security_objective: SecurityObjective, standard_answer: StandardAnswer, is_regulator: bool) -> str:
+    """The legend symbol of the objective's bullet, as the suffix of its `btn-` class.
+
+    An operator follows how far each objective is filled until the review is sent, except
+    on a new version, where an objective the regulator already judged keeps its verdict.
+    """
+    so_status = getattr(security_objective, "status", None)
+    review_status = so_status.status if so_status else None
+    follows_filling = (
+        not is_regulator
+        and not standard_answer.is_review_sent
+        and (standard_answer.status != "UNDE" or review_status in (None, "NOT_REVIEWED"))
+    )
+    if follows_filling:
+        state = security_objective.completion_state
+        if state["is_completed"]:
+            return "passed"
+        if state["is_partially"]:
+            return "partially"
+        return "outline-uninitiated"
+    if review_status == "PASS":
+        return "passed"
+    if review_status == "FAIL":
+        return "failed"
+    return "partially"
+
+
+def get_domain_symbol(symbols: list[str], is_regulator: bool) -> str:
+    """The one symbol a collapsed domain shows for the symbols of its objectives.
+
+    A regulator's domain stays "not reviewed" until every objective in it is reviewed, so
+    "revision required" means the domain's review is complete.
+    """
+    if is_regulator:
+        if "partially" in symbols:
+            return "partially"
+        if "failed" in symbols:
+            return "failed"
+        return "passed"
+    if "failed" in symbols:
+        return "failed"
+    if all(symbol == "passed" for symbol in symbols):
+        return "passed"
+    if all(symbol == "outline-uninitiated" for symbol in symbols):
+        return "outline-uninitiated"
+    return "partially"
+
+
+def is_objective_open(symbol: str, is_regulator: bool) -> bool:
+    """Whether the objective still needs the user: not fully filled, or not reviewed yet."""
+    return symbol == "partially" if is_regulator else symbol != "passed"
+
+
+def get_navigation_labels(standard_answer: StandardAnswer, is_regulator: bool) -> dict:
+    """The legend names of the symbols the bar can show, and how it counts the progress of a domain."""
+    if not is_regulator and not standard_answer.is_review_sent:
+        return {
+            "symbols": {
+                "outline-uninitiated": _("Not filled"),
+                "partially": _("Partially filled"),
+                "passed": _("Fully filled"),
+                "failed": _("Revision required"),
+            },
+            "done_symbols": ["passed"],
+            # Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 filled".
+            "progress": _("%(code)s, %(label)s, %(done)s of %(total)s filled"),
+        }
+    return {
+        "symbols": {
+            "partially": _("Not reviewed"),
+            "passed": _("Review passed"),
+            "failed": _("Revision required"),
+        },
+        "done_symbols": ["passed", "failed"],
+        # Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 reviewed".
+        "progress": _("%(code)s, %(label)s, %(done)s of %(total)s reviewed"),
+    }
+
+
+def build_objective_navigation(security_objectives: list[SecurityObjective], standard_answer: StandardAnswer, is_regulator: bool) -> dict:
+    """Group the objectives of the declaration by domain, for the objective selector.
+
+    The objectives must already be in their display order, domain by domain. Each one is
+    given its slide index, its number in the bar, its symbol and its domain. The page
+    opens on the first objective still to fill or to review.
+    """
+    domains: list[dict] = []
+    for domain, objectives in groupby(security_objectives, key=lambda security_objective: security_objective.domain):
+        domains.append(
+            {
+                "code": f"D{domain.position}" if domain else "–",
+                "label": domain.label if domain else _("No domain"),
+                "objectives": list(objectives),
+            }
+        )
+
+    index = 0
+    initial_slide = None
+    for domain in domains:
+        domain["first_open"] = None
+        for position, security_objective in enumerate(domain["objectives"], start=1):
+            security_objective.nav_index = index
+            security_objective.nav_number = index + 1
+            security_objective.nav_symbol = get_objective_symbol(security_objective, standard_answer, is_regulator)
+            security_objective.nav_domain = domain
+            security_objective.nav_position_in_domain = position
+            if domain["first_open"] is None and is_objective_open(security_objective.nav_symbol, is_regulator):
+                domain["first_open"] = index
+            index += 1
+        domain["symbol"] = get_domain_symbol([so.nav_symbol for so in domain["objectives"]], is_regulator)
+        domain["first_number"] = domain["objectives"][0].nav_number
+        domain["last_number"] = domain["objectives"][-1].nav_number
+        if initial_slide is None:
+            initial_slide = domain["first_open"]
+
+    return {
+        "domains": domains,
+        "is_grouped": len(domains) > 1,
+        "initial_slide": initial_slide or 0,
+        "rule": "regulator" if is_regulator else "operator",
+        "labels": get_navigation_labels(standard_answer, is_regulator),
+    }
