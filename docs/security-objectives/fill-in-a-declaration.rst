@@ -26,7 +26,7 @@ and the regulator's review in :doc:`review-a-declaration`.
 Create a declaration
 ~~~~~~~~~~~~~~~~~~~~
 
-Click **New submission** on the :doc:`dashboard`. In the **Create a new security objectives statement** pop-up,
+Click **New assessment** on the :doc:`dashboard`. In the **Create a new security objectives statement** pop-up,
 select the **Evaluation Framework** and the **Year**, then click **Create**.
 The new declaration opens straight away, with the status **Unsubmitted**.
 
