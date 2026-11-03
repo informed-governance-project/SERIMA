@@ -55,7 +55,7 @@ def edit_account(request):
             )
     else:
         form = CustomUserChangeForm(instance=user)
-    return render(request, "account/edit.html", {"form": form})
+    return render(request, "account/edit_with_api.html", {"form": form, "api_enabled": settings.API_ENABLED})
 
 
 def terms(request):

@@ -1,0 +1,8 @@
+{% extends "account/edit.html" %}
+{% load i18n %}
+{% block content %}
+  {{ block.super }}
+  {% if api_enabled %}
+    <p class="mt-4"><a href="{% url 'api_keys' %}">{% translate "Manage API keys" %}</a></p>
+  {% endif %}
+{% endblock %}

@@ -192,13 +192,24 @@ python manage.py compilemessages
 
 ## API
 
-**There is no API.** DRF and drf-spectacular are installed and configured in `settings.py`, but `rest_framework` is imported nowhere else: there are no serializers, no viewsets, no routers, and no API paths in any `urls.py`. `API_ENABLED` is copied from `config.py` into settings and then consumed nowhere.
+The opt-in read-only API lives in `governanceplatform/api/` and uses DRF and drf-spectacular.
+`API_ENABLED` defaults to False. When enabled, `/api/v1/` exposes the key owner, incidents,
+latest security-objective declarations and reporting projects; `/api/openapi.yaml` and
+`/api/docs/` serve public documentation. See `docs/technical/api.rst` for fields and scope.
+
+Authentication accepts personal bearer keys only. `APIKey` stores SHA-256 digests of
+256-bit random secrets, expiry and revocation. Users manage their own keys through
+`/account/api-keys/` after login/OTP and password confirmation. Never expose stored digests
+or full keys outside the one-time creation response. API requests enforce account/terms,
+module and organization/sector permissions themselves, without browser interstitials.
+No API endpoint may write application records. Project API references are opaque UUIDs;
+incidents and declarations use their existing references. Review comments are not serialized,
+and operator declaration statuses must continue hiding in-progress regulator verdicts.
 
 ```bash
-make openapi   # writes docs/_static/openapi.yml
+poetry run python manage.py spectacular --file /tmp/openapi.yaml --validate
+poetry run pytest governanceplatform/tests/test_api.py
 ```
-
-The generated schema is therefore empty (`paths: {}`), and so is the committed `docs/_static/openapi.yml`. Setting `API_ENABLED = True` does not change this — the flag is inert. Building an API here means adding serializers, views, and URL routes from scratch; there is no existing endpoint to mirror.
 
 ## Conventions
 
@@ -284,7 +295,7 @@ Templates use Bootstrap 5. When adding or modifying UI components:
 |------------|---------|
 | Add a translatable model | `governanceplatform/models.py` — mirror existing `TranslatableModel` pattern |
 | Add an admin view | the `admin.py` of the app concerned |
-| Add an API endpoint | No API exists yet — see the API section before starting |
+| Add an API endpoint | `governanceplatform/api/` — keep it read-only and scope every queryset |
 | Add a test | Mirror the files in `<app>/tests/` |
 | Update config defaults | `governanceplatform/config_dev.py` |
 | Change middleware order | `governanceplatform/settings.py` → `MIDDLEWARE` list |
