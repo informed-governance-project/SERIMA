@@ -4,7 +4,7 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from governanceplatform.models import User
-from incidents.models import Incident
+from incidents.models import Answer, Impact, Incident, IncidentWorkflow
 from reporting.models import Project
 from securityobjectives.globals import OPERATOR_STATUS
 from securityobjectives.models import SecurityMeasureAnswer, StandardAnswer
@@ -17,7 +17,53 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class IncidentAnswerSerializer(serializers.ModelSerializer):
+    category = serializers.StringRelatedField(source="question_options.category_option")
+    question_reference = serializers.CharField(source="question_options.question.reference", read_only=True)
+    question = serializers.StringRelatedField(source="question_options.question")
+    question_type = serializers.CharField(source="question_options.question.question_type", read_only=True)
+    choices = serializers.StringRelatedField(source="predefined_answers", many=True)
+
+    class Meta:
+        model = Answer
+        fields = ("category", "question_reference", "question", "question_type", "choices", "answer")
+        read_only_fields = fields
+
+
+class ImpactSerializer(serializers.ModelSerializer):
+    headline = serializers.CharField(read_only=True, allow_null=True)
+    label = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Impact
+        fields = ("headline", "label")
+        read_only_fields = fields
+
+
+class IncidentReportSerializer(serializers.ModelSerializer):
+    report = serializers.StringRelatedField(source="workflow")
+    detection_date = serializers.DateTimeField(source="report_timeline.incident_detection_date", allow_null=True)
+    starting_date = serializers.DateTimeField(source="report_timeline.incident_starting_date", allow_null=True)
+    resolution_date = serializers.DateTimeField(source="report_timeline.incident_resolution_date", allow_null=True)
+
+    class Meta:
+        model = IncidentWorkflow
+        fields = ("report", "timestamp", "review_status", "detection_date", "starting_date", "resolution_date")
+        read_only_fields = fields
+
+
+class IncidentReportDetailSerializer(IncidentReportSerializer):
+    impacts = ImpactSerializer(many=True, read_only=True)
+    answers = IncidentAnswerSerializer(source="answer_set", many=True, read_only=True)
+
+    class Meta(IncidentReportSerializer.Meta):
+        fields = (*IncidentReportSerializer.Meta.fields, "impacts", "answers")
+        read_only_fields = fields
+
+
 class IncidentSerializer(serializers.ModelSerializer):
+    reports = IncidentReportSerializer(source="incidentworkflow_set", many=True, read_only=True)
+
     class Meta:
         model = Incident
         fields = (
@@ -30,8 +76,13 @@ class IncidentSerializer(serializers.ModelSerializer):
             "is_significative_impact",
             "incident_reference",
             "complaint_reference",
+            "reports",
         )
         read_only_fields = fields
+
+
+class IncidentDetailSerializer(IncidentSerializer):
+    reports = IncidentReportDetailSerializer(source="incidentworkflow_set", many=True, read_only=True)
 
 
 class SecurityMeasureAnswerSerializer(serializers.ModelSerializer):

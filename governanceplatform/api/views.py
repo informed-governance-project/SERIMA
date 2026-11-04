@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from django.conf import settings
+from django.db.models import Prefetch
 from django.http import Http404
 from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -15,7 +16,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 from .authentication import APIKeyAuthentication
 from .permissions import ReadOnlyAPIUser
 from .querysets import declarations_for_user, incidents_for_user, projects_for_user
-from .serializers import CurrentUserSerializer, DeclarationSerializer, IncidentSerializer, ProjectSerializer
+from .serializers import CurrentUserSerializer, DeclarationSerializer, IncidentDetailSerializer, IncidentSerializer, ProjectSerializer
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -64,16 +65,39 @@ class ReadOnlyViewSet(APIAccessMixin, ReadOnlyModelViewSet):
 
 
 class IncidentViewSet(ReadOnlyViewSet):
-    serializer_class = IncidentSerializer
     lookup_field = "incident_id"
     lookup_url_kwarg = "reference"
+
+    def get_serializer_class(self) -> type[IncidentSerializer]:
+        return IncidentDetailSerializer if self.action == "retrieve" else IncidentSerializer
 
     def get_queryset(self) -> QuerySet[Incident]:
         if getattr(self, "swagger_fake_view", False):
             from incidents.models import Incident
 
             return Incident.objects.none()
-        return incidents_for_user(self.request.user)
+        from incidents.models import Answer, IncidentWorkflow
+
+        reports = (
+            IncidentWorkflow.objects.select_related("report_timeline").prefetch_related("workflow__translations").order_by("timestamp")
+        )
+        if self.action == "retrieve":
+            reports = reports.prefetch_related(
+                "impacts__translations",
+                Prefetch(
+                    "answer_set",
+                    queryset=Answer.objects.select_related(
+                        "question_options__question", "question_options__category_option__question_category"
+                    )
+                    .prefetch_related(
+                        "question_options__question__translations",
+                        "question_options__category_option__question_category__translations",
+                        "predefined_answers__translations",
+                    )
+                    .order_by("question_options__category_option__position", "question_options__position"),
+                ),
+            )
+        return incidents_for_user(self.request.user).prefetch_related(Prefetch("incidentworkflow_set", queryset=reports))
 
 
 class DeclarationViewSet(ReadOnlyViewSet):
