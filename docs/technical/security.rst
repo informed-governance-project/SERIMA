@@ -42,8 +42,9 @@ which also detects private keys committed by mistake.
 Authentication and sessions
 ---------------------------
 
-- **Two-factor authentication** is mandatory for every account: a user who has not enabled it
-  can reach nothing but the two-factor set-up pages.
+- **Two-factor authentication** is mandatory for interactive accounts: a user who has not enabled it
+  can reach nothing but the two-factor set-up pages. The optional :doc:`api` uses expiring
+  personal bearer keys created through an authenticated account session, with password confirmation.
 - **Passwords** must be at least 12 characters long, not too similar to the user's details, not common,
   not entirely numeric, and different from the current password and the last 24.
 - **Sensitive pages** — account details, password, backup tokens and disabling two-factor authentication —
@@ -52,7 +53,8 @@ Authentication and sessions
 - **Superusers** cannot use the platform at all; administrators work through roles
   (see :doc:`/getting-started/roles-and-permissions`).
 - Users who belong to several operators choose the one they act for at each login,
-  and every action is limited to that operator.
+  and every browser action is limited to that operator. Read-only API keys span the owner's
+  approved operator memberships and check those memberships on every request.
 
 
 Data

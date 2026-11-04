@@ -127,7 +127,8 @@ Start from ``governanceplatform/config_dev.py`` and set at least:
 - ``MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER``;
 - ``LANGUAGES``, ``PARLER_LANGUAGES`` and ``PARLER_DEFAULT_LANGUAGE_CODE``.
 
-``API_ENABLED`` must be present but has no effect: SERIMA has no API yet.
+``API_ENABLED`` defaults to ``False``. Set it to ``True`` to enable the read-only API,
+API key management and OpenAPI documentation; see :doc:`api`.
 
 These settings are optional; the application applies a default when they are missing:
 

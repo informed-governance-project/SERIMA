@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Opt-in read-only APIs for incidents, security-objective declarations, reporting projects and the current user, with expiring personal API keys stored as hashes, account-based key creation/revocation, OpenAPI YAML and Swagger UI. The API is disabled by default and follows the key owner's current organization, sector and module permissions.
+
 ### Changed
 
 - On the security objectives dashboard, the button that starts a declaration is now "New assessment" instead of "New submission", and an empty dashboard now reads "No security objectives statements have been created yet." instead of "…submitted yet." (#934)
