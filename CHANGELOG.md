@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - On the security objectives dashboard, the button that starts a declaration is now "New assessment" instead of "New submission", and an empty dashboard now reads "No security objectives statements have been created yet." instead of "…submitted yet." (#934)
 
+### Fixed
+
+- The referrer policy set in the configuration was ignored, because the setting was named `REFERRER_POLICY` instead of Django's `SECURE_REFERRER_POLICY`, so pages were always sent with Django's default `Referrer-Policy: same-origin`. That remains the default, and `SECURE_REFERRER_POLICY` in `config.py` now changes it. Rename `REFERRER_POLICY` to `SECURE_REFERRER_POLICY` in an existing `config.py`, as the old name is no longer read (#613)
+
 ## [0.6.1] - 2026-10-27
 
 ### Added

@@ -667,13 +667,13 @@ except AttributeError:
         "PASSWORD_HASHERS",
         "PREPEND_WWW",
         "PROJECT_ROOT",
-        "REFERRER_POLICY",
         "REST_FRAMEWORK",
         "ROOT_URLCONF",
         "RT_SECRET_KEY",
         "SECRET_KEY",
         "SECRET_KEY_FALLBACKS",
         "SECURE_CROSS_ORIGIN_OPENER_POLICY",
+        "SECURE_REFERRER_POLICY",
         "SECURE_SSL_HOST",
         "SECURE_SSL_REDIRECT",
         "SERVER_EMAIL",
@@ -725,9 +725,9 @@ except AttributeError:
 
 # Referrer Policy
 try:
-    REFERRER_POLICY = config.REFERRER_POLICY
+    SECURE_REFERRER_POLICY = config.SECURE_REFERRER_POLICY
 except AttributeError:
-    REFERRER_POLICY = "strict-origin-when-cross-origin"
+    SECURE_REFERRER_POLICY = "same-origin"
 
 # import export celery
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000000000
