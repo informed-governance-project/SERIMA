@@ -58,11 +58,9 @@ def manage_api_keys(request: HttpRequest) -> HttpResponse:
             expires_at=timezone.now() + timedelta(days=form.cleaned_data["expires_in_days"]),
         )
         form = APIKeyForm(user=request.user)
-    response = render(
+    return render(
         request, "account/api_keys.html", {"form": form, "token": token, "api_keys": request.user.api_keys.order_by("-created_at")}
     )
-    response["Referrer-Policy"] = "no-referrer"
-    return response
 
 
 @login_required
