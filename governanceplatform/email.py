@@ -89,7 +89,7 @@ def is_valid_email(email):
         return False
 
 
-def send_html_email(subject, content, recipient_list):
+def send_html_email(subject, content, recipient_list, attachments=None):
     valid_recipient_list = [email for email in recipient_list if is_valid_email(email)]
     if not valid_recipient_list:
         logger.warning(
@@ -105,6 +105,8 @@ def send_html_email(subject, content, recipient_list):
         bcc=valid_recipient_list,
     )
     email.content_subtype = "html"
+    for attachment in attachments or []:
+        email.attach(*attachment)
 
     try:
         sent_count = email.send()
