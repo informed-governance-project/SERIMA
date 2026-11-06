@@ -8,7 +8,6 @@ from django.contrib import admin
 from django.contrib.auth.models import AbstractUser, Group, PermissionsMixin
 from django.contrib.sessions.base_session import AbstractBaseSession
 from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Deferrable
 from django.utils.translation import gettext_lazy as _
@@ -16,10 +15,10 @@ from django_countries.fields import CountryField
 from parler.models import TranslatableModel, TranslatedFields
 from phonenumber_field.modelfields import PhoneNumberField
 
+from .connectors.registry import connector_type_choices
 from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
 from .managers import CustomUserManager
-from .settings import RT_SECRET_KEY
-from .validators import validate_rt_url
+from .settings import CONNECTOR_SECRET_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -261,51 +260,24 @@ class Observer(TranslatableModel):
         verbose_name=_("Functionalities"),
         blank=True,
     )
+    # connector types this observer is allowed to use; set by PlatformAdmin, acts as a filter
+    allowed_connector_types = models.JSONField(default=list, blank=True, verbose_name=_("Available connectors"))
 
-    rt_url = models.URLField(
-        blank=True,
-        null=True,
-        help_text="e.g., https://rt.exemple.com",
-        verbose_name=_("URL"),
-        validators=[
-            URLValidator(),
-            validate_rt_url,
-        ],
-    )
-    _rt_token = models.CharField(
-        db_column="rt_token",
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name=_("Token"),
+    class NotificationMode(models.TextChoices):
+        DEFAULT = "default", _("Default (e-mail when no active connector)")
+        DEFAULT_AND_CONNECTORS = "default_and_connectors", _("E-mail and connectors")
+        CONNECTORS_ONLY = "connectors_only", _("Connectors only (never e-mail)")
+
+    notification_mode = models.CharField(
+        max_length=32,
+        choices=NotificationMode.choices,
+        default=NotificationMode.DEFAULT,
+        verbose_name=_("Notification mode"),
     )
 
-    @property
-    def rt_token(self):
-        if self._rt_token is None or self._rt_token == "" or self._rt_token.strip() == "":
-            return ""
-        try:
-            cipher_suite = Fernet(RT_SECRET_KEY)
-            val = cipher_suite.decrypt(str.encode(self._rt_token))
-            return val.decode()
-        except InvalidToken, ValueError, TypeError:
-            # A rotated or malformed RT_SECRET_KEY makes every stored token unreadable.
-            # Degrade to "no token" so the admin still renders, but say so in the logs.
-            logger.exception("Unable to decrypt the RT token of observer %s", self.pk)
-            return ""
-
-    @rt_token.setter
-    def rt_token(self, val):
-        if not val:
-            self._rt_token = None
-            return
-
-        cipher_suite = Fernet(RT_SECRET_KEY)
-
-        enc_val = cipher_suite.encrypt(str.encode(val))
-        self._rt_token = enc_val.decode()
-
-    rt_queue = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Queue"))
+    def deactivate_disallowed_connectors(self):
+        # connectors whose type is no longer in the allow-list are switched off
+        self.connectors.exclude(connector_type__in=self.allowed_connector_types or []).update(is_active=False)
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)
@@ -314,6 +286,79 @@ class Observer(TranslatableModel):
     class Meta:
         verbose_name = _("Observer")
         verbose_name_plural = _("Observers")
+
+
+class ObserverConnector(models.Model):
+    observer = models.ForeignKey(
+        Observer,
+        on_delete=models.CASCADE,
+        related_name="connectors",
+        verbose_name=_("Observer"),
+    )
+    connector_type = models.CharField(max_length=32, choices=connector_type_choices, verbose_name=_("Type"))
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+    config = models.JSONField(default=dict, blank=True, verbose_name=_("Configuration"))
+    _secret = models.CharField(
+        db_column="secret",
+        max_length=512,
+        blank=True,
+        null=True,
+        verbose_name=_("Secret"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def secret(self):
+        if self._secret is None or self._secret.strip() == "":
+            return ""
+        try:
+            cipher_suite = Fernet(CONNECTOR_SECRET_KEY)
+            val = cipher_suite.decrypt(str.encode(self._secret))
+            return val.decode()
+        except InvalidToken, ValueError, TypeError:
+            # A rotated or malformed CONNECTOR_SECRET_KEY makes every stored secret unreadable.
+            # Degrade to "no secret" so the admin still renders, but say so in the logs.
+            logger.exception("Unable to decrypt the secret of connector %s", self.pk)
+            return ""
+
+    @secret.setter
+    def secret(self, val):
+        if not val:
+            self._secret = None
+            return
+
+        cipher_suite = Fernet(CONNECTOR_SECRET_KEY)
+
+        enc_val = cipher_suite.encrypt(str.encode(val))
+        self._secret = enc_val.decode()
+
+    def get_impl(self):
+        from .connectors.registry import get_connector_class
+
+        return get_connector_class(self.connector_type)(self)
+
+    def clean(self):
+        super().clean()
+        try:
+            impl = self.get_impl()
+        except KeyError:
+            raise ValidationError({"connector_type": _("Unknown connector type")})
+        # the admin add view exposes no config fields (two-step flow); the
+        # configuration is validated on the change view once the type is known
+        if self.pk or self.config:
+            self.config = impl.validate_config(self.config or {})
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Observer connector")
+        verbose_name_plural = _("Observer connectors")
+        constraints = [
+            models.UniqueConstraint(fields=["observer", "name"], name="unique_connector_name_per_observer"),
+        ]
 
 
 # define an abstract class which make  the difference between operator and regulator

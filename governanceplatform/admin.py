@@ -14,7 +14,7 @@ from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import path, reverse
-from django.utils import timezone, translation
+from django.utils import translation
 from django.utils.html import format_html
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
@@ -31,7 +31,7 @@ from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
 from .decorators import check_user_is_correct
 from .email import send_html_email
-from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm
+from .forms import CustomTranslatableAdminForm, FunctionalityAdminForm, ObserverAdminForm, ObserverConnectorAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     delete_file_and_parents,
@@ -52,6 +52,7 @@ from .models import (  # OperatorType,; Service,
     EntityCategory,
     Functionality,
     Observer,
+    ObserverConnector,
     ObserverRegulation,
     ObserverUser,
     Regulation,
@@ -62,7 +63,6 @@ from .models import (  # OperatorType,; Service,
     User,
 )
 from .permissions import set_platform_admin_permissions
-from .rt import check_rt_config, create_rt_ticket
 from .settings import SITE_NAME
 
 
@@ -1818,9 +1818,35 @@ class ObserverUserInline(admin.TabularInline):
         return readonly_fields
 
 
+class ObserverConnectorInline(admin.TabularInline):
+    model = ObserverConnector
+    fields = ("name", "connector_type", "is_active")
+    readonly_fields = ("name", "connector_type", "is_active")
+    show_change_link = True
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        user = request.user
+        # observers only see connectors of the types PlatformAdmin allowed them
+        if user_in_group(user, "ObserverAdmin"):
+            observer = user.observers.first()
+            allowed = observer.allowed_connector_types or [] if observer else []
+            return queryset.filter(connector_type__in=allowed)
+        return queryset
+
+
 @admin.register(Observer, site=admin_site)
 class ObserverAdmin(CustomTranslatableAdmin):
-    form = CustomObserverAdminForm
+    form = ObserverAdminForm
+
+    class Media:
+        css = {"all": ("admin/css/observer_admin.css",)}
+
     list_display = [
         "name_display",
         "full_name_display",
@@ -1836,37 +1862,23 @@ class ObserverAdmin(CustomTranslatableAdmin):
     inlines = (
         ObserverUserInline,
         ObserverRegulationInline,
+        ObserverConnectorInline,
     )
 
     def get_fieldsets(self, request, obj=None):
-        base_fieldsets = [
-            (
-                None,
-                {
-                    "fields": [
-                        "name",
-                        "full_name",
-                        "description",
-                        "country",
-                        "address",
-                        "email_for_notification",
-                    ],
-                },
-            ),
+        fields = [
+            "name",
+            "full_name",
+            "description",
+            "country",
+            "address",
+            "email_for_notification",
+            "notification_mode",
         ]
-
-        if is_observer_user(request.user):
-            base_fieldsets.append(
-                (
-                    "RT Configuration",
-                    {
-                        "classes": ["collapse"],
-                        "fields": ["rt_url", "rt_token", "rt_queue", "rt_test_button"],
-                    },
-                )
-            )
-
-        return base_fieldsets
+        # the allowed-connectors filter is PlatformAdmin-only and hidden from observers
+        if user_in_group(request.user, "PlatformAdmin"):
+            fields.append("allowed_connector_types")
+        return [(None, {"fields": fields})]
 
     def has_change_permission(self, request, obj=None):
         user = request.user
@@ -1885,90 +1897,145 @@ class ObserverAdmin(CustomTranslatableAdmin):
 
         return queryset
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        user = request.user
-        if obj and obj.pk and is_observer_user(user):
-            readonly_fields += ("rt_test_button",)
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # switch off connectors whose type is no longer allowed for this observer
+        obj.deactivate_disallowed_connectors()
 
-        return readonly_fields
+
+@admin.register(ObserverConnector, site=admin_site)
+class ObserverConnectorAdmin(admin.ModelAdmin):
+    form = ObserverConnectorAdminForm
+    list_display = ["name", "observer", "connector_type", "is_active"]
+    list_filter = ["connector_type", "is_active"]
+
+    def get_fields(self, request, obj=None):
+        fields = ["connector_type", "name", "is_active"]
+        if obj is None:
+            return fields
+
+        impl = obj.get_impl()
+        fields += [f"config__{field_name}" for field_name in impl.config_form().fields]
+        if impl.requires_secret:
+            fields.append("secret")
+        fields.append("test_button")
+        return fields
+
+    def save_model(self, request, obj, form, change):
+        if not change and user_in_group(request.user, "ObserverAdmin"):
+            obj.observer = request.user.observers.first()
+        super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        # two-step flow: the type-specific configuration fields only exist on the
+        # change view, so land there right after the connector is created
+        messages.info(request, _("Now complete the connector configuration below."))
+        return redirect(reverse("admin:governanceplatform_observerconnector_change", args=[obj.pk]))
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is not None:
+            impl = obj.get_impl()
+            # per-type fields must be declared on the form class for modelform_factory
+            attrs = {f"config__{field_name}": field for field_name, field in impl.config_form().fields.items()}
+            if impl.requires_secret:
+                attrs["secret"] = forms.CharField(
+                    widget=forms.PasswordInput(render_value=False, attrs={"class": "vTextField"}),
+                    required=False,
+                    label=impl.secret_label,
+                )
+            kwargs["form"] = type(self.form)("DynamicObserverConnectorAdminForm", (self.form,), attrs)
+        form = super().get_form(request, obj, **kwargs)
+        # observers may only pick connector types PlatformAdmin allowed for their observer
+        if user_in_group(request.user, "ObserverAdmin") and "connector_type" in form.base_fields:
+            observer = request.user.observers.first()
+            allowed = set(observer.allowed_connector_types or []) if observer else set()
+            field = form.base_fields["connector_type"]
+            field.choices = [choice for choice in field.choices if choice[0] == "" or choice[0] in allowed]
+        return form
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ()
+        return ("connector_type", "test_button")
+
+    def has_change_permission(self, request, obj=None):
+        user = request.user
+        if user_in_group(user, "ObserverAdmin") and obj and obj.observer != user.observers.first():
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        user = request.user
+        if user_in_group(user, "ObserverAdmin") and obj and obj.observer != user.observers.first():
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        user = request.user
+        if user_in_group(user, "ObserverAdmin"):
+            observer = user.observers.first()
+            allowed = observer.allowed_connector_types or [] if observer else []
+            # hide connectors of types no longer allowed for this observer
+            return queryset.filter(observer__user=user, connector_type__in=allowed)
+
+        return queryset
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "observer" and user_in_group(request.user, "ObserverAdmin"):
+            kwargs["queryset"] = Observer.objects.filter(user=request.user)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     @admin.display(description="")
-    def rt_test_button(self, obj):
+    def test_button(self, obj):
         if not obj or not obj.pk:
             return ""
-        url = reverse("admin:observer-test-rt-connection", args=[obj.pk])
+        url = reverse("admin:observerconnector-test-connection", args=[obj.pk])
         return format_html(
             """
-            <button type="button" class="button rt-test-btn" data-url="{}">{}</button>
-            <span id="rt-test-result"></span>
-            <p id="rt-test-help" class="help">{}</p>
+            <button type="button" class="button connector-test-btn" data-url="{}">{}</button>
+            <span id="connector-test-result"></span>
+            <p id="connector-test-help" class="help">{}</p>
             """,
             url,
-            _("Test RT Connection"),
-            _("Before testing the connection, make sure to save the RT configuration."),
+            _("Test connection"),
+            _("Before testing the connection, make sure to save the configuration."),
         )
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<int:observer_id>/test-rt-connection/",
-                self.admin_site.admin_view(self.test_rt_connection_view),
-                name="observer-test-rt-connection",
+                "<int:connector_id>/test-connection/",
+                self.admin_site.admin_view(self.test_connection_view),
+                name="observerconnector-test-connection",
             ),
         ]
         return custom_urls + urls
 
-    def test_rt_connection_view(self, request, observer_id):
+    def test_connection_view(self, request, connector_id):
         try:
-            observer = Observer.objects.get(pk=observer_id)
-        except Observer.DoesNotExist:
-            return JsonResponse({"success": False, "message": _("Observer not found.")}, status=404)
+            connector = ObserverConnector.objects.get(pk=connector_id)
+        except ObserverConnector.DoesNotExist:
+            return JsonResponse({"success": False, "message": _("Connector not found.")}, status=404)
 
-        if not self.has_change_permission(request, observer):
+        if not self.has_change_permission(request, connector):
             raise Http404()
 
         if request.method != "POST":
             return JsonResponse({"success": False, "message": _("Method not allowed.")}, status=405)
 
-        try:
-            observer = Observer.objects.get(pk=observer_id)
-        except Observer.DoesNotExist:
-            return JsonResponse({"success": False, "message": _("Observer not found.")}, status=404)
-
         user = request.user
 
-        if not (user_in_group(user, "ObserverAdmin") and observer == user.observers.first()):
+        if not (user_in_group(user, "ObserverAdmin") and connector.observer == user.observers.first()):
             return JsonResponse({"success": False, "message": _("Permission denied.")}, status=403)
 
-        ok = check_rt_config(observer)
-        if ok:
-            subject = f"[TEST] SERIMA - RT connection ({timezone.now().strftime('%Y-%m-%d %H:%M %Z')})"
-            content = format_html(
-                """
-                <p>This is an automated test ticket generated by SERIMA to verify the RT API connection.</p>
-                <p><strong>This ticket can be safely deleted.</strong></p>
-                <hr>
-                <p>Observer: {} </p>
-                <p>Queue: {}</p>
-                <p>Generated at: {}</p>
-                <p>Generated by: {}</p>
-                """,
-                observer.name,
-                observer.rt_queue,
-                timezone.now().strftime("%Y-%m-%d %H:%M %Z"),
-                user.get_full_name(),
-            )
-            # Not recorded as an RTTicket: that row requires an incident, and this one has none.
-            create_rt_ticket(observer, subject, content)
-            return JsonResponse({"success": True, "message": _("RT connection successful.")})
-
-        return JsonResponse({"success": False, "message": _("RT connection failed. Check URL, queue and token.")})
+        ok, message = connector.get_impl().test_connection()
+        return JsonResponse({"success": ok, "message": message})
 
     class Media:
-        js = ("admin/js/rt_test_button.js",)
-        css = {"all": ("admin/css/rt_test_button.css",)}
+        js = ("admin/js/connector_test_button.js",)
+        css = {"all": ("admin/css/connector_test_button.css",)}
 
 
 for name, method in generate_display_methods(["name", "full_name", "description"]).items():
