@@ -1841,7 +1841,15 @@ name = "images/security-objectives/fill-in-a-declaration-01"
 # Numbered as in the list of fill-in-a-declaration.rst.
 role = "operator_admin"
 path = "/securityobjectives/declaration?id=105"
-viewport = { width = 1440, height = 450 }
+viewport = { width = 1440, height = 490 }
+# The declaration opens on its first objective not fully filled; the shot shows
+# the first one. Its bullet is clickable because that objective is also in D1,
+# the domain the bar keeps expanded.
+steps = [
+  { action = "click", selector = "#security_objective_selector [data-bs-slide-to='0']" },
+  { action = "wait_for", selector = "#security_objective_selector [data-bs-slide-to='0'].slide-active-container" },
+  { action = "wait_ms", value = 800 },
+]
 annotate = [
   { selector = ".card-header .row > div:nth-child(1)", box = true, arrow = "top", length = 0, label = "1" },
   { selector = ".card-header .row > div:nth-child(3)", box = true, arrow = "top", length = 0, label = "2" },
@@ -1850,9 +1858,10 @@ annotate = [
   { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "5" },
   { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "6" },
   { selector = [".carousel-control-prev", ".carousel-control-next"], box = true, arrow = "bottom", length = 0, label = "7" },
-  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "8" },
-  { selector = ".carousel-item.active .me-auto", box = true, arrow = "right", length = 0, label = "9" },
-  { selector = ".carousel-item.active #score_container", box = true, arrow = "left", length = 0, label = "10" },
+  { selector = "#so_table_of_contents_btn", box = true, arrow = "bottom", length = 0, label = "8" },
+  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "9" },
+  { selector = ".carousel-item.active .me-auto", box = true, arrow = "right", length = 0, label = "10" },
+  { selector = ".carousel-item.active #score_container", box = true, arrow = "left", length = 0, label = "11" },
 ]
 
 [[shots]]
@@ -1877,7 +1886,7 @@ name = "images/security-objectives/fill-in-a-declaration-03"
 role = "operator_admin"
 path = "/securityobjectives/declaration?id=105"
 fresh = true
-viewport = { width = 1440, height = 530 }
+viewport = { width = 1440, height = 540 }
 hide = [".tooltip"]
 steps = [
   { action = "click", selector = "#so_declaration_status_legend_btn" },
@@ -1889,7 +1898,7 @@ annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], b
 name = "images/security-objectives/fill-in-a-declaration-04"
 role = "operator_admin"
 path = "/securityobjectives/declaration?id=51"
-viewport = { width = 1440, height = 450 }
+viewport = { width = 1440, height = 490 }
 annotate = [
   { selector = ".card-header .ms-auto button.review_comment_so_declaration", box = true },
   { selector = "#so_status_form > div:not(.d-none)", box = true },
@@ -1966,14 +1975,15 @@ annotate = [{ selector = ["#collapseLegend", "#collapseLegend .legend-title"], b
 name = "images/security-objectives/review-a-declaration-03"
 role = "regulator_admin"
 path = "/securityobjectives/declaration?id=67"
-viewport = { width = 1440, height = 450 }
+viewport = { width = 1440, height = 550 }
 annotate = [
   { selector = ".card-header .ms-auto .d-flex > button:first-child", box = true, arrow = "left", length = 0, label = "1" },
   { selector = "#so_status_form > div:not(.d-none)", box = true, arrow = "top", length = 0, label = "2" },
   { selector = "#so_send_button", box = true, arrow = "top", length = 0, label = "3" },
   { selector = ".card-header .ms-auto a.btn-primary", box = true, arrow = "top", length = 0, label = "4" },
   { selector = "#security_objective_selector", box = true, arrow = "bottom", length = 0, label = "5" },
-  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "6" },
+  { selector = "#so_table_of_contents_btn", box = true, arrow = "bottom", length = 0, label = "6" },
+  { selector = "#so_declaration_status_legend_btn", box = true, arrow = "bottom", length = 0, label = "7" },
 ]
 
 [[shots]]
@@ -1982,7 +1992,7 @@ name = "images/security-objectives/review-a-declaration-04"
 role = "regulator_admin"
 path = "/securityobjectives/declaration?id=67"
 fresh = true
-viewport = { width = 1440, height = 600 }
+viewport = { width = 1440, height = 610 }
 hide = [".tooltip"]
 steps = [
   { action = "click", selector = "#so_declaration_status_legend_btn" },
@@ -1997,7 +2007,7 @@ path = "/securityobjectives/declaration?id=67"
 # Tall enough for the whole slide: the capture stops at the viewport, and a
 # taller one leaves blank space under the table. The card body rather than the
 # slide, so the outline of the last column is not cut off at the edge.
-viewport = { width = 1440, height = 1650 }
+viewport = { width = 1440, height = 2000 }
 selector = ".card-body"
 steps = [{ action = "wait_ms", value = 1000 }]
 # The planned measures take the last two rows, so the third from last is the

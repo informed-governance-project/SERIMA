@@ -541,10 +541,6 @@ class StandardAnswer(models.Model):
     def is_review_in_progress(self) -> bool:
         return self.status in ("DELIV", "PASS", "FAIL")
 
-    @property
-    def has_failed_objectives(self) -> bool:
-        return SecurityObjectiveStatus.objects.filter(standard_answer=self, status="FAIL").exists()
-
     # The sectors are those the regulator assigned to the company, read live, so a change in
     # the backend reaches every declaration of the company (#911).
     def get_sectors(self) -> QuerySet[Sector]:

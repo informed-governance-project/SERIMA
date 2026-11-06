@@ -101,7 +101,7 @@ Its parts are numbered in the screenshot below and described one by one.
         - The year the declaration is for.
       * - 8
         - Progress
-        - How much of the declaration has been filled in. At 100 %, an unsubmitted declaration shows a **Submit** button here instead.
+        - How much of the declaration has been filled in. At 100 %, an unsubmitted declaration with no objective still marked for revision shows a **Submit** button here instead.
       * - 9
         - Actions
         - The actions on the declaration, described in points 8 to 13.
@@ -111,7 +111,7 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. important::
 
-      Once a declaration is complete, a **Submit** button replaces its progress bar: click it to submit the declaration.
+      Once a declaration is complete, and none of its objectives is still marked for revision, a **Submit** button replaces its progress bar: click it to submit the declaration.
       The declaration screen has its own **Submit** button (see :doc:`fill-in-a-declaration`).
 
 7. **Column settings**: The white gear icon on a red background opens the **Choice of columns** pop-up.
