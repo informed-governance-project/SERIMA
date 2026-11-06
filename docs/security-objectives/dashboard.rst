@@ -20,7 +20,7 @@ Its parts are numbered in the screenshot below and described one by one.
 
 1. **Dashboard**: This link in the top-right corner brings you back to the dashboard from any page of the module.
 
-2. **New submission**: This red button opens the **Create a new security objectives statement** pop-up.
+2. **New assessment**: This red button opens the **Create a new security objectives statement** pop-up.
    The new declaration is then filled in as described in :doc:`fill-in-a-declaration`.
 
 3. **Search**: Finds declarations by the text you enter, looked up in the identifier, the framework, the creator, the operator, the year and, for regulators, the sectors.

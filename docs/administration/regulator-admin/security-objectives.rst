@@ -100,7 +100,7 @@ Create a standard
 
 1. Click **Add standard** and fill in the **General** section:
 
-   - **Active**: operators can create a declaration, with **New submission** on the :doc:`/security-objectives/dashboard`,
+   - **Active**: operators can create a declaration, with **New assessment** on the :doc:`/security-objectives/dashboard`,
      only on an active standard that contains objectives, and duplicate one only if its standard is active. Untick it until the framework is complete.
    - **Regulation**: the regulation the framework belongs to. Only the regulations of your regulator are listed
      (see :ref:`platform-regulations`).

@@ -9,17 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-
-- A table of contents button beside the Icon Guide of a security objectives declaration opens a side panel with the number of objectives in each state, and every domain with its objectives, their state and how many of them are filled (operators) or reviewed (regulators); clicking an objective opens it. Unlike the objective selector, it is available on every screen size (#925)
-
 ### Changed
 
 - The objective selector of a security objectives declaration is now grouped by the domains of the evaluation framework, each labelled D1, D2… from its position, and the objectives are numbered domain by domain. When the selector is too narrow for every objective, the other domains collapse to their code and one symbol summing up their objectives, which shows their name and the count of objectives in each state on hover and opens their first objective still to fill or to review on click; if the current domain still does not fit, its objectives are shown a page at a time. A line above each objective names its domain and its place in it. A declaration now opens on the first objective still to fill (operators) or to review (regulators) instead of the first one (#925)
 
+- On the security objectives dashboard, the button that starts a declaration is now "New assessment" instead of "New submission", and an empty dashboard now reads "No security objectives statements have been created yet." instead of "…submitted yet." (#934)
+
 ### Fixed
 
 - The security objectives dashboard offered to submit a fully filled declaration that still had an objective marked for revision, and the submission went through, while the declaration screen kept its Submit button disabled. A declaration can now be submitted only once every objective is fully filled and none is still marked for revision, from the dashboard as from the declaration screen
+
+
+- The referrer policy set in the configuration was ignored, because the setting was named `REFERRER_POLICY` instead of Django's `SECURE_REFERRER_POLICY`, so pages were always sent with Django's default `Referrer-Policy: same-origin`. That remains the default, and `SECURE_REFERRER_POLICY` in `config.py` now changes it. Rename `REFERRER_POLICY` to `SECURE_REFERRER_POLICY` in an existing `config.py`, as the old name is no longer read (#613)
+
+### Added
+
+- A table of contents button beside the Icon Guide of a security objectives declaration opens a side panel with the number of objectives in each state, and every domain with its objectives, their state and how many of them are filled (operators) or reviewed (regulators); clicking an objective opens it. Unlike the objective selector, it is available on every screen size (#925)
+
 
 ## [0.6.1] - 2026-10-27
 

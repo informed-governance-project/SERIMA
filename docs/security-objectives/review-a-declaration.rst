@@ -19,7 +19,7 @@ The dashboard works as described in :doc:`dashboard`, with the differences numbe
    :alt: Regulator's dashboard with its differences from the operator's dashboard numbered
    :target: ../_static/images/security-objectives/review-a-declaration-01.png
 
-1. **Import**: Replaces **New submission**. It adds a declaration from an Excel file (see `Import a declaration`_).
+1. **Import**: Replaces **New assessment**. It adds a declaration from an Excel file (see `Import a declaration`_).
    An **Export** link follows it when you have the right to export (see `Export the list of declarations`_).
 
 2. **Company**: Replaces the **Creator** column: the operator that submitted the declaration.
