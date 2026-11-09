@@ -65,6 +65,7 @@ class ReadOnlyViewSet(APIAccessMixin, ReadOnlyModelViewSet):
 
 
 class IncidentViewSet(ReadOnlyViewSet):
+    module = "incidents"
     lookup_field = "incident_id"
     lookup_url_kwarg = "reference"
 

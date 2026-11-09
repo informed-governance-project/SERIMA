@@ -10,11 +10,36 @@ application to enable them. Missing configuration defaults to ``False``.
 Apply the database migrations with ``poetry run python manage.py migrate``.
 No additional Python dependencies are needed.
 
+``API_ENABLED`` is the master switch: when it is ``False`` nothing below applies.
+Once it is ``True``, nobody can use the API until a platform administrator grants
+access per module, as described in `API access per module`_.
+
+API access per module
+---------------------
+
+In the administration, **API access** lists the three modules the API exposes:
+incident notification, security objectives and reporting. For each one, the
+platform administrator picks the roles allowed to read it through the API. A new
+installation grants no role, so the API serves nobody until access is granted.
+
+Only roles that can use a module on the web are offered for it. Incident
+notification is open to regulator, operator, incident and observer roles;
+security objectives and reporting to the roles listed for their functionality.
+
+API access never widens web access. A user reads a module through the API only
+when their role is granted it here *and* they can use it on the web: for
+security objectives and reporting, the functionality must also be enabled for
+their role and, for regulator users, on their regulator. ``/api/v1/me/`` needs at
+least one module.
+
+Users with no module granted see no **API keys** menu entry and cannot create keys.
+They can still revoke keys they created earlier.
+
 API keys
 --------
 
-Sign in, complete two-factor authentication when required, and open **Account**,
-then **Manage API keys**. Give the key a name, choose an expiry between 1 and 365
+Sign in, complete two-factor authentication when required, and open **API keys**
+in the account menu. Give the key a name, choose an expiry between 1 and 365
 days (90 by default), and confirm your password. Copy the key immediately: the
 full value is displayed only in the creation response and cannot be retrieved
 later. Existing keys show only their identifying prefix, expiry and status.
@@ -97,6 +122,7 @@ their regulator and sector scope; regulator administrators retain their regulato
 scope. Observers retain their incident regulation rules. Detached accounts have
 no organization data.
 
+Every module requires the user's role to be granted in `API access per module`_.
 Security objectives and reporting additionally require the existing role and
 regulator functionality switches. Reporting remains restricted to regulator
 roles, and observers cannot read security-objective declarations or reporting

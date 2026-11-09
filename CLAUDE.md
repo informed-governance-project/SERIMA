@@ -197,6 +197,12 @@ The opt-in read-only API lives in `governanceplatform/api/` and uses DRF and drf
 latest security-objective declarations and reporting projects; `/api/openapi.yaml` and
 `/api/docs/` serve public documentation. See `docs/technical/api.rst` for fields and scope.
 
+`API_ENABLED` is only the master switch. Per module, `APIModuleAccess` (admin: **API access**) lists
+the roles allowed to read it through the API, chosen from `API_ELIGIBLE_ROLES` in
+`governanceplatform/globals.py`. `User.get_api_modules()` returns the granted modules the user also
+reaches on the web (incidents, plus `get_module_permissions()`), so the API never widens web access.
+Each viewset declares its `module`; `ReadOnlyAPIUser` checks it against `get_api_modules()`.
+
 Authentication accepts personal bearer keys only. `APIKey` stores SHA-256 digests of
 256-bit random secrets, expiry and revocation. Users manage their own keys through
 `/account/api-keys/` after login/OTP and password confirmation. Never expose stored digests

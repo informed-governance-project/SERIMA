@@ -3,18 +3,40 @@ from datetime import timedelta
 
 import pytest
 import yaml
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.cache import cache
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from governanceplatform.models import APIKey, Company, CompanyUser, Functionality, Regulation, Regulator, RegulatorUser, Sector, User
+from governanceplatform.globals import API_ELIGIBLE_ROLES
+from governanceplatform.models import (
+    APIKey,
+    APIModuleAccess,
+    Company,
+    CompanyUser,
+    Functionality,
+    Regulation,
+    Regulator,
+    RegulatorUser,
+    Sector,
+    User,
+)
 from incidents.models import Incident, SectorRegulation
 from reporting.models import Project
 from securityobjectives.models import Standard, StandardAnswer, StandardAnswerGroup
 
 pytestmark = pytest.mark.django_db
+
+
+@pytest.fixture(autouse=True)
+def api_access():
+    """Grant API access to every eligible role, so each test narrows it only where it means to."""
+    access = {}
+    for module, roles in API_ELIGIBLE_ROLES.items():
+        access[module] = APIModuleAccess.objects.get_or_create(module=module)[0]
+        access[module].roles.set([Group.objects.get_or_create(name=role)[0] for role in roles])
+    return access
 
 
 @pytest.fixture
@@ -312,3 +334,87 @@ def test_session_company_cannot_expand_api_scope(client, api_user, bearer, recor
         client.get(reverse("api:incident-detail", kwargs={"reference": records["hidden_incident"].incident_id}), **auth(bearer)).status_code
         == 404
     )
+
+
+def test_role_without_api_access_is_refused(client, bearer, records, api_access):
+    api_access["incidents"].roles.clear()
+    assert client.get(reverse("api:incident-list"), **auth(bearer)).status_code == 403
+    assert client.get(reverse("api:me"), **auth(bearer)).status_code == 403
+
+
+def test_api_access_is_granted_per_module(client, api_user, bearer, records, api_access):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    api_user.groups.set([Group.objects.get_or_create(name="OperatorAdmin")[0]])
+    enable_module(api_user, "securityobjectives")
+    api_access["incidents"].roles.clear()
+    assert client.get(reverse("api:incident-list"), **auth(bearer)).status_code == 403
+    assert client.get(reverse("api:declaration-list"), **auth(bearer)).status_code == 200
+    assert client.get(reverse("api:me"), **auth(bearer)).status_code == 200
+
+
+def test_api_access_does_not_widen_web_access(client, api_user, bearer, records):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    api_user.groups.set([Group.objects.get_or_create(name="OperatorAdmin")[0]])
+    # granted on the API, but the security objectives functionality is off for the role
+    assert client.get(reverse("api:declaration-list"), **auth(bearer)).status_code == 403
+
+
+def test_grant_to_an_ineligible_role_is_ignored(client, api_user, bearer, records, api_access):
+    # IncidentUser can never reach reporting; a grant written past the admin form must not open it
+    api_access["reporting"].roles.add(Group.objects.get(name="IncidentUser"))
+    enable_module(api_user, "reporting")
+    assert client.get(reverse("api:project-list"), **auth(bearer)).status_code == 403
+
+
+def test_key_management_requires_an_api_module(otp_client, api_user, bearer, settings, api_access):
+    client = otp_client(api_user)
+    assert client.get(reverse("api_keys")).status_code == 200
+    assert client.get(reverse("edit_account")).context["api_enabled"] is True
+    api_access["incidents"].roles.clear()
+    assert client.get(reverse("api_keys")).status_code == 403
+    assert client.get(reverse("edit_account")).context["api_enabled"] is False
+    # an existing key can still be revoked
+    response = client.post(reverse("revoke_api_key", kwargs={"key_id": bearer["key"].id}))
+    assert response.status_code == 302
+    bearer["key"].refresh_from_db()
+    assert bearer["key"].revoked_at is not None
+
+
+def test_admin_form_offers_and_accepts_only_eligible_roles(api_access):
+    from governanceplatform.forms import APIModuleAccessAdminForm
+
+    reporting = api_access["reporting"]
+    form = APIModuleAccessAdminForm(instance=reporting)
+    assert set(form.fields["roles"].queryset.values_list("name", flat=True)) == set(API_ELIGIBLE_ROLES["reporting"])
+    incident_user = Group.objects.get(name="IncidentUser")
+    form = APIModuleAccessAdminForm({"roles": [incident_user.pk]}, instance=reporting)
+    assert not form.is_valid()
+    assert "roles" in form.errors
+
+
+def test_api_access_admin_edits_roles_only(otp_client, api_access):
+    admin_user = User.objects.create(email="platform@example.org", is_staff=True, accepted_terms=True, accepted_terms_date=timezone.now())
+    admin_user.groups.add(Group.objects.get_or_create(name="PlatformAdmin")[0])
+    admin_user.user_permissions.add(*Permission.objects.filter(codename="change_apimoduleaccess"))
+    client = otp_client(admin_user)
+    assert client.get(reverse("admin:governanceplatform_apimoduleaccess_add")).status_code == 403
+    response = client.get(reverse("admin:governanceplatform_apimoduleaccess_change", args=[api_access["reporting"].pk]))
+    assert response.status_code == 200
+    assert list(response.context["adminform"].form.fields) == ["roles"]
+    delete = reverse("admin:governanceplatform_apimoduleaccess_delete", args=[api_access["reporting"].pk])
+    assert client.get(delete).status_code == 403
+
+
+def test_api_module_rows_follow_api_modules(monkeypatch, api_access):
+    from django.apps import apps
+
+    from governanceplatform import signals
+
+    APIModuleAccess.objects.create(module="retired")
+    monkeypatch.setattr(signals, "API_MODULES", {**signals.API_MODULES, "newmodule": "New module"})
+    signals.sync_api_modules(sender=apps.get_app_config("governanceplatform"), apps=apps, using="default")
+
+    assert set(APIModuleAccess.objects.values_list("module", flat=True)) == {"incidents", "securityobjectives", "reporting", "newmodule"}
+    assert not APIModuleAccess.objects.get(module="newmodule").roles.exists()
+    # existing grants survive the sync
+    assert set(api_access["incidents"].roles.values_list("name", flat=True)) == set(API_ELIGIBLE_ROLES["incidents"])

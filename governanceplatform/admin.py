@@ -31,7 +31,7 @@ from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
 from .decorators import check_user_is_correct
 from .email import send_html_email
-from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm
+from .forms import APIModuleAccessAdminForm, CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     delete_file_and_parents,
@@ -46,6 +46,7 @@ from .helpers import (
 )
 from .mixins import ShowReminderForTranslationsMixin
 from .models import (  # OperatorType,; Service,
+    APIModuleAccess,
     ApplicationConfig,
     Company,
     CompanyUser,
@@ -1676,6 +1677,29 @@ class FunctionalityAdmin(CustomTranslatableAdmin):
 
 for name, method in generate_display_methods(["name"]).items():
     setattr(FunctionalityAdmin, name, method)
+
+
+@admin.register(APIModuleAccess, site=admin_site)
+class APIModuleAccessAdmin(admin.ModelAdmin):
+    form = APIModuleAccessAdminForm
+    list_display = ["module", "get_roles"]
+    fields = ("roles",)
+    filter_horizontal = ["roles"]
+    ordering = ["module"]
+
+    # The migration creates one row per API module; admins only choose its roles.
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("roles")
+
+    @admin.display(description=_("Roles"))
+    def get_roles(self, obj):
+        return ", ".join(role.name for role in obj.roles.all())
 
 
 @admin.register(Regulator, site=admin_site)

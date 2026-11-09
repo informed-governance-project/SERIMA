@@ -7,6 +7,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -49,6 +50,8 @@ class APIKeyForm(forms.Form):
 def manage_api_keys(request: HttpRequest) -> HttpResponse:
     if not settings.API_ENABLED:
         raise Http404()
+    if not request.user.get_api_modules():
+        raise PermissionDenied()
     token = None
     form = APIKeyForm(request.POST if request.method == "POST" else None, user=request.user)
     if request.method == "POST" and form.is_valid():
