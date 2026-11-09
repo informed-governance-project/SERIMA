@@ -84,7 +84,7 @@ review comments, user directories or historical declaration versions.
 Access follows the owner
 ------------------------
 
-The key owner must remain active, have a verified email, and have accepted the
+The key owner must remain active and have accepted the
 current terms within the configured acceptance period. Superusers and platform
 administrators cannot use these data endpoints. Keys do not grant extra roles.
 Changes to roles, memberships, module switches and sector assignments take effect
