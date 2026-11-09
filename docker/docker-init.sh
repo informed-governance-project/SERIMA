@@ -31,6 +31,9 @@ case "$component" in
         mkdir -p /app/theme/static
 
         python manage.py collectstatic --noinput > /dev/null
+        # No-op except on a database migrated on feat/observer-connectors, whose connector
+        # migrations were renumbered when the feature merged: must run before migrate.
+        python manage.py upgrade_connector_poc
         python manage.py migrate
         python manage.py compilemessages
         python manage.py update_group_permissions
