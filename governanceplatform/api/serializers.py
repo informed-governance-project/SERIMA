@@ -54,7 +54,12 @@ class IncidentReportSerializer(serializers.ModelSerializer):
 
 class IncidentReportDetailSerializer(IncidentReportSerializer):
     impacts = ImpactSerializer(many=True, read_only=True)
-    answers = IncidentAnswerSerializer(source="answer_set", many=True, read_only=True)
+    answers = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.DictField(child=IncidentAnswerSerializer()))
+    def get_answers(self, obj: IncidentWorkflow) -> dict[str, dict]:
+        answers = IncidentAnswerSerializer(obj.answer_set.all(), many=True, context=self.context).data
+        return {answer["question_reference"]: answer for answer in answers}
 
     class Meta(IncidentReportSerializer.Meta):
         fields = (*IncidentReportSerializer.Meta.fields, "impacts", "answers")

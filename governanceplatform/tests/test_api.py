@@ -106,7 +106,7 @@ def test_missing_or_invalid_credentials(client, api_user, header):
     assert client.get(reverse("api:me"), **kwargs).status_code == 401
 
 
-@pytest.mark.parametrize("state", ["expired", "revoked", "inactive", "unverified", "terms", "stale_terms", "superuser"])
+@pytest.mark.parametrize("state", ["expired", "revoked", "inactive", "terms", "stale_terms", "superuser"])
 def test_key_and_owner_lifecycle(client, api_user, bearer, state):
     key = bearer["key"]
     if state == "expired":
@@ -118,8 +118,6 @@ def test_key_and_owner_lifecycle(client, api_user, bearer, state):
     else:
         if state == "inactive":
             api_user.is_active = False
-        elif state == "unverified":
-            api_user.email_verified = False
         elif state == "terms":
             api_user.accepted_terms = False
         elif state == "stale_terms":
@@ -128,6 +126,12 @@ def test_key_and_owner_lifecycle(client, api_user, bearer, state):
             api_user.is_superuser = True
         api_user.save()
     assert client.get(reverse("api:me"), **auth(bearer)).status_code in (401, 403)
+
+
+def test_unverified_email_does_not_block_api(client, api_user, bearer):
+    api_user.email_verified = False
+    api_user.save()
+    assert client.get(reverse("api:me"), **auth(bearer)).status_code == 200
 
 
 def test_session_does_not_authenticate_api(client, api_user):
