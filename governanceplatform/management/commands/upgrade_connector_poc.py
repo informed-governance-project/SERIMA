@@ -15,11 +15,11 @@ POC_MIGRATIONS = [
     ("incidents", "0067_delete_rtticket"),
 ]
 LAST_DEV_MIGRATIONS = [
-    ("governanceplatform", "0068_functionality_roles"),
+    ("governanceplatform", "0069_apikey"),
     ("incidents", "0070_alter_answer_options_alter_incident_options_and_more"),
 ]
 RENUMBERED_LEAVES = [
-    ("governanceplatform", "0071_remove_observer_rt_fields"),
+    ("governanceplatform", "0072_remove_observer_rt_fields"),
     ("incidents", "0073_delete_rtticket"),
 ]
 

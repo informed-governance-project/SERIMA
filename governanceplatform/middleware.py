@@ -32,6 +32,9 @@ class SessionExpiryMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Bearer endpoints enforce account eligibility themselves, without browser interstitials.
+        if request.path_info.startswith("/api/"):
+            return self.get_response(request)
         user = request.user
 
         if not user.is_authenticated:
@@ -86,6 +89,9 @@ class RestrictViewsMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Bearer endpoints enforce account eligibility themselves, without browser interstitials.
+        if request.path_info.startswith("/api/"):
+            return self.get_response(request)
         user = request.user
         if user.is_authenticated:
             # Superusers are not allowed to access the platform
@@ -166,6 +172,9 @@ class TermsAcceptanceMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Bearer endpoints enforce account eligibility themselves, without browser interstitials.
+        if request.path_info.startswith("/api/"):
+            return self.get_response(request)
         # Only check for authenticated users
         user = request.user
         if user.is_authenticated and user.is_verified():
@@ -191,6 +200,9 @@ class CheckFunctionalityAccessMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Bearer endpoints enforce account eligibility themselves, without browser interstitials.
+        if request.path_info.startswith("/api/"):
+            return self.get_response(request)
         user = request.user
         if not user.is_authenticated:
             return self.get_response(request)
@@ -219,6 +231,7 @@ class ForceReloginMiddleware:
             "/account/password_change/",
             "/account/two_factor/backup/tokens/",
             "/account/two_factor/disable/",
+            "/account/api-keys/",
         ]
 
         if request.path in force_relogin_paths:

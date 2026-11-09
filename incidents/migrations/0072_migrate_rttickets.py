@@ -44,7 +44,7 @@ def restore_rttickets(apps, schema_editor):
 class Migration(migrations.Migration):
     dependencies = [
         ("incidents", "0071_connectordelivery"),
-        ("governanceplatform", "0070_migrate_rt_to_connectors"),
+        ("governanceplatform", "0071_migrate_rt_to_connectors"),
     ]
 
     operations = [

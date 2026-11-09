@@ -4,7 +4,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("governanceplatform", "0069_connectors"),
+        ("governanceplatform", "0070_connectors"),
         ("incidents", "0070_alter_answer_options_alter_incident_options_and_more"),
     ]
 

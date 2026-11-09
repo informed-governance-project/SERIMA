@@ -71,7 +71,7 @@ try:
         EMAIL_SSL_KEYFILE = None
         EMAIL_TIMEOUT = None
 
-    API_ENABLED = config.API_ENABLED
+    API_ENABLED = getattr(config, "API_ENABLED", False)
 
     COOKIEBANNER = config.COOKIEBANNER
 
@@ -141,6 +141,7 @@ INSTALLED_APPS = [
     "incidents",
     "securityobjectives",
     "reporting",
+    "rest_framework",
     "drf_spectacular",
     "drf_spectacular_sidecar",  # required for Django collectstatic discovery
     "corsheaders",
@@ -188,7 +189,10 @@ SPECTACULAR_SETTINGS = {
     '<a href="https://github.com/informed-governance-project" rel="noopener noreferrer" target="_blank">'
     "Governance Platform</a> by NC3-LU.",
     "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": True,
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "SWAGGER_UI_SETTINGS": {"persistAuthorization": False},
 }
 
 GRAPH_MODELS = {
