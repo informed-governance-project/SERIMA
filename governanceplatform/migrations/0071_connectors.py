@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("governanceplatform", "0069_apikey"),
+        ("governanceplatform", "0070_apimoduleaccess"),
     ]
 
     operations = [

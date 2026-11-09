@@ -6,8 +6,6 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework.permissions import BasePermission
 
-from governanceplatform.globals import FUNCTIONALITY_ELIGIBLE_ROLES
-
 if TYPE_CHECKING:
     from rest_framework.request import Request
     from rest_framework.views import APIView
@@ -27,7 +25,6 @@ class ReadOnlyAPIUser(BasePermission):
         days = settings.TERMS_ACCEPTANCE_TIME_IN_DAYS
         if days and (timezone.now().date() - user.accepted_terms_date.date()).days > days:
             return False
+        api_modules = user.get_api_modules()
         module = getattr(view, "module", None)
-        if module in FUNCTIONALITY_ELIGIBLE_ROLES:
-            return any(user.in_group(role) for role in FUNCTIONALITY_ELIGIBLE_ROLES[module]) and module in user.get_module_permissions()
-        return True
+        return module in api_modules if module else bool(api_modules)

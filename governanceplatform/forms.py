@@ -16,9 +16,9 @@ from parler.forms import TranslatableModelForm
 
 from .connectors.registry import connector_type_choices
 from .email import Base64EmailMultiAlternatives
-from .globals import FUNCTIONALITY_ELIGIBLE_ROLES
+from .globals import API_ELIGIBLE_ROLES, FUNCTIONALITY_ELIGIBLE_ROLES
 from .helpers import strip_control_characters
-from .models import Observer, ObserverConnector
+from .models import APIModuleAccess, Observer, ObserverConnector
 
 User = get_user_model()
 logger = logging.getLogger("django.contrib.auth")
@@ -420,6 +420,20 @@ class FunctionalityAdminForm(CustomTranslatableAdminForm):
                 ),
             )
         return cleaned_data
+
+
+class APIModuleAccessAdminForm(forms.ModelForm):
+    class Meta:
+        model = APIModuleAccess
+        fields = ("roles",)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Users with view-only permission get a form whose fields are all read-only, so roles is absent.
+        if "roles" not in self.fields:
+            return
+        # Each row's module is fixed by the migration, so only its eligible roles are offered; any other is an invalid choice.
+        self.fields["roles"].queryset = Group.objects.filter(name__in=API_ELIGIBLE_ROLES[self.instance.module]).order_by("name")
 
 
 class FreeTextField(forms.CharField):

@@ -3,7 +3,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("governanceplatform", "0071_migrate_rt_to_connectors"),
+        ("governanceplatform", "0072_migrate_rt_to_connectors"),
     ]
 
     operations = [

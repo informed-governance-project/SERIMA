@@ -40,7 +40,7 @@ def restore_rt_fields(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("governanceplatform", "0070_connectors"),
+        ("governanceplatform", "0071_connectors"),
     ]
 
     operations = [

@@ -28,7 +28,8 @@ def test_incident_user_access_without_2FA(client, populate_incident_db):
 
     for user in users:
         client.force_login(user)
-        url_list = list_url_freetext_filter("incidents", "admin")
+        # The API authenticates by bearer key only, never by session, so its routes are covered by test_api.py
+        url_list = [url for url in list_url_freetext_filter("incidents", "admin") if not url.startswith("api/")]
         for url in url_list:
             response = client.get("/" + url)
             assert response.status_code in (

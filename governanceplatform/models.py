@@ -23,7 +23,7 @@ from parler.models import TranslatableModel, TranslatedFields
 from phonenumber_field.modelfields import PhoneNumberField
 
 from .connectors.registry import connector_type_choices
-from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
+from .globals import ACTION_FLAG_CHOICES, API_ELIGIBLE_ROLES, get_api_module_choices, get_functionality_choices
 from .managers import CustomUserManager
 from .settings import CONNECTOR_SECRET_KEY
 
@@ -137,6 +137,18 @@ class Functionality(TranslatableModel):
         ]
         verbose_name = _("Functionality")
         verbose_name_plural = _("Functionalities")
+
+
+class APIModuleAccess(models.Model):
+    module = models.CharField(verbose_name=_("Module"), max_length=100, choices=get_api_module_choices, unique=True)
+    roles = models.ManyToManyField(Group, verbose_name=_("Roles"), blank=True, related_name="api_modules")
+
+    def __str__(self):
+        return str(get_api_module_choices().get(self.module, self.module))
+
+    class Meta:
+        verbose_name = _("API access")
+        verbose_name_plural = _("API access")
 
 
 # operator has type (critical, essential, etc.) who give access to functionalities
@@ -487,6 +499,15 @@ class User(AbstractUser, PermissionsMixin):
         if self.is_regulator():
             functionalities = functionalities.filter(regulator__in=self.regulators.all())
         return list(functionalities.values_list("type", flat=True).distinct())
+
+    def get_api_modules(self) -> set[str]:
+        """The modules this user may read through the API: granted to their role, and reachable on the web."""
+        groups = list(self.groups.all())
+        role_names = {group.name for group in groups}
+        granted = set(APIModuleAccess.objects.filter(roles__in=groups).values_list("module", flat=True))
+        # The API skips RestrictViewsMiddleware, so it re-checks eligibility in case a grant bypassed the admin form.
+        eligible = {module for module in granted if role_names & set(API_ELIGIBLE_ROLES.get(module, []))}
+        return eligible & ({"incidents"} | set(self.get_module_permissions()))
 
     class Meta:
         verbose_name_plural = _("Users")
