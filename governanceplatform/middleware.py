@@ -231,6 +231,7 @@ class ForceReloginMiddleware:
             "/account/password_change/",
             "/account/two_factor/backup/tokens/",
             "/account/two_factor/disable/",
+            "/account/api-keys/",
         ]
 
         if request.path in force_relogin_paths:
