@@ -24,24 +24,51 @@ def _build_sectors(incident) -> dict:
     return sectors
 
 
+def _answer_fields(answer, question_type: str) -> dict:
+    from django_countries import countries
+
+    from incidents.globals import REGIONAL_AREA
+
+    choices = [_clean_text(str(choice)) for choice in answer.predefined_answers.all()]
+    text = _clean_text(answer.answer) if answer.answer else None
+    if question_type == "MULTI":
+        return {"answer": choices}
+    if question_type == "SO":
+        return {"answer": choices[0] if choices else None}
+    if question_type == "MT":
+        return {"answer": choices, "details": text}
+    if question_type == "ST":
+        return {"answer": choices[0] if choices else None, "details": text}
+    if question_type in ("CL", "RL"):
+        # stored as comma-separated codes
+        names = dict(countries) if question_type == "CL" else dict(REGIONAL_AREA)
+        return {"answer": [str(names.get(code, code)) for code in filter(None, (answer.answer or "").split(","))]}
+    return {"answer": text}
+
+
 def _build_questionnaire(incident_workflow) -> list[dict]:
     from incidents.models import Answer
-    from incidents.pdf_generation import populate_questions_answers
+    from incidents.pdf_generation import get_question_option_at_submission
 
     answers_by_category: dict = {}
-    answers = Answer.objects.filter(incident_workflow=incident_workflow).order_by("question_options__position")
+    answers = (
+        Answer.objects.filter(incident_workflow=incident_workflow).select_related("question_options").prefetch_related("predefined_answers")
+    )
     for answer in answers:
-        populate_questions_answers(answer, answers_by_category)
+        question_option = get_question_option_at_submission(answer)
+        answers_by_category.setdefault(question_option.category_option, []).append((question_option, answer))
 
     categories = []
     for category_option in sorted(answers_by_category, key=lambda category: category.position):
-        questions = [
-            {
+        questions = {
+            question_option.question.reference: {
+                "question_reference": question_option.question.reference,
                 "question": str(question_option),
-                "answers": [_clean_text(str(answer)) for answer in answer_list],
+                "question_type": question_option.question.question_type,
+                **_answer_fields(answer, question_option.question.question_type),
             }
-            for question_option, answer_list in sorted(answers_by_category[category_option].items(), key=lambda item: item[0].position)
-        ]
+            for question_option, answer in sorted(answers_by_category[category_option], key=lambda item: item[0].position)
+        }
         categories.append({"category": str(category_option), "questions": questions})
     return categories
 

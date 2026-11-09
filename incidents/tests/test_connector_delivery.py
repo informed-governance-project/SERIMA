@@ -284,3 +284,42 @@ def test_incident_payload_mirrors_pdf_sections(populate_incident_db, incident):
     assert set(inc["contacts"]) == {"incident", "technical"}
     assert set(inc["contacts"]["incident"]) == {"first_name", "last_name", "title", "email", "telephone"}
     assert set(inc["timeline"]) == {"timezone", "notification_date", "detection_date", "starting_date", "resolution_date"}
+
+
+@pytest.mark.django_db
+def test_incident_payload_keeps_answer_format_per_question_type(incident):
+    from governanceplatform.connectors.payload import build_incident_payload
+    from incidents.models import Answer, IncidentWorkflow, QuestionOptions
+
+    # the fixture's preliminary report asks the choice questions, its final report the free-text ones
+    reports = {
+        workflow.pk: IncidentWorkflow.objects.create(incident=incident, workflow=workflow)
+        for workflow in incident.sector_regulation.workflows.all()
+    }
+    options = QuestionOptions.objects.filter(report__in=reports).select_related("question")
+
+    def answer(question_type, text=None, choice_count=0):
+        question_option = next(option for option in options if option.question.question_type == question_type)
+        created = Answer.objects.create(incident_workflow=reports[question_option.report_id], question_options=question_option, answer=text)
+        choices = list(question_option.question.predefinedanswer_set.all()[:choice_count])
+        created.predefined_answers.set(choices)
+        return question_option.question.reference, [str(choice) for choice in choices]
+
+    freetext, _ = answer("FREETEXT", text="Line one\r\nline two")
+    single, [single_choice] = answer("SO", choice_count=1)
+    multi, multi_choices = answer("MT", text="More details", choice_count=2)
+    assert len(multi_choices) == 2
+
+    questions = {
+        reference: entry
+        for report_payload in build_incident_payload(incident)["incident"]["reports"]
+        for category in report_payload["questionnaire"]
+        for reference, entry in category["questions"].items()
+    }
+
+    assert set(questions) == {freetext, single, multi}
+    assert all(entry["question_reference"] == reference for reference, entry in questions.items())
+    assert questions[freetext]["answer"] == "Line one line two"
+    assert questions[single]["answer"] == single_choice
+    assert questions[multi]["answer"] == multi_choices
+    assert questions[multi]["details"] == "More details"
