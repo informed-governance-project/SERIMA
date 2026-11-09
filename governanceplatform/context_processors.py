@@ -9,7 +9,7 @@ from .helpers import (
     user_in_group,
 )
 from .models import ApplicationConfig, Functionality
-from .settings import COOKIEBANNER, REGULATOR_CONTACT, SITE_NAME
+from .settings import API_ENABLED, COOKIEBANNER, REGULATOR_CONTACT, SITE_NAME
 
 
 def extra_content_for_all_templates(request):
@@ -19,6 +19,7 @@ def extra_content_for_all_templates(request):
         "is_staff": user.is_staff,
         "is_only_admin": False,
         "regulator_name": REGULATOR_CONTACT["name"],
+        "api_enabled": API_ENABLED,
     }
     extra_data["is_regulator"] = is_user_regulator(user)
     extra_data["is_observer"] = is_observer_user(user)
