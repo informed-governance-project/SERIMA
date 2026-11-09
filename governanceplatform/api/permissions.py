@@ -20,7 +20,7 @@ class ReadOnlyAPIUser(BasePermission):
         user = request.user
         if not user.is_authenticated:
             return False
-        if not user.is_active or not user.email_verified or user.is_superuser or user.in_group("PlatformAdmin"):
+        if not user.is_active or user.is_superuser or user.in_group("PlatformAdmin"):
             return False
         if not user.accepted_terms or user.accepted_terms_date is None:
             return False
