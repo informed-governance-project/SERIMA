@@ -171,6 +171,11 @@ two documentation endpoints are public, contain no application records, and
 vanish when the API is disabled. In Swagger, use **Authorize** to enter the full
 key. Authorization is not persisted across page reloads.
 
+Both list security objectives and reporting only while their functionality
+grants at least one role (see :ref:`functionalities`);
+otherwise those endpoints could not answer anyone. Incident notification and
+``/api/v1/me/`` are always listed.
+
 Generate the same schema offline with:
 
 .. code-block:: bash
