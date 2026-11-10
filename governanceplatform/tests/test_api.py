@@ -59,6 +59,11 @@ def auth(bearer):
     return {"HTTP_AUTHORIZATION": bearer["HTTP_AUTHORIZATION"]}
 
 
+def bind_key(bearer, company):
+    """Operator keys read the company they were created for."""
+    APIKey.objects.filter(pk=bearer["key"].pk).update(company=company)
+
+
 @pytest.fixture
 def records(api_user):
     regulator = Regulator.objects.create(name="Regulator")
@@ -186,6 +191,7 @@ def test_incident_user_sees_only_own_incidents(client, bearer, records):
 
 def test_operator_scope_approval_and_live_permissions(client, api_user, bearer, records):
     link = CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    bind_key(bearer, records["company"])
     module = enable_module(api_user, "securityobjectives")
     url = reverse("api:declaration-list")
     response = client.get(url, **auth(bearer))
@@ -195,13 +201,13 @@ def test_operator_scope_approval_and_live_permissions(client, api_user, bearer, 
     assert "review_comment" not in response.json()["results"][0]
     hidden = reverse("api:declaration-detail", kwargs={"reference": records["hidden_declaration"].group.group_id})
     assert client.get(hidden, **auth(bearer)).status_code == 404
-    link.approved = False
-    link.save()
-    assert client.get(url, **auth(bearer)).json()["count"] == 0
-    assert client.get(reverse("api:incident-list"), **auth(bearer)).json()["count"] == 0
     module.roles.clear()
     assert client.get(url, **auth(bearer)).status_code == 403
     assert client.get(reverse("api:project-list"), **auth(bearer)).status_code == 403
+    assert client.get(reverse("api:incident-list"), **auth(bearer)).status_code == 200
+    link.approved = False
+    link.save()
+    assert client.get(reverse("api:incident-list"), **auth(bearer)).status_code == 403
 
 
 def test_regulator_sectors_and_module_switch(client, api_user, bearer, records):
@@ -397,6 +403,7 @@ def test_incident_detail_skips_answers_detached_from_their_question(client, bear
 
 def test_declaration_detail_is_logged_for_the_operator_company_but_not_the_list(client, api_user, bearer, records):
     CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    bind_key(bearer, records["company"])
     enable_module(api_user, "securityobjectives")
     client.get(reverse("api:declaration-list"), **auth(bearer))
     assert not LogStandardAnswer.objects.exists()
@@ -407,6 +414,7 @@ def test_declaration_detail_is_logged_for_the_operator_company_but_not_the_list(
 
 def test_declaration_list_omits_answers_that_detail_returns(client, api_user, bearer, records):
     CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    bind_key(bearer, records["company"])
     enable_module(api_user, "securityobjectives")
     listed = client.get(reverse("api:declaration-list"), **auth(bearer)).json()["results"][0]
     detail = client.get(reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id}), **auth(bearer)).json()
@@ -423,8 +431,10 @@ def test_project_reads_are_not_logged_like_on_the_web(client, api_user, bearer, 
     assert not LogReporting.objects.exists()
 
 
-def test_session_company_cannot_expand_api_scope(client, api_user, bearer, records):
+def test_session_company_cannot_change_the_key_company(client, api_user, bearer, records):
     CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    CompanyUser.objects.create(user=api_user, company=records["other_company"], approved=True)
+    bind_key(bearer, records["company"])
     client.force_login(api_user)
     session = client.session
     session["company_in_use"] = records["other_company"].pk
@@ -436,6 +446,60 @@ def test_session_company_cannot_expand_api_scope(client, api_user, bearer, recor
     )
 
 
+def test_operator_key_reads_only_its_company(client, api_user, bearer, records):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    CompanyUser.objects.create(user=api_user, company=records["other_company"], approved=True)
+    enable_module(api_user, "securityobjectives")
+    bind_key(bearer, records["company"])
+    incidents = client.get(reverse("api:incident-list"), **auth(bearer)).json()["results"]
+    declarations = client.get(reverse("api:declaration-list"), **auth(bearer)).json()["results"]
+    assert [incident["incident_id"] for incident in incidents] == [records["incident"].incident_id]
+    assert [declaration["reference"] for declaration in declarations] == [str(records["group"].group_id)]
+    hidden = reverse("api:incident-detail", kwargs={"reference": records["hidden_incident"].incident_id})
+    assert client.get(hidden, **auth(bearer)).status_code == 404
+
+
+def test_operator_key_without_company_is_refused(client, api_user, bearer, records):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    assert client.get(reverse("api:incident-list"), **auth(bearer)).status_code == 403
+
+
+def test_operator_key_role_follows_its_company_membership(client, api_user, bearer, records, api_access):
+    operator_admin = Group.objects.get_or_create(name="OperatorAdmin")[0]
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True, is_company_administrator=True)
+    CompanyUser.objects.create(user=api_user, company=records["other_company"], approved=True)
+    # the user last selected the company where they are not administrator
+    api_user.groups.set([Group.objects.get_or_create(name="OperatorUser")[0]])
+    Functionality.objects.create(type="securityobjectives", name="securityobjectives").roles.set([operator_admin])
+    api_access["securityobjectives"].roles.set([operator_admin])
+    bind_key(bearer, records["company"])
+    assert client.get(reverse("api:declaration-list"), **auth(bearer)).status_code == 200
+    bind_key(bearer, records["other_company"])
+    assert client.get(reverse("api:declaration-list"), **auth(bearer)).status_code == 403
+
+
+def test_operator_key_is_bound_to_the_approved_company_in_use(otp_client, api_user, records, settings):
+    settings.DEBUG = True
+    api_user.set_password("a-real-test-password")
+    api_user.save()
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    CompanyUser.objects.create(user=api_user, company=records["other_company"], approved=False)
+    client = otp_client(api_user)
+    data = {"name": "Operator key", "expires_in_days": 1, "password": "a-real-test-password"}
+    session = client.session
+    session["company_in_use"] = records["other_company"].pk
+    session.save()
+    response = client.post(reverse("create_api_key"), data)
+    assert response.context["form"].non_field_errors()
+    assert not APIKey.objects.filter(name="Operator key").exists()
+    session = client.session
+    session["company_in_use"] = records["company"].pk
+    session.save()
+    response = client.post(reverse("create_api_key"), data)
+    assert response.context["token"]
+    assert APIKey.objects.get(name="Operator key").company == records["company"]
+
+
 def test_role_without_api_access_is_refused(client, bearer, records, api_access):
     api_access["incidents"].roles.clear()
     assert client.get(reverse("api:incident-list"), **auth(bearer)).status_code == 403
@@ -443,7 +507,8 @@ def test_role_without_api_access_is_refused(client, bearer, records, api_access)
 
 
 def test_api_access_is_granted_per_module(client, api_user, bearer, records, api_access):
-    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True, is_company_administrator=True)
+    bind_key(bearer, records["company"])
     api_user.groups.set([Group.objects.get_or_create(name="OperatorAdmin")[0]])
     enable_module(api_user, "securityobjectives")
     api_access["incidents"].roles.clear()
@@ -453,7 +518,8 @@ def test_api_access_is_granted_per_module(client, api_user, bearer, records, api
 
 
 def test_api_access_does_not_widen_web_access(client, api_user, bearer, records):
-    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True, is_company_administrator=True)
+    bind_key(bearer, records["company"])
     api_user.groups.set([Group.objects.get_or_create(name="OperatorAdmin")[0]])
     # granted on the API, but the security objectives functionality is off for the role
     assert client.get(reverse("api:declaration-list"), **auth(bearer)).status_code == 403
