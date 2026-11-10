@@ -7,8 +7,10 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.db import transaction
 from django.db.models.signals import post_delete, post_migrate, post_save, pre_delete, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from governanceplatform.models import User, UserSession
+from governanceplatform.models import APIKey, User, UserSession
 
 from .globals import API_MODULES
 from .helpers import user_in_group
@@ -35,6 +37,17 @@ def save_old_password(sender, instance, **kwargs):
 
     if old_password and old_password != instance.password:
         PasswordUserHistory.objects.create(user=instance, hashed_password=old_password)
+        revoke_api_keys(instance.pk)
+
+
+# Disabling or resetting 2FA deletes the TOTP device: a key minted from a compromised account must not outlive it.
+@receiver(post_delete, sender=TOTPDevice)
+def revoke_api_keys_on_2fa_reset(sender, instance, **kwargs):
+    revoke_api_keys(instance.user_id)
+
+
+def revoke_api_keys(user_id: int) -> None:
+    APIKey.objects.filter(user_id=user_id, revoked_at__isnull=True).update(revoked_at=timezone.now())
 
 
 # Add logs for user connection
