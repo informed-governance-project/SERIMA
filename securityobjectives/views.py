@@ -10,6 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import (
     BooleanField,
     Case,
@@ -256,7 +257,14 @@ def declaration(request):
         return redirect("securityobjectives")
 
     if is_update and standard_answer.status != "UNDE":
-        standard_answer = duplicate_standard_answer(standard_answer)
+        with transaction.atomic():
+            standard_answer.lock_versions()
+            # Only the latest version is offered for update; a copy of an older one would
+            # hide the newer version from both dashboards.
+            if standard_answer.get_newer_versions().exists():
+                messages.error(request, _("A newer version of this declaration already exists."))
+                return redirect("securityobjectives")
+            standard_answer = duplicate_standard_answer(standard_answer)
         return redirect(f"{reverse('so_declaration')}?id={standard_answer.id}")
 
     standard = standard_answer.standard
@@ -650,6 +658,7 @@ def copy_declaration(request, group_id: int):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
+@transaction.atomic
 def submit_declaration(request, standard_answer_id: int):
     user = request.user
     standard_answer_queryset = StandardAnswer.objects.filter(pk=standard_answer_id)
@@ -660,6 +669,9 @@ def submit_declaration(request, standard_answer_id: int):
         return redirect("securityobjectives")
 
     standard_answer = standard_answer.first()
+    standard_answer.lock_versions()
+    # Read again under the lock, so a second click on Submit finds the version submitted.
+    standard_answer.refresh_from_db(fields=["status"])
     if not has_change_permission(request, standard_answer, "submit"):
         return redirect("securityobjectives")
     standard_answer.status = "DELIV"
@@ -692,6 +704,7 @@ def delete_declaration(request, standard_answer_id: int):
 
 @login_required
 @otp_required
+@transaction.atomic
 def review_comment_declaration(request, standard_answer_id: int):
     user = request.user
     is_only_review_comment = request.GET.get("only_review_comment", "false") == "true"
@@ -704,6 +717,9 @@ def review_comment_declaration(request, standard_answer_id: int):
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
 
+    if request.method == "POST":
+        # Waits for a submission of a newer version in progress, so the check below sees it.
+        standard_answer.lock_versions()
     newer_version = standard_answer.get_newer_submitted_version()
     initial = model_to_dict(standard_answer, fields=["review_comment", "status"])
     if is_user_operator(user):
