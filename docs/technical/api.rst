@@ -76,9 +76,10 @@ API reads are written to the module's **Access Log** with the action
 
 Records outside the user's scope return ``404`` and are not logged.
 
-Each entry records the key owner, their role and their organisation: the
-regulator or observer, or, for operators, the company the record belongs to. The
-key used is not recorded. The entries follow the visibility rules of the web log.
+Each entry records the key owner, their role and their organisation, as the web
+log does: the regulator or observer, the key's company for operators, and none
+for incident users. The key used is not recorded. The entries follow the
+visibility rules of the web log.
 
 Requests
 --------
