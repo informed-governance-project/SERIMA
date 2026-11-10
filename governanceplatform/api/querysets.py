@@ -13,12 +13,15 @@ from securityobjectives.models import StandardAnswer
 if TYPE_CHECKING:
     from django.db.models import QuerySet
 
-    from governanceplatform.models import User
+    from governanceplatform.models import Company, User
 
 
-def incidents_for_user(user: User) -> QuerySet[Incident]:
+def incidents_for_user(user: User, company: Company | None) -> QuerySet[Incident]:
+    """``company`` is the API key's company: operators read only that one, as the web shows only the company in use."""
     queryset = Incident.objects.exclude(sector_regulation__isnull=True)
-    if user.is_regulator():
+    if company is not None:
+        queryset = queryset.filter(company=company, company__companyuser__user=user, company__companyuser__approved=True)
+    elif user.is_regulator():
         if not user.regulators.exists():
             return queryset.none()
         scope = Q(sector_regulation__regulator__in=user.regulators.all())
@@ -28,8 +31,6 @@ def incidents_for_user(user: User) -> QuerySet[Incident]:
     elif user.is_observer():
         observer = user.observers.first()
         queryset = get_observer_incidents(observer) if observer else queryset.none()
-    elif user.is_operator():
-        queryset = queryset.filter(company__companyuser__user=user, company__companyuser__approved=True)
     elif user.in_group("IncidentUser"):
         queryset = queryset.filter(contact_user=user)
     else:
@@ -37,13 +38,15 @@ def incidents_for_user(user: User) -> QuerySet[Incident]:
     return queryset.distinct().order_by("-incident_notification_date", "pk")
 
 
-def declarations_for_user(user: User) -> QuerySet[StandardAnswer]:
-    if user.is_regulator():
-        queryset = get_scoped_standard_answers(user) if user.regulators.exists() else StandardAnswer.objects.none()
-    elif user.is_operator():
-        queryset = StandardAnswer.objects.filter(submitter_company__companyuser__user=user, submitter_company__companyuser__approved=True)
+def declarations_for_user(user: User, company: Company | None) -> QuerySet[StandardAnswer]:
+    if company is not None:
+        queryset = StandardAnswer.objects.filter(
+            submitter_company=company, submitter_company__companyuser__user=user, submitter_company__companyuser__approved=True
+        )
         latest = queryset.filter(group_id=OuterRef("group_id")).order_by("-last_update", "-pk").values("pk")[:1]
         queryset = queryset.filter(pk__in=Subquery(latest))
+    elif user.is_regulator():
+        queryset = get_scoped_standard_answers(user) if user.regulators.exists() else StandardAnswer.objects.none()
     else:
         queryset = StandardAnswer.objects.none()
     return queryset.select_related("standard", "group", "submitter_company").distinct().order_by("-last_update", "pk")
