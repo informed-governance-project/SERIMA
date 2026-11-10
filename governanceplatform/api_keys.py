@@ -5,16 +5,15 @@ from typing import TYPE_CHECKING
 
 from django import forms
 from django.conf import settings
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.debug import sensitive_post_parameters, sensitive_variables
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from django_otp.decorators import otp_required
 
 from .models import APIKey
@@ -41,17 +40,30 @@ class APIKeyForm(forms.Form):
         return password
 
 
+def check_key_management_access(request: HttpRequest) -> None:
+    if not settings.API_ENABLED:
+        raise Http404()
+    if not request.user.get_api_modules():
+        raise PermissionDenied()
+
+
+@login_required
+@otp_required
+@never_cache
+@require_GET
+def manage_api_keys(request: HttpRequest) -> HttpResponse:
+    check_key_management_access(request)
+    return render(request, "account/api_keys.html", {"api_keys": request.user.api_keys.order_by("-created_at")})
+
+
 @login_required
 @otp_required
 @never_cache
 @sensitive_post_parameters("password")
 @sensitive_variables("token")
 @require_http_methods(["GET", "POST"])
-def manage_api_keys(request: HttpRequest) -> HttpResponse:
-    if not settings.API_ENABLED:
-        raise Http404()
-    if not request.user.get_api_modules():
-        raise PermissionDenied()
+def create_api_key(request: HttpRequest) -> HttpResponse:
+    check_key_management_access(request)
     token = None
     form = APIKeyForm(request.POST if request.method == "POST" else None, user=request.user)
     if request.method == "POST" and form.is_valid():
@@ -60,9 +72,10 @@ def manage_api_keys(request: HttpRequest) -> HttpResponse:
             name=form.cleaned_data["name"],
             expires_at=timezone.now() + timedelta(days=form.cleaned_data["expires_in_days"]),
         )
-        form = APIKeyForm(user=request.user)
     return render(
-        request, "account/api_keys.html", {"form": form, "token": token, "api_keys": request.user.api_keys.order_by("-created_at")}
+        request,
+        "modals/create_api_key.html",
+        {"form": form, "token": token, "api_keys": request.user.api_keys.order_by("-created_at")},
     )
 
 
@@ -75,5 +88,4 @@ def revoke_api_key(request: HttpRequest, key_id: UUID) -> HttpResponse:
         raise Http404()
     key = get_object_or_404(APIKey, pk=key_id, user=request.user)
     APIKey.objects.filter(pk=key.pk, revoked_at__isnull=True).update(revoked_at=timezone.now())
-    messages.success(request, _("API key revoked."))
-    return redirect("api_keys")
+    return render(request, "parts/api_keys_table.html", {"api_keys": request.user.api_keys.order_by("-created_at")})
