@@ -541,6 +541,19 @@ class StandardAnswer(models.Model):
     def is_review_in_progress(self) -> bool:
         return self.status in ("DELIV", "PASS", "FAIL")
 
+    def get_newer_submitted_version(self) -> StandardAnswer | None:
+        """The latest version of the declaration submitted after this one, which replaces it.
+
+        Creation order, not last_update, decides which version is newer: a regulator
+        reviewing an older version updates that one.
+        """
+        return (
+            StandardAnswer.objects.filter(group=self.group, creation_date__gt=self.creation_date)
+            .exclude(status="UNDE")
+            .order_by("-creation_date")
+            .first()
+        )
+
     # The sectors are those the regulator assigned to the company, read live, so a change in
     # the backend reaches every declaration of the company (#911).
     def get_sectors(self) -> QuerySet[Sector]:

@@ -148,7 +148,7 @@ def get_security_objectives(request):
         company = get_active_company_from_session(request)
         standard_answer_queryset = StandardAnswer.objects.filter(submitter_company=company)
 
-    latest_so_id = standard_answer_queryset.filter(group__id=OuterRef("group__id")).order_by("-last_update").values("id")[:1]
+    latest_so_id = standard_answer_queryset.filter(group__id=OuterRef("group__id")).order_by("-creation_date").values("id")[:1]
 
     standard_answer_queryset = standard_answer_queryset.filter(id__in=Subquery(latest_so_id))
 
@@ -260,6 +260,7 @@ def declaration(request):
         return redirect(f"{reverse('so_declaration')}?id={standard_answer.id}")
 
     standard = standard_answer.standard
+    newer_version = standard_answer.get_newer_submitted_version()
 
     # The selector groups the objectives by domain, so its numbers follow the domains first.
     security_objectives_queryset = (
@@ -278,6 +279,10 @@ def declaration(request):
         data = json.loads(request.body.decode("utf-8"))
         id_object = data.pop("id", None)
         field_name = next(iter(data))
+        # The page may have been opened before the operator submitted the newer version,
+        # so the browser reloads to show it.
+        if newer_version:
+            return JsonResponse({"success": False, "error": "A newer version was submitted"}, status=409)
         if field_name in ["review_comment", "status"] and not is_user_regulator(user):
             return JsonResponse(
                 {
@@ -431,6 +436,7 @@ def declaration(request):
         .order_by("-creation_date")
         .first()
     )
+    show_previous_review_comments = previous_standard_answer is not None and can_see_review_comments(user, previous_standard_answer)
     previous_answers_by_measure = (
         {sma.security_measure_id: sma for sma in SecurityMeasureAnswer.objects.filter(standard_answer=previous_standard_answer)}
         if previous_standard_answer is not None
@@ -457,8 +463,10 @@ def declaration(request):
             )
             initial = model_to_dict(so_status, fields=["status", "actions"])
             initial["is_regulator"] = is_user_regulator(user)
-            initial["is_readonly"] = (is_user_operator(user) and standard_answer.status != "UNDE") or (
-                is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"]
+            initial["is_readonly"] = (
+                newer_version is not None
+                or (is_user_operator(user) and standard_answer.status != "UNDE")
+                or (is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"])
             )
 
             security_objective.status = so_status
@@ -490,8 +498,10 @@ def declaration(request):
 
             initial["is_regulator"] = is_user_regulator(user)
             initial["has_review_comment"] = bool(standard_answer.review_comment)
-            initial["is_readonly"] = (is_user_operator(user) and standard_answer.status != "UNDE") or (
-                is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"]
+            initial["is_readonly"] = (
+                newer_version is not None
+                or (is_user_operator(user) and standard_answer.status != "UNDE")
+                or (is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"])
             )
 
             previous_sma = previous_answers_by_measure.get(measure.id)
@@ -504,7 +514,7 @@ def declaration(request):
                 measure.previous_answer = {
                     "is_implemented": previous_sma.is_implemented if previous_sma else False,
                     "justification": (previous_sma.justification if previous_sma else "") or "",
-                    "review_comment": (previous_sma.review_comment if previous_sma else "") or "",
+                    "review_comment": (previous_sma.review_comment if previous_sma and show_previous_review_comments else "") or "",
                 }
 
             security_objective = measure.security_objective
@@ -529,6 +539,7 @@ def declaration(request):
         "security_objectives": security_objectives,
         "navigation": build_objective_navigation(list(security_objectives), standard_answer, is_user_regulator(user)),
         "standard_answer": standard_answer,
+        "newer_version": newer_version,
         "column_config": column_config,
         "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
         "score_display": standard.get_score_display_config(),
@@ -552,7 +563,7 @@ def copy_declaration(request, group_id: int):
     user = request.user
 
     # get the last standard from the group
-    original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-last_update").first()
+    original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-creation_date").first()
     if not original_standard_answer:
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
@@ -693,14 +704,21 @@ def review_comment_declaration(request, standard_answer_id: int):
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
 
+    newer_version = standard_answer.get_newer_submitted_version()
     initial = model_to_dict(standard_answer, fields=["review_comment", "status"])
     if is_user_operator(user):
         create_entry_log(user, standard_answer, "READ", request)
         initial["is_readonly"] = is_user_operator(user)
     else:
-        initial["is_readonly"] = not is_user_regulator(user) or standard_answer.status in ["PASSM", "FAILM"]
+        initial["is_readonly"] = newer_version is not None or not is_user_regulator(user) or standard_answer.status in ["PASSM", "FAILM"]
         if standard_answer.status == "DELIV":
             initial["status"] = get_standard_answer_status(standard_answer)
+
+    if request.method == "POST" and newer_version:
+        messages.error(request, _("A newer version of this declaration was submitted. Review that version instead."))
+        if is_only_review_comment:
+            return JsonResponse({"success": False, "error": "A newer version was submitted"}, status=409)
+        return redirect("securityobjectives")
 
     if request.method == "POST":
         form = ReviewForm(
@@ -1425,6 +1443,10 @@ def declaration_is_ready_to(standard_answer):
 
 # duplicate a standard answer to keep the versioning
 def duplicate_standard_answer(original):
+    # A review in progress is the regulator's draft: copying its verdicts and comments
+    # would show them to the operator on the new version before the review is sent (#931).
+    drop_review = original.is_review_in_progress
+
     # Copy object
     new_obj = copy.copy(original)
     new_obj.pk = None
@@ -1432,6 +1454,8 @@ def duplicate_standard_answer(original):
     new_obj.status = "UNDE"
     new_obj.submit_date = None
     new_obj.last_update = timezone.now()
+    if drop_review:
+        new_obj.review_comment = None
     new_obj.save()
 
     # Copy SecurityMeasureAmswer
@@ -1440,6 +1464,8 @@ def duplicate_standard_answer(original):
         new_sma = copy.copy(sma)
         new_sma.pk = None
         new_sma.standard_answer = new_obj
+        if drop_review:
+            new_sma.review_comment = ""
         new_sma.save()
     new_obj.save()
 
@@ -1449,6 +1475,8 @@ def duplicate_standard_answer(original):
         new_sos = copy.copy(sos)
         new_sos.pk = None
         new_sos.standard_answer = new_obj
+        if drop_review:
+            new_sos.status = "NOT_REVIEWED"
         new_sos.save()
     new_obj.save()
     return new_obj
