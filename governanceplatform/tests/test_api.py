@@ -8,6 +8,7 @@ from django.core.cache import cache
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from django_otp.plugins.otp_totp.models import TOTPDevice
 
 from governanceplatform.globals import API_ELIGIBLE_ROLES
 from governanceplatform.models import (
@@ -22,7 +23,7 @@ from governanceplatform.models import (
     Sector,
     User,
 )
-from incidents.models import Incident, IncidentWorkflow, LogReportRead, SectorRegulation, SectorRegulationWorkflow, Workflow
+from incidents.models import Answer, Incident, IncidentWorkflow, LogReportRead, SectorRegulation, SectorRegulationWorkflow, Workflow
 from reporting.models import LogReporting, Project
 from securityobjectives.models import LogStandardAnswer, Standard, StandardAnswer, StandardAnswerGroup
 
@@ -257,6 +258,34 @@ def test_ui_key_creation_once_revoke_and_ownership(otp_client, api_user, bearer,
     assert client.get(create).status_code == 404
 
 
+def test_password_change_revokes_api_keys(client, api_user, bearer):
+    api_user.set_password("a-first-password")
+    api_user.save()
+    assert client.get(reverse("api:me"), **auth(bearer)).status_code == 200
+    api_user.set_password("a-second-password")
+    api_user.save()
+    bearer["key"].refresh_from_db()
+    assert bearer["key"].revoked_at is not None
+    assert client.get(reverse("api:me"), **auth(bearer)).status_code == 401
+
+
+def test_saving_the_user_without_a_password_change_keeps_api_keys(client, api_user, bearer):
+    api_user.set_password("a-first-password")
+    api_user.save()
+    key, token = APIKey.issue(user=api_user, name="After", expires_at=timezone.now() + timedelta(days=1))
+    api_user.first_name = "Renamed"
+    api_user.save()
+    key.refresh_from_db()
+    assert key.revoked_at is None
+
+
+def test_two_factor_reset_revokes_api_keys(api_user, bearer):
+    device = TOTPDevice.objects.create(user=api_user, name="default")
+    device.delete()
+    bearer["key"].refresh_from_db()
+    assert bearer["key"].revoked_at is not None
+
+
 def test_key_mutations_require_csrf(api_user, bearer, settings):
     settings.DEBUG = True
     client = Client(enforce_csrf_checks=True)
@@ -354,6 +383,16 @@ def test_incident_detail_logs_each_report(client, api_user, bearer, records):
     hidden = reverse("api:incident-detail", kwargs={"reference": records["hidden_incident"].incident_id})
     assert client.get(hidden, **auth(bearer)).status_code == 404
     assert not LogReportRead.objects.filter(incident=records["hidden_incident"]).exists()
+
+
+def test_incident_detail_skips_answers_detached_from_their_question(client, bearer, records):
+    workflow = Workflow.objects.create(name="Early warning", label="Early warning")
+    SectorRegulationWorkflow.objects.create(sector_regulation=records["workflow"], workflow=workflow)
+    report = IncidentWorkflow.objects.create(incident=records["incident"], workflow=workflow)
+    Answer.objects.create(incident_workflow=report, question_options=None, answer="orphan")
+    response = client.get(reverse("api:incident-detail", kwargs={"reference": records["incident"].incident_id}), **auth(bearer))
+    assert response.status_code == 200
+    assert response.json()["reports"][0]["answers"] == {}
 
 
 def test_declaration_detail_is_logged_for_the_operator_company_but_not_the_list(client, api_user, bearer, records):
