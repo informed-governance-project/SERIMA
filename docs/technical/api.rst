@@ -44,8 +44,10 @@ in the account menu. Click **New API key**, give the key a name, choose an
 expiry between 1 and 365 days (90 by default), and confirm your password. Copy
 the key immediately, with the **Copy** button if you like: the full value is
 displayed only in the creation window and cannot be retrieved once that window
-is closed. The table of keys shows only each key's creation date, name,
-identifying prefix, expiry and status. Use the bin icon to revoke a key: after
+is closed. Operators create a key for the company they have selected; to read
+another company's data, switch company and create a key there. The table of keys
+shows only each key's creation date, name, company (for operators), identifying
+prefix, expiry and status. Use the bin icon to revoke a key: after
 confirmation it is invalidated immediately. Changing the account password, or
 disabling or resetting its two-factor authentication, revokes all the user's
 keys. Users can manage only their own keys; creation and revocation require a
@@ -140,9 +142,13 @@ administrators cannot use these data endpoints. Keys do not grant extra roles.
 Changes to roles, memberships, module switches and sector assignments take effect
 on the next request.
 
-Incident users see only their own incidents. Operators see incidents and
-security-objective declarations for all their approved company memberships,
-without needing a browser's selected-company session. Regulator users retain
+Incident users see only their own incidents. An operator's key is bound to the
+company selected when the key was created, and reads only that company's
+incidents and security-objective declarations, as the web shows only the company
+in use. Switching company in the browser afterwards does not change the key. The
+key acts with the user's role in that company (administrator or user), and is
+refused once that membership is no longer approved. Operator keys created before
+company binding are refused. Regulator users retain
 their regulator and sector scope; regulator administrators retain their regulator
 scope. Observers retain their incident regulation rules. Detached accounts have
 no organization data.
