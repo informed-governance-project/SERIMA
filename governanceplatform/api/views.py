@@ -101,8 +101,8 @@ class ReadOnlyViewSet(APIAccessMixin, ReadOnlyModelViewSet):
 
     @cached_property
     def actor_role(self) -> str:
-        group = self.request.user.groups.first()
-        return group.name if group else ""
+        roles = self.request.auth.roles
+        return roles[0].name if roles else ""
 
     def log_fields(self, company_name: str) -> dict:
         user = self.request.user
@@ -150,7 +150,8 @@ class IncidentViewSet(ReadOnlyViewSet):
                     .order_by("question_options__category_option__position", "question_options__position"),
                 ),
             )
-        return incidents_for_user(self.request.user).prefetch_related(Prefetch("incidentworkflow_set", queryset=reports))
+        incidents = incidents_for_user(self.request.user, self.request.auth.company)
+        return incidents.prefetch_related(Prefetch("incidentworkflow_set", queryset=reports))
 
     def log_read(self, incident: Incident) -> None:
         # The response holds every report's answers, so each report is logged like the web's READ of one report.
@@ -174,7 +175,7 @@ class DeclarationViewSet(ReadOnlyViewSet):
             from securityobjectives.models import StandardAnswer
 
             return StandardAnswer.objects.none()
-        queryset = declarations_for_user(self.request.user).prefetch_related("standard__translations")
+        queryset = declarations_for_user(self.request.user, self.request.auth.company).prefetch_related("standard__translations")
         if self.action == "retrieve":
             queryset = queryset.prefetch_related("securitymeasureanswers__security_measure__translations")
         return queryset

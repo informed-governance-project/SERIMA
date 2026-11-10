@@ -25,6 +25,6 @@ class ReadOnlyAPIUser(BasePermission):
         days = settings.TERMS_ACCEPTANCE_TIME_IN_DAYS
         if days and (timezone.now().date() - user.accepted_terms_date.date()).days > days:
             return False
-        api_modules = user.get_api_modules()
+        api_modules = user.get_api_modules(request.auth.roles)
         module = getattr(view, "module", None)
         return module in api_modules if module else bool(api_modules)
