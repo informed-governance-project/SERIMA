@@ -385,7 +385,8 @@ def test_incident_detail_logs_each_report(client, api_user, bearer, records):
     assert set(LogReportRead.objects.values_list("incident_report", flat=True)) == reports
     log = LogReportRead.objects.first()
     assert (log.user, log.incident, log.action) == (api_user, records["incident"], "API READ")
-    assert (log.role, log.entity_name, log.user_full_name) == ("IncidentUser", "Company", api_user.get_full_name())
+    # an incident user belongs to no organisation, whatever company name their incident carries
+    assert (log.role, log.entity_name, log.user_full_name) == ("IncidentUser", "", api_user.get_full_name())
     hidden = reverse("api:incident-detail", kwargs={"reference": records["hidden_incident"].incident_id})
     assert client.get(hidden, **auth(bearer)).status_code == 404
     assert not LogReportRead.objects.filter(incident=records["hidden_incident"]).exists()
@@ -410,6 +411,14 @@ def test_declaration_detail_is_logged_for_the_operator_company_but_not_the_list(
     client.get(reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id}), **auth(bearer))
     log = LogStandardAnswer.objects.get()
     assert (log.standard_answer, log.entity_name, log.action) == (records["declaration"], "Company", "API READ")
+
+
+def test_regulator_declaration_read_is_logged_with_the_regulator(client, api_user, bearer, records):
+    RegulatorUser.objects.create(user=api_user, regulator=records["regulator"], is_regulator_administrator=True)
+    enable_module(api_user, "securityobjectives", records["regulator"])
+    client.get(reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id}), **auth(bearer))
+    log = LogStandardAnswer.objects.get()
+    assert (log.entity_name, log.role, log.action) == ("Regulator", "RegulatorAdmin", "API READ")
 
 
 def test_declaration_list_omits_answers_that_detail_returns(client, api_user, bearer, records):
