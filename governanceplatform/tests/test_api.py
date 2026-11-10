@@ -301,6 +301,8 @@ def test_key_mutations_require_csrf(api_user, bearer, settings):
 
 
 def test_openapi_and_swagger(client, api_user):
+    for module in ["securityobjectives", "reporting"]:
+        enable_module(api_user, module)
     response = client.get(reverse("api:schema"))
     assert response.status_code == 200
     schema = yaml.safe_load(response.content)
@@ -309,6 +311,28 @@ def test_openapi_and_swagger(client, api_user):
         assert path in schema["paths"]
         assert set(schema["paths"][path]) == {"get"}
     assert client.get(reverse("api:swagger")).status_code == 200
+
+
+def test_schema_hides_modules_whose_functionality_grants_no_role(client, api_user):
+    reporting = Functionality.objects.create(type="reporting", name="reporting")
+    paths = yaml.safe_load(client.get(reverse("api:schema")).content)["paths"]
+    assert {"/api/v1/me/", "/api/v1/incidents/"} <= set(paths)
+    assert not any(path.startswith(("/api/v1/security-objectives/", "/api/v1/reporting/")) for path in paths)
+    reporting.roles.add(Group.objects.get(name="IncidentUser"))
+    paths = yaml.safe_load(client.get(reverse("api:schema")).content)["paths"]
+    assert "/api/v1/reporting/projects/" in paths
+    assert "/api/v1/security-objectives/" not in paths
+
+
+def test_swagger_page_uses_the_platform_layout_without_inline_script(client, api_user):
+    response = client.get(reverse("api:swagger"))
+    assert [template.name for template in response.templates][:2] == ["api/swagger_ui.html", "home/base.html"]
+    assert b'id="swagger-ui"' in response.content
+    assert b"SwaggerUIBundle(" not in response.content
+    script = client.get(reverse("api:swagger") + "?script")
+    assert script.status_code == 200
+    assert script["Content-Type"].startswith("application/javascript")
+    assert reverse("api:schema").encode() in script.content
 
 
 def test_pagination_is_bounded(client, api_user, bearer, records):
