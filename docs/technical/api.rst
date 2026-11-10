@@ -32,8 +32,9 @@ security objectives and reporting, the functionality must also be enabled for
 their role and, for regulator users, on their regulator. ``/api/v1/me/`` needs at
 least one module.
 
-Users with no module granted see no **API keys** menu entry and cannot create keys.
-They can still revoke keys they created earlier.
+Users with no module granted see no **API keys** menu entry and cannot open the
+**API keys** page. Their existing keys are refused on every endpoint while no
+module is granted, and work again if a module is granted back before they expire.
 
 API keys
 --------
@@ -45,8 +46,10 @@ the key immediately, with the **Copy** button if you like: the full value is
 displayed only in the creation window and cannot be retrieved once that window
 is closed. The table of keys shows only each key's creation date, name,
 identifying prefix, expiry and status. Use the bin icon to revoke a key: after
-confirmation it is invalidated immediately. Users can manage only their own
-keys; creation and revocation require a browser session and CSRF protection.
+confirmation it is invalidated immediately. Changing the account password, or
+disabling or resetting its two-factor authentication, revokes all the user's
+keys. Users can manage only their own keys; creation and revocation require a
+browser session and CSRF protection.
 API keys cannot create or revoke other keys through the API.
 
 Keys contain 256 random bits. Only their SHA-256 digest is stored; the database
