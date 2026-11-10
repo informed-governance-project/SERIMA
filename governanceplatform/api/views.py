@@ -88,30 +88,32 @@ class ReadOnlyViewSet(APIAccessMixin, ReadOnlyModelViewSet):
         """Reporting logs no reads on the web, so its viewset keeps this no-op."""
 
     @cached_property
-    def actor_entity_name(self) -> str | None:
-        """The reader's own organisation, or None for operators, who read on behalf of the object's company."""
+    def actor_entity_name(self) -> str:
+        """The reader's own organisation, as the web logs it: an operator's is the key's company, an incident user has none."""
         user = self.request.user
+        if self.request.auth.company is not None:
+            return self.request.auth.company.name
         if user.is_regulator():
             regulator = user.regulators.first()
             return regulator.name if regulator else ""
         if user.is_observer():
             observer = user.observers.first()
             return observer.name if observer else ""
-        return None
+        return ""
 
     @cached_property
     def actor_role(self) -> str:
         roles = self.request.auth.roles
         return roles[0].name if roles else ""
 
-    def log_fields(self, company_name: str) -> dict:
+    def log_fields(self) -> dict:
         user = self.request.user
         # bulk_create bypasses the log models' save(), which is where user_full_name is normally filled.
         return {
             "user": user,
             "user_full_name": user.get_full_name(),
             "role": self.actor_role,
-            "entity_name": self.actor_entity_name if self.actor_entity_name is not None else company_name,
+            "entity_name": self.actor_entity_name,
             "action": API_READ_ACTION,
         }
 
@@ -155,7 +157,7 @@ class IncidentViewSet(ReadOnlyViewSet):
 
     def log_read(self, incident: Incident) -> None:
         # The response holds every report's answers, so each report is logged like the web's READ of one report.
-        fields = self.log_fields(incident.company_name)
+        fields = self.log_fields()
         LogReportRead.objects.bulk_create(
             LogReportRead(**fields, incident=incident, incident_report=report) for report in incident.incidentworkflow_set.all()
         )
@@ -181,9 +183,7 @@ class DeclarationViewSet(ReadOnlyViewSet):
         return queryset
 
     def log_read(self, declaration: StandardAnswer) -> None:
-        company = declaration.submitter_company
-        company_name = company.name if company else declaration.creator_company_name or ""
-        LogStandardAnswer.objects.create(**self.log_fields(company_name), standard_answer=declaration)
+        LogStandardAnswer.objects.create(**self.log_fields(), standard_answer=declaration)
 
 
 class ProjectViewSet(ReadOnlyViewSet):
