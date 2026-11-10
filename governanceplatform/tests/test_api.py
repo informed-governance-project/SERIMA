@@ -22,9 +22,9 @@ from governanceplatform.models import (
     Sector,
     User,
 )
-from incidents.models import Incident, SectorRegulation
-from reporting.models import Project
-from securityobjectives.models import Standard, StandardAnswer, StandardAnswerGroup
+from incidents.models import Incident, IncidentWorkflow, LogReportRead, SectorRegulation, SectorRegulationWorkflow, Workflow
+from reporting.models import LogReporting, Project
+from securityobjectives.models import LogStandardAnswer, Standard, StandardAnswer, StandardAnswerGroup
 
 pytestmark = pytest.mark.django_db
 
@@ -228,31 +228,40 @@ def test_ui_key_creation_once_revoke_and_ownership(otp_client, api_user, bearer,
     api_user.save()
     client = otp_client(api_user)
     url = reverse("api_keys")
+    create = reverse("create_api_key")
+    assert client.post(url, {"name": "x", "expires_in_days": 1, "password": "a-real-test-password"}).status_code == 405
     before = APIKey.objects.count()
-    assert client.post(url, {"name": "bad", "expires_in_days": 0, "password": "wrong"}).status_code == 200
+    response = client.post(create, {"name": "bad", "expires_in_days": 0, "password": "wrong"})
+    assert response.status_code == 200
+    assert response.context["form"].errors.keys() == {"expires_in_days", "password"}
     assert APIKey.objects.count() == before
-    response = client.post(url, {"name": "New key", "expires_in_days": 1, "password": "a-real-test-password"})
+    response = client.post(create, {"name": "New key", "expires_in_days": 1, "password": "a-real-test-password"})
     token = response.context["token"]
     assert token and token.encode() in response.content
+    assert list(response.context["api_keys"]) == list(api_user.api_keys.order_by("-created_at"))
     assert "no-store" in response["Cache-Control"]
     assert token.encode() not in client.get(url).content
+    assert token.encode() not in client.get(create).content
     key = APIKey.objects.get(name="New key")
     other = User.objects.create(email="other@example.org")
     other_key, _ = APIKey.issue(user=other, name="Other", expires_at=timezone.now() + timedelta(days=1))
     assert client.post(reverse("revoke_api_key", args=[other_key.pk])).status_code == 404
     revoke = reverse("revoke_api_key", args=[key.pk])
     assert client.get(revoke).status_code == 405
-    assert client.post(revoke).status_code == 302
+    response = client.post(revoke)
+    assert response.status_code == 200
+    assert response.templates[0].name == "parts/api_keys_table.html"
     assert client.get(reverse("api:me"), HTTP_AUTHORIZATION=f"Bearer {token}").status_code == 401
     settings.API_ENABLED = False
     assert client.get(url).status_code == 404
+    assert client.get(create).status_code == 404
 
 
 def test_key_mutations_require_csrf(api_user, bearer, settings):
     settings.DEBUG = True
     client = Client(enforce_csrf_checks=True)
     client.force_login(api_user)
-    assert client.post(reverse("api_keys"), {"name": "x"}).status_code == 403
+    assert client.post(reverse("create_api_key"), {"name": "x"}).status_code == 403
     assert client.post(reverse("revoke_api_key", args=[bearer["key"].pk])).status_code == 403
 
 
@@ -323,6 +332,58 @@ def test_observer_rules_and_ineligible_modules(client, api_user, bearer, records
     assert client.get(reverse("api:project-list"), **auth(bearer)).status_code == 403
 
 
+def test_incident_list_is_not_logged(client, bearer, records):
+    assert client.get(reverse("api:incident-list"), **auth(bearer)).status_code == 200
+    assert not LogReportRead.objects.exists()
+
+
+def test_incident_detail_logs_each_report(client, api_user, bearer, records):
+    detail = reverse("api:incident-detail", kwargs={"reference": records["incident"].incident_id})
+    client.get(detail, **auth(bearer))
+    assert not LogReportRead.objects.exists()
+    reports = set()
+    for position, name in enumerate(["Early warning", "Notification"]):
+        workflow = Workflow.objects.create(name=name, label=name)
+        SectorRegulationWorkflow.objects.create(sector_regulation=records["workflow"], workflow=workflow, position=position)
+        reports.add(IncidentWorkflow.objects.create(incident=records["incident"], workflow=workflow).pk)
+    client.get(detail, **auth(bearer))
+    assert set(LogReportRead.objects.values_list("incident_report", flat=True)) == reports
+    log = LogReportRead.objects.first()
+    assert (log.user, log.incident, log.action) == (api_user, records["incident"], "API READ")
+    assert (log.role, log.entity_name, log.user_full_name) == ("IncidentUser", "Company", api_user.get_full_name())
+    hidden = reverse("api:incident-detail", kwargs={"reference": records["hidden_incident"].incident_id})
+    assert client.get(hidden, **auth(bearer)).status_code == 404
+    assert not LogReportRead.objects.filter(incident=records["hidden_incident"]).exists()
+
+
+def test_declaration_detail_is_logged_for_the_operator_company_but_not_the_list(client, api_user, bearer, records):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    enable_module(api_user, "securityobjectives")
+    client.get(reverse("api:declaration-list"), **auth(bearer))
+    assert not LogStandardAnswer.objects.exists()
+    client.get(reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id}), **auth(bearer))
+    log = LogStandardAnswer.objects.get()
+    assert (log.standard_answer, log.entity_name, log.action) == (records["declaration"], "Company", "API READ")
+
+
+def test_declaration_list_omits_answers_that_detail_returns(client, api_user, bearer, records):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    enable_module(api_user, "securityobjectives")
+    listed = client.get(reverse("api:declaration-list"), **auth(bearer)).json()["results"][0]
+    detail = client.get(reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id}), **auth(bearer)).json()
+    assert "measures" not in listed
+    assert detail["measures"] == []
+    assert listed == {field: value for field, value in detail.items() if field != "measures"}
+
+
+def test_project_reads_are_not_logged_like_on_the_web(client, api_user, bearer, records):
+    RegulatorUser.objects.create(user=api_user, regulator=records["regulator"], is_regulator_administrator=True)
+    enable_module(api_user, "reporting", records["regulator"])
+    assert client.get(reverse("api:project-list"), **auth(bearer)).status_code == 200
+    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].api_id}), **auth(bearer)).status_code == 200
+    assert not LogReporting.objects.exists()
+
+
 def test_session_company_cannot_expand_api_scope(client, api_user, bearer, records):
     CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
     client.force_login(api_user)
@@ -372,10 +433,11 @@ def test_key_management_requires_an_api_module(otp_client, api_user, bearer, set
     assert client.get(reverse("edit_account")).context["api_enabled"] is True
     api_access["incidents"].roles.clear()
     assert client.get(reverse("api_keys")).status_code == 403
+    assert client.get(reverse("create_api_key")).status_code == 403
     assert client.get(reverse("edit_account")).context["api_enabled"] is False
     # an existing key can still be revoked
     response = client.post(reverse("revoke_api_key", kwargs={"key_id": bearer["key"].id}))
-    assert response.status_code == 302
+    assert response.status_code == 200
     bearer["key"].refresh_from_db()
     assert bearer["key"].revoked_at is not None
 
