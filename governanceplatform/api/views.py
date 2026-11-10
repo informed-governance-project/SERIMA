@@ -7,13 +7,15 @@ from django.conf import settings
 from django.db.models import Prefetch
 from django.http import Http404
 from drf_spectacular.renderers import OpenApiYamlRenderer
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.renderers import JSONRenderer
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from governanceplatform.models import Functionality
 from incidents.models import LogReportRead
 from securityobjectives.models import LogStandardAnswer
 
@@ -64,6 +66,7 @@ class APIAccessMixin(APIEnabledMixin):
     http_method_names = ["get", "head", "options"]
 
 
+@extend_schema(tags=["Account"])
 class CurrentUserView(APIAccessMixin, RetrieveAPIView):
     serializer_class = CurrentUserSerializer
 
@@ -118,6 +121,7 @@ class ReadOnlyViewSet(APIAccessMixin, ReadOnlyModelViewSet):
         }
 
 
+@extend_schema(tags=["Incidents"])
 class IncidentViewSet(ReadOnlyViewSet):
     module = "incidents"
     lookup_field = "incident_id"
@@ -163,6 +167,7 @@ class IncidentViewSet(ReadOnlyViewSet):
         )
 
 
+@extend_schema(tags=["Security objectives"])
 class DeclarationViewSet(ReadOnlyViewSet):
     module = "securityobjectives"
     lookup_field = "group__group_id"
@@ -186,6 +191,7 @@ class DeclarationViewSet(ReadOnlyViewSet):
         LogStandardAnswer.objects.create(**self.log_fields(), standard_answer=declaration)
 
 
+@extend_schema(tags=["Reporting"])
 class ProjectViewSet(ReadOnlyViewSet):
     serializer_class = ProjectSerializer
     module = "reporting"
@@ -201,6 +207,13 @@ class ProjectViewSet(ReadOnlyViewSet):
         return projects_for_user(self.request.user).select_related("standard").prefetch_related("standard__translations")
 
 
+def hide_inactive_modules(endpoints: list[tuple], **kwargs) -> list[tuple]:
+    """drf-spectacular preprocessing hook: a module whose functionality grants no role cannot answer anyone,
+    so its endpoints are left out of the schema and the documentation page."""
+    active = set(Functionality.objects.filter(roles__isnull=False).values_list("type", flat=True))
+    return [endpoint for endpoint in endpoints if getattr(endpoint[3].cls, "module", "incidents") in active | {"incidents"}]
+
+
 class OpenAPIView(APIEnabledMixin, SpectacularAPIView):
     authentication_classes = []
     permission_classes = []
@@ -209,7 +222,10 @@ class OpenAPIView(APIEnabledMixin, SpectacularAPIView):
     serve_public = True
 
 
-class SwaggerView(APIEnabledMixin, SpectacularSwaggerView):
+class SwaggerView(APIEnabledMixin, SpectacularSwaggerSplitView):
+    """Rendered in the platform layout; the split view serves the init script as a file (``?script``), not inline."""
+
+    template_name = "api/swagger_ui.html"
     authentication_classes = []
     permission_classes = []
     throttle_classes = []
