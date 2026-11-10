@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-10-26 09:01+0100\n"
-"PO-Revision-Date: 2026-10-27 13:06+0000\n"
+"PO-Revision-Date: 2026-11-10 14:47+0000\n"
 "Last-Translator: Weblate Admin <admin@users.noreply.weblate.nc3.lu>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -462,8 +462,7 @@ msgstr ""
 #: governanceplatform/forms.py:389
 #, python-format
 msgid "These roles cannot access this functionality: %(roles)s"
-msgstr ""
-"Die folgenden Rollen haben keinen Zugriff auf diese Funktion: %(roles)s"
+msgstr "Die folgenden Rollen haben keinen Zugriff auf diese Funktion: %(roles)s"
 
 #: governanceplatform/formset.py:25
 msgid "There must be at least one administrator user."
@@ -512,8 +511,8 @@ msgid ""
 "({creator_name})"
 msgstr ""
 "<strong>Ändern oder Löschen ist nicht erlaubt.</strong><br> Dieses "
-"{object_name} wird entweder verwendet oder Sie sind nicht sein Ersteller "
-"({creator_name})"
+"{object_name} wird entweder verwendet oder Sie sind nicht sein Ersteller ("
+"{creator_name})"
 
 #: governanceplatform/managers.py:15
 msgid "User must have an email address"
@@ -2792,8 +2791,7 @@ msgstr "Beim Datenexport treten einige Fehler auf:"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:22
 msgid "You can download exported data with following link"
-msgstr ""
-"Über den folgenden Link können Sie die exportierten Daten herunterladen"
+msgstr "Über den folgenden Link können Sie die exportierten Daten herunterladen"
 
 #: templates/admin/import_export_extensions/celery_export_results.html:26
 msgid "Download export data"
