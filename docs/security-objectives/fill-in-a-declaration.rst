@@ -237,7 +237,8 @@ The earlier versions remain unchanged, and are listed under **Version control** 
 .. note::
 
    **Update** is offered on every submitted declaration, not only after a **Revision required**,
-   so you can also send new information to the regulator.
+   so you can also send new information to the regulator. While the declaration is **Under review**,
+   the new version carries no result of that review: no comment, and no objective marked for revision.
 
 .. _compare-versions:
 
