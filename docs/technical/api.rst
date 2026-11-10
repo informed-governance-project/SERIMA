@@ -39,11 +39,13 @@ API keys
 --------
 
 Sign in, complete two-factor authentication when required, and open **API keys**
-in the account menu. Give the key a name, choose an expiry between 1 and 365
-days (90 by default), and confirm your password. Copy the key immediately: the
-full value is displayed only in the creation response and cannot be retrieved
-later. Existing keys show only their identifying prefix, expiry and status.
-Use **Revoke** to invalidate a key immediately. Users can manage only their own
+in the account menu. Click **New API key**, give the key a name, choose an
+expiry between 1 and 365 days (90 by default), and confirm your password. Copy
+the key immediately, with the **Copy** button if you like: the full value is
+displayed only in the creation window and cannot be retrieved once that window
+is closed. The table of keys shows only each key's creation date, name,
+identifying prefix, expiry and status. Use the bin icon to revoke a key: after
+confirmation it is invalidated immediately. Users can manage only their own
 keys; creation and revocation require a browser session and CSRF protection.
 API keys cannot create or revoke other keys through the API.
 
@@ -52,6 +54,26 @@ never stores a recoverable key. Use HTTPS, keep keys out of URLs and logs, and
 store them in your client's secret storage. Revocation and expiry are checked
 on every request. Disabling the API makes existing keys unusable without deleting
 them; keys that are still valid work again if the API is re-enabled.
+
+Access logging
+--------------
+
+API reads are written to the module's **Access Log** with the action
+``API READ``, following the same rules as the web pages:
+
+- Opening an incident (``/api/v1/incidents/{reference}/``) logs one entry per
+  report, as opening a report on the web does. An incident with no report logs
+  nothing.
+- Opening a declaration (``/api/v1/security-objectives/{reference}/``) logs one
+  entry.
+- Lists are not logged, as browsing a dashboard is not.
+- Reporting projects are not logged, as opening a project on the web is not.
+
+Records outside the user's scope return ``404`` and are not logged.
+
+Each entry records the key owner, their role and their organisation: the
+regulator or observer, or, for operators, the company the record belongs to. The
+key used is not recorded. The entries follow the visibility rules of the web log.
 
 Requests
 --------
@@ -92,11 +114,11 @@ Resources
    * - ``/api/v1/incidents/{reference}/``
      - One incident, using its incident reference.
    * - ``/api/v1/security-objectives/``
-     - Latest visible declarations, including reference, standard, company,
-       submission year, dates, status and measure answers (measure, justification
-       and implementation flag).
+     - Latest visible declarations, with the dashboard data only: reference,
+       standard, company, submission year, dates and status.
    * - ``/api/v1/security-objectives/{reference}/``
-     - Latest visible declaration for the declaration group reference.
+     - Latest visible declaration for the declaration group reference, adding its
+       measure answers (measure, justification and implementation flag).
    * - ``/api/v1/reporting/projects/``
      - Reporting project reference, name, standard, dates, years, reference year
        and generation status.

@@ -177,4 +177,5 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
     .. note::
 
        Operators see only the actions of operator users in the log. The regulator's readings and reviews
-       appear in the regulator's log only.
+       appear in the regulator's log only. Declarations opened through the API appear with the action
+       **API READ**; see :doc:`/technical/api`.
