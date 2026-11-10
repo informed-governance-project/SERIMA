@@ -33,6 +33,7 @@ handler500 = "governanceplatform.views.custom_500_view"
 urlpatterns = [
     path("api/", include("governanceplatform.api.urls")),
     path("account/api-keys/", api_keys.manage_api_keys, name="api_keys"),
+    path("account/api-keys/create/", api_keys.create_api_key, name="create_api_key"),
     path("account/api-keys/<uuid:key_id>/revoke/", api_keys.revoke_api_key, name="revoke_api_key"),
     # Root
     path("", views.index, name="index"),

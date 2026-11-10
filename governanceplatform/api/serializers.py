@@ -48,7 +48,7 @@ class IncidentReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IncidentWorkflow
-        fields = ("report", "timestamp", "review_status", "detection_date", "starting_date", "resolution_date")
+        fields: tuple[str, ...] = ("report", "timestamp", "review_status", "detection_date", "starting_date", "resolution_date")
         read_only_fields = fields
 
 
@@ -104,7 +104,6 @@ class DeclarationSerializer(serializers.ModelSerializer):
     standard = serializers.StringRelatedField()
     company = serializers.StringRelatedField(source="submitter_company")
     status = serializers.SerializerMethodField()
-    measures = SecurityMeasureAnswerSerializer(source="securitymeasureanswers", many=True, read_only=True)
 
     @extend_schema_field(serializers.CharField())
     def get_status(self, obj: StandardAnswer) -> str:
@@ -112,7 +111,7 @@ class DeclarationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = StandardAnswer
-        fields = (
+        fields: tuple[str, ...] = (
             "reference",
             "standard",
             "company",
@@ -121,8 +120,15 @@ class DeclarationSerializer(serializers.ModelSerializer):
             "last_update",
             "submit_date",
             "status",
-            "measures",
         )
+        read_only_fields = fields
+
+
+class DeclarationDetailSerializer(DeclarationSerializer):
+    measures = SecurityMeasureAnswerSerializer(source="securitymeasureanswers", many=True, read_only=True)
+
+    class Meta(DeclarationSerializer.Meta):
+        fields = (*DeclarationSerializer.Meta.fields, "measures")
         read_only_fields = fields
 
 

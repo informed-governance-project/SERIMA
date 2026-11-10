@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from functools import cached_property
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.db.models import Prefetch
@@ -13,13 +14,23 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from incidents.models import LogReportRead
+from securityobjectives.models import LogStandardAnswer
+
 from .authentication import APIKeyAuthentication
 from .permissions import ReadOnlyAPIUser
 from .querysets import declarations_for_user, incidents_for_user, projects_for_user
-from .serializers import CurrentUserSerializer, DeclarationSerializer, IncidentDetailSerializer, IncidentSerializer, ProjectSerializer
+from .serializers import (
+    CurrentUserSerializer,
+    DeclarationDetailSerializer,
+    DeclarationSerializer,
+    IncidentDetailSerializer,
+    IncidentSerializer,
+    ProjectSerializer,
+)
 
 if TYPE_CHECKING:
-    from django.db.models import QuerySet
+    from django.db.models import Model, QuerySet
     from django.http import HttpRequest, HttpResponse
 
     from governanceplatform.models import User
@@ -60,8 +71,49 @@ class CurrentUserView(APIAccessMixin, RetrieveAPIView):
         return self.request.user
 
 
+API_READ_ACTION = "API READ"
+
+
 class ReadOnlyViewSet(APIAccessMixin, ReadOnlyModelViewSet):
+    """Logs reads the way the web does: opening a record is logged, browsing a list is not."""
+
     pagination_class = APIPagination
+
+    def get_object(self) -> Model:
+        obj = super().get_object()
+        self.log_read(obj)
+        return obj
+
+    def log_read(self, obj: Any) -> None:
+        """Reporting logs no reads on the web, so its viewset keeps this no-op."""
+
+    @cached_property
+    def actor_entity_name(self) -> str | None:
+        """The reader's own organisation, or None for operators, who read on behalf of the object's company."""
+        user = self.request.user
+        if user.is_regulator():
+            regulator = user.regulators.first()
+            return regulator.name if regulator else ""
+        if user.is_observer():
+            observer = user.observers.first()
+            return observer.name if observer else ""
+        return None
+
+    @cached_property
+    def actor_role(self) -> str:
+        group = self.request.user.groups.first()
+        return group.name if group else ""
+
+    def log_fields(self, company_name: str) -> dict:
+        user = self.request.user
+        # bulk_create bypasses the log models' save(), which is where user_full_name is normally filled.
+        return {
+            "user": user,
+            "user_full_name": user.get_full_name(),
+            "role": self.actor_role,
+            "entity_name": self.actor_entity_name if self.actor_entity_name is not None else company_name,
+            "action": API_READ_ACTION,
+        }
 
 
 class IncidentViewSet(ReadOnlyViewSet):
@@ -100,21 +152,37 @@ class IncidentViewSet(ReadOnlyViewSet):
             )
         return incidents_for_user(self.request.user).prefetch_related(Prefetch("incidentworkflow_set", queryset=reports))
 
+    def log_read(self, incident: Incident) -> None:
+        # The response holds every report's answers, so each report is logged like the web's READ of one report.
+        fields = self.log_fields(incident.company_name)
+        LogReportRead.objects.bulk_create(
+            LogReportRead(**fields, incident=incident, incident_report=report) for report in incident.incidentworkflow_set.all()
+        )
+
 
 class DeclarationViewSet(ReadOnlyViewSet):
-    serializer_class = DeclarationSerializer
     module = "securityobjectives"
     lookup_field = "group__group_id"
     lookup_url_kwarg = "reference"
+
+    def get_serializer_class(self) -> type[DeclarationSerializer]:
+        # Lists carry only the dashboard columns; answers and justifications need a detail request.
+        return DeclarationDetailSerializer if self.action == "retrieve" else DeclarationSerializer
 
     def get_queryset(self) -> QuerySet[StandardAnswer]:
         if getattr(self, "swagger_fake_view", False):
             from securityobjectives.models import StandardAnswer
 
             return StandardAnswer.objects.none()
-        return declarations_for_user(self.request.user).prefetch_related(
-            "securitymeasureanswers__security_measure__translations", "standard__translations"
-        )
+        queryset = declarations_for_user(self.request.user).prefetch_related("standard__translations")
+        if self.action == "retrieve":
+            queryset = queryset.prefetch_related("securitymeasureanswers__security_measure__translations")
+        return queryset
+
+    def log_read(self, declaration: StandardAnswer) -> None:
+        company = declaration.submitter_company
+        company_name = company.name if company else declaration.creator_company_name or ""
+        LogStandardAnswer.objects.create(**self.log_fields(company_name), standard_answer=declaration)
 
 
 class ProjectViewSet(ReadOnlyViewSet):
