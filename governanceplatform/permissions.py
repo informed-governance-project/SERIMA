@@ -5,6 +5,7 @@ GROUP_PERMISSIONS = {
         "site": ["change"],
         "logentry": ["view"],
         "functionality": ["add", "change", "delete"],
+        "apimoduleaccess": ["change"],
         "user": ["add", "change", "delete"],
         "regulatoruser": ["add", "change", "delete"],
         "regulator": ["add", "change", "delete"],

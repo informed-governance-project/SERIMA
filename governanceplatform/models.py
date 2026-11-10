@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+import hashlib
 import importlib
 import logging
+import secrets
 import uuid
+from typing import TYPE_CHECKING
 
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
@@ -11,15 +16,20 @@ from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Deferrable
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.debug import sensitive_variables
 from django_countries.fields import CountryField
 from parler.models import TranslatableModel, TranslatedFields
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
+from .globals import ACTION_FLAG_CHOICES, API_ELIGIBLE_ROLES, get_api_module_choices, get_functionality_choices
 from .managers import CustomUserManager
 from .settings import RT_SECRET_KEY
 from .validators import validate_rt_url
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +138,18 @@ class Functionality(TranslatableModel):
         ]
         verbose_name = _("Functionality")
         verbose_name_plural = _("Functionalities")
+
+
+class APIModuleAccess(models.Model):
+    module = models.CharField(verbose_name=_("Module"), max_length=100, choices=get_api_module_choices, unique=True)
+    roles = models.ManyToManyField(Group, verbose_name=_("Roles"), blank=True, related_name="api_modules")
+
+    def __str__(self):
+        return str(get_api_module_choices().get(self.module, self.module))
+
+    class Meta:
+        verbose_name = _("API access")
+        verbose_name_plural = _("API access")
 
 
 # operator has type (critical, essential, etc.) who give access to functionalities
@@ -433,6 +455,15 @@ class User(AbstractUser, PermissionsMixin):
             functionalities = functionalities.filter(regulator__in=self.regulators.all())
         return list(functionalities.values_list("type", flat=True).distinct())
 
+    def get_api_modules(self) -> set[str]:
+        """The modules this user may read through the API: granted to their role, and reachable on the web."""
+        groups = list(self.groups.all())
+        role_names = {group.name for group in groups}
+        granted = set(APIModuleAccess.objects.filter(roles__in=groups).values_list("module", flat=True))
+        # The API skips RestrictViewsMiddleware, so it re-checks eligibility in case a grant bypassed the admin form.
+        eligible = {module for module in granted if role_names & set(API_ELIGIBLE_ROLES.get(module, []))}
+        return eligible & ({"incidents"} | set(self.get_module_permissions()))
+
     class Meta:
         verbose_name_plural = _("Users")
         verbose_name = _("User")
@@ -670,3 +701,34 @@ class UserSession(AbstractBaseSession):
     class Meta:
         verbose_name = _("User session")
         verbose_name_plural = _("User sessions")
+
+
+class APIKey(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="api_keys")
+    name = models.CharField(max_length=100)
+    prefix = models.CharField(max_length=14, editable=False)
+    digest = models.CharField(max_length=64, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    @classmethod
+    @sensitive_variables("token")
+    def issue(cls, *, user: User, name: str, expires_at: datetime) -> tuple[APIKey, str]:
+        if expires_at <= timezone.now():
+            raise ValidationError(_("The expiry must be in the future."))
+        # 256 random bits make a fast, unsalted digest safe; no recoverable key is stored.
+        token = "serima_" + secrets.token_urlsafe(32)
+        key = cls.objects.create(
+            user=user,
+            name=name,
+            prefix=token[:14],
+            digest=hashlib.sha256(token.encode()).hexdigest(),
+            expires_at=expires_at,
+        )
+        return key, token
+
+    @property
+    def is_active(self) -> bool:
+        return self.revoked_at is None and self.expires_at > timezone.now()
