@@ -32,8 +32,9 @@ security objectives and reporting, the functionality must also be enabled for
 their role and, for regulator users, on their regulator. ``/api/v1/me/`` needs at
 least one module.
 
-Users with no module granted see no **API keys** menu entry and cannot create keys.
-They can still revoke keys they created earlier.
+Users with no module granted see no **API keys** menu entry and cannot open the
+**API keys** page. Their existing keys are refused on every endpoint while no
+module is granted, and work again if a module is granted back before they expire.
 
 API keys
 --------
@@ -43,10 +44,14 @@ in the account menu. Click **New API key**, give the key a name, choose an
 expiry between 1 and 365 days (90 by default), and confirm your password. Copy
 the key immediately, with the **Copy** button if you like: the full value is
 displayed only in the creation window and cannot be retrieved once that window
-is closed. The table of keys shows only each key's creation date, name,
-identifying prefix, expiry and status. Use the bin icon to revoke a key: after
-confirmation it is invalidated immediately. Users can manage only their own
-keys; creation and revocation require a browser session and CSRF protection.
+is closed. Operators create a key for the company they have selected; to read
+another company's data, switch company and create a key there. The table of keys
+shows only each key's creation date, name, company (for operators), identifying
+prefix, expiry and status. Use the bin icon to revoke a key: after
+confirmation it is invalidated immediately. Changing the account password, or
+disabling or resetting its two-factor authentication, revokes all the user's
+keys. Users can manage only their own keys; creation and revocation require a
+browser session and CSRF protection.
 API keys cannot create or revoke other keys through the API.
 
 Keys contain 256 random bits. Only their SHA-256 digest is stored; the database
@@ -71,9 +76,10 @@ API reads are written to the module's **Access Log** with the action
 
 Records outside the user's scope return ``404`` and are not logged.
 
-Each entry records the key owner, their role and their organisation: the
-regulator or observer, or, for operators, the company the record belongs to. The
-key used is not recorded. The entries follow the visibility rules of the web log.
+Each entry records the key owner, their role and their organisation, as the web
+log does: the regulator or observer, the key's company for operators, and none
+for incident users. The key used is not recorded. The entries follow the
+visibility rules of the web log.
 
 Requests
 --------
@@ -137,9 +143,13 @@ administrators cannot use these data endpoints. Keys do not grant extra roles.
 Changes to roles, memberships, module switches and sector assignments take effect
 on the next request.
 
-Incident users see only their own incidents. Operators see incidents and
-security-objective declarations for all their approved company memberships,
-without needing a browser's selected-company session. Regulator users retain
+Incident users see only their own incidents. An operator's key is bound to the
+company selected when the key was created, and reads only that company's
+incidents and security-objective declarations, as the web shows only the company
+in use. Switching company in the browser afterwards does not change the key. The
+key acts with the user's role in that company (administrator or user), and is
+refused once that membership is no longer approved. Operator keys created before
+company binding are refused. Regulator users retain
 their regulator and sector scope; regulator administrators retain their regulator
 scope. Observers retain their incident regulation rules. Detached accounts have
 no organization data.
@@ -160,6 +170,11 @@ When enabled, ``/api/openapi.yaml`` serves the OpenAPI YAML schema and
 two documentation endpoints are public, contain no application records, and
 vanish when the API is disabled. In Swagger, use **Authorize** to enter the full
 key. Authorization is not persisted across page reloads.
+
+Both list security objectives and reporting only while their functionality
+grants at least one role (see :ref:`functionalities`);
+otherwise those endpoints could not answer anyone. Incident notification and
+``/api/v1/me/`` are always listed.
 
 Generate the same schema offline with:
 

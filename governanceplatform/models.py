@@ -16,6 +16,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Deferrable
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_variables
 from django_countries.fields import CountryField
@@ -491,23 +492,28 @@ class User(AbstractUser, PermissionsMixin):
             sectors = Sector.objects.all()
         return sectors
 
-    def get_module_permissions(self) -> list[str]:
+    def get_module_permissions(self, roles: list[Group] | None = None) -> list[str]:
         """A module needs the user's role enabled on it first; regulators then also need it
-        enabled on their regulator. Operators have no entity switch."""
+        enabled on their regulator. Operators have no entity switch.
+
+        ``roles`` overrides the user's groups, for an API key acting with its company's role."""
         # Listing the groups reuses the prefetch done at authentication instead of a subquery
-        functionalities = Functionality.objects.filter(roles__in=list(self.groups.all()))
+        roles = list(self.groups.all()) if roles is None else roles
+        functionalities = Functionality.objects.filter(roles__in=roles)
         if self.is_regulator():
             functionalities = functionalities.filter(regulator__in=self.regulators.all())
         return list(functionalities.values_list("type", flat=True).distinct())
 
-    def get_api_modules(self) -> set[str]:
+    def get_api_modules(self, roles: list[Group] | None = None) -> set[str]:
         """The modules this user may read through the API: granted to their role, and reachable on the web."""
-        groups = list(self.groups.all())
-        role_names = {group.name for group in groups}
-        granted = set(APIModuleAccess.objects.filter(roles__in=groups).values_list("module", flat=True))
+        roles = list(self.groups.all()) if roles is None else roles
+        if not roles:
+            return set()
+        role_names = {group.name for group in roles}
+        granted = set(APIModuleAccess.objects.filter(roles__in=roles).values_list("module", flat=True))
         # The API skips RestrictViewsMiddleware, so it re-checks eligibility in case a grant bypassed the admin form.
         eligible = {module for module in granted if role_names & set(API_ELIGIBLE_ROLES.get(module, []))}
-        return eligible & ({"incidents"} | set(self.get_module_permissions()))
+        return eligible & ({"incidents"} | set(self.get_module_permissions(roles)))
 
     class Meta:
         verbose_name_plural = _("Users")
@@ -757,10 +763,12 @@ class APIKey(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     revoked_at = models.DateTimeField(null=True, blank=True)
+    # An operator key reads only this company's records, like the web shows only the company in use.
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name="api_keys")
 
     @classmethod
     @sensitive_variables("token")
-    def issue(cls, *, user: User, name: str, expires_at: datetime) -> tuple[APIKey, str]:
+    def issue(cls, *, user: User, name: str, expires_at: datetime, company: Company | None = None) -> tuple[APIKey, str]:
         if expires_at <= timezone.now():
             raise ValidationError(_("The expiry must be in the future."))
         # 256 random bits make a fast, unsalted digest safe; no recoverable key is stored.
@@ -771,8 +779,20 @@ class APIKey(models.Model):
             prefix=token[:14],
             digest=hashlib.sha256(token.encode()).hexdigest(),
             expires_at=expires_at,
+            company=company,
         )
         return key, token
+
+    @cached_property
+    def roles(self) -> list[Group]:
+        """The roles the key acts with. An operator key takes the user's role in its company, not the group
+        left by the company last selected on the web; it has none once that membership is no longer approved."""
+        if self.company_id is None:
+            return [] if self.user.is_operator() else list(self.user.groups.all())
+        membership = self.user.companyuser_set.filter(company_id=self.company_id, approved=True).first()
+        if membership is None:
+            return []
+        return list(Group.objects.filter(name="OperatorAdmin" if membership.is_company_administrator else "OperatorUser"))
 
     @property
     def is_active(self) -> bool:

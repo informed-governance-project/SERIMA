@@ -7,13 +7,15 @@ from django.conf import settings
 from django.db.models import Prefetch
 from django.http import Http404
 from drf_spectacular.renderers import OpenApiYamlRenderer
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.renderers import JSONRenderer
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
+from governanceplatform.models import Functionality
 from incidents.models import LogReportRead
 from securityobjectives.models import LogStandardAnswer
 
@@ -64,6 +66,7 @@ class APIAccessMixin(APIEnabledMixin):
     http_method_names = ["get", "head", "options"]
 
 
+@extend_schema(tags=["Account"])
 class CurrentUserView(APIAccessMixin, RetrieveAPIView):
     serializer_class = CurrentUserSerializer
 
@@ -88,34 +91,37 @@ class ReadOnlyViewSet(APIAccessMixin, ReadOnlyModelViewSet):
         """Reporting logs no reads on the web, so its viewset keeps this no-op."""
 
     @cached_property
-    def actor_entity_name(self) -> str | None:
-        """The reader's own organisation, or None for operators, who read on behalf of the object's company."""
+    def actor_entity_name(self) -> str:
+        """The reader's own organisation, as the web logs it: an operator's is the key's company, an incident user has none."""
         user = self.request.user
+        if self.request.auth.company is not None:
+            return self.request.auth.company.name
         if user.is_regulator():
             regulator = user.regulators.first()
             return regulator.name if regulator else ""
         if user.is_observer():
             observer = user.observers.first()
             return observer.name if observer else ""
-        return None
+        return ""
 
     @cached_property
     def actor_role(self) -> str:
-        group = self.request.user.groups.first()
-        return group.name if group else ""
+        roles = self.request.auth.roles
+        return roles[0].name if roles else ""
 
-    def log_fields(self, company_name: str) -> dict:
+    def log_fields(self) -> dict:
         user = self.request.user
         # bulk_create bypasses the log models' save(), which is where user_full_name is normally filled.
         return {
             "user": user,
             "user_full_name": user.get_full_name(),
             "role": self.actor_role,
-            "entity_name": self.actor_entity_name if self.actor_entity_name is not None else company_name,
+            "entity_name": self.actor_entity_name,
             "action": API_READ_ACTION,
         }
 
 
+@extend_schema(tags=["Incidents"])
 class IncidentViewSet(ReadOnlyViewSet):
     module = "incidents"
     lookup_field = "incident_id"
@@ -150,16 +156,18 @@ class IncidentViewSet(ReadOnlyViewSet):
                     .order_by("question_options__category_option__position", "question_options__position"),
                 ),
             )
-        return incidents_for_user(self.request.user).prefetch_related(Prefetch("incidentworkflow_set", queryset=reports))
+        incidents = incidents_for_user(self.request.user, self.request.auth.company)
+        return incidents.prefetch_related(Prefetch("incidentworkflow_set", queryset=reports))
 
     def log_read(self, incident: Incident) -> None:
         # The response holds every report's answers, so each report is logged like the web's READ of one report.
-        fields = self.log_fields(incident.company_name)
+        fields = self.log_fields()
         LogReportRead.objects.bulk_create(
             LogReportRead(**fields, incident=incident, incident_report=report) for report in incident.incidentworkflow_set.all()
         )
 
 
+@extend_schema(tags=["Security objectives"])
 class DeclarationViewSet(ReadOnlyViewSet):
     module = "securityobjectives"
     lookup_field = "group__group_id"
@@ -174,17 +182,16 @@ class DeclarationViewSet(ReadOnlyViewSet):
             from securityobjectives.models import StandardAnswer
 
             return StandardAnswer.objects.none()
-        queryset = declarations_for_user(self.request.user).prefetch_related("standard__translations")
+        queryset = declarations_for_user(self.request.user, self.request.auth.company).prefetch_related("standard__translations")
         if self.action == "retrieve":
             queryset = queryset.prefetch_related("securitymeasureanswers__security_measure__translations")
         return queryset
 
     def log_read(self, declaration: StandardAnswer) -> None:
-        company = declaration.submitter_company
-        company_name = company.name if company else declaration.creator_company_name or ""
-        LogStandardAnswer.objects.create(**self.log_fields(company_name), standard_answer=declaration)
+        LogStandardAnswer.objects.create(**self.log_fields(), standard_answer=declaration)
 
 
+@extend_schema(tags=["Reporting"])
 class ProjectViewSet(ReadOnlyViewSet):
     serializer_class = ProjectSerializer
     module = "reporting"
@@ -200,6 +207,13 @@ class ProjectViewSet(ReadOnlyViewSet):
         return projects_for_user(self.request.user).select_related("standard").prefetch_related("standard__translations")
 
 
+def hide_inactive_modules(endpoints: list[tuple], **kwargs) -> list[tuple]:
+    """drf-spectacular preprocessing hook: a module whose functionality grants no role cannot answer anyone,
+    so its endpoints are left out of the schema and the documentation page."""
+    active = set(Functionality.objects.filter(roles__isnull=False).values_list("type", flat=True))
+    return [endpoint for endpoint in endpoints if getattr(endpoint[3].cls, "module", "incidents") in active | {"incidents"}]
+
+
 class OpenAPIView(APIEnabledMixin, SpectacularAPIView):
     authentication_classes = []
     permission_classes = []
@@ -208,7 +222,10 @@ class OpenAPIView(APIEnabledMixin, SpectacularAPIView):
     serve_public = True
 
 
-class SwaggerView(APIEnabledMixin, SpectacularSwaggerView):
+class SwaggerView(APIEnabledMixin, SpectacularSwaggerSplitView):
+    """Rendered in the platform layout; the split view serves the init script as a file (``?script``), not inline."""
+
+    template_name = "api/swagger_ui.html"
     authentication_classes = []
     permission_classes = []
     throttle_classes = []

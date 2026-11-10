@@ -7,9 +7,9 @@ from django.db.migrations.recorder import MigrationRecorder
 from governanceplatform.management.commands.upgrade_connector_poc import POC_MIGRATIONS
 
 RENUMBERED_MIGRATIONS = [
-    ("governanceplatform", "0071_connectors"),
-    ("governanceplatform", "0072_migrate_rt_to_connectors"),
-    ("governanceplatform", "0073_remove_observer_rt_fields"),
+    ("governanceplatform", "0072_connectors"),
+    ("governanceplatform", "0073_migrate_rt_to_connectors"),
+    ("governanceplatform", "0074_remove_observer_rt_fields"),
     ("incidents", "0071_connectordelivery"),
     ("incidents", "0072_migrate_rttickets"),
     ("incidents", "0073_delete_rtticket"),

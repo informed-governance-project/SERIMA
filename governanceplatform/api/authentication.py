@@ -28,7 +28,7 @@ class APIKeyAuthentication(BaseAuthentication):
             raise AuthenticationFailed("Invalid or expired API key.")
         digest = hashlib.sha256(header[1]).hexdigest()
         key = (
-            APIKey.objects.select_related("user")
+            APIKey.objects.select_related("user", "company")
             .prefetch_related("user__groups")
             .filter(digest=digest, revoked_at__isnull=True, expires_at__gt=timezone.now(), user__is_active=True)
             .first()

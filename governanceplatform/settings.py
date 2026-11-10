@@ -184,14 +184,14 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "NC3-LU Governance Platform",
+    "TITLE": SITE_NAME,
     "DESCRIPTION": "API for the "
     '<a href="https://github.com/informed-governance-project" rel="noopener noreferrer" target="_blank">'
     "Governance Platform</a> by NC3-LU.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "PREPROCESSING_HOOKS": ["governanceplatform.api.views.hide_inactive_modules"],
     "SWAGGER_UI_DIST": "SIDECAR",
-    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
     "SWAGGER_UI_SETTINGS": {"persistAuthorization": False},
 }
 
