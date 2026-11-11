@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-11 09:22+0100\n"
+"POT-Creation-Date: 2026-11-11 09:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -919,7 +919,7 @@ msgid ""
 msgstr ""
 
 #: incidents/admin.py:648 incidents/admin.py:866 incidents/admin.py:979
-#: securityobjectives/admin.py:701
+#: securityobjectives/admin.py:707
 msgid "General"
 msgstr ""
 
@@ -936,20 +936,20 @@ msgid "Email type"
 msgstr ""
 
 #: incidents/admin.py:807 incidents/models.py:230
-#: securityobjectives/admin.py:1266 securityobjectives/models.py:216
+#: securityobjectives/admin.py:1275 securityobjectives/models.py:216
 msgid "Content"
 msgstr ""
 
-#: incidents/admin.py:814 securityobjectives/admin.py:1277
+#: incidents/admin.py:814 securityobjectives/admin.py:1286
 msgid "HTML preview"
 msgstr ""
 
-#: incidents/admin.py:817 securityobjectives/admin.py:1280
+#: incidents/admin.py:817 securityobjectives/admin.py:1289
 msgid "No preview yet"
 msgstr ""
 
 #: incidents/admin.py:873 incidents/admin.py:1006
-#: securityobjectives/admin.py:708
+#: securityobjectives/admin.py:714
 msgid "Notification Email"
 msgstr ""
 
@@ -1628,7 +1628,7 @@ msgid "Project name"
 msgstr ""
 
 #: reporting/forms.py:147 reporting/models.py:402 reporting/models.py:492
-#: securityobjectives/admin.py:1017 securityobjectives/admin.py:1170
+#: securityobjectives/admin.py:1026 securityobjectives/admin.py:1179
 #: securityobjectives/models.py:85 securityobjectives/models.py:377
 #: securityobjectives/models.py:486
 msgid "Standard"
@@ -2075,7 +2075,7 @@ msgid "This regulator already has this standard configured."
 msgstr ""
 
 #: reporting/models.py:425 reporting/models.py:430
-#: securityobjectives/admin.py:895 securityobjectives/models.py:38
+#: securityobjectives/admin.py:904 securityobjectives/models.py:38
 msgid "Color"
 msgstr ""
 
@@ -2282,73 +2282,73 @@ msgstr ""
 msgid "Invalid year. Please provide a valid year."
 msgstr ""
 
-#: securityobjectives/admin.py:344
+#: securityobjectives/admin.py:352
 msgid "domain"
 msgstr ""
 
-#: securityobjectives/admin.py:345
+#: securityobjectives/admin.py:353
 msgid "Security objective objective"
 msgstr ""
 
-#: securityobjectives/admin.py:346
+#: securityobjectives/admin.py:354
 msgid "Security objective description"
 msgstr ""
 
-#: securityobjectives/admin.py:347
+#: securityobjectives/admin.py:355
 msgid "Security objective position"
 msgstr ""
 
-#: securityobjectives/admin.py:348
+#: securityobjectives/admin.py:356
 msgid "Security objective priority"
 msgstr ""
 
-#: securityobjectives/admin.py:349
+#: securityobjectives/admin.py:357
 msgid "maturity_level"
 msgstr ""
 
-#: securityobjectives/admin.py:350
+#: securityobjectives/admin.py:358
 msgid "Security measure description"
 msgstr ""
 
-#: securityobjectives/admin.py:351
+#: securityobjectives/admin.py:359
 msgid "Security measure evidence"
 msgstr ""
 
-#: securityobjectives/admin.py:387
+#: securityobjectives/admin.py:395
 #, python-format
 msgid "Regulation '%(label)s' does not exist. Check your data."
 msgstr ""
 
-#: securityobjectives/admin.py:402
+#: securityobjectives/admin.py:410
 #, python-format
 msgid ""
 "The standard '%(label)s' is not find for regulation '%(regulation)s' and "
 "this regulator."
 msgstr ""
 
-#: securityobjectives/admin.py:410
+#: securityobjectives/admin.py:418
 #, python-format
 msgid "Several '%(label)s' have been found. Check your data."
 msgstr ""
 
-#: securityobjectives/admin.py:719
+#: securityobjectives/admin.py:725
 msgid "Columns display settings"
 msgstr ""
 
-#: securityobjectives/admin.py:722
+#: securityobjectives/admin.py:728
 msgid "Leave a label empty to use the default translation."
 msgstr ""
 
-#: securityobjectives/admin.py:737
+#: securityobjectives/admin.py:743
 msgid "Score display settings"
 msgstr ""
 
-#: securityobjectives/admin.py:783 securityobjectives/admin.py:786
+#: securityobjectives/admin.py:792 securityobjectives/admin.py:795
 #, python-brace-format
 msgid "Default: {label}"
 msgstr ""
 
-#: securityobjectives/admin.py:797
+#: securityobjectives/admin.py:806
 msgid ""
 "This standard is in use: declarations already reference it. Its name and the "
 "configuration of the declaration table columns stay editable; the "
@@ -2356,7 +2356,7 @@ msgid ""
 "not."
 msgstr ""
 
-#: securityobjectives/admin.py:1118
+#: securityobjectives/admin.py:1127
 msgid "Standard of security objective and maturity level must be the same"
 msgstr ""
 
