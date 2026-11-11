@@ -6,6 +6,7 @@ would silently unlock objects operators have already answered against.
 """
 
 import pytest
+from tablib import Dataset
 
 from governanceplatform.helpers import can_change_or_delete_obj
 from governanceplatform.models import User
@@ -126,6 +127,14 @@ def _request_from(rf, user):
     request.user = user
     request._messages = _CollectingMessages()
     return request
+
+
+def test_standard_admin_csv_export_starts_with_a_utf8_bom(standard_admin):
+    csv_format = next(file_format for file_format in standard_admin.get_export_formats() if file_format().get_extension() == "csv")
+
+    exported_data = csv_format().export_data(Dataset(headers=["S\u00e9curit\u00e9"]))
+
+    assert exported_data.startswith("\ufeffS\u00e9curit\u00e9")
 
 
 @pytest.mark.django_db()

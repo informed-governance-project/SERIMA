@@ -94,7 +94,7 @@ def write_csv(rows) -> str:
     writer = csv.writer(buffer, quoting=csv.QUOTE_ALL)
     for row in rows:
         writer.writerow([sanitize_spreadsheet_cell(value) for value in row])
-    return buffer.getvalue()
+    return "\ufeff" + buffer.getvalue()
 
 
 def set_column_widths(worksheet):

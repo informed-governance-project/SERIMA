@@ -1,8 +1,11 @@
+import datetime as dt
 import json
 import re
 from unittest.mock import patch
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -15,6 +18,7 @@ from governanceplatform.helpers import (
     user_in_group,
 )
 from securityobjectives.globals import SO_DECLARATION_COLUMNS
+from securityobjectives.helpers import get_scoped_standard_answers
 from securityobjectives.models import (
     Domain,
     SecurityMeasure,
@@ -854,6 +858,254 @@ def test_regulator_declaration_shows_draft_measure_comments(otp_client, populate
     response = otp_client(regulator).get(reverse("so_declaration"), {"id": declaration.pk})
 
     assert MEASURE_COMMENT in response.content.decode()
+
+
+def _new_version(client, declaration):
+    client.get(reverse("so_declaration"), {"id": declaration.pk, "update": "true"})
+    return StandardAnswer.objects.filter(group=declaration.group).exclude(pk=declaration.pk).get()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("stored_status", REVIEW_IN_PROGRESS)
+def test_a_new_version_made_during_the_review_leaves_its_draft_behind(otp_client, populate_so_db, stored_status):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+    SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status="FAIL")
+
+    new_version = _new_version(otp_client(_operator(populate_so_db)), declaration)
+    _response, navigation = _navigation(otp_client, _operator(populate_so_db), new_version)
+
+    assert new_version.review_comment is None
+    assert not SecurityMeasureAnswer.objects.filter(standard_answer=new_version).exclude(review_comment="").exists()
+    assert set(SecurityObjectiveStatus.objects.filter(standard_answer=new_version).values_list("status", flat=True)) == {"NOT_REVIEWED"}
+    assert "failed" not in {so.nav_symbol for domain in navigation["domains"] for so in domain["objectives"]}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("stored_status", REVIEW_SENT)
+def test_a_new_version_keeps_the_review_that_was_sent(otp_client, populate_so_db, stored_status):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+    SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status="FAIL")
+
+    new_version = _new_version(otp_client(_operator(populate_so_db)), declaration)
+
+    assert new_version.review_comment == DECLARATION_COMMENT
+    assert set(SecurityMeasureAnswer.objects.filter(standard_answer=new_version).values_list("review_comment", flat=True)) == {
+        MEASURE_COMMENT
+    }
+    assert set(SecurityObjectiveStatus.objects.filter(standard_answer=new_version).values_list("status", flat=True)) == {"FAIL"}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("stored_status", "shown"), [(s, False) for s in REVIEW_IN_PROGRESS] + [(s, True) for s in REVIEW_SENT])
+def test_the_previous_answer_holds_the_review_comment_only_once_sent(otp_client, populate_so_db, stored_status, shown):
+    declaration = _reviewed_declaration(populate_so_db, stored_status)
+    client = otp_client(_operator(populate_so_db))
+    new_version = _new_version(client, declaration)
+    SecurityMeasureAnswer.objects.filter(standard_answer=new_version).update(is_implemented=True, review_comment="")
+
+    content = client.get(reverse("so_declaration"), {"id": new_version.pk}).content.decode()
+
+    assert "so-previous-answer-row" in content
+    assert (MEASURE_COMMENT in content) is shown
+
+
+def _superseded_declaration(otp_client, populate_so_db):
+    """A version under review, and the newer version the operator made from it and submitted."""
+    old_version = _reviewed_declaration(populate_so_db, "DELIV")
+    client, _url = _declaration_as_operator(otp_client, populate_so_db)
+    new_version = _new_version(client, old_version)
+    StandardAnswer.objects.filter(pk=new_version.pk).update(status="DELIV", submit_date=timezone.now())
+    return old_version, new_version
+
+
+def _post_objective_status(client, declaration, status):
+    objective_id = SecurityObjectiveStatus.objects.filter(standard_answer=declaration).first().security_objective_id
+    return client.post(
+        f"{reverse('so_declaration')}?id={declaration.pk}",
+        data=json.dumps({"id": objective_id, "status": status}),
+        content_type="application/json",
+    )
+
+
+@pytest.mark.django_db
+def test_regulator_cannot_change_a_superseded_version(otp_client, populate_so_db):
+    old_version, _new = _superseded_declaration(otp_client, populate_so_db)
+
+    response = _post_objective_status(otp_client(_regulator(populate_so_db)), old_version, "FAIL")
+
+    assert response.status_code == 409
+    assert not SecurityObjectiveStatus.objects.filter(standard_answer=old_version, status="FAIL").exists()
+
+
+@pytest.mark.django_db
+def test_regulator_keeps_reviewing_while_the_newer_version_is_unsubmitted(otp_client, populate_so_db):
+    old_version = _reviewed_declaration(populate_so_db, "DELIV")
+    client, _url = _declaration_as_operator(otp_client, populate_so_db)
+    _new_version(client, old_version)
+
+    response = _post_objective_status(otp_client(_regulator(populate_so_db)), old_version, "FAIL")
+
+    assert response.status_code == 200
+    assert SecurityObjectiveStatus.objects.filter(standard_answer=old_version, status="FAIL").exists()
+
+
+@pytest.mark.django_db
+def test_regulator_cannot_send_the_review_of_a_superseded_version(otp_client, populate_so_db):
+    old_version, _new = _superseded_declaration(otp_client, populate_so_db)
+    SecurityObjectiveStatus.objects.filter(standard_answer=old_version).update(status="PASS")
+
+    otp_client(_regulator(populate_so_db)).post(
+        reverse("review_comment_so_declaration", args=[old_version.pk]), {"review_comment": "Verdict"}
+    )
+
+    old_version.refresh_from_db()
+    assert old_version.status == "DELIV"
+    assert old_version.review_comment == DECLARATION_COMMENT
+
+
+@pytest.mark.django_db
+def test_regulator_cannot_comment_a_superseded_version(otp_client, populate_so_db):
+    old_version, _new = _superseded_declaration(otp_client, populate_so_db)
+
+    response = otp_client(_regulator(populate_so_db)).post(
+        f"{reverse('review_comment_so_declaration', args=[old_version.pk])}?only_review_comment=true",
+        {"review_comment": "Draft comment"},
+    )
+
+    old_version.refresh_from_db()
+    assert response.status_code == 409
+    assert old_version.review_comment == DECLARATION_COMMENT
+
+
+@pytest.mark.django_db
+def test_regulator_is_sent_to_the_newer_version(otp_client, populate_so_db):
+    old_version, new_version = _superseded_declaration(otp_client, populate_so_db)
+
+    content = otp_client(_regulator(populate_so_db)).get(reverse("so_declaration"), {"id": old_version.pk}).content.decode()
+
+    assert f"{reverse('so_declaration')}?id={new_version.pk}" in content
+    assert 'id="so_send_button"' not in content
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("role", ["operator", "regulator"])
+def test_dashboard_shows_the_newer_version_after_the_older_one_was_updated(otp_client, populate_so_db, role):
+    old_version, new_version = _superseded_declaration(otp_client, populate_so_db)
+    StandardAnswer.objects.filter(pk=old_version.pk).update(last_update=timezone.now() + dt.timedelta(hours=1))
+    if role == "operator":
+        client, _url = _declaration_as_operator(otp_client, populate_so_db)
+    else:
+        client = otp_client(_regulator(populate_so_db))
+
+    response = client.get(reverse("securityobjectives"))
+
+    assert [declaration.pk for declaration in response.context["standard_answers"]] == [new_version.pk]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("newer_status", ["UNDE", "DELIV"])
+def test_operator_cannot_update_a_version_that_has_a_newer_one(otp_client, populate_so_db, newer_status):
+    old_version = _reviewed_declaration(populate_so_db, "FAILM")
+    client, _url = _declaration_as_operator(otp_client, populate_so_db)
+    new_version = _new_version(client, old_version)
+    StandardAnswer.objects.filter(pk=new_version.pk).update(status=newer_status)
+
+    client.get(reverse("so_declaration"), {"id": old_version.pk, "update": "true"})
+
+    assert StandardAnswer.objects.filter(group=old_version.group).count() == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("status", ["ALL_PASS", "ALL_FAIL"])
+def test_regulator_cannot_mark_every_objective_of_a_superseded_version(otp_client, populate_so_db, status):
+    old_version, _new = _superseded_declaration(otp_client, populate_so_db)
+
+    response = _post_objective_status(otp_client(_regulator(populate_so_db)), old_version, status)
+
+    assert response.status_code == 409
+    assert set(SecurityObjectiveStatus.objects.filter(standard_answer=old_version).values_list("status", flat=True)) == {"NOT_REVIEWED"}
+
+
+@pytest.mark.django_db
+def test_a_superseded_version_keeps_its_planned_measures(otp_client, populate_so_db):
+    old_version, _new = _superseded_declaration(otp_client, populate_so_db)
+    client, _url = _declaration_as_operator(otp_client, populate_so_db)
+    objective_status = SecurityObjectiveStatus.objects.filter(standard_answer=old_version).first()
+
+    response = client.post(
+        f"{reverse('so_declaration')}?id={old_version.pk}",
+        data=json.dumps({"id": objective_status.security_objective_id, "actions": "Planned later"}),
+        content_type="application/json",
+    )
+
+    objective_status.refresh_from_db()
+    assert response.status_code == 409
+    assert objective_status.actions != "Planned later"
+
+
+@pytest.mark.django_db
+def test_the_export_takes_the_newer_version_after_the_older_one_was_updated(otp_client, populate_so_db):
+    old_version, new_version = _superseded_declaration(otp_client, populate_so_db)
+    StandardAnswer.objects.filter(pk=old_version.pk).update(last_update=timezone.now() + dt.timedelta(hours=1))
+
+    exported = get_scoped_standard_answers(_regulator(populate_so_db))
+
+    assert list(exported.values_list("pk", flat=True)) == [new_version.pk]
+
+
+@pytest.mark.django_db
+def test_the_version_list_starts_with_the_newer_version_after_the_older_one_was_updated(otp_client, populate_so_db):
+    old_version, new_version = _superseded_declaration(otp_client, populate_so_db)
+    StandardAnswer.objects.filter(pk=old_version.pk).update(last_update=timezone.now() + dt.timedelta(hours=1))
+
+    versions = json.loads(get_all_versions({"is_regulator": True}, new_version))
+
+    assert [version["id"] for version in versions] == [new_version.pk, old_version.pk]
+
+
+@pytest.mark.django_db
+def test_duplicate_copies_the_newer_version_after_the_older_one_was_updated(otp_client, populate_so_db):
+    old_version, new_version = _superseded_declaration(otp_client, populate_so_db)
+    SecurityMeasureAnswer.objects.filter(standard_answer=old_version).update(is_implemented=False)
+    SecurityMeasureAnswer.objects.filter(standard_answer=new_version).update(is_implemented=True)
+    StandardAnswer.objects.filter(pk=old_version.pk).update(last_update=timezone.now() + dt.timedelta(hours=1))
+    client, _url = _declaration_as_operator(otp_client, populate_so_db)
+
+    client.post(reverse("copy_so_declaration", args=[old_version.group_id]), {"year": timezone.now().year})
+
+    duplicate = StandardAnswer.objects.exclude(group=old_version.group).get()
+    assert SecurityMeasureAnswer.objects.filter(standard_answer=duplicate, is_implemented=True).exists()
+
+
+def _locks_the_versions(queries):
+    return any("FOR UPDATE" in query["sql"] and "standardanswergroup" in query["sql"] for query in queries)
+
+
+@pytest.mark.django_db
+def test_submitting_waits_for_other_requests_on_the_declaration(otp_client, populate_so_db):
+    client, declaration = _filled_out_declaration(otp_client, populate_so_db, "PASS")
+
+    with CaptureQueriesContext(connection) as queries:
+        client.post(reverse("submit_so_declaration", args=[declaration.pk]))
+
+    declaration.refresh_from_db()
+    assert declaration.status == "DELIV"
+    assert _locks_the_versions(queries.captured_queries)
+
+
+@pytest.mark.django_db
+def test_sending_the_review_waits_for_other_requests_on_the_declaration(otp_client, populate_so_db):
+    declaration = _reviewed_declaration(populate_so_db, "DELIV")
+    SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status="PASS")
+
+    with CaptureQueriesContext(connection) as queries:
+        otp_client(_regulator(populate_so_db)).post(
+            reverse("review_comment_so_declaration", args=[declaration.pk]), {"review_comment": "Verdict"}
+        )
+
+    declaration.refresh_from_db()
+    assert declaration.status == "PASSM"
+    assert _locks_the_versions(queries.captured_queries)
 
 
 def _pdf_html(otp_client, declaration, user):

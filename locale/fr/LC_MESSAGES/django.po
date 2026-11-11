@@ -3,15 +3,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 09:01+0100\n"
-"PO-Revision-Date: 2026-10-27 12:39+0000\n"
-"Last-Translator: Edgar Dugourd <Edgar.Dugourd@ilr.lu>\n"
+"POT-Creation-Date: 2026-11-11 09:38+0100\n"
+"PO-Revision-Date: 2026-09-16 13:47+0000\n"
+"Last-Translator: Edgar Dugourd <Edd@ilr.lu>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 2026.10.1\n"
+"X-Generator: Weblate 2026.6.1\n"
 
 #: governanceplatform/admin.py:80 governanceplatform/context_processors.py:29
 #: governanceplatform/views.py:98
@@ -411,7 +411,7 @@ msgid "Email address"
 msgstr "Adresse de courrier électronique"
 
 #: governanceplatform/forms.py:51 incidents/models.py:970
-#: reporting/models.py:377 securityobjectives/models.py:666
+#: reporting/models.py:377 securityobjectives/models.py:682
 msgid "Role"
 msgstr "Rôle"
 
@@ -496,7 +496,7 @@ msgstr "Exporter"
 
 #: governanceplatform/globals.py:29 securityobjectives/models.py:191
 #: securityobjectives/models.py:383 securityobjectives/models.py:412
-#: securityobjectives/models.py:611
+#: securityobjectives/models.py:627
 msgid "Security Objective"
 msgstr "Objectifs de sécurité"
 
@@ -698,8 +698,8 @@ msgstr "Utilisateurs"
 #: governanceplatform/models.py:438 governanceplatform/models.py:461
 #: governanceplatform/models.py:497 governanceplatform/models.py:525
 #: incidents/models.py:964 incidents/templatetags/custom_filters.py:84
-#: reporting/models.py:371 securityobjectives/models.py:660
-#: securityobjectives/models.py:685
+#: reporting/models.py:371 securityobjectives/models.py:676
+#: securityobjectives/models.py:701
 #: securityobjectives/templatetags/SO_custom_filters.py:138
 msgid "User"
 msgstr "Utilisateur"
@@ -757,7 +757,7 @@ msgstr "Régulations"
 #: governanceplatform/models.py:571 incidents/forms.py:1254
 #: incidents/models.py:490 reporting/admin.py:108 reporting/forms.py:141
 #: securityobjectives/forms.py:289 securityobjectives/models.py:286
-#: securityobjectives/models.py:691 securityobjectives/tasks.py:79
+#: securityobjectives/models.py:707 securityobjectives/tasks.py:79
 msgid "Regulation"
 msgstr "Régulation"
 
@@ -781,7 +781,7 @@ msgstr "Règles relatives aux incidents"
 #: governanceplatform/models.py:638 incidents/models.py:858
 #: incidents/models.py:967 incidents/models.py:1023 incidents/models.py:1044
 #: incidents/models.py:1246 reporting/models.py:374 reporting/models.py:587
-#: securityobjectives/models.py:663 securityobjectives/models.py:705
+#: securityobjectives/models.py:679 securityobjectives/models.py:721
 msgid "Timestamp"
 msgstr "Horodatage"
 
@@ -975,7 +975,7 @@ msgstr ""
 "s'affichent."
 
 #: incidents/admin.py:648 incidents/admin.py:866 incidents/admin.py:979
-#: securityobjectives/admin.py:701
+#: securityobjectives/admin.py:707
 msgid "General"
 msgstr "Général"
 
@@ -992,20 +992,20 @@ msgid "Email type"
 msgstr "Type de courriel"
 
 #: incidents/admin.py:807 incidents/models.py:230
-#: securityobjectives/admin.py:1266 securityobjectives/models.py:216
+#: securityobjectives/admin.py:1275 securityobjectives/models.py:216
 msgid "Content"
 msgstr "Contenu"
 
-#: incidents/admin.py:814 securityobjectives/admin.py:1277
+#: incidents/admin.py:814 securityobjectives/admin.py:1286
 msgid "HTML preview"
 msgstr "Aperçu HTML"
 
-#: incidents/admin.py:817 securityobjectives/admin.py:1280
+#: incidents/admin.py:817 securityobjectives/admin.py:1289
 msgid "No preview yet"
 msgstr "Pas encore d'aperçu"
 
 #: incidents/admin.py:873 incidents/admin.py:1006
-#: securityobjectives/admin.py:708
+#: securityobjectives/admin.py:714
 msgid "Notification Email"
 msgstr "Courriel de notification"
 
@@ -1134,13 +1134,14 @@ msgstr "Sélectionnez la date et l'heure"
 
 #: incidents/forms.py:947 incidents/globals.py:41 incidents/globals.py:49
 #: incidents/globals.py:70 securityobjectives/forms.py:97
-#: securityobjectives/globals.py:9 securityobjectives/models.py:620
+#: securityobjectives/globals.py:9 securityobjectives/models.py:636
 msgid "Passed"
 msgstr "Réussi"
 
 #: incidents/forms.py:948 incidents/globals.py:42 incidents/globals.py:50
 #: incidents/globals.py:75 securityobjectives/forms.py:98
-#: securityobjectives/globals.py:11 securityobjectives/models.py:621
+#: securityobjectives/globals.py:11 securityobjectives/helpers.py:253
+#: securityobjectives/helpers.py:263 securityobjectives/models.py:637
 msgid "Revision required"
 msgstr "Améliorations requises"
 
@@ -1494,7 +1495,7 @@ msgid "Full username"
 msgstr "Nom d'utilisateur complet"
 
 #: incidents/models.py:971 reporting/models.py:378
-#: securityobjectives/models.py:667
+#: securityobjectives/models.py:683
 msgid "Entity name"
 msgstr "Nom de l’entité"
 
@@ -1503,7 +1504,7 @@ msgid "Incident report processed"
 msgstr "Rapport d’incident traité"
 
 #: incidents/models.py:987 reporting/models.py:386
-#: securityobjectives/models.py:674
+#: securityobjectives/models.py:690
 msgid "Action performed"
 msgstr "Action effectuée"
 
@@ -1604,7 +1605,7 @@ msgstr "L'incident est clos"
 #: incidents/views.py:682 incidents/views.py:718 reporting/views.py:111
 #: reporting/views.py:505 reporting/views.py:914 reporting/views.py:939
 #: reporting/views.py:946 reporting/views.py:1253
-#: securityobjectives/views.py:919 securityobjectives/views.py:1092
+#: securityobjectives/views.py:965 securityobjectives/views.py:1141
 msgid "Forbidden"
 msgstr "Interdit"
 
@@ -1614,7 +1615,7 @@ msgid "No incident report could be found."
 msgstr "Aucun rapport d'incident n'a été trouvé."
 
 #: incidents/views.py:609 incidents/views.py:653
-#: securityobjectives/views.py:892
+#: securityobjectives/views.py:938
 msgid "An error occurred while generating the report."
 msgstr "Une erreur s'est produite lors de la génération du rapport."
 
@@ -1703,7 +1704,7 @@ msgid "Project name"
 msgstr "Nom du projet"
 
 #: reporting/forms.py:147 reporting/models.py:402 reporting/models.py:492
-#: securityobjectives/admin.py:1017 securityobjectives/admin.py:1170
+#: securityobjectives/admin.py:1026 securityobjectives/admin.py:1179
 #: securityobjectives/models.py:85 securityobjectives/models.py:377
 #: securityobjectives/models.py:486
 msgid "Standard"
@@ -1861,8 +1862,8 @@ msgstr "Date limite"
 
 #: reporting/globals.py:43 securityobjectives/filters.py:32
 #: securityobjectives/forms.py:313 securityobjectives/globals.py:37
-#: securityobjectives/models.py:502 securityobjectives/models.py:625
-#: securityobjectives/models.py:703 securityobjectives/tasks.py:86
+#: securityobjectives/models.py:502 securityobjectives/models.py:641
+#: securityobjectives/models.py:719 securityobjectives/tasks.py:86
 msgid "Status"
 msgstr "Statut"
 
@@ -1932,7 +1933,7 @@ msgstr "Commentaire"
 
 #: reporting/models.py:57 reporting/models.py:83 reporting/models.py:109
 #: reporting/models.py:162 reporting/models.py:248 reporting/models.py:584
-#: securityobjectives/models.py:696
+#: securityobjectives/models.py:712
 msgid "uuid"
 msgstr "uuid"
 
@@ -2136,7 +2137,7 @@ msgstr "Ordre des observations"
 msgid "Observation order"
 msgstr "Ordre des observations"
 
-#: reporting/models.py:376 securityobjectives/models.py:665
+#: reporting/models.py:376 securityobjectives/models.py:681
 msgid "User full name"
 msgstr "Nom complet de l'utilisateur"
 
@@ -2150,7 +2151,7 @@ msgid "This regulator already has this standard configured."
 msgstr "Ce standard est déjà configuré pour ce régulateur."
 
 #: reporting/models.py:425 reporting/models.py:430
-#: securityobjectives/admin.py:895 securityobjectives/models.py:38
+#: securityobjectives/admin.py:904 securityobjectives/models.py:38
 msgid "Color"
 msgstr "Couleur"
 
@@ -2218,7 +2219,7 @@ msgstr "Statistiques"
 msgid "Governance report"
 msgstr "Gouvernance"
 
-#: reporting/models.py:586 securityobjectives/models.py:697
+#: reporting/models.py:586 securityobjectives/models.py:713
 msgid "Filename"
 msgstr "Nom du fichier"
 
@@ -2334,7 +2335,7 @@ msgstr "Aucune recommandation trouvée"
 msgid "The report recommendation has been deleted."
 msgstr "La recommandation a été supprimée."
 
-#: reporting/views.py:954 securityobjectives/views.py:929
+#: reporting/views.py:954 securityobjectives/views.py:975
 msgid "Invalid request"
 msgstr "Requête non valide"
 
@@ -2362,44 +2363,44 @@ msgstr "La valeur de l'année n'est pas valide"
 msgid "Invalid year. Please provide a valid year."
 msgstr "Année non valide. Veuillez indiquer une année valide."
 
-#: securityobjectives/admin.py:344
+#: securityobjectives/admin.py:352
 msgid "domain"
 msgstr "domaine"
 
-#: securityobjectives/admin.py:345
+#: securityobjectives/admin.py:353
 msgid "Security objective objective"
 msgstr "Objectif de sécurité - objectif"
 
-#: securityobjectives/admin.py:346
+#: securityobjectives/admin.py:354
 msgid "Security objective description"
 msgstr "Description de l'objectif de sécurité"
 
-#: securityobjectives/admin.py:347
+#: securityobjectives/admin.py:355
 msgid "Security objective position"
 msgstr "Position de l'objectif de sécurité"
 
-#: securityobjectives/admin.py:348
+#: securityobjectives/admin.py:356
 msgid "Security objective priority"
 msgstr "Priorité de l'objectif de sécurité"
 
-#: securityobjectives/admin.py:349
+#: securityobjectives/admin.py:357
 msgid "maturity_level"
 msgstr "niveau_maturité"
 
-#: securityobjectives/admin.py:350
+#: securityobjectives/admin.py:358
 msgid "Security measure description"
 msgstr "Description de la mesure de sécurité"
 
-#: securityobjectives/admin.py:351
+#: securityobjectives/admin.py:359
 msgid "Security measure evidence"
 msgstr "Preuves relatives à la mesure de sécurité"
 
-#: securityobjectives/admin.py:387
+#: securityobjectives/admin.py:395
 #, python-format
 msgid "Regulation '%(label)s' does not exist. Check your data."
 msgstr "La régulation '%(label)s' n'existe pas. Veuillez vérifier vos données."
 
-#: securityobjectives/admin.py:402
+#: securityobjectives/admin.py:410
 #, python-format
 msgid ""
 "The standard '%(label)s' is not find for regulation '%(regulation)s' and "
@@ -2408,29 +2409,29 @@ msgstr ""
 "Le standard '%(label)s' n'existe pas pour la régulation '%(regulation)s' et "
 "pour ce régulateur."
 
-#: securityobjectives/admin.py:410
+#: securityobjectives/admin.py:418
 #, python-format
 msgid "Several '%(label)s' have been found. Check your data."
 msgstr "Plusieurs '%(label)s' ont été détectés. Veuillez vérifiez vos données."
 
-#: securityobjectives/admin.py:719
+#: securityobjectives/admin.py:725
 msgid "Columns display settings"
 msgstr "Paramètres d'affichage de colonnes"
 
-#: securityobjectives/admin.py:722
+#: securityobjectives/admin.py:728
 msgid "Leave a label empty to use the default translation."
 msgstr "Laissez un libellé vide pour utiliser la traduction par défaut."
 
-#: securityobjectives/admin.py:737
+#: securityobjectives/admin.py:743
 msgid "Score display settings"
 msgstr "Paramètres d'affichage du score"
 
-#: securityobjectives/admin.py:783 securityobjectives/admin.py:786
+#: securityobjectives/admin.py:792 securityobjectives/admin.py:795
 #, python-brace-format
 msgid "Default: {label}"
 msgstr "Valeur par défaut: {label}"
 
-#: securityobjectives/admin.py:797
+#: securityobjectives/admin.py:806
 msgid ""
 "This standard is in use: declarations already reference it. Its name and the "
 "configuration of the declaration table columns stay editable; the "
@@ -2442,7 +2443,7 @@ msgstr ""
 "modifiables; en revanche, la réglementation, les e-mails de notification et "
 "la liste des objectifs de sécurité ne le sont pas."
 
-#: securityobjectives/admin.py:1118
+#: securityobjectives/admin.py:1127
 msgid "Standard of security objective and maturity level must be the same"
 msgstr ""
 "Le standard des objectifs de sécurité et des niveaux de maturité doit être "
@@ -2471,7 +2472,8 @@ msgstr ""
 "Un champ masqué ne peut pas être obligatoire. Affichez ce champ ou supprimez "
 "cette exigence."
 
-#: securityobjectives/forms.py:96 securityobjectives/models.py:619
+#: securityobjectives/forms.py:96 securityobjectives/helpers.py:261
+#: securityobjectives/models.py:635
 msgid "Not reviewed"
 msgstr "Non revu"
 
@@ -2518,7 +2520,7 @@ msgid "Maturity level"
 msgstr "Niveau de maturité"
 
 #: securityobjectives/globals.py:99 securityobjectives/models.py:449
-#: securityobjectives/models.py:579
+#: securityobjectives/models.py:595
 msgid "Security Measure"
 msgstr "Mesure de sécurité"
 
@@ -2530,16 +2532,16 @@ msgstr "Preuve"
 msgid "Measure Implemented?"
 msgstr "Mesure implémentée ?"
 
-#: securityobjectives/globals.py:102 securityobjectives/models.py:586
+#: securityobjectives/globals.py:102 securityobjectives/models.py:602
 msgid "Justification"
 msgstr "Justification"
 
 #: securityobjectives/globals.py:103 securityobjectives/models.py:533
-#: securityobjectives/models.py:588
+#: securityobjectives/models.py:604
 msgid "Review comment"
 msgstr "Commentaire de revue"
 
-#: securityobjectives/globals.py:108 securityobjectives/models.py:639
+#: securityobjectives/globals.py:108 securityobjectives/models.py:655
 msgid "Planned Measures"
 msgstr "Mesures planifiées"
 
@@ -2554,6 +2556,38 @@ msgstr "Score seulement"
 #: securityobjectives/globals.py:118
 msgid "Hidden"
 msgstr "Caché"
+
+#: securityobjectives/helpers.py:250
+msgid "Not filled"
+msgstr ""
+
+#: securityobjectives/helpers.py:251
+msgid "Partially filled"
+msgstr ""
+
+#: securityobjectives/helpers.py:252
+msgid "Fully filled"
+msgstr ""
+
+#. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 filled".
+#: securityobjectives/helpers.py:257
+#, python-format
+msgid "%(code)s, %(label)s, %(done)s of %(total)s filled"
+msgstr ""
+
+#: securityobjectives/helpers.py:262
+msgid "Review passed"
+msgstr ""
+
+#. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 reviewed".
+#: securityobjectives/helpers.py:267
+#, python-format
+msgid "%(code)s, %(label)s, %(done)s of %(total)s reviewed"
+msgstr ""
+
+#: securityobjectives/helpers.py:283
+msgid "No domain"
+msgstr ""
 
 #: securityobjectives/models.py:31 securityobjectives/models.py:415
 msgid "Level"
@@ -2627,7 +2661,7 @@ msgstr "Intitulé de mesures planifiées"
 msgid "Show"
 msgstr "Afficher"
 
-#: securityobjectives/models.py:274 securityobjectives/models.py:629
+#: securityobjectives/models.py:274 securityobjectives/models.py:645
 msgid "Score"
 msgstr "Score"
 
@@ -2655,7 +2689,7 @@ msgstr "Priorité"
 msgid "Security Measures"
 msgstr "Mesures de sécurité"
 
-#: securityobjectives/models.py:461 securityobjectives/models.py:567
+#: securityobjectives/models.py:461 securityobjectives/models.py:583
 msgid "Notification date"
 msgstr "Date de notification"
 
@@ -2679,31 +2713,31 @@ msgstr "Soumission pour l'année"
 msgid "Group"
 msgstr "Groupe"
 
-#: securityobjectives/models.py:570
+#: securityobjectives/models.py:586
 msgid "Standard Answer"
 msgstr "Réponse standard"
 
-#: securityobjectives/models.py:587
+#: securityobjectives/models.py:603
 msgid "Implemented"
 msgstr "Implémenté"
 
-#: securityobjectives/models.py:603
+#: securityobjectives/models.py:619
 msgid "Security objectives statement"
 msgstr "Déclaration des objectifs de sécurité"
 
-#: securityobjectives/models.py:642
+#: securityobjectives/models.py:658
 msgid "It is completely filled out"
 msgstr "C'est entièrement rempli"
 
-#: securityobjectives/models.py:698
+#: securityobjectives/models.py:714
 msgid "Task id"
 msgstr "ID de la tâche"
 
-#: securityobjectives/models.py:708
+#: securityobjectives/models.py:724
 msgid "Security objective export"
 msgstr "Export des objectifs de sécurité"
 
-#: securityobjectives/models.py:709
+#: securityobjectives/models.py:725
 msgid "Security objective exports"
 msgstr "Exports des objectifs de sécurité"
 
@@ -2723,64 +2757,74 @@ msgstr "Déclarations"
 msgid "Metadata"
 msgstr "Metadata"
 
-#: securityobjectives/views.py:199 securityobjectives/views.py:904
+#: securityobjectives/views.py:202 securityobjectives/views.py:950
 msgid "No data available"
 msgstr "Aucune donnée disponible"
 
-#: securityobjectives/views.py:225
+#: securityobjectives/views.py:228
 msgid "Standard does not exist"
 msgstr "Le standard n'existe pas"
 
-#: securityobjectives/views.py:246 securityobjectives/views.py:250
-#: securityobjectives/views.py:545 securityobjectives/views.py:636
-#: securityobjectives/views.py:666 securityobjectives/views.py:681
-#: securityobjectives/views.py:778 securityobjectives/views.py:806
+#: securityobjectives/views.py:249 securityobjectives/views.py:253
+#: securityobjectives/views.py:576 securityobjectives/views.py:668
+#: securityobjectives/views.py:701 securityobjectives/views.py:717
+#: securityobjectives/views.py:824 securityobjectives/views.py:852
 msgid "Declaration not found"
 msgstr "Déclaration introuvable"
 
-#: securityobjectives/views.py:527
+#: securityobjectives/views.py:265
+msgid "A newer version of this declaration already exists."
+msgstr ""
+
+#: securityobjectives/views.py:558
 #, python-brace-format
 msgid "{label} required"
 msgstr "{label} requis"
 
-#: securityobjectives/views.py:617
+#: securityobjectives/views.py:648
 msgid "The security objectives declaration has been duplicated."
 msgstr "La déclaration des objectifs de sécurité a été dupliquée."
 
-#: securityobjectives/views.py:647
+#: securityobjectives/views.py:682
 msgid "The security objectives declaration has been submitted."
 msgstr "La déclaration des objectifs de sécurité a été soumise."
 
-#: securityobjectives/views.py:664
+#: securityobjectives/views.py:699
 msgid "The security objectives declaration has been deleted."
 msgstr "La déclaration relative aux objectifs de sécurité a été supprimée."
 
-#: securityobjectives/views.py:715
+#: securityobjectives/views.py:734
+msgid ""
+"A newer version of this declaration was submitted. Review that version "
+"instead."
+msgstr ""
+
+#: securityobjectives/views.py:761
 msgid "The security objectives review has been sent."
 msgstr "La revue des objectifs de sécurité a été envoyée."
 
-#: securityobjectives/views.py:948
+#: securityobjectives/views.py:994
 msgid "Error opening the file: {}"
 msgstr "Erreur lors de l'ouverture du fichier : {}"
 
-#: securityobjectives/views.py:966
+#: securityobjectives/views.py:1012
 msgid "No users for this company"
 msgstr "Aucun utilisateur pour cette entreprise"
 
-#: securityobjectives/views.py:988
+#: securityobjectives/views.py:1034
 msgid "An error occurred while importing the declaration file."
 msgstr ""
 "Une erreur s'est produite lors de l'importation du fichier de la déclaration."
 
-#: securityobjectives/views.py:1289
+#: securityobjectives/views.py:1338
 msgid "No security objective declarations available for export."
 msgstr "Aucune déclaration des objectifs de sécurité disponible pour export."
 
-#: securityobjectives/views.py:1306
+#: securityobjectives/views.py:1355
 msgid "The export could not be started. Please try again later."
 msgstr "L'export n'a pas pu être lancé. Merci de réessayer ultérieurement."
 
-#: securityobjectives/views.py:1351
+#: securityobjectives/views.py:1400
 msgid "The export failed."
 msgstr "L'export a échoué."
 

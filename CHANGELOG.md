@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)
+
+- An operator who updated a security objectives declaration still under review got a new version carrying the regulator's unsent review, so the objective selector showed the objectives the regulator had marked for revision, and the **Previous version** pop-up showed the regulator's draft comments. A version updated before the review is sent now starts with every objective not reviewed and no review comment, and the previous version's review comments are shown only once that review is sent (#931)
+
+- A regulator could keep reviewing a security objectives declaration after the operator had submitted a newer version of it, and send the verdict on the older one, which then took the newer version's place on both dashboards, so the newer version was never reviewed. Once a newer version is submitted, the older one can no longer be reviewed, commented on or sent: it shows a banner linking to the newer version, and the dashboards, the export, the version list and **Duplicate** now take the most recently created version instead of the most recently updated one. Only the latest version of a declaration can be updated, and a submission and the sending of a review on the same declaration no longer overlap, so a review sent while the operator submits a newer version is refused (#931)
+
 - The security objectives dashboard offered to submit a fully filled declaration that still had an objective marked for revision, and the submission went through, while the declaration screen kept its Submit button disabled. A declaration can now be submitted only once every objective is fully filled and none is still marked for revision, from the dashboard as from the declaration screen
 
 
