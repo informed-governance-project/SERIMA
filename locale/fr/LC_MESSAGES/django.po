@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-11 09:38+0100\n"
-"PO-Revision-Date: 2026-09-16 13:47+0000\n"
+"PO-Revision-Date: 2026-11-11 09:13+0000\n"
 "Last-Translator: Edgar Dugourd <Edd@ilr.lu>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -2559,15 +2559,15 @@ msgstr "Caché"
 
 #: securityobjectives/helpers.py:250
 msgid "Not filled"
-msgstr ""
+msgstr "Non renseigné"
 
 #: securityobjectives/helpers.py:251
 msgid "Partially filled"
-msgstr ""
+msgstr "Partiellement rempli"
 
 #: securityobjectives/helpers.py:252
 msgid "Fully filled"
-msgstr ""
+msgstr "Entièrement rempli"
 
 #. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 filled".
 #: securityobjectives/helpers.py:257
@@ -2577,7 +2577,7 @@ msgstr ""
 
 #: securityobjectives/helpers.py:262
 msgid "Review passed"
-msgstr ""
+msgstr "Revue réussie"
 
 #. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 reviewed".
 #: securityobjectives/helpers.py:267
