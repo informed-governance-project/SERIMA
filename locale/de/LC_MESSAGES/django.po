@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-11 09:38+0100\n"
-"PO-Revision-Date: 2026-09-16 13:47+0000\n"
+"PO-Revision-Date: 2026-11-11 09:13+0000\n"
 "Last-Translator: Edgar Dugourd <Edd@ilr.lu>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -462,8 +462,7 @@ msgstr ""
 #: governanceplatform/forms.py:389
 #, python-format
 msgid "These roles cannot access this functionality: %(roles)s"
-msgstr ""
-"Die folgenden Rollen haben keinen Zugriff auf diese Funktion: %(roles)s"
+msgstr "Die folgenden Rollen haben keinen Zugriff auf diese Funktion: %(roles)s"
 
 #: governanceplatform/formset.py:25
 msgid "There must be at least one administrator user."
@@ -890,7 +889,7 @@ msgstr "Passwort ändern"
 
 #: governanceplatform/views.py:104
 msgid "Log out"
-msgstr "Abmeldung"
+msgstr "Abmelden"
 
 #: governanceplatform/views.py:111
 msgid "Overview"
@@ -2562,15 +2561,15 @@ msgstr "Versteckt"
 
 #: securityobjectives/helpers.py:250
 msgid "Not filled"
-msgstr ""
+msgstr "Nicht ausgefüllt"
 
 #: securityobjectives/helpers.py:251
 msgid "Partially filled"
-msgstr ""
+msgstr "Teilweise ausgefüllt"
 
 #: securityobjectives/helpers.py:252
 msgid "Fully filled"
-msgstr ""
+msgstr "Vollständig ausgefüllt"
 
 #. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 filled".
 #: securityobjectives/helpers.py:257
@@ -2580,7 +2579,7 @@ msgstr ""
 
 #: securityobjectives/helpers.py:262
 msgid "Review passed"
-msgstr ""
+msgstr "Überprüfung bestanden"
 
 #. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 reviewed".
 #: securityobjectives/helpers.py:267
