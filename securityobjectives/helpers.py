@@ -163,7 +163,7 @@ def get_scoped_standard_answers(user: User) -> QuerySet[StandardAnswer]:
 
     # Only the most recent declaration of each group reaches the dashboard, and the export
     # has to show the same rows.
-    latest_so_id = queryset.filter(group__id=OuterRef("group__id")).order_by("-last_update").values("id")[:1]
+    latest_so_id = queryset.filter(group__id=OuterRef("group__id")).order_by("-creation_date").values("id")[:1]
     return queryset.filter(id__in=Subquery(latest_so_id))
 
 

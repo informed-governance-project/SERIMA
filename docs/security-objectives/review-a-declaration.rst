@@ -233,6 +233,14 @@ The new version starts from your review of the previous one:
    :alt: Objective of a new version with the changed measures and planned measures outlined in orange and a View previous version button outlined
    :target: ../_static/images/security-objectives/review-a-declaration-09.png
 
+If the operator updated a version you had not sent the result of yet, your unsent review stays on that version:
+the new version starts with every objective **Not reviewed** and none of your comments.
+
+Once the operator submits the new version, the dashboard shows it in place of the one you were reviewing, which
+can no longer be changed: a banner at the top of that version gives the date of the new submission and a link to it,
+and its results, comments and **Send** button are no longer available. If you had it open, the page reloads with the
+banner as soon as you change something. Your unsent review is not carried over, so review the new version.
+
 Review and send the new version as described above. The declaration can go back and forth until you accept it.
 
 To follow the rounds, open **Version control** in the **More options** menu of the dashboard. It lists each submitted
