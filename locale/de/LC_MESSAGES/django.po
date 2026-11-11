@@ -463,6 +463,7 @@ msgstr ""
 #, python-format
 msgid "These roles cannot access this functionality: %(roles)s"
 msgstr ""
+"Die folgenden Rollen haben keinen Zugriff auf diese Funktion: %(roles)s"
 
 #: governanceplatform/formset.py:25
 msgid "There must be at least one administrator user."
@@ -732,7 +733,7 @@ msgstr "Darf Vorfälle exportieren"
 
 #: governanceplatform/models.py:506
 msgid "Can export security objectives"
-msgstr ""
+msgstr "Kann Sicherheitsziele exportieren"
 
 #: governanceplatform/models.py:513
 msgid "Regulator user"
@@ -2453,19 +2454,19 @@ msgstr ""
 
 #: securityobjectives/email.py:100
 msgid "New security objectives export"
-msgstr ""
+msgstr "Sicherheitsziele exportieren"
 
 #: securityobjectives/email.py:120
 msgid "Reference of the declaration"
-msgstr ""
+msgstr "Referenz der Einreichung"
 
 #: securityobjectives/email.py:121
 msgid "Status of the declaration"
-msgstr ""
+msgstr "Status der Einreichung"
 
 #: securityobjectives/email.py:125
 msgid "empty until the review is sent with a comment"
-msgstr ""
+msgstr "leer, bis die Prüfung mit einem Kommentar gesendet wurde"
 
 #: securityobjectives/forms.py:28
 msgid ""
@@ -2511,11 +2512,11 @@ msgstr "Einreichungsdatum"
 
 #: securityobjectives/globals.py:40
 msgid "Identifier"
-msgstr ""
+msgstr "Kennung"
 
 #: securityobjectives/globals.py:45
 msgid "Progress"
-msgstr ""
+msgstr "Fortschritt"
 
 #: securityobjectives/globals.py:98 securityobjectives/models.py:67
 msgid "Maturity level"
@@ -2731,31 +2732,31 @@ msgstr "Es ist vollständig ausgefüllt"
 
 #: securityobjectives/models.py:714
 msgid "Task id"
-msgstr ""
+msgstr "Task-ID"
 
 #: securityobjectives/models.py:724
 msgid "Security objective export"
-msgstr ""
+msgstr "Export von Sicherheitszielen"
 
 #: securityobjectives/models.py:725
 msgid "Security objective exports"
-msgstr ""
+msgstr "Export von Sicherheitszielen"
 
 #: securityobjectives/tasks.py:78
 msgid "Export date"
-msgstr ""
+msgstr "Exportdatum"
 
 #: securityobjectives/tasks.py:88
 msgid "Number of rows"
-msgstr ""
+msgstr "Anzahl der Zeilen"
 
 #: securityobjectives/tasks.py:109
 msgid "Declarations"
-msgstr ""
+msgstr "Einreichungen"
 
 #: securityobjectives/tasks.py:115
 msgid "Metadata"
-msgstr ""
+msgstr "Metadaten"
 
 #: securityobjectives/views.py:202 securityobjectives/views.py:950
 msgid "No data available"
@@ -2817,15 +2818,17 @@ msgstr "Beim Importieren der Deklarationsdatei ist ein Fehler aufgetreten."
 
 #: securityobjectives/views.py:1338
 msgid "No security objective declarations available for export."
-msgstr ""
+msgstr "Es sind keine Sicherheitsziel-Einreichungen für den Export verfügbar."
 
 #: securityobjectives/views.py:1355
 msgid "The export could not be started. Please try again later."
 msgstr ""
+"Der Export konnte nicht gestartet werden. Bitte versuchen Sie es später "
+"erneut."
 
 #: securityobjectives/views.py:1400
 msgid "The export failed."
-msgstr ""
+msgstr "Der Export ist fehlgeschlagen."
 
 #: templates/admin/import_export_extensions/celery_export_results.html:13
 msgid "There are some errors during data exporting:"
