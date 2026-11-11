@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 from diff_match_patch import diff_match_patch
 from django.contrib import admin, messages
@@ -15,11 +16,13 @@ from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ExportActionModelAdmin
 from import_export.exceptions import ImportExportError
+from import_export.formats import base_formats
 from import_export.resources import Diff
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
 from markdown import markdown
 from parler.forms import TranslatableModelForm
+from tablib import Dataset
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
 from governanceplatform.helpers import (
@@ -50,6 +53,11 @@ from securityobjectives.models import (
 
 from .forms import StandardAdminForm
 from .mixins import CreatorMixin
+
+
+class UTF8BOMCSV(base_formats.CSV):
+    def export_data(self, dataset: Dataset, **kwargs: Any) -> str:
+        return "\ufeff" + super().export_data(dataset, **kwargs)
 
 
 class DomainResource(TranslationUpdateMixin, resources.ModelResource):
@@ -511,8 +519,6 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
             instance.set_current_language(lang)
 
     def export(self, queryset=None, *args, **kwargs):
-        from tablib import Dataset
-
         lang = self.lang
 
         # CeleryModelResource inject selected field in kwargs
@@ -758,6 +764,9 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         kwargs = super().get_export_resource_kwargs(request, **kwargs)
         kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
         return kwargs
+
+    def get_export_formats(self) -> list[type[base_formats.Format]]:
+        return [UTF8BOMCSV if file_format is base_formats.CSV else file_format for file_format in super().get_export_formats()]
 
     def get_inline_instances(self, request, obj=None):
         inline_instances = super().get_inline_instances(request, obj)
