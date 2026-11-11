@@ -824,7 +824,7 @@ def access_log(request, standard_answer_id: int):
         messages.error(request, _("Declaration not found"))
         return redirect("securityobjectives")
 
-    log = LogStandardAnswer.objects.filter(standard_answer=standard_answer).order_by("-timestamp")
+    log = LogStandardAnswer.objects.filter(standard_answer__group=standard_answer.group).order_by("-timestamp")
     if is_user_operator(user) or user_in_group(user, "IncidentUser"):
         log = log.exclude(user__regulatoruser__isnull=False)
 

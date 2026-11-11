@@ -63,7 +63,7 @@ Its parts are numbered in the screenshot below and described one by one.
 
 6. **Objective selector**: One button for each security objective of the framework, grouped by domain (D1, D2…)
    in the framework's order. Click a button to open that objective. The shape and colour of each button tell you how far
-   the objective is filled in (see `Follow your progress`_). The selector is shown on wide screens only.
+   the objective is filled in (see `Follow your progress`_).
 
    When the selector is too narrow for every button, only the domain you are in shows its buttons, inside a dark
    border. The other domains show their code and one symbol for the whole domain:
