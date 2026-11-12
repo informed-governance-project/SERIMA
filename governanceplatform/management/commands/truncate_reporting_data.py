@@ -3,7 +3,6 @@ from django.db import connection, transaction
 
 TABLES = [
     # Security Objectives
-    "securityobjectives_standardanswer_sectors",
     "securityobjectives_logstandardanswer",
     "securityobjectives_securityobjectivestatus",
     "securityobjectives_securitymeasureanswer",

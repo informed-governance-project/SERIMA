@@ -4,7 +4,9 @@ Review a declaration
 As a regulator, you review the declarations operators submit against your frameworks. You go through the declaration
 objective by objective, accept each objective or ask for its revision, comment where needed, then send the result
 to the operator. Regulator administrators see all the declarations made to their regulator; regulator users see those
-of the sectors assigned to them (see :doc:`/getting-started/roles-and-permissions`).
+of the operators in the sectors assigned to them (see :doc:`/getting-started/roles-and-permissions`).
+The sectors of a declaration are those of its operator, set in the operator's configuration
+(see :ref:`regulator-operators`).
 
 The operator's side of the cycle is described in :doc:`fill-in-a-declaration`.
 
@@ -17,21 +19,25 @@ The dashboard works as described in :doc:`dashboard`, with the differences numbe
    :alt: Regulator's dashboard with its differences from the operator's dashboard numbered
    :target: ../_static/images/security-objectives/review-a-declaration-01.png
 
-1. **Import**: Replaces **New submission**. It adds a declaration from an Excel file (see `Import a declaration`_).
+1. **Import**: Replaces **New assessment**. It adds a declaration from an Excel file (see `Import a declaration`_).
    An **Export** link follows it when you have the right to export (see `Export the list of declarations`_).
 
 2. **Company**: Replaces the **Creator** column: the operator that submitted the declaration.
    In the **Filter** panel, **Submitter** selects an operator rather than a person.
 
-3. **Progress**: The share of the objectives you have reviewed. Once all are reviewed, a **Send** button
+3. **Sectors**: A column operators do not have: the sectors of the operator, set in its configuration
+   (see :ref:`regulator-operators`). You can sort the list by it, the **Search** also looks in it, and the **Filter** panel
+   has a **Sectors** field.
+
+4. **Progress**: The share of the objectives you have reviewed. Once all are reviewed, a **Send** button
    replaces the bar until you send the result (see `Send the result`_).
 
-4. **Review**: The pencil icon opens the declaration for review.
+5. **Review**: The pencil icon opens the declaration for review.
 
-5. **Review comment**: Greyed out until every objective is reviewed. It then opens the **Review** pop-up, where you write
+6. **Review comment**: Greyed out until every objective is reviewed. It then opens the **Review** pop-up, where you write
    your comment and send the result; once the result is sent, it shows your comment read-only.
 
-6. **Delete**: Deletes the declaration.
+7. **Delete**: Deletes the declaration.
 
    .. warning::
 
@@ -70,11 +76,12 @@ Open a declaration
 ~~~~~~~~~~~~~~~~~~
 
 Click the **Review** icon (pencil) of the declaration. It opens on the declaration screen described in
-:ref:`declaration-screen`, where the operator's answers are read-only. The profile icon beside **Company** gives you
+:ref:`declaration-screen`, where the operator's answers are read-only, on the first objective you have not reviewed yet. Its header also shows the **Company** the declaration is for, between
+its **Reference** and its **Evaluation Framework**, and the profile icon beside them gives you
 the name, email and phone number of the person who created the declaration. The parts specific to your review are numbered below.
 
 .. figure:: /_static/images/security-objectives/review-a-declaration-03.png
-   :alt: Declaration under review with the review comment icon, the objective result, Send, Close, the objective selector and the Icon Guide numbered
+   :alt: Declaration under review with the review comment icon, the objective result, Send, Close, the objective selector, the table of contents and the Icon Guide numbered
    :target: ../_static/images/security-objectives/review-a-declaration-03.png
 
 1. **Review comment**: Opens the **Review** pop-up, to write your comment on the whole declaration (see `Comment on the declaration`_).
@@ -86,12 +93,25 @@ the name, email and phone number of the person who created the declaration. The 
 
 4. **Close**: Brings you back to the dashboard.
 
-5. **Objective selector**: One button per objective, showing your result for it. Click a button to open that objective.
+5. **Objective selector**: One button per objective, grouped by domain, showing your result for it. Click a button
+   to open that objective. When the selector is too narrow for every button, the other domains show their code and
+   one symbol for the whole domain:
 
-6. **Icon Guide**: Shows the legend of the selector and of the maturity levels.
+   - an orange triangle while at least one of its objectives is not reviewed, even if another one already
+     requires a revision;
+   - a red square once all its objectives are reviewed and at least one requires a revision;
+   - a green circle when all its objectives passed.
+
+   Point at a domain to see its name and how many of its objectives are in each state. Click it to open its first
+   objective not reviewed.
+
+6. **Table of contents**: Opens a panel with the number of objectives in each state, and every domain with its
+   objectives, your result for each, and how many of them you have reviewed. Click an objective to open it.
+
+7. **Icon Guide**: Shows the legend of the selector and of the maturity levels.
 
    .. figure:: /_static/images/security-objectives/review-a-declaration-04.png
-      :alt: Legend of the objective selector with Not reviewed, Review passed and Review required, and the maturity levels
+      :alt: Legend of the objective selector with Not reviewed, Review passed and Revision required, and the maturity levels
       :target: ../_static/images/security-objectives/review-a-declaration-04.png
 
    .. list-table::
@@ -108,7 +128,7 @@ the name, email and phone number of the person who created the declaration. The 
         - Review passed
         - You accepted the objective.
       * - Red square
-        - Review required
+        - Revision required
         - You asked for the revision of the objective.
 
 .. important::
@@ -147,11 +167,11 @@ For each objective of the declaration:
    **All passed** and **All revision required** give every objective of the declaration that result at once.
    When most objectives are fine, select **All passed**, then change the few that need revision.
 
-.. warning::
+.. note::
 
-   The operator sees your work as you save it, before you send anything: the results of the objectives and
-   your comments on measures in the declaration, and the status **Passed** or **Revision required** once every
-   objective is reviewed. Only your comment on the declaration, and the email, wait until you send the result.
+   The operator sees nothing of your review until you send the result. Until then, the declaration stays
+   **Under review** for them, on the dashboard, in the declaration and in its PDF, without the results of the objectives
+   or your comments. You can change your results and comments freely until you send them.
 
 Comment on the declaration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -179,7 +199,7 @@ The platform takes you back to the dashboard with the message **The security obj
 The status becomes **Passed and sent** or **Revision required and sent**, and the operator sees it as **Passed** or
 **Revision required**, with your comment (see :doc:`fill-in-a-declaration`). If the framework has an email for status change
 (see :doc:`/administration/regulator-admin/security-objectives`), it is sent to the users of the operator, to your
-regulator's notification address, and to the regulator users of the declaration's sectors and the regulator administrators.
+regulator's notification address, and to the regulator users of the operator's sectors and the regulator administrators.
 
 .. important::
 
@@ -194,7 +214,7 @@ regulator's notification address, and to the regulator users of the declaration'
 .. note::
 
    A declaration **Passed and sent** is the one the reporting module counts as the security objectives
-   of the operator for its year and sectors.
+   of the operator for its year, in each of the operator's sectors.
 
 Review an updated version
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -214,6 +234,14 @@ The new version starts from your review of the previous one:
    :alt: Objective of a new version with the changed measures and planned measures outlined in orange and a View previous version button outlined
    :target: ../_static/images/security-objectives/review-a-declaration-09.png
 
+If the operator updated a version you had not sent the result of yet, your unsent review stays on that version:
+the new version starts with every objective **Not reviewed** and none of your comments.
+
+Once the operator submits the new version, the dashboard shows it in place of the one you were reviewing, which
+can no longer be changed: a banner at the top of that version gives the date of the new submission and a link to it,
+and its results, comments and **Send** button are no longer available. If you had it open, the page reloads with the
+banner as soon as you change something. Your unsent review is not carried over, so review the new version.
+
 Review and send the new version as described above. The declaration can go back and forth until you accept it.
 
 To follow the rounds, open **Version control** in the **More options** menu of the dashboard. It lists each submitted
@@ -230,12 +258,12 @@ Import a declaration
 When an operator gives you its declaration as an Excel file rather than through the platform, import it:
 
 1. Click **Import** in the top-right corner of the module.
-2. In the **Import Security Objectives Statement** pop-up, select the file, then the **Company**, the **Sectors**,
-   the **Evaluation Framework** and the **Year** of the declaration.
+2. In the **Import Security Objectives Statement** pop-up, select the file, then the **Company**,
+   the **Evaluation Framework** and the **Year** of the declaration. The declaration covers the sectors of the company.
 3. Click **Import**.
 
 The declaration is created with the status **Under review** and today's submission date, in the name of an administrator
-of the company, and you review it like any other. Regulator users can import only for the companies and sectors assigned to them.
+of the company, and you review it like any other. Regulator users can import only for the companies in the sectors assigned to them.
 
 .. important::
 

@@ -55,6 +55,7 @@ def populate_so_db(populate_db, create_standard_answer_group, create_standard_an
     standards = populate_db["so_standard"]
     # operator admin
     user = next((u for u in users if u.email == "opadmin@com1.lu"), None)
+    user.companies.first().sectors.set(populate_db["sectors"])
     sag = create_standard_answer_group(company=user.companies.first())
     sa = create_standard_answer(
         standard=standards[0],
@@ -62,7 +63,6 @@ def populate_so_db(populate_db, create_standard_answer_group, create_standard_an
         submitter_company=user.companies.first(),
         creator_name="opadmin",
         creator_company_name="com1",
-        sectors=populate_db["sectors"],
         group=sag,
     )
     sas.append(sa)
@@ -178,13 +178,12 @@ def create_standard_answer():
         submitter_company,
         creator_name,
         creator_company_name,
-        sectors,
         group,
         status="DELIV",
         year_of_submission=2026,
         review_comment=None,
     ):
-        sa = StandardAnswer.objects.create(
+        return StandardAnswer.objects.create(
             standard=standard,
             submitter_user=submitter_user,
             submitter_company=submitter_company,
@@ -198,9 +197,5 @@ def create_standard_answer():
             year_of_submission=year_of_submission,
             review_comment=review_comment,
         )
-        if sectors:
-            sa.sectors.set(sectors)
-        sa.save()
-        return sa
 
     return _create_standard_answer

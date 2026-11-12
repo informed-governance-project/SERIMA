@@ -31,7 +31,17 @@ def test_so_elements_in_db(populate_so_db):
     assert StandardAnswerGroup.objects.count() == 1
 
 
+@pytest.fixture
+def restore_latest_migrations():
+    """Leave the schema the models expect, or the teardown flush trips over tables the
+    rolled-back state still holds, such as the StandardAnswer.sectors join table."""
+    yield
+    executor = MigrationExecutor(connection)
+    executor.migrate(executor.loader.graph.leaf_nodes())
+
+
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.usefixtures("restore_latest_migrations")
 def test_duplicate_answers_are_deduplicated_before_unique_constraints_are_added():
     """Keep the lowest duplicate ID during migration, then enforce uniqueness."""
     migrate_from = [("securityobjectives", "0040_alter_securityobjectivestatus_status")]

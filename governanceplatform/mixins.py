@@ -1,8 +1,17 @@
+from typing import TYPE_CHECKING
+
+from django import forms
 from django.contrib import messages
 from django.contrib.admin.utils import unquote
+from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
 
 from .helpers import can_change_or_delete_obj, filter_languages_not_translated
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from .email import EmailPlaceholder
 
 
 class TranslationUpdateMixin:
@@ -85,6 +94,27 @@ class ShowReminderForTranslationsMixin:
         if request.method == "GET" and self.has_add_permission(request):
             self._add_reminder_message(request)
         return super().add_view(request, form_url, extra_context)
+
+
+class EmailPlaceholdersMixin:
+    """Lists the placeholders of an email template admin in a dialog, opened from the fieldset holding the content.
+
+    The dialog goes in the fieldset description rather than in a change form template, which some admins
+    already take from another mixin (ExportActionModelAdmin).
+    """
+
+    email_placeholders: Sequence[EmailPlaceholder] = ()
+
+    def get_fieldsets(self, request, obj=None):
+        help_dialog = render_to_string("admin/includes/email_placeholders_help.html", {"email_placeholders": self.email_placeholders})
+        return [
+            (name, {**options, "description": help_dialog}) if "content" in options["fields"] else (name, options)
+            for name, options in super().get_fieldsets(request, obj)
+        ]
+
+    @property
+    def media(self):
+        return super().media + forms.Media(js=["js/admin_email_placeholders.js"])
 
 
 class FunctionalityMixin:

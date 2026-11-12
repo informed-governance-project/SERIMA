@@ -1,3 +1,6 @@
+import codecs
+import csv
+import io
 import zipfile
 from pathlib import Path
 from unittest.mock import patch
@@ -13,7 +16,7 @@ from governanceplatform.globals import EXPORT
 from governanceplatform.models import RegulatorUser, Sector
 from securityobjectives.helpers import can_export_security_objectives
 from securityobjectives.models import SecurityObjectiveExport
-from securityobjectives.tasks import cleanup_so_export_file, generate_so_export_task
+from securityobjectives.tasks import cleanup_so_export_file, generate_so_export_task, write_export_zip
 
 
 def grant_export_right(user):
@@ -32,7 +35,7 @@ def load_export_workbook(export):
 
 def selectable_sectors(declaration):
     """The picker offers leaf sectors only, as the dashboard filter does."""
-    return declaration.sectors.filter(parent__isnull=False)
+    return declaration.get_sectors().filter(parent__isnull=False)
 
 
 def build_filters(populate_so_db, file_format="xlsx", sectors=None):
@@ -60,6 +63,20 @@ def run_export(user, filters, settings, tmp_path):
         generate_so_export_task(export.id, user.id, filters, "en")
     export.refresh_from_db()
     return export
+
+
+def test_csv_export_marks_headers_and_data_as_utf8(tmp_path):
+    export_path = tmp_path / "export.zip"
+    write_export_zip(export_path, ["S\u00e9curit\u00e9"], [["R\u00e9vis\u00e9"]], [["Ann\u00e9e", "2026"]])
+
+    with zipfile.ZipFile(export_path) as archive:
+        declarations = archive.read("declarations.csv")
+        metadata = archive.read("metadata.csv")
+
+    assert declarations.startswith(codecs.BOM_UTF8)
+    assert metadata.startswith(codecs.BOM_UTF8)
+    assert list(csv.reader(io.StringIO(declarations.decode("utf-8-sig")))) == [["S\u00e9curit\u00e9"], ["R\u00e9vis\u00e9"]]
+    assert list(csv.reader(io.StringIO(metadata.decode("utf-8-sig")))) == [["Ann\u00e9e", "2026"]]
 
 
 @pytest.mark.django_db
@@ -269,6 +286,8 @@ def test_csv_export_is_a_zip_of_two_files(populate_so_db, settings, tmp_path):
 
     with zipfile.ZipFile(export.get_file_path()) as archive:
         assert sorted(archive.namelist()) == ["declarations.csv", "metadata.csv"]
+        assert archive.read("declarations.csv").startswith(codecs.BOM_UTF8)
+        assert archive.read("metadata.csv").startswith(codecs.BOM_UTF8)
 
 
 @pytest.mark.django_db
@@ -288,7 +307,6 @@ def test_export_logs_every_declaration_and_sends_one_email(
         submitter_company=first.submitter_company,
         creator_name=first.creator_name,
         creator_company_name=first.creator_company_name,
-        sectors=list(first.sectors.all()),
         group=create_standard_answer_group(company=first.submitter_company),
         status=first.status,
         year_of_submission=first.year_of_submission,

@@ -1,6 +1,6 @@
 import logging
 from dataclasses import KW_ONLY, dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.utils import timezone
@@ -8,12 +8,17 @@ from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
     from datetime import datetime
 
     from django.utils.functional import Promise
 
-from governanceplatform.email import send_html_email
+from governanceplatform.email import (
+    COMMENT_ADDED_NOTICE,
+    PUBLIC_URL_PLACEHOLDER,
+    EmailPlaceholder,
+    replace_placeholders,
+    send_html_email,
+)
 from governanceplatform.helpers import render_to_string_multi_languages
 from governanceplatform.models import Observer, RegulatorUser
 from governanceplatform.rt import add_rt_correspondence, check_rt_config, create_rt_ticket
@@ -39,19 +44,6 @@ class EmailContext:
     _: KW_ONLY
     workflow: Workflow | None = None
     incident_workflow: IncidentWorkflow | None = None
-
-
-@dataclass(frozen=True)
-class EmailPlaceholder:
-    """A token a regulator can type in an email template, and how to resolve it against an incident."""
-
-    token: str
-    description: str | Promise
-    resolve: Callable[[EmailContext], Any]
-
-    def render(self, context: EmailContext) -> str:
-        value = self.resolve(context)
-        return "" if value is None else str(value)
 
 
 def _format_date(value: datetime | None) -> str:
@@ -103,9 +95,6 @@ def _resolve_review_status(context: EmailContext) -> str | Promise:
     return dict(WORKFLOW_REVIEW_STATUS).get(is_deadline_exceeded(workflow, context.incident), "")
 
 
-COMMENT_ADDED_NOTICE = _("New comment added")
-
-
 def _submission_in_context(context: EmailContext) -> IncidentWorkflow | None:
     """The submission the email is about. A reminder names a report instead, which may have none yet."""
     if context.incident_workflow is not None:
@@ -132,7 +121,7 @@ def _resolve_deadline(context: EmailContext) -> str:
 # Adding a new one is a single entry here: the admin help text and the substitution both read from this list.
 
 INCIDENT_EMAIL_PLACEHOLDERS = [
-    EmailPlaceholder("#PUBLIC_URL#", _("Address of the platform"), lambda context: settings.PUBLIC_URL),
+    PUBLIC_URL_PLACEHOLDER,
     EmailPlaceholder("#INCIDENT_ID#", _("Incident reference"), lambda context: context.incident.incident_id),
     EmailPlaceholder(
         "#INCIDENT_NOTIFICATION_DATE#",
@@ -155,10 +144,7 @@ INCIDENT_EMAIL_PLACEHOLDERS = [
 
 
 def replace_email_variables(content: str, context: EmailContext) -> str:
-    for placeholder in INCIDENT_EMAIL_PLACEHOLDERS:
-        if placeholder.token in content:
-            content = content.replace(placeholder.token, placeholder.render(context))
-    return content
+    return replace_placeholders(content, INCIDENT_EMAIL_PLACEHOLDERS, context)
 
 
 def get_emails_from_qs(queryset):

@@ -11,10 +11,12 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import (
     BooleanField,
     Case,
     Count,
+    F,
     FloatField,
     Max,
     Min,
@@ -54,7 +56,7 @@ from governanceplatform.helpers import (
     update_list_params,
     user_in_group,
 )
-from governanceplatform.models import Company, Regulation, Sector
+from governanceplatform.models import Company, Regulation, Sector, User
 from reporting.models import CompanyProject
 
 from .email import send_email
@@ -68,10 +70,12 @@ from .forms import (
     SecurityObjectiveStatusForm,
     SelectSOStandardForm,
 )
-from .globals import ALLOWED_SORT_FIELDS, STANDARD_ANSWER_REVIEW_STATUS
+from .globals import ALLOWED_SORT_FIELDS, OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
 from .helpers import (
+    build_objective_navigation,
     can_export_security_objectives,
     can_see_review_comments,
+    filter_by_company_sectors,
     get_exportable_standard_answers,
     get_scoped_standard_answers,
     get_standard_answers_with_progress,
@@ -115,7 +119,9 @@ def get_security_objectives(request):
         template = "regulator/so_dashboard.html"
         is_regulator_admin = user_in_group(user, "RegulatorAdmin")
         if not is_regulator_admin:
-            standard_answer_queryset = StandardAnswer.objects.filter(standard__regulator=regulator, sectors__in=user.get_sectors().all())
+            standard_answer_queryset = filter_by_company_sectors(
+                StandardAnswer.objects.filter(standard__regulator=regulator), user.get_sectors().all()
+            )
         if is_regulator_admin:
             standard_answer_queryset = StandardAnswer.objects.filter(standard__regulator=regulator)
 
@@ -125,7 +131,7 @@ def get_security_objectives(request):
         company = get_active_company_from_session(request)
         standard_answer_queryset = StandardAnswer.objects.filter(submitter_company=company)
 
-    latest_so_id = standard_answer_queryset.filter(group__id=OuterRef("group__id")).order_by("-last_update").values("id")[:1]
+    latest_so_id = standard_answer_queryset.filter(group__id=OuterRef("group__id")).order_by("-creation_date").values("id")[:1]
 
     standard_answer_queryset = standard_answer_queryset.filter(id__in=Subquery(latest_so_id))
 
@@ -178,17 +184,15 @@ def create_so_declaration(request):
         (standard.id, str(standard)) for standard in Standard.objects.filter(active=True, security_objectives_set__isnull=False).distinct()
     ]
 
-    sector_list = get_sectors_grouped(Sector.objects.all())
-    if not standard_list or not sector_list:
+    if not standard_list:
         messages.error(request, _("No data available"))
 
-    initial = {"standard_list": standard_list, "sectors_list": sector_list}
+    initial = {"standard_list": standard_list}
     if request.method == "POST":
         form = SelectSOStandardForm(request.POST, initial=initial)
         if form.is_valid():
             so_standard_id = form.cleaned_data["so_standard"]
             year = form.cleaned_data["year"]
-            sectors = form.cleaned_data["sectors"]
             try:
                 standard = Standard.objects.get(pk=so_standard_id)
                 user = request.user
@@ -204,7 +208,6 @@ def create_so_declaration(request):
                     group=sag,
                 )
                 new_standard_answer.save()
-                new_standard_answer.sectors.set(sectors)
                 create_entry_log(user, new_standard_answer, "CREATE", request)
                 return redirect(f"{reverse('so_declaration')}?id={new_standard_answer.id}")
             except Standard.DoesNotExist:
@@ -240,12 +243,29 @@ def declaration(request):
         return redirect("securityobjectives")
 
     if is_update and standard_answer.status != "UNDE":
-        standard_answer = duplicate_standard_answer(standard_answer)
+        with transaction.atomic():
+            standard_answer.lock_versions()
+            # Only the latest version is offered for update; a copy of an older one would
+            # hide the newer version from both dashboards.
+            if standard_answer.get_newer_versions().exists():
+                messages.error(request, _("A newer version of this declaration already exists."))
+                return redirect("securityobjectives")
+            standard_answer = duplicate_standard_answer(standard_answer)
         return redirect(f"{reverse('so_declaration')}?id={standard_answer.id}")
 
     standard = standard_answer.standard
+    newer_version = standard_answer.get_newer_submitted_version()
 
-    security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
+    # The selector groups the objectives by domain, so its numbers follow the domains first.
+    security_objectives_queryset = (
+        standard.security_objectives_set.select_related("security_objective__domain")
+        .prefetch_related("security_objective__domain__translations")
+        .order_by(
+            F("security_objective__domain__position").asc(nulls_last=True),
+            "security_objective__domain_id",
+            "position",
+        )
+    )
 
     levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
 
@@ -253,6 +273,10 @@ def declaration(request):
         data = json.loads(request.body.decode("utf-8"))
         id_object = data.pop("id", None)
         field_name = next(iter(data))
+        # The page may have been opened before the operator submitted the newer version,
+        # so the browser reloads to show it.
+        if newer_version:
+            return JsonResponse({"success": False, "error": "A newer version was submitted"}, status=409)
         if field_name in ["review_comment", "status"] and not is_user_regulator(user):
             return JsonResponse(
                 {
@@ -406,6 +430,7 @@ def declaration(request):
         .order_by("-creation_date")
         .first()
     )
+    show_previous_review_comments = previous_standard_answer is not None and can_see_review_comments(user, previous_standard_answer)
     previous_answers_by_measure = (
         {sma.security_measure_id: sma for sma in SecurityMeasureAnswer.objects.filter(standard_answer=previous_standard_answer)}
         if previous_standard_answer is not None
@@ -432,8 +457,10 @@ def declaration(request):
             )
             initial = model_to_dict(so_status, fields=["status", "actions"])
             initial["is_regulator"] = is_user_regulator(user)
-            initial["is_readonly"] = (is_user_operator(user) and standard_answer.status != "UNDE") or (
-                is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"]
+            initial["is_readonly"] = (
+                newer_version is not None
+                or (is_user_operator(user) and standard_answer.status != "UNDE")
+                or (is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"])
             )
 
             security_objective.status = so_status
@@ -465,8 +492,10 @@ def declaration(request):
 
             initial["is_regulator"] = is_user_regulator(user)
             initial["has_review_comment"] = bool(standard_answer.review_comment)
-            initial["is_readonly"] = (is_user_operator(user) and standard_answer.status != "UNDE") or (
-                is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"]
+            initial["is_readonly"] = (
+                newer_version is not None
+                or (is_user_operator(user) and standard_answer.status != "UNDE")
+                or (is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"])
             )
 
             previous_sma = previous_answers_by_measure.get(measure.id)
@@ -479,7 +508,7 @@ def declaration(request):
                 measure.previous_answer = {
                     "is_implemented": previous_sma.is_implemented if previous_sma else False,
                     "justification": (previous_sma.justification if previous_sma else "") or "",
-                    "review_comment": (previous_sma.review_comment if previous_sma else "") or "",
+                    "review_comment": (previous_sma.review_comment if previous_sma and show_previous_review_comments else "") or "",
                 }
 
             security_objective = measure.security_objective
@@ -502,7 +531,9 @@ def declaration(request):
     context = {
         "last_maturity_level": levels["last_level"],
         "security_objectives": security_objectives,
+        "navigation": build_objective_navigation(list(security_objectives), standard_answer, is_user_regulator(user)),
         "standard_answer": standard_answer,
+        "newer_version": newer_version,
         "column_config": column_config,
         "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
         "score_display": standard.get_score_display_config(),
@@ -525,13 +556,9 @@ def declaration(request):
 @otp_required
 def copy_declaration(request, group_id: int):
     user = request.user
-    sector_list = get_sectors_grouped(Sector.objects.all())
-    initial = {"sectors": sector_list}
-    if not sector_list:
-        messages.error(request, _("No sectors data available"))
 
     # get the last standard from the group
-    original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-last_update").first()
+    original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-creation_date").first()
     if not original_standard_answer:
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
@@ -540,10 +567,9 @@ def copy_declaration(request, group_id: int):
         return JsonResponse({"error": "Forbidden"}, status=403)
 
     if request.method == "POST":
-        form = CopySOForm(request.POST, initial=initial)
+        form = CopySOForm(request.POST)
         if form.is_valid():
             year = form.cleaned_data["year"]
-            sectors = form.cleaned_data["sectors"]
             original_standard_answer_dict = {
                 "standard": original_standard_answer.standard,
                 "submitter_company": original_standard_answer.submitter_company,
@@ -560,7 +586,6 @@ def copy_declaration(request, group_id: int):
                 group=sag,
             )
             new_standard_answer.save()
-            new_standard_answer.sectors.set(sectors)
             create_entry_log(user, new_standard_answer, "CREATE", request)
             create_entry_log(user, original_standard_answer, "COPY", request)
 
@@ -612,7 +637,7 @@ def copy_declaration(request, group_id: int):
 
         return redirect("securityobjectives")
 
-    form = CopySOForm(initial=initial)
+    form = CopySOForm()
     context = {"form": form, "group_id": group_id}
     return render(request, "modals/copy_so_declaration.html", context=context)
 
@@ -620,6 +645,7 @@ def copy_declaration(request, group_id: int):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
+@transaction.atomic
 def submit_declaration(request, standard_answer_id: int):
     user = request.user
     standard_answer_queryset = StandardAnswer.objects.filter(pk=standard_answer_id)
@@ -630,6 +656,9 @@ def submit_declaration(request, standard_answer_id: int):
         return redirect("securityobjectives")
 
     standard_answer = standard_answer.first()
+    standard_answer.lock_versions()
+    # Read again under the lock, so a second click on Submit finds the version submitted.
+    standard_answer.refresh_from_db(fields=["status"])
     if not has_change_permission(request, standard_answer, "submit"):
         return redirect("securityobjectives")
     standard_answer.status = "DELIV"
@@ -662,6 +691,7 @@ def delete_declaration(request, standard_answer_id: int):
 
 @login_required
 @otp_required
+@transaction.atomic
 def review_comment_declaration(request, standard_answer_id: int):
     user = request.user
     is_only_review_comment = request.GET.get("only_review_comment", "false") == "true"
@@ -674,14 +704,24 @@ def review_comment_declaration(request, standard_answer_id: int):
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
 
+    if request.method == "POST":
+        # Waits for a submission of a newer version in progress, so the check below sees it.
+        standard_answer.lock_versions()
+    newer_version = standard_answer.get_newer_submitted_version()
     initial = model_to_dict(standard_answer, fields=["review_comment", "status"])
     if is_user_operator(user):
         create_entry_log(user, standard_answer, "READ", request)
         initial["is_readonly"] = is_user_operator(user)
     else:
-        initial["is_readonly"] = not is_user_regulator(user) or standard_answer.status in ["PASSM", "FAILM"]
+        initial["is_readonly"] = newer_version is not None or not is_user_regulator(user) or standard_answer.status in ["PASSM", "FAILM"]
         if standard_answer.status == "DELIV":
             initial["status"] = get_standard_answer_status(standard_answer)
+
+    if request.method == "POST" and newer_version:
+        messages.error(request, _("A newer version of this declaration was submitted. Review that version instead."))
+        if is_only_review_comment:
+            return JsonResponse({"success": False, "error": "A newer version was submitted"}, status=409)
+        return redirect("securityobjectives")
 
     if request.method == "POST":
         form = ReviewForm(
@@ -722,7 +762,7 @@ def review_comment_declaration(request, standard_answer_id: int):
                 )
 
             company = standard_answer.submitter_company
-            sectors = standard_answer.sectors.all()
+            sectors = standard_answer.get_sectors()
             year = standard_answer.year_of_submission
             for sector in sectors:
                 has_security_objectives = security_objective_exists(company, year, sector)
@@ -771,7 +811,7 @@ def access_log(request, standard_answer_id: int):
         messages.error(request, _("Declaration not found"))
         return redirect("securityobjectives")
 
-    log = LogStandardAnswer.objects.filter(standard_answer=standard_answer).order_by("-timestamp")
+    log = LogStandardAnswer.objects.filter(standard_answer__group=standard_answer.group).order_by("-timestamp")
     if is_user_operator(user) or user_in_group(user, "IncidentUser"):
         log = log.exclude(user__regulatoruser__isnull=False)
         # A deleted user leaves user=NULL, so the role recorded at logging time is all that is left to filter on.
@@ -779,6 +819,15 @@ def access_log(request, standard_answer_id: int):
 
     context = {"log": log}
     return render(request, "modals/so_access_log.html", context=context)
+
+
+def get_review_status_label(standard_answer: StandardAnswer, user: User) -> str:
+    """The review status on the cover, which does not say whether the review was sent."""
+    status = standard_answer.status
+    if not is_user_regulator(user):
+        status = OPERATOR_STATUS[status]
+    status = {"PASSM": "PASS", "FAILM": "FAIL"}.get(status, status)
+    return dict(STANDARD_ANSWER_REVIEW_STATUS)[status]
 
 
 @login_required
@@ -841,10 +890,6 @@ def import_so_declaration(request):
     if not standard_list:
         messages.error(request, _("No data available"))
 
-    sectors_queryset = user.get_sectors().all() if user_in_group(user, "RegulatorUser") else Sector.objects.all()
-
-    sector_list = get_sectors_grouped(sectors_queryset)
-
     companies_queryset = (
         Company.objects.filter(sectors__in=user.get_sectors().values_list("id", flat=True)).distinct()
         if user_in_group(user, "RegulatorUser")
@@ -861,12 +906,6 @@ def import_so_declaration(request):
                 messages.error(request, _("Forbidden"))
             initial["company"] = company_id
 
-        if "sector_id" in request.GET:
-            sector_id = int(request.GET.get("sector_id"))
-            if not sectors_queryset.filter(id=sector_id).exists():
-                messages.error(request, _("Forbidden"))
-            initial["sectors"] = sector_id
-
         if "year" in request.GET:
             initial["year"] = int(request.GET.get("year"))
 
@@ -879,7 +918,6 @@ def import_so_declaration(request):
     choices = {
         "standard": standard_list,
         "company": company_list,
-        "sectors": sector_list,
     }
 
     if request.method == "POST":
@@ -902,7 +940,6 @@ def import_so_declaration(request):
             standard_id = form.cleaned_data["standard"]
             company_id = form.cleaned_data["company"]
             year = form.cleaned_data["year"]
-            sectors = form.cleaned_data["sectors"]
 
             try:
                 standard = Standard.objects.get(pk=standard_id)
@@ -915,11 +952,6 @@ def import_so_declaration(request):
                         request,
                         _("No users for this company"),
                     )
-                    return safe_redirect_to_referer(request, "securityobjectives")
-
-                valid_sectors = [sector for sector in Sector.objects.filter(id__in=sectors)]
-
-                if not valid_sectors:
                     return safe_redirect_to_referer(request, "securityobjectives")
 
                 group = StandardAnswerGroup.objects.create(company=company)
@@ -936,7 +968,6 @@ def import_so_declaration(request):
                     group=group,
                 )
                 new_standard_answer.save()
-                new_standard_answer.sectors.set(valid_sectors)
 
             except Standard.DoesNotExist, Company.DoesNotExist:
                 messages.error(
@@ -1016,7 +1047,7 @@ def has_change_permission(request, standard_answer, action):
         user_sectors = user.get_sectors().all()
         user_company = get_active_company_from_session(request)
         is_standard_answer_in_user_company = is_user_operator(user) and standard_answer.submitter_company == user_company
-        standard_sectors = standard_answer.sectors.all()
+        standard_sectors = standard_answer.get_sectors()
         is_user_regulator_sector = (
             user_in_group(user, "RegulatorAdmin") and standard_answer.standard.regulator == user.regulators.first()
         ) or (
@@ -1030,7 +1061,10 @@ def has_change_permission(request, standard_answer, action):
                 return (is_user_regulator_sector and standard_answer.status != "UNDE") or (is_standard_answer_in_user_company)
             case "submit":
                 return (
-                    is_standard_answer_in_user_company and standard_answer.status == "UNDE" and standard_answer.answered_percentage == 100
+                    is_standard_answer_in_user_company
+                    and standard_answer.status == "UNDE"
+                    and standard_answer.answered_percentage == 100
+                    and not standard_answer.has_failed_objectives
                 )
             case "copy":
                 return is_standard_answer_in_user_company and standard_answer.standard is not None and standard_answer.standard.active
@@ -1135,13 +1169,9 @@ def get_completion_objective(security_objective, standard_answer):
     at_first_level = Q(security_measure__maturity_level__level=first_maturity_level)
 
     if justification_mandatory:
-        is_completed_condition = (
-            Q(is_implemented=True, justification__gt="") | Q(is_implemented=False, justification="", review_comment__gt="") | at_first_level
-        )
-        # Implemented without a reason, or a reason given without implementing it.
-        is_partially_condition = (
-            (Q(is_implemented=True) & Q(justification="")) | (~Q(is_implemented=True) & Q(justification__gt=""))
-        ) & ~at_first_level
+        is_completed_condition = Q(is_implemented=True, justification__gt="") | Q(is_implemented=False) | at_first_level
+        # Implemented without saying how; explaining why a measure is not implemented is a valid answer.
+        is_partially_condition = Q(is_implemented=True, justification="") & ~at_first_level
     else:
         is_completed_condition = Q(is_implemented=True) | Q(is_implemented=False, review_comment__gt="") | at_first_level
         is_partially_condition = None
@@ -1359,8 +1389,7 @@ def get_standard_answer_status(standard_answer):
 def declaration_is_ready_to(standard_answer):
     try:
         declaration = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer.pk)).first()
-        has_failed_so = declaration.securityobjectivestatus_set.filter(status="FAIL").exists()
-        submit = declaration.answered_percentage == 100 and not has_failed_so
+        submit = declaration.answered_percentage == 100 and not declaration.has_failed_objectives
         send = declaration.reviewed_percentage == 100
     except Exception:
         submit = False
@@ -1371,6 +1400,10 @@ def declaration_is_ready_to(standard_answer):
 
 # duplicate a standard answer to keep the versioning
 def duplicate_standard_answer(original):
+    # A review in progress is the regulator's draft: copying its verdicts and comments
+    # would show them to the operator on the new version before the review is sent (#931).
+    drop_review = original.is_review_in_progress
+
     # Copy object
     new_obj = copy.copy(original)
     new_obj.pk = None
@@ -1378,12 +1411,8 @@ def duplicate_standard_answer(original):
     new_obj.status = "UNDE"
     new_obj.submit_date = None
     new_obj.last_update = timezone.now()
-    new_obj.save()
-
-    # Copy M2M (sectors)
-    for field in original._meta.many_to_many:
-        source_m2m = getattr(original, field.name).all()
-        getattr(new_obj, field.name).set(source_m2m)
+    if drop_review:
+        new_obj.review_comment = None
     new_obj.save()
 
     # Copy SecurityMeasureAmswer
@@ -1392,6 +1421,8 @@ def duplicate_standard_answer(original):
         new_sma = copy.copy(sma)
         new_sma.pk = None
         new_sma.standard_answer = new_obj
+        if drop_review:
+            new_sma.review_comment = ""
         new_sma.save()
     new_obj.save()
 
@@ -1401,6 +1432,8 @@ def duplicate_standard_answer(original):
         new_sos = copy.copy(sos)
         new_sos.pk = None
         new_sos.standard_answer = new_obj
+        if drop_review:
+            new_sos.status = "NOT_REVIEWED"
         new_sos.save()
     new_obj.save()
     return new_obj

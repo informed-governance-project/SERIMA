@@ -281,9 +281,9 @@ def test_deadline_renders_a_localised_datetime(populate_incident_db, create_inci
 @pytest.fixture
 def email_change_form(otp_client, populate_incident_db):
     try:
-        get_template("admin/incidents/email/change_form.html")
+        get_template("admin/includes/email_placeholders_help.html")
     except TemplateDoesNotExist:
-        pytest.skip("theme does not provide the Email change form, so the placeholder dialog cannot render")
+        pytest.skip("theme does not provide the placeholder dialog")
     email = Email.objects.first()
     client = otp_client(User.objects.get(email="regadmin@reg1.lu"))
     return client.get(f"/admin/incidents/email/{email.pk}/change/")
@@ -306,5 +306,4 @@ def test_the_dialog_lists_every_registered_placeholder(email_change_form):
 @pytest.mark.django_db
 def test_the_change_form_keeps_the_parler_language_tabs(email_change_form):
     rendered = [template.name for template in email_change_form.templates if template.name]
-    assert "admin/incidents/email/change_form.html" in rendered
     assert "admin/parler/language_tabs.html" in rendered

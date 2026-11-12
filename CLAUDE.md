@@ -34,7 +34,7 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | Colour fields | django-colorfield | >=0.14.0,<0.15 |
 | Frontend | Bootstrap 5 + bootstrap-icons | ^5.3.8 / ^1.13.1 |
 | JS build | Node.js + npm | 24.x / 11.x |
-| Lint & format | ruff | ^0.16.1 |
+| Lint & format | ruff | ^0.17.2 |
 | Type checking | mypy | <3.0.0 |
 | Testing | pytest-django | ^4.11.1 |
 
@@ -212,7 +212,7 @@ The generated schema is therefore empty (`paths: {}`), and so is the committed `
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
 - **Python style**: ruff format (`[tool.ruff]` in pyproject.toml — line length 140, target `py314`, `migrations/` excluded)
-- **Linting**: ruff (`[tool.ruff.lint]` — includes import sorting via `I`, so no separate isort step)
+- **Linting**: ruff (`[tool.ruff.lint]` — includes import sorting via `I`, so no separate isort step). `ICN` enforces conventional import aliases: write `import datetime as dt`, not `import datetime`
 
 ```bash
 poetry run ruff check --fix .   # lint + autofix, includes import sorting
@@ -305,6 +305,18 @@ Rules:
 - Reference the GitHub issue number where one exists, e.g. `Fixed: foo bar (#123)`.
 - When a version is released, rename `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and add a fresh empty `[Unreleased]` block above it. Also add the comparison link at the bottom of the file.
 - Omit pure chore entries (dependency bumps, translation updates, theme submodule bumps) unless they affect end-users.
+
+## Documentation
+
+The user guide lives in `docs/` (Sphinx, reStructuredText), one folder per module: `getting-started/`, `incident-notification/`, `security-objectives/`, `reporting/`, `administration/`, `technical/`.
+
+**For every new feature or behaviour change, check the docs.** Search `docs/` for the pages that describe the behaviour you touched (statuses, who sees what, buttons, filters, emails, settings) and update them in the same PR as the code. A page that now states something false is worse than a missing one. Look at both roles' pages: a change to what operators see is usually also described in the regulator's guide, and the reverse.
+
+```bash
+poetry run sphinx-build -q -b html docs /tmp/docs-build   # must build without warnings
+```
+
+Screenshots are not edited by hand: `docs/screenshots/shots.toml` defines them and `make screenshots` regenerates them (see `docs/screenshots/README.md`). When a change alters a screen shown in the docs, say which shots need regenerating.
 
 ## CI/CD
 

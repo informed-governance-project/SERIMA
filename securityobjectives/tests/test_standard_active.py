@@ -10,8 +10,7 @@ import pytest
 from django.urls import reverse
 
 from governanceplatform.admin import admin_site
-from governanceplatform.helpers import get_sectors_grouped
-from governanceplatform.models import Functionality, Sector
+from governanceplatform.models import Functionality
 from reporting.models import Project
 from securityobjectives.models import Standard, StandardAnswer
 
@@ -24,11 +23,6 @@ class _CollectingMessages:
 
     def add(self, level, message, extra_tags=""):
         self.added.append((level, message))
-
-
-def _selectable_sector_ids():
-    """The sector ids a picker actually offers; a parent with children is only a group."""
-    return [str(option[0]) for _group, options in get_sectors_grouped(Sector.objects.all()) for option in options]
 
 
 @pytest.fixture
@@ -95,7 +89,7 @@ def test_creation_refuses_a_deactivated_framework(operator_client, standard):
 
     operator_client.post(
         reverse("create_so_declaration"),
-        data={"so_standard": standard.pk, "year": 2026, "sectors": _selectable_sector_ids()},
+        data={"so_standard": standard.pk, "year": 2026},
     )
 
     assert StandardAnswer.objects.count() == before
@@ -120,7 +114,7 @@ def test_copy_is_refused_on_a_deactivated_framework(operator_client, standard, d
 
     response = operator_client.post(
         reverse("copy_so_declaration", args=[declaration.group.pk]),
-        data={"year": 2026, "sectors": _selectable_sector_ids()},
+        data={"year": 2026},
     )
 
     assert response.status_code == 403
@@ -134,7 +128,7 @@ def test_copy_succeeds_while_the_framework_is_active(operator_client, declaratio
 
     operator_client.post(
         reverse("copy_so_declaration", args=[declaration.group.pk]),
-        data={"year": 2026, "sectors": _selectable_sector_ids()},
+        data={"year": 2026},
     )
 
     assert StandardAnswer.objects.count() == before + 1

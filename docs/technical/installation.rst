@@ -142,6 +142,8 @@ These settings are optional; the application applies a default when they are mis
   account that never reported an incident is deleted (default 90);
 - ``TERMS_ACCEPTANCE_TIME_IN_DAYS`` — after how many days users must accept the terms of service again (default 365);
 - ``SESSION_COOKIE_AGE`` — after how many seconds of inactivity users are logged out;
+- ``SECURE_REFERRER_POLICY`` — the ``Referrer-Policy`` header sent with every page
+  (default ``same-origin``);
 - ``RT_SECRET_KEY`` — the key encrypting observers' RT tokens (defaults to ``HASH_KEY``).
 
 When ``DEBUG`` is ``True``, emails are not sent but written to the ``sent_emails`` folder at the root of the project.

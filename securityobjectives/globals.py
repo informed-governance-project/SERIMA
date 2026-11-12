@@ -79,7 +79,7 @@ ALLOWED_SORT_FIELDS = {
         "type": "string",
     },
     "sectors": {
-        "field": "sectors__translations__name",
+        "field": "submitter_company__sectors__translations__name",
         "type": "string",
     },
     "year": {

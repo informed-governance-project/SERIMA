@@ -1,5 +1,5 @@
 Dashboard
-----------------------------------
+---------------------------------
 
 The **Security Objectives** module is a self-assessment tool: you declare how your organisation meets the security objectives
 of your regulator's framework, and provide evidence of the security measures in place.
@@ -20,13 +20,13 @@ Its parts are numbered in the screenshot below and described one by one.
 
 1. **Dashboard**: This link in the top-right corner brings you back to the dashboard from any page of the module.
 
-2. **New submission**: This red button opens the **Create a new security objectives statement** pop-up.
+2. **New assessment**: This red button opens the **Create a new security objectives statement** pop-up.
    The new declaration is then filled in as described in :doc:`fill-in-a-declaration`.
 
-3. **Search**: Finds declarations by the text you enter, looked up in the identifier, the framework, the creator, the operator, the year and the sectors.
+3. **Search**: Finds declarations by the text you enter, looked up in the identifier, the framework, the creator, the operator, the year and, for regulators, the sectors.
 
 4. **Filter**: Opens a panel to narrow the list down by **Standard** (the evaluation framework), **Year of submission**,
-   **Sectors**, **Status** and **Submitter** (the person who submitted the declaration).
+   **Sectors** (regulators only), **Status** (the statuses of the legend, see point 5) and **Submitter** (the person who submitted the declaration).
    Click **Search** to apply the filter, or **Reset** to clear it. While a filter is applied, the **Filter** button shows the label **(Active)**.
 
    .. note::
@@ -53,22 +53,24 @@ Its parts are numbered in the screenshot below and described one by one.
       * - Unsubmitted
         - The declaration is being filled in, and can still be edited or deleted.
       * - Under review
-        - The declaration has been submitted, and the regulator has not reviewed it yet.
+        - The declaration has been submitted, and the regulator has not sent the result of the review yet.
       * - Passed
-        - The regulator accepted the declaration.
+        - The regulator accepted the declaration and sent you the result.
       * - Revision required
-        - The regulator needs changes: read the review comment, then submit an updated version (see point 8).
+        - The regulator needs changes and sent you the result: read the review comment, then submit an updated version (see point 8).
 
    .. note::
 
-      Regulators see two more statuses, **Passed and sent** and **Revision required and sent**, once they have sent
-      the result of their review to the operator. Operators see them as **Passed** and **Revision required**.
+      Regulators see more statuses (see :doc:`review-a-declaration`). While they review, a declaration is **Passed**
+      or **Revision required** for them as soon as every objective has a result; it becomes **Passed and sent** or
+      **Revision required and sent** once they send it. Operators see the declaration as **Under review** until the
+      result is sent, then as **Passed** or **Revision required**.
 
 6. **Columns and sorting**: The declarations are listed in a table. The screenshot below numbers its columns, all displayed by default;
    the table after it describes them.
 
    .. figure:: /_static/images/security-objectives/dashboard-04.png
-      :alt: Header of the declarations list with its ten columns numbered
+      :alt: Header of the declarations list with its nine columns numbered
       :target: ../_static/images/security-objectives/dashboard-04.png
 
    .. list-table::
@@ -97,15 +99,12 @@ Its parts are numbered in the screenshot below and described one by one.
         - Creator
         - Operators only: the person who created the declaration. Regulators see the **Company** instead.
       * - 7
-        - Sectors
-        - The sectors the declaration covers.
-      * - 8
         - Year
         - The year the declaration is for.
-      * - 9
+      * - 8
         - Progress
-        - How much of the declaration has been filled in. At 100 %, an unsubmitted declaration shows a **Submit** button here instead.
-      * - 10
+        - How much of the declaration has been filled in. At 100 %, an unsubmitted declaration with no objective still marked for revision shows a **Submit** button here instead.
+      * - 9
         - Actions
         - The actions on the declaration, described in points 8 to 13.
 
@@ -114,7 +113,7 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. important::
 
-      Once a declaration is complete, a **Submit** button replaces its progress bar: click it to submit the declaration.
+      Once a declaration is complete, and none of its objectives is still marked for revision, a **Submit** button replaces its progress bar: click it to submit the declaration.
       The declaration screen has its own **Submit** button (see :doc:`fill-in-a-declaration`).
 
 7. **Column settings**: The white gear icon on a red background opens the **Choice of columns** pop-up.
@@ -141,8 +140,8 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
 9. **Review comment**: The speech bubble opens the regulator's comment on the declaration.
    It is greyed out until the regulator has sent the result of the review with a comment.
 
-10. **Duplicate**: Copies the declaration, with all its answers, to another year and sector, which saves filling in a similar declaration from scratch.
-    In the **Duplicate the selected security objectives statement to** pop-up, select the **year** and the **sectors**, then click **Duplicate**.
+10. **Duplicate**: Copies the declaration, with all its answers, to another year, which saves filling in a similar declaration from scratch.
+    In the **Duplicate the selected security objectives statement to** pop-up, select the **year**, then click **Duplicate**.
 
     .. figure:: /_static/images/security-objectives/dashboard-06.png
        :alt: Duplicate the selected security objectives statement pop-up
@@ -159,7 +158,8 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
 
        The **Duplicate** icon is disabled when the evaluation framework of the declaration is no longer active.
 
-11. **Download**: Downloads the declaration as a PDF document.
+11. **Download**: Downloads the declaration as a PDF document. Until the regulator sends the result of the review,
+    the PDF shows the status **Under review**, without the results of the objectives or the review comments.
 
 12. **Delete**: Deletes the declaration. Only unsubmitted declarations can be deleted; for the others, the icon is greyed out.
 

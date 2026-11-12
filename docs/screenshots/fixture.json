@@ -14335,7 +14335,7 @@
   "pk": 9,
   "fields": {
    "language_code": "en",
-   "label": "D1: Governance and risk management",
+   "label": "Governance and risk management",
    "master": 9
   }
  },
@@ -14344,7 +14344,7 @@
   "pk": 10,
   "fields": {
    "language_code": "en",
-   "label": "D2: Human resources security",
+   "label": "Human resources security",
    "master": 10
   }
  },
@@ -14353,7 +14353,7 @@
   "pk": 11,
   "fields": {
    "language_code": "en",
-   "label": "D3: Security of systems and facilities",
+   "label": "Security of systems and facilities",
    "master": 11
   }
  },
@@ -14362,7 +14362,7 @@
   "pk": 12,
   "fields": {
    "language_code": "en",
-   "label": "D4: Operations management",
+   "label": "Operations management",
    "master": 12
   }
  },
@@ -14371,7 +14371,7 @@
   "pk": 13,
   "fields": {
    "language_code": "en",
-   "label": "D5: Incident management",
+   "label": "Incident management",
    "master": 13
   }
  },
@@ -14380,7 +14380,7 @@
   "pk": 14,
   "fields": {
    "language_code": "en",
-   "label": "D6: Business continuity management",
+   "label": "Business continuity management",
    "master": 14
   }
  },
@@ -14389,7 +14389,7 @@
   "pk": 15,
   "fields": {
    "language_code": "en",
-   "label": "D7: Monitoring, auditing and testing",
+   "label": "Monitoring, auditing and testing",
    "master": 15
   }
  },
@@ -14776,7 +14776,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 88,
   "fields": {
-   "unique_code": "SFA_D_SO01",
+   "unique_code": "SO01",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14787,7 +14787,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 89,
   "fields": {
-   "unique_code": "SFA_D_SO02",
+   "unique_code": "SO02",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14798,7 +14798,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 90,
   "fields": {
-   "unique_code": "SFA_D_SO03",
+   "unique_code": "SO03",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14809,7 +14809,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 91,
   "fields": {
-   "unique_code": "SFA_D_SO04",
+   "unique_code": "SO04",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14820,7 +14820,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 92,
   "fields": {
-   "unique_code": "SFA_D_SO05",
+   "unique_code": "SO05",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14831,7 +14831,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 93,
   "fields": {
-   "unique_code": "SFA_D_SO06",
+   "unique_code": "SO06",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14842,7 +14842,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 94,
   "fields": {
-   "unique_code": "SFA_D_SO07",
+   "unique_code": "SO07",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14853,7 +14853,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 95,
   "fields": {
-   "unique_code": "SFA_D_SO08",
+   "unique_code": "SO08",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14864,7 +14864,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 96,
   "fields": {
-   "unique_code": "SFA_D_SO09",
+   "unique_code": "SO09",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14875,7 +14875,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 97,
   "fields": {
-   "unique_code": "SFA_D_SO10",
+   "unique_code": "SO10",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14886,7 +14886,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 98,
   "fields": {
-   "unique_code": "SFA_D_SO11",
+   "unique_code": "SO11",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14897,7 +14897,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 99,
   "fields": {
-   "unique_code": "SFA_D_SO12",
+   "unique_code": "SO12",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14908,7 +14908,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 100,
   "fields": {
-   "unique_code": "SFA_D_SO13",
+   "unique_code": "SO13",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14919,7 +14919,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 101,
   "fields": {
-   "unique_code": "SFA_D_SO14",
+   "unique_code": "SO14",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14930,7 +14930,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 102,
   "fields": {
-   "unique_code": "SFA_D_SO15",
+   "unique_code": "SO15",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14941,7 +14941,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 103,
   "fields": {
-   "unique_code": "SFA_D_SO16",
+   "unique_code": "SO16",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14952,7 +14952,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 104,
   "fields": {
-   "unique_code": "SFA_D_SO17",
+   "unique_code": "SO17",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14963,7 +14963,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 105,
   "fields": {
-   "unique_code": "SFA_D_SO18",
+   "unique_code": "SO18",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14974,7 +14974,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 106,
   "fields": {
-   "unique_code": "SFA_D_SO19",
+   "unique_code": "SO19",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14985,7 +14985,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 107,
   "fields": {
-   "unique_code": "SFA_D_SO20",
+   "unique_code": "SO20",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14996,7 +14996,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 108,
   "fields": {
-   "unique_code": "SFA_D_SO21",
+   "unique_code": "SO21",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15018,7 +15018,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 110,
   "fields": {
-   "unique_code": "SFA_D_SO23",
+   "unique_code": "SO23",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15029,7 +15029,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 111,
   "fields": {
-   "unique_code": "SFA_D_SO24",
+   "unique_code": "SO24",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15040,7 +15040,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 112,
   "fields": {
-   "unique_code": "SFA_D_SO25",
+   "unique_code": "SO25",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15051,7 +15051,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 113,
   "fields": {
-   "unique_code": "SFA_D_SO26",
+   "unique_code": "SO26",
    "is_archived": false,
    "domain": 15,
    "creator_name": "Regulator A",
@@ -15062,7 +15062,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 114,
   "fields": {
-   "unique_code": "SFA_D_SO27",
+   "unique_code": "SO27",
    "is_archived": false,
    "domain": 15,
    "creator_name": "Regulator A",
@@ -15073,7 +15073,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 115,
   "fields": {
-   "unique_code": "SFA_D_SO28",
+   "unique_code": "SO28",
    "is_archived": false,
    "domain": 16,
    "creator_name": "Regulator A",
@@ -15084,7 +15084,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 116,
   "fields": {
-   "unique_code": "SFA_D_SO29",
+   "unique_code": "SO29",
    "is_archived": false,
    "domain": 16,
    "creator_name": "Regulator A",
@@ -19448,6 +19448,15 @@
   }
  },
  {
+  "model": "securityobjectives.standardanswergroup",
+  "pk": 51,
+  "fields": {
+   "notification_date": "2026-08-31T13:09:57.078Z",
+   "company": 46,
+   "group_id": "SO_R7KD2M4Q"
+  }
+ },
+ {
   "model": "securityobjectives.standardanswer",
   "pk": 23,
   "fields": {
@@ -19464,10 +19473,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2023,
    "review_comment": null,
-   "group": 11,
-   "sectors": [
-    12
-   ]
+   "group": 11
   }
  },
  {
@@ -19487,10 +19493,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2024,
    "review_comment": null,
-   "group": 12,
-   "sectors": [
-    10
-   ]
+   "group": 12
   }
  },
  {
@@ -19510,10 +19513,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2025,
    "review_comment": "<p>Accepted. The planned measures look appropriate.</p>",
-   "group": 16,
-   "sectors": [
-    3
-   ]
+   "group": 16
   }
  },
  {
@@ -19533,10 +19533,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2024,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 17,
-   "sectors": [
-    3
-   ]
+   "group": 17
   }
  },
  {
@@ -19556,10 +19553,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 18,
-   "sectors": [
-    10
-   ]
+   "group": 18
   }
  },
  {
@@ -19579,10 +19573,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2027,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 20,
-   "sectors": [
-    13
-   ]
+   "group": 20
   }
  },
  {
@@ -19602,11 +19593,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2024,
    "review_comment": "<p>Accepted. The planned measures look appropriate.</p>",
-   "group": 22,
-   "sectors": [
-    2,
-    3
-   ]
+   "group": 22
   }
  },
  {
@@ -19626,10 +19613,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -19649,10 +19633,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2023,
    "review_comment": null,
-   "group": 28,
-   "sectors": [
-    3
-   ]
+   "group": 28
   }
  },
  {
@@ -19672,10 +19653,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2023,
    "review_comment": null,
-   "group": 29,
-   "sectors": [
-    3
-   ]
+   "group": 29
   }
  },
  {
@@ -19695,10 +19673,7 @@
    "creator_company_name": "Operator B",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 30,
-   "sectors": [
-    12
-   ]
+   "group": 30
   }
  },
  {
@@ -19718,10 +19693,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19741,10 +19713,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Accepted. The planned measures look appropriate.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19764,10 +19733,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19787,10 +19753,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19810,10 +19773,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -19833,10 +19793,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -19855,11 +19812,8 @@
    "creator_name": "Operator Admin",
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
-   "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
+   "group": 51
   }
  },
  {
@@ -19879,10 +19833,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -19902,10 +19853,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19925,10 +19873,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19948,10 +19893,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19971,10 +19913,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -19994,10 +19933,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20017,10 +19953,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20040,10 +19973,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20063,10 +19993,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20086,10 +20013,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20109,10 +20033,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -20132,10 +20053,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -20155,10 +20073,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20178,10 +20093,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20201,10 +20113,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20224,10 +20133,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 31,
-   "sectors": [
-    2
-   ]
+   "group": 31
   }
  },
  {
@@ -20247,10 +20153,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Several justifications are missing; please complete them and resubmit.</p>",
-   "group": 50,
-   "sectors": [
-    12
-   ]
+   "group": 50
   }
  },
  {
@@ -20270,10 +20173,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
-   "group": 24,
-   "sectors": [
-    6
-   ]
+   "group": 24
   }
  },
  {
@@ -20293,10 +20193,7 @@
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
    "review_comment": null,
-   "group": 48,
-   "sectors": [
-    12
-   ]
+   "group": 48
   }
  },
  {
@@ -20332,6 +20229,18 @@
    "security_measure": 1751,
    "justification": "Implemented and reviewed during the last internal audit.",
    "is_implemented": true,
+   "review_comment": ""
+  }
+ },
+ {
+  "model": "securityobjectives.securitymeasureanswer",
+  "pk": 3932,
+  "fields": {
+   "security_measure_notification_date": "2026-02-13T13:41:18.512Z",
+   "standard_answer": 23,
+   "security_measure": 1755,
+   "justification": "Not implemented yet: the risk management methodology was adopted this year, and its first periodic review is planned for next year.",
+   "is_implemented": false,
    "review_comment": ""
   }
  },

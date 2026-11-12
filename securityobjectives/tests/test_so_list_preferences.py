@@ -57,7 +57,9 @@ def test_column_choice_offers_the_registry_columns(otp_client, populate_so_db, e
     html = otp_client(_user(email)).get(reverse("securityobjectives")).content.decode()
 
     toggles = set(re.findall(r'data-column="([^"]+)"\s+id="column-', html))
-    assert toggles == set(LIST_PREFERENCE_PAGES["securityobjectives"]["columns"])
+    # Operators do not see the sector their regulator placed them in (#911).
+    hidden = set() if email == "regadmin@reg1.lu" else {"sectors"}
+    assert toggles == set(LIST_PREFERENCE_PAGES["securityobjectives"]["columns"]) - hidden
 
 
 @pytest.mark.django_db

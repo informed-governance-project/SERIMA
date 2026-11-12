@@ -89,7 +89,7 @@ def get_so_data(cleaned_data):
             StandardAnswer.objects.filter(
                 standard__id=standard_id,
                 submitter_company=OuterRef("submitter_company"),
-                sectors__id__in=[sector["id"]],
+                submitter_company__sectors__id=sector["id"],
                 year_of_submission=year,
                 status="PASSM",
             )
@@ -99,7 +99,7 @@ def get_so_data(cleaned_data):
 
         queryset = StandardAnswer.objects.filter(
             standard__id=standard_id,
-            sectors__id__in=[sector["id"]],
+            submitter_company__sectors__id=sector["id"],
             year_of_submission=year,
             status="PASSM",
             submit_date=Subquery(latest_submit_date),

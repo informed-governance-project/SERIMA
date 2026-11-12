@@ -17,10 +17,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Background tasks are now sent to one of three Celery queues (#901): `interactive` for the PDFs, exports and imports a user waits for, `reports` for report generation, and `celery` for the scheduled tasks and file cleanups. A worker started as before consumes all three, so an installation that changes nothing keeps working, but restart the worker after upgrading: one still running the former code reads only the `celery` queue. Running one worker per queue, with the new `CELERY_QUEUES` variable of the Docker image or `-Q` on the command line, keeps a report generation from making users wait for their PDFs; the example compose file now does this, as described in "Splitting the workers" of the Docker documentation. When moving to it, start the containers with `docker compose up -d --remove-orphans`, so that the former single worker is removed. Only a worker reading the `reports` queue starts Kaleido's Chrome, which saves its memory in the others. Each worker process now holds at most one task in reserve instead of four, and a PDF, export, risk analysis import or report generation whose queue has no worker running is reported as an error instead of waiting
 - Each user's choices on the lists of incidents, security objectives declarations and reporting projects are now saved in their account and restored at the next login, on any browser (#673): the columns shown, the sort order, the filters, the number of rows per page and whether the legend is open. Each list keeps its own choices, and a regulator's two incident lists are kept apart. The search text and the page number are kept only until logout. Column choices saved in the browser by earlier versions are not carried over, so each user picks their columns once more after upgrading. Clearing the search box now clears only the search instead of every filter, and resetting the filters or the sort of a regulator's own incidents now stays on that list instead of returning to all incidents
 
+- The objective selector of a security objectives declaration is now grouped by the domains of the evaluation framework, each labelled D1, D2… from its position, and the objectives are numbered domain by domain. When the selector is too narrow for every objective, the other domains collapse to their code and one symbol summing up their objectives, which shows their name and the count of objectives in each state on hover and opens their first objective still to fill or to review on click; if the current domain still does not fit, its objectives are shown a page at a time. A line above each objective names its domain and its place in it. A declaration now opens on the first objective still to fill (operators) or to review (regulators) instead of the first one (#925)
+
+- On the security objectives dashboard, the button that starts a declaration is now "New assessment" instead of "New submission", and an empty dashboard now reads "No security objectives statements have been created yet." instead of "…submitted yet." (#934)
+
+- On the security objectives logs, show all the actions for all the versions of the submission. (#951)
+
+- The header of an incident report and of a security objectives declaration now shows the **Reference** of the incident or declaration. Operators no longer see the **Company** there, nor the contact icon, which only regulators (and, for incidents, observers) still have (#942)
+
 ### Fixed
 
-- A regulator opening an incident report from a link that named both the incident and the report, without its workflow, got a server error instead of the report editor (#905)
-- The XLSX exports of incidents and of security objectives declarations no longer fail when an answer holds invisible control characters, as text pasted from Word or a PDF often does, such as a hyphen arriving as STX (#908). These characters are now removed as the text is saved, from every free-text field of an incident notification (contact details, answers, the details added to a choice, and the regulator's review comment) and of a security objectives declaration (justifications, planned measures and review comments); tabs and line breaks are kept. Answers saved before the upgrade still hold them, so they are also removed from every export, CSV included, and a formula hidden behind such a character is now neutralised like any other
 - The access logs of an incident, of a security objectives declaration and of a reporting project left the name blank on every line written by a user whose account has since been deleted; they now show the name recorded when the line was written. An operator viewing the access log of an incident or of a declaration could also see the lines of a deleted regulator or observer user, which are hidden from operators while the account exists; they are now hidden in both cases
 - Filtering the reporting dashboard by base year had no effect (#673)
 - Moving to another page of a list filtered on several values, such as two sectors, kept only one of them, and a search holding a character such as `&` was cut short there (#673)
@@ -28,7 +34,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The column chooser of the reporting dashboard labelled the author column "Autor" (#673)
 - Unticking every value of a multi-choice filter, such as the sectors, and clicking "Search" left the previous values applied until "Reset" was clicked. The "Filter" button of the incident list also showed "(Active)" after any search from the filter pop-up, even with every field left empty, as a significant impact left on "Unknown" counted as a filter; that default choice now reads "---------", like the other fields of the pop-up (#673)
 - Applying a filter, a search or a sort order while on a later page of a list kept that page number, so the new results could open on their last page instead of the first (#673)
+
+- Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)
+
+- An operator who updated a security objectives declaration still under review got a new version carrying the regulator's unsent review, so the objective selector showed the objectives the regulator had marked for revision, and the **Previous version** pop-up showed the regulator's draft comments. A version updated before the review is sent now starts with every objective not reviewed and no review comment, and the previous version's review comments are shown only once that review is sent (#931)
+
+- A regulator could keep reviewing a security objectives declaration after the operator had submitted a newer version of it, and send the verdict on the older one, which then took the newer version's place on both dashboards, so the newer version was never reviewed. Once a newer version is submitted, the older one can no longer be reviewed, commented on or sent: it shows a banner linking to the newer version, and the dashboards, the export, the version list and **Duplicate** now take the most recently created version instead of the most recently updated one. Only the latest version of a declaration can be updated, and a submission and the sending of a review on the same declaration no longer overlap, so a review sent while the operator submits a newer version is refused (#931)
+
+- The security objectives dashboard offered to submit a fully filled declaration that still had an objective marked for revision, and the submission went through, while the declaration screen kept its Submit button disabled. A declaration can now be submitted only once every objective is fully filled and none is still marked for revision, from the dashboard as from the declaration screen
+
+
+- The referrer policy set in the configuration was ignored, because the setting was named `REFERRER_POLICY` instead of Django's `SECURE_REFERRER_POLICY`, so pages were always sent with Django's default `Referrer-Policy: same-origin`. That remains the default, and `SECURE_REFERRER_POLICY` in `config.py` now changes it. Rename `REFERRER_POLICY` to `SECURE_REFERRER_POLICY` in an existing `config.py`, as the old name is no longer read (#613)
+
+### Added
+
+- A table of contents button beside the Icon Guide of a security objectives declaration opens a side panel with the number of objectives in each state, and every domain with its objectives, their state and how many of them are filled (operators) or reviewed (regulators); clicking an objective opens it. Unlike the objective selector, it is available on every screen size (#925)
+
+
+## [0.6.1] - 2026-10-27
+
+### Added
+
+- Security objectives email templates accept three more placeholders: `#SO_STATUS#` for the status of the declaration as the operator sees it (Under review, Passed or Revision required), `#SO_REVIEW_COMMENT_ADDED#` for a notice when the review sent carries a comment, without the comment itself, and `#PUBLIC_URL#` for the address of the platform. As for incident emails, an "Available placeholders" button above the content field lists them (#912)
+
+### Changed
+
+- The sectors of a security objectives declaration are now those the regulator assigned to the operator in the backend, instead of being picked by the operator from a list that did not match the evaluation framework (#911). The operator no longer chooses sectors when starting or duplicating a declaration, nor does the regulator when importing one, and operators no longer see the sectors anywhere in the module: not on the dashboard (column, column selector, filter and search), on the declaration or on the cover of its PDF; regulators still do. A change to the operator's sectors in the backend applies at once to all its declarations, both for which regulator users see them and for the reporting projects they feed. The sectors operators picked on existing declarations are discarded on upgrade
+- On a security objectives declaration, the justification and review comment fields of each security measure now grow with their text instead of showing two lines, up to a maximum height beyond which they scroll
+- On the security objectives dashboard, the button that opens a submitted declaration without changing it is now "View" instead of "Review", both in the dialog that offers to view or update a declaration, now titled "View or update security objectives statement", and in the version history (#919)
+- On a security objectives declaration, the legend now names the status of an objective that must be corrected "Revision required" instead of "Review required", as the dashboard already did (#922)
+
+### Fixed
+
+- A regulator opening an incident report from a link that named both the incident and the report, without its workflow, got a server error instead of the report editor (#905)
+- The XLSX exports of incidents and of security objectives declarations no longer fail when an answer holds invisible control characters, as text pasted from Word or a PDF often does, such as a hyphen arriving as STX (#908). These characters are now removed as the text is saved, from every free-text field of an incident notification (contact details, answers, the details added to a choice, and the regulator's review comment) and of a security objectives declaration (justifications, planned measures and review comments); tabs and line breaks are kept. Answers saved before the upgrade still hold them, so they are also removed from every export, CSV included, and a formula hidden behind such a character is now neutralised like any other
 - An operator could see the regulator's review of a security objectives declaration before it was sent: the verdict, on the dashboard, in the version history, on each objective of the declaration and on the cover of its PDF, and the review comments, on the declaration as a whole and on each security measure, both on the page and in the PDF. Until the review is sent, the operator now sees the declaration as "Under review", without verdict or comments. The operator's status filter now offers the four statuses operators see (Unsubmitted, Under review, Passed and Revision required), and "Passed" and "Revision required" now find the declarations whose review was sent, which they used to miss. Regulators still filter on every status (#910)
+- A security measure left unimplemented but given a justification counted as not completely filled out, so the declaration could not be submitted until the justification was removed. Explaining why a measure is not implemented is now a valid answer (#920)
+- In the incident notification wizard, the error message of an unanswered question was covered by the question's tooltip. The tooltip of a field in error now only shows once the user interacts with the field (#904)
+- In the incident notification wizard, clicking "Next" with a required question left empty did not always lead to that question or show a message. Multiple-answer questions, the Sectors step, and required questions shown after picking the answer that opens them are now checked before the step is sent, and the "Please select at least one option." message is shown even when the question is outside the visible part of the page (#906)
+- The loading wheel kept spinning after a regulator saved a review comment on a security objectives declaration (#921)
 
 ## [0.6.0] - 2026-10-06
 
@@ -781,6 +825,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.6.1]: https://github.com/informed-governance-project/SERIMA/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.18...v0.6.0
 [0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
 [0.5.17]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.16...v0.5.17
