@@ -308,6 +308,7 @@ def build_objective_navigation(security_objectives: list[SecurityObjective], sta
         "domains": domains,
         "is_grouped": len(domains) > 1,
         "initial_slide": initial_slide or 0,
+        "shows_failed": any(so.nav_symbol == "failed" for domain in domains for so in domain["objectives"]),
         "rule": "regulator" if is_regulator else "operator",
         "labels": get_navigation_labels(standard_answer, is_regulator),
     }
