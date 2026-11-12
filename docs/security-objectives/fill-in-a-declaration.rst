@@ -50,9 +50,8 @@ Its parts are numbered in the screenshot below and described one by one.
 
 1. **Submission date** and **Last update**: The submission date stays empty until the declaration is submitted.
 
-2. **Company** and **Evaluation Framework**: The operator the declaration is for, and the framework it answers.
-   The profile icon beside them opens the **Profile** pop-up, with the name, email and phone number of the person
-   who created the declaration.
+2. **Reference** and **Evaluation Framework**: The reference of the declaration, shared by all its versions,
+   and the framework it answers.
 
 3. **Review comment**: The speech bubble opens the regulator's comment on the whole declaration.
    It is greyed out until the regulator has sent the result of the review with a comment.

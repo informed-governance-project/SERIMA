@@ -31,6 +31,9 @@ Review the report
       :alt: Preliminary Incident Report link outlined in the Report column
       :target: ../_static/images/incident-notification/workflow-regulator-03.png
 
+   The header above the steps gives the **Reference**, **Company** and **Regulation** of the incident;
+   the **Contacts** icon beside them opens the same contact details as in the incident list.
+
 2. Go through the forms of the report with **Next**. They show the operator's answers, which you cannot change.
    When the operator has submitted several versions, the steps whose answers changed since the previous version are marked in orange,
    and each changed answer is outlined, with a **View previous version** button.

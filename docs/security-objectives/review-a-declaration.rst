@@ -76,7 +76,8 @@ Open a declaration
 ~~~~~~~~~~~~~~~~~~
 
 Click the **Review** icon (pencil) of the declaration. It opens on the declaration screen described in
-:ref:`declaration-screen`, where the operator's answers are read-only, on the first objective you have not reviewed yet. The profile icon beside **Company** gives you
+:ref:`declaration-screen`, where the operator's answers are read-only, on the first objective you have not reviewed yet. Its header also shows the **Company** the declaration is for, between
+its **Reference** and its **Evaluation Framework**, and the profile icon beside them gives you
 the name, email and phone number of the person who created the declaration. The parts specific to your review are numbered below.
 
 .. figure:: /_static/images/security-objectives/review-a-declaration-03.png

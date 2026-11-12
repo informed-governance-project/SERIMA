@@ -1939,8 +1939,9 @@ steps = [
 # which is why none of them opens 107: dashboard-09 shows that log.
 #
 # 67 is Under review with its objectives passed, in revision and not reviewed
-# yet. 36 is Revision required, not sent, with a review comment drafted. 51 is
-# the sent version that followed 36, and 50 the latest of four versions.
+# yet, and a review comment drafted; it is the only version of its declaration,
+# so it can be reviewed. 51 is a sent version, and 36 the one before it.
+# 50 is the latest of four versions.
 
 [[shots]]
 name = "images/security-objectives/review-a-declaration-01"
@@ -2027,7 +2028,7 @@ annotate = [{ selector = "#so_status_form > div:not(.d-none) select", box = true
 [[shots]]
 name = "images/security-objectives/review-a-declaration-07"
 role = "regulator_admin"
-path = "/securityobjectives/declaration?id=36"
+path = "/securityobjectives/declaration?id=67"
 selector = "#review_comment_so_declaration > .modal-dialog > .modal-content"
 steps = [
   # Send carries the same class; this is the comment-only icon, whose pop-up
