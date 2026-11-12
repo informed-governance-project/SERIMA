@@ -13,7 +13,7 @@ from governanceplatform.helpers import is_user_regulator
 from governanceplatform.utils.weasyprint_fetcher import RestrictedURLFetcher
 
 from .globals import OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
-from .helpers import can_see_review_comments, set_declaration_column_widths
+from .helpers import can_see_review_comments, group_objectives_by_domain, objectives_in_domain_order, set_declaration_column_widths
 from .models import MaturityLevel, SecurityMeasureAnswer, SecurityObjectiveStatus
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ def get_declaration_pdf(standard_answer: StandardAnswer, user: User) -> bytes:
     show_review_comments = can_see_review_comments(user, standard_answer)
 
     levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
-    security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
+    security_objectives_queryset = objectives_in_domain_order(standard)
     security_objectives = defaultdict(lambda: defaultdict(list))
 
     for so_in_standard in security_objectives_queryset:
@@ -80,6 +80,7 @@ def get_declaration_pdf(standard_answer: StandardAnswer, user: User) -> bytes:
             security_objectives[security_objective][maturity_level].append(measure)
 
     security_objectives = {so: dict(levels) for so, levels in security_objectives.items()}
+    domains = group_objectives_by_domain(list(security_objectives))
     static_theme_dir = settings.STATIC_THEME_DIR
     font_config = FontConfiguration()
 
@@ -95,6 +96,7 @@ def get_declaration_pdf(standard_answer: StandardAnswer, user: User) -> bytes:
             "review_status": get_review_status_label(standard_answer, user),
             "show_objective_status": is_user_regulator(user) or standard_answer.is_review_sent,
             "security_objectives": security_objectives,
+            "is_grouped": len(domains) > 1,
             "column_config": column_config,
             "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
             "score_display": standard.get_score_display_config(),

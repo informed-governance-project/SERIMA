@@ -16,7 +16,6 @@ from django.db.models import (
     BooleanField,
     Case,
     Count,
-    F,
     FloatField,
     Max,
     Min,
@@ -79,6 +78,7 @@ from .helpers import (
     get_exportable_standard_answers,
     get_scoped_standard_answers,
     get_standard_answers_with_progress,
+    objectives_in_domain_order,
     security_objective_exists,
     set_declaration_column_widths,
 )
@@ -256,16 +256,7 @@ def declaration(request):
     standard = standard_answer.standard
     newer_version = standard_answer.get_newer_submitted_version()
 
-    # The selector groups the objectives by domain, so its numbers follow the domains first.
-    security_objectives_queryset = (
-        standard.security_objectives_set.select_related("security_objective__domain")
-        .prefetch_related("security_objective__domain__translations")
-        .order_by(
-            F("security_objective__domain__position").asc(nulls_last=True),
-            "security_objective__domain_id",
-            "position",
-        )
-    )
+    security_objectives_queryset = objectives_in_domain_order(standard)
 
     levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
 
