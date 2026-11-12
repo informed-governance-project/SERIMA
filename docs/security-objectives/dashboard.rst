@@ -158,6 +158,9 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
 
 11. **Download**: Downloads the declaration as a PDF document. Until the regulator sends the result of the review,
     the PDF shows the status **Under review**, without the results of the objectives or the review comments.
+    As in the declaration, the objectives are listed domain by domain, each under a line naming its domain and its
+    place in it, for example *D2 · Access control · Objective 3 of 5 in this domain*. A framework with a single
+    domain shows no such line.
 
 12. **Delete**: Deletes the declaration. Only unsubmitted declarations can be deleted; for the others, the icon is greyed out.
 

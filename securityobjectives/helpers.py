@@ -26,7 +26,7 @@ from .models import SecurityObjectiveStatus, StandardAnswer
 if TYPE_CHECKING:
     from governanceplatform.models import Sector, User
 
-    from .models import SecurityObjective
+    from .models import SecurityObjective, SecurityObjectivesInStandard, Standard
 
 
 def security_objective_exists(company: Company, year: int | None = None, sector: Sector | None = None) -> bool:
@@ -268,12 +268,23 @@ def get_navigation_labels(standard_answer: StandardAnswer, is_regulator: bool) -
     }
 
 
-def build_objective_navigation(security_objectives: list[SecurityObjective], standard_answer: StandardAnswer, is_regulator: bool) -> dict:
-    """Group the objectives of the declaration by domain, for the objective selector.
+def objectives_in_domain_order(standard: Standard) -> QuerySet[SecurityObjectivesInStandard]:
+    """The objectives of the standard domain by domain, so their numbers follow the domains first."""
+    return (
+        standard.security_objectives_set.select_related("security_objective__domain")
+        .prefetch_related("security_objective__domain__translations")
+        .order_by(
+            F("security_objective__domain__position").asc(nulls_last=True),
+            "security_objective__domain_id",
+            "position",
+        )
+    )
 
-    The objectives must already be in their display order, domain by domain. Each one is
-    given its slide index, its number in the bar, its symbol and its domain. The page
-    opens on the first objective still to fill or to review.
+
+def group_objectives_by_domain(security_objectives: list[SecurityObjective]) -> list[dict]:
+    """Group the objectives by domain, giving each one its domain and its place in it.
+
+    The objectives must already be in their display order, domain by domain.
     """
     domains: list[dict] = []
     for domain, objectives in groupby(security_objectives, key=lambda security_objective: security_objective.domain):
@@ -284,17 +295,30 @@ def build_objective_navigation(security_objectives: list[SecurityObjective], sta
                 "objectives": list(objectives),
             }
         )
+    for domain in domains:
+        for position, security_objective in enumerate(domain["objectives"], start=1):
+            security_objective.nav_domain = domain
+            security_objective.nav_position_in_domain = position
+    return domains
+
+
+def build_objective_navigation(security_objectives: list[SecurityObjective], standard_answer: StandardAnswer, is_regulator: bool) -> dict:
+    """Group the objectives of the declaration by domain, for the objective selector.
+
+    The objectives must already be in their display order, domain by domain. Each one is
+    given its slide index, its number in the bar, its symbol and its domain. The page
+    opens on the first objective still to fill or to review.
+    """
+    domains = group_objectives_by_domain(security_objectives)
 
     index = 0
     initial_slide = None
     for domain in domains:
         domain["first_open"] = None
-        for position, security_objective in enumerate(domain["objectives"], start=1):
+        for security_objective in domain["objectives"]:
             security_objective.nav_index = index
             security_objective.nav_number = index + 1
             security_objective.nav_symbol = get_objective_symbol(security_objective, standard_answer, is_regulator)
-            security_objective.nav_domain = domain
-            security_objective.nav_position_in_domain = position
             if domain["first_open"] is None and is_objective_open(security_objective.nav_symbol, is_regulator):
                 domain["first_open"] = index
             index += 1
@@ -308,6 +332,7 @@ def build_objective_navigation(security_objectives: list[SecurityObjective], sta
         "domains": domains,
         "is_grouped": len(domains) > 1,
         "initial_slide": initial_slide or 0,
+        "shows_failed": any(so.nav_symbol == "failed" for domain in domains for so in domain["objectives"]),
         "rule": "regulator" if is_regulator else "operator",
         "labels": get_navigation_labels(standard_answer, is_regulator),
     }
