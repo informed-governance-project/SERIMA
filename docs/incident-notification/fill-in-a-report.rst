@@ -71,6 +71,8 @@ Fill in the report
 
 The report opens as a series of forms, shown as steps at the top of the screen.
 Click **Next** to move to the following form, **Previous** or the name of an earlier step to go back.
+Above the steps, a header recalls the creation and last update dates of the incident, its **Reference**,
+its **Regulation** and its sectors.
 
 .. important::
 

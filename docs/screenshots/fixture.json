@@ -19448,6 +19448,15 @@
   }
  },
  {
+  "model": "securityobjectives.standardanswergroup",
+  "pk": 51,
+  "fields": {
+   "notification_date": "2026-08-31T13:09:57.078Z",
+   "company": 46,
+   "group_id": "SO_R7KD2M4Q"
+  }
+ },
+ {
   "model": "securityobjectives.standardanswer",
   "pk": 23,
   "fields": {
@@ -19803,8 +19812,8 @@
    "creator_name": "Operator Admin",
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
-   "review_comment": null,
-   "group": 48
+   "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
+   "group": 51
   }
  },
  {
