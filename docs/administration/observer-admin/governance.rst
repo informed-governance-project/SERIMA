@@ -161,7 +161,7 @@ When someone has lost access to their authentication app, click **Reset 2FA toke
 or beside **2FA Activated** on their account, then **Confirm** in the **Attention** dialog. To reset several accounts
 at once, tick them, choose **Reset 2FA** in the **Action** drop-down and click **Run**. At their next login,
 they set up two-factor authentication again (see :doc:`/getting-started/enable-2fa`).
-You cannot reset your own: use **Account security** at the top of the console.
+You cannot reset your own: use **Account security** in the menu under your name, at the top right of the console.
 
 Remove an account
 """""""""""""""""

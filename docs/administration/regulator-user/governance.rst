@@ -139,4 +139,4 @@ Reset two-factor authentication
 
 You can reset the two-factor authentication of the operator and incident user accounts, with the **Reset 2FA token**
 button or the **Reset 2FA** action, as described in :ref:`platform-users`. You cannot reset it for regulator accounts,
-nor for your own: use **Account security** at the top of the console.
+nor for your own: use **Account security** in the menu under your name, at the top right of the console.

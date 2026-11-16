@@ -90,7 +90,7 @@ and work as in the list:
   The account is logged out either way. You cannot change your own role.
 - **Reset 2FA token** removes the authentication app of the account, when its owner has lost access to it.
   At the next login, they set up two-factor authentication again (see :doc:`/getting-started/enable-2fa`).
-  To reset your own, use **Account security** at the top of the console.
+  To reset your own, use **Account security** in the menu under your name, at the top right of the console.
 
 .. _operator-admin-approve:
 
