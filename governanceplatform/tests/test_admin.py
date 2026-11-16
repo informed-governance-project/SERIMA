@@ -127,8 +127,25 @@ def test_header_links_and_favicon_are_on_every_kind_of_admin_page(otp_client, po
     body = client.get(path).content.decode()
 
     assert body.count(f'href="{reverse("two_factor:profile")}"') == 1
+    assert body.count(f'href="{reverse("password_change")}"') == 1
     assert body.count(f'href="{reverse("logout")}"') == 1
     assert body.count("images/favicon.svg") == 1
+
+
+@pytest.mark.django_db
+def test_user_menu_is_in_the_header_not_the_sidebar(otp_client, populate_db):
+    user = platform_admin(populate_db["users"])
+    client = otp_client(user)
+
+    body = client.get("/admin/").content.decode()
+    menu = body[body.index('class="admin-user-menu"') :]
+
+    assert "openUserLinks" not in body
+    assert "switchTheme(" not in body
+    assert '<html lang="en" dir="ltr" class="light"' in body
+    assert user.email in menu
+    assert reverse("two_factor:profile") in menu
+    assert reverse("password_change") in menu
 
 
 @pytest.mark.django_db
