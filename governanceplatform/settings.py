@@ -172,10 +172,11 @@ UNFOLD = {
     "SITE_LOGO": lambda _request: static("images/logo.svg"),
     "STYLES": [
         lambda _request: static("css/admin.css"),
-        lambda _request: static("css/admin_dark.css"),
     ],
     "SCRIPTS": [lambda _request: static("js/admin_responsive_cards.js")],
     "COLORS": unfold_colors(),
+    # The public site has no dark mode, so the admin does not offer one either.
+    "THEME": "light",
 }
 
 AUTHENTICATION_BACKENDS = [
