@@ -172,6 +172,7 @@ UNFOLD = {
         lambda _request: static("css/admin.css"),
         lambda _request: static("css/admin_dark.css"),
     ],
+    "SCRIPTS": [lambda _request: static("js/admin_responsive_cards.js")],
 }
 
 AUTHENTICATION_BACKENDS = [
