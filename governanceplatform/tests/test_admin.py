@@ -1,4 +1,5 @@
 import pytest
+from django.urls import reverse
 from unfold.admin import BaseInlineMixin, ModelAdmin
 from unfold.sites import UnfoldAdminSite
 
@@ -116,3 +117,27 @@ def test_reset_buttons_ask_for_confirmation(otp_client, populate_db):
         assert f'formaction="{url}"' in body
     assert body.count("data-confirm-message=") >= 2
     assert 'id="account-action-confirm"' in body
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("path", ["/admin/", "/admin/governanceplatform/", "/admin/governanceplatform/user/"])
+def test_header_links_and_favicon_are_on_every_kind_of_admin_page(otp_client, populate_db, path):
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    body = client.get(path).content.decode()
+
+    assert body.count(f'href="{reverse("two_factor:profile")}"') == 1
+    assert body.count(f'href="{reverse("logout")}"') == 1
+    assert body.count("images/favicon.svg") == 1
+
+
+@pytest.mark.django_db
+def test_add_button_is_labelled_in_the_list_toolbar(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    body = client.get("/admin/governanceplatform/user/").content.decode()
+    toolbar = body[body.index('class="changelist-tools"') :]
+
+    assert 'class="changelist-add-link' in toolbar
+    assert f"Add {User._meta.verbose_name}" in toolbar
+    assert 'class="addlink' not in body
