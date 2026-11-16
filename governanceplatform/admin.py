@@ -37,6 +37,7 @@ from .forms import (
     FunctionalityAdminForm,
     ObserverAdminForm,
     ObserverConnectorAdminForm,
+    UserAdminForm,
 )
 from .formset import CompanyUserInlineFormset
 from .helpers import (
@@ -909,6 +910,7 @@ class UserPermissionsGroupListFilter(SimpleListFilter):
 
 @admin.register(User, site=admin_site)
 class UserAdmin(admin.ModelAdmin):
+    form = UserAdminForm
     list_display = [
         "is_active",
         "first_name",
@@ -977,7 +979,7 @@ class UserAdmin(admin.ModelAdmin):
 
         if not obj and user_in_group(request.user, "OperatorAdmin"):
 
-            class DynamicForm(forms.ModelForm):
+            class DynamicForm(UserAdminForm):
                 is_administrator = forms.BooleanField(required=False, label=_("Create this user as an administrator"))
 
                 class Meta:
