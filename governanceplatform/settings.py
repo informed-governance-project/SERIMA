@@ -16,6 +16,8 @@ import sys
 
 from django.templatetags.static import static
 
+from governanceplatform.unfold_colors import unfold_colors
+
 logger = logging.getLogger(__name__)
 
 DJANGO_CI = os.getenv("DJANGO_CI") == "True"
@@ -173,6 +175,7 @@ UNFOLD = {
         lambda _request: static("css/admin_dark.css"),
     ],
     "SCRIPTS": [lambda _request: static("js/admin_responsive_cards.js")],
+    "COLORS": unfold_colors(),
 }
 
 AUTHENTICATION_BACKENDS = [
