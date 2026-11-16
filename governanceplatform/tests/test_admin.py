@@ -49,6 +49,39 @@ def test_add_user_via_admin(otp_client, populate_db):
         assert user_in_group(created_user, expected_group), f"{creator_group} → {expected_group} expected, but got something else"
 
 
+def assert_add_user_rejects_email(client, email):
+    user_count = User.objects.count()
+
+    response = client.post(
+        "/admin/governanceplatform/user/add/",
+        {"email": email, "first_name": "test", "last_name": "test"},
+    )
+
+    assert response.status_code == 200
+    assert "email" in response.context["adminform"].form.errors
+    assert User.objects.count() == user_count
+
+
+@pytest.mark.django_db
+def test_add_user_via_admin_rejects_existing_email_in_other_case(otp_client, populate_db):
+    users = populate_db["users"]
+    creator = platform_admin(users)
+    existing = next(user for user in users if user != creator)
+
+    assert_add_user_rejects_email(otp_client(creator), existing.email.upper())
+
+
+@pytest.mark.django_db
+def test_operator_admin_add_user_rejects_existing_email_in_other_case(otp_client, operator_admin_with_pending_link):
+    context = operator_admin_with_pending_link
+    client = otp_client(context["operator_admin"])
+    session = client.session
+    session["company_in_use"] = context["company"].id
+    session.save()
+
+    assert_add_user_rejects_email(client, context["member"].email.upper())
+
+
 def platform_admin(users):
     return next(user for user in users if user_in_group(user, "PlatformAdmin"))
 
