@@ -89,7 +89,7 @@ Standards
 ~~~~~~~~~
 
 The **Standards** list shows whether each standard is **Active**, its **Label**, **Description** and **Regulator**.
-The **Import** and **Export** buttons at the top right are described in `Import and export a framework`_.
+The **Import** and **Export** buttons next to **Filters**, above the list, are described in `Import and export a framework`_.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-02.png
    :alt: Standards list with the Standards entry of the sidebar, the Import and Export buttons and the column headers outlined

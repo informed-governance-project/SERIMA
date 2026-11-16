@@ -8,8 +8,8 @@ This page describes them in the order of the set-up (see :doc:`index`).
 
 Every item works the same way:
 
-- Click its name to open the list. Click **Add** next to the name, or the **Add** button at the top right of the list,
-  to create a new one; click a name in the list to open and change it.
+- Click its name to open the list. Click **Add** next to the name, or the **Add** button (for example **Add User**)
+  next to **Filters** above the list, to create a new one; click a name in the list to open and change it.
 - To delete objects, tick them in the list, choose **Delete selected** in the **Action** drop-down and click **Run**.
   A confirmation page lists everything that will be deleted along with them.
 - Names, labels and descriptions can be translated: the tabs above the form (**English**, **French**, **Dutch**, **German**)
