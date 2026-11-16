@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Adding a user in the administration interface with the email address of an existing account written in a different case (e.g. `Jane.Doe@…` for `jane.doe@…`) now shows "An account with this email address already exists." instead of an error page
+
 - Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)
 
 - An operator who updated a security objectives declaration still under review got a new version carrying the regulator's unsent review, so the objective selector showed the objectives the regulator had marked for revision, and the **Previous version** pop-up showed the regulator's draft comments. A version updated before the review is sent now starts with every objective not reviewed and no review comment, and the previous version's review comments are shown only once that review is sent (#931)

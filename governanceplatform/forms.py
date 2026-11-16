@@ -305,6 +305,13 @@ class CustomTranslatableAdminForm(TranslatableModelForm):
             )
 
 
+class UserAdminForm(forms.ModelForm):
+    def clean_email(self):
+        # User.save() lowercases the email, so the unique check has to see the lowercased value or a
+        # case variant of an existing address passes the form and fails on the database constraint.
+        return self.cleaned_data["email"].lower()
+
+
 class TermsAcceptanceForm(forms.Form):
     accept = forms.BooleanField(label=_("I acknowledge and agree to the"))
 
