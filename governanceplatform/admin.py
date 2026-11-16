@@ -26,6 +26,8 @@ from import_export_extensions.admin.model_admins.export_job_admin import ExportJ
 from import_export_extensions.admin.model_admins.import_job_admin import ImportJobAdmin
 from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
+from unfold.admin import ModelAdmin, TabularInline
+from unfold.sites import UnfoldAdminSite
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
@@ -76,7 +78,7 @@ def get_group_id(name=""):
     return group_id
 
 
-class CustomAdminSite(admin.AdminSite):
+class CustomAdminSite(UnfoldAdminSite):
     site_header = SITE_NAME + " " + _("Settings")
     site_title = SITE_NAME
 
@@ -120,7 +122,7 @@ admin_site = CustomAdminSite()
 
 
 @admin.register(ImportJob, site=admin_site)
-class CustomImportJobAdmin(ImportJobAdmin):
+class CustomImportJobAdmin(ModelAdmin, ImportJobAdmin):
     def import_job_progress_view(self, request, job_id, **kwargs):
         try:
             response = super().import_job_progress_view(request, job_id, **kwargs)
@@ -141,7 +143,7 @@ class CustomImportJobAdmin(ImportJobAdmin):
 
 
 @admin.register(ExportJob, site=admin_site)
-class CustomExportJobAdmin(ExportJobAdmin):
+class CustomExportJobAdmin(ModelAdmin, ExportJobAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -193,7 +195,7 @@ class CustomExportJobAdmin(ExportJobAdmin):
         return response
 
 
-class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmin):
+class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, ModelAdmin, TranslatableAdmin):
     form = CustomTranslatableAdminForm
 
     translated_fields: list[str] = []
@@ -242,7 +244,7 @@ class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmi
         return qs.annotate(**final_annotations)
 
 
-class CustomTranslatableTabularInline(TranslatableTabularInline):
+class CustomTranslatableTabularInline(TabularInline, TranslatableTabularInline):
     form = CustomTranslatableAdminForm
 
 
@@ -255,7 +257,7 @@ class SettingsDummy(Model):
 
 
 @admin.register(SettingsDummy, site=admin_site)
-class SettingsAdmin(admin.ModelAdmin):
+class SettingsAdmin(ModelAdmin):
     change_list_template = "admin/settings_list.html"
 
     def changelist_view(self, request, extra_context=None):
@@ -273,7 +275,7 @@ class SettingsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Site, site=admin_site)
-class SiteAdmin(admin.ModelAdmin):
+class SiteAdmin(ModelAdmin):
     pass
 
 
@@ -326,7 +328,7 @@ for name, method in generate_display_methods(["label"]).items():
     setattr(EntityCategoryAdmin, name, method)
 
 
-class CompanyUserInline(admin.TabularInline):
+class CompanyUserInline(TabularInline):
     model = CompanyUser
     verbose_name = _("Contact for company")
     verbose_name_plural = _("Contacts for company")
@@ -452,7 +454,7 @@ class CompanyUserMultipleInline(CompanyUserInline):
 
 
 @admin.register(Company, site=admin_site)
-class CompanyAdmin(admin.ModelAdmin):
+class CompanyAdmin(ModelAdmin):
     list_display = [
         "identifier",
         "name",
@@ -648,7 +650,7 @@ class CompanyAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class userRegulatorInline(admin.TabularInline):
+class userRegulatorInline(TabularInline):
     model = RegulatorUser
     extra = 0
     min_num = 1
@@ -901,7 +903,7 @@ class UserPermissionsGroupListFilter(SimpleListFilter):
 
 
 @admin.register(User, site=admin_site)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(ModelAdmin):
     list_display = [
         "is_active",
         "first_name",
@@ -1729,7 +1731,7 @@ for name, method in generate_display_methods(["name", "full_name", "description"
     setattr(RegulatorAdmin, name, method)
 
 
-class ObserverRegulationInline(admin.TabularInline):
+class ObserverRegulationInline(TabularInline):
     model = ObserverRegulation
     verbose_name = _("Observer regulation")
     filter_horizontal = ("sectors",)
@@ -1745,7 +1747,7 @@ class ObserverRegulationInline(admin.TabularInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class ObserverUserInline(admin.TabularInline):
+class ObserverUserInline(TabularInline):
     model = ObserverUser
     verbose_name = _("Observer user")
     verbose_name_plural = _("Observer users")
@@ -1994,7 +1996,7 @@ for name, method in generate_display_methods(["label"]).items():
 
 
 @admin.register(ScriptLogEntry, site=admin_site)
-class ScriptLogEntryAdmin(admin.ModelAdmin):
+class ScriptLogEntryAdmin(ModelAdmin):
     list_display = ["action_time", "action", "object_repr", "additional_info"]
     readonly_fields = [
         "action_time",

@@ -53,6 +53,7 @@ dependencies = [
     "gunicorn>=27.0.0,<28",
     "django-import-export-extensions>=1.10.0,<2",
     "requests>=2.34.2,<3",
+    "django-unfold (>=0.110.1,<0.111)",
 ]
 
 [project.urls]

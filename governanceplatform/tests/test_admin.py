@@ -1,10 +1,21 @@
 import pytest
+from unfold.admin import BaseInlineMixin, ModelAdmin
+from unfold.sites import UnfoldAdminSite
 
+from governanceplatform.admin import admin_site
 from governanceplatform.helpers import user_in_group
 from governanceplatform.models import (
     ApplicationConfig,
     User,
 )
+
+
+def test_all_admin_registrations_use_unfold():
+    assert isinstance(admin_site, UnfoldAdminSite)
+
+    for model_admin in admin_site._registry.values():
+        assert isinstance(model_admin, ModelAdmin)
+        assert all(issubclass(inline, BaseInlineMixin) for inline in model_admin.inlines)
 
 
 @pytest.mark.django_db(transaction=True)

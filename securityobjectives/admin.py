@@ -23,6 +23,8 @@ from import_export_extensions.resources import CeleryModelResource
 from markdown import markdown
 from parler.forms import TranslatableModelForm
 from tablib import Dataset
+from unfold.admin import TabularInline
+from unfold.contrib.import_export.forms import ExportForm, ImportForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
 from governanceplatform.helpers import (
@@ -622,7 +624,7 @@ class StandardResource(CeleryModelResource, TranslationUpdateMixin):
         exclude = ("regulator",)
 
 
-class SecurityObjectiveInline(admin.TabularInline):
+class SecurityObjectiveInline(TabularInline):
     model = SecurityObjectivesInStandard
     ordering = ["position"]
     extra = 0
@@ -675,6 +677,8 @@ class SecurityObjectiveInline(admin.TabularInline):
 @admin.register(Standard, site=admin_site)
 class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin):
     form = StandardAdminForm
+    import_form_class = ImportForm
+    export_form_class = ExportForm
     resource_class = StandardResource
     should_escape_html = False
     # The declaration table columns are presentation and stay editable for the life

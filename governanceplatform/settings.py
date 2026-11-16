@@ -14,6 +14,8 @@ import logging
 import os
 import sys
 
+from django.templatetags.static import static
+
 logger = logging.getLogger(__name__)
 
 DJANGO_CI = os.getenv("DJANGO_CI") == "True"
@@ -128,6 +130,8 @@ except Exception:
 
 # Application definition
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.import_export",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -159,6 +163,16 @@ INSTALLED_APPS = [
     "captcha",
     "colorfield",
 ]
+
+UNFOLD = {
+    "SITE_TITLE": SITE_NAME,
+    "SITE_HEADER": SITE_NAME,
+    "SITE_LOGO": lambda _request: static("images/logo.svg"),
+    "STYLES": [
+        lambda _request: static("css/admin.css"),
+        lambda _request: static("css/admin_dark.css"),
+    ],
+}
 
 AUTHENTICATION_BACKENDS = [
     "governanceplatform.custom_auth_backend.CaseInsensitiveEmailBackend",

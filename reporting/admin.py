@@ -5,6 +5,8 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ImportExportModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
+from unfold.contrib.import_export.forms import ExportForm, ImportForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
 from governanceplatform.mixins import FunctionalityMixin, TranslationUpdateMixin
@@ -48,6 +50,8 @@ class ObservationRecommendationResource(TranslationUpdateMixin, resources.ModelR
 
 @admin.register(ObservationRecommendation, site=admin_site)
 class ObservationRecommendationAdmin(FunctionalityMixin, CustomTranslatableAdmin, ImportExportModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = ExportForm
     resource_class = ObservationRecommendationResource
     list_display = ["code", "description", "get_sector_name"]
     search_fields = ["code", "description"]
@@ -74,13 +78,13 @@ class ObservationRecommendationAdmin(FunctionalityMixin, CustomTranslatableAdmin
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class ColorInline(admin.TabularInline):
+class ColorInline(TabularInline):
     model = Color
     extra = 0
     fields = ("position", "color")
 
 
-class TemplateInline(admin.TabularInline):
+class TemplateInline(TabularInline):
     model = Template
     form = TemplateAdminForm
     extra = 0
@@ -100,7 +104,7 @@ class TemplateInline(admin.TabularInline):
 
 
 @admin.register(Configuration, site=admin_site)
-class ConfigurationAdmin(FunctionalityMixin, admin.ModelAdmin):
+class ConfigurationAdmin(FunctionalityMixin, ModelAdmin):
     inlines = [TemplateInline, ColorInline]
     list_display = ("display_regulation", "standard", "regulator")
     fields = ["standard"]
