@@ -41,7 +41,7 @@ dependencies = [
     "django-cookiebanner>=0.2.8,<0.3",
     "django-health-check>=4.0.0,<5",
     "whitenoise>=6.9.0,<7",
-    "django-simple-captcha>=0.7.0,<0.8",
+    "django-simple-captcha>=0.8.0,<0.9",
     "celery>=5.5.1,<6",
     "redis>=8.0.0,<9",
     "markdown>=3.10.1,<4",
@@ -64,17 +64,17 @@ Documentation = "https://serima.readthedocs.io"
 poetry-plugin-export = ">=1.8"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.17.2"
-pre-commit = "^4.2.0"
-autoflake = "^2.3.1"
-mypy = "<3.0.0"
-django-stubs = {version = "^6.0.3", extras = ["compatible-mypy"]}
-types-requests = "^2.32.0.20250515"
-pip-audit = "^2.9.0"
-pyparsing = "^3.2.3"
-pytest = "^9.0.3"
-pytest-django = "^4.11.1"
-pytest-html = "^4.1.1"
+ruff = "^0.17.5"
+pre-commit = "^4.7.0"
+autoflake = "^2.4.0"
+mypy = "^2.4.1"
+django-stubs = {version = "^6.1.2", extras = ["compatible-mypy"]}
+types-requests = "^2.33.0.20261030"
+pip-audit = "^2.10.1"
+pyparsing = "^3.3.3"
+pytest = "^9.2.0"
+pytest-django = "^4.14.0"
+pytest-html = "^4.2.0"
 pytest-cov = "^7.1.0"
 
 
@@ -82,10 +82,9 @@ pytest-cov = "^7.1.0"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-sphinx-book-theme = "^1.0.1"
-sphinxcontrib-openapi = "^0.8.1"
-sphinx = "^9.1.0"
-playwright = "^1.62.0"
+sphinxcontrib-openapi = "^0.10.0"
+sphinx = "^9.2.0"
+playwright = "^1.65.2"
 sphinx-rtd-theme = "^3.1.0"
 
 [build-system]

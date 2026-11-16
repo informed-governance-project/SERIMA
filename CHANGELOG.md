@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The column chooser of the reporting dashboard labelled the author column "Autor" (#673)
 - Unticking every value of a multi-choice filter, such as the sectors, and clicking "Search" left the previous values applied until "Reset" was clicked. The "Filter" button of the incident list also showed "(Active)" after any search from the filter pop-up, even with every field left empty, as a significant impact left on "Unknown" counted as a filter; that default choice now reads "---------", like the other fields of the pop-up (#673)
 - Applying a filter, a search or a sort order while on a later page of a list kept that page number, so the new results could open on their last page instead of the first (#673)
+- Adding a user in the administration interface with the email address of an existing account written in a different case (e.g. `Jane.Doe@…` for `jane.doe@…`) now shows "An account with this email address already exists." instead of an error page
 
 - Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)
 
