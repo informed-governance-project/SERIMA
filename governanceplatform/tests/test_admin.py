@@ -116,9 +116,11 @@ def test_reset_buttons_ask_for_confirmation(otp_client, populate_db):
     client = otp_client(platform_admin(populate_db["users"]))
 
     body = client.get("/admin/governanceplatform/user/").content.decode()
+    header, toolbar = body.split('class="changelist-tools"', 1)
 
     for url in ("reset-accepted-terms/", "reset-cookie-acceptation/"):
-        assert f'formaction="{url}"' in body
+        assert f'formaction="{url}"' not in header
+        assert f'formaction="{url}"' in toolbar
     assert body.count("data-confirm-message=") >= 2
     assert 'id="account-action-confirm"' in body
 
