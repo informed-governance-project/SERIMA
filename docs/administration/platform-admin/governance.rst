@@ -235,6 +235,10 @@ An observer receives only the incidents covered by its observer regulations.
 
    An observer without any observer regulation receives no incidents.
 
+Each observer regulation is a card. Saved cards are closed and show the regulation, then what the observer receives
+from it: *All sectors* or the number of sectors chosen, and *All incidents* or the number of incident rules.
+Click the regulation or the arrow at the right of a card to open it.
+
 Click **Add another Observer regulation** for each regulation the observer is entitled to, and fill in:
 
 - **Legal basis**: the regulation. An observer can have only one observer regulation per regulation.

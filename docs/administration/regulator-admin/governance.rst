@@ -36,13 +36,15 @@ Regulator accounts
 ~~~~~~~~~~~~~~~~~~
 
 The **Regulator users** section at the bottom of the form of your regulator lists all its accounts,
-administrators and users, one row each.
+administrators and users, one card each. The cards are closed: each shows the name of the account, followed by
+*Administrator* or by the number of sectors of a regulator user. Click the name or the arrow at the right of a card
+to open it; a card you add opens by itself.
 
 .. figure:: /_static/images/administration/regulator-admin/governance-02.png
    :alt: Regulator users section with the row of a regulator user and the Add another Regulator user link outlined
    :target: ../../_static/images/administration/regulator-admin/governance-02.png
 
-Each row has:
+Each card has:
 
 - **User**: the account.
 - **Is administrator**: ticked for a regulator administrator, unticked for a regulator user.
