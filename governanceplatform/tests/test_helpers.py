@@ -224,6 +224,23 @@ def test_sanitize_html_removes_scripts_and_unsafe_styles():
     assert sanitized == '<p style="color: red;">Safe</p>alert(1)'
 
 
+def test_sanitize_html_keeps_what_the_rich_text_editor_writes():
+    """Keep the paragraphs, quotes and underlines of the admin's rich-text editor (Trix)."""
+    html = "<div>First</div><div>Second <u>line</u></div><blockquote>Quote</blockquote>"
+
+    assert helpers.sanitize_html(html) == html
+
+
+def test_render_to_string_multi_languages_sends_the_content_as_html(monkeypatch):
+    """The content is HTML: sent sanitised, with no Markdown conversion of what it says."""
+    monkeypatch.setattr(helpers, "render_to_string", lambda template, context: context["content"])
+    content = SimpleNamespace(safe_translation_getter=lambda field, language_code: "<div>Use **bold**</div><script>x</script>")
+
+    result = helpers.render_to_string_multi_languages("email.html", {}, lambda text, obj: text, content=content, object=object())
+
+    assert "<div>Use **bold**</div>x" in result
+
+
 @pytest.fixture
 def referer_request():
     """Build a request carrying the given Referer header, as a browser would send it."""

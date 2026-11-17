@@ -16,7 +16,6 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
-from markdown import markdown
 from parler.models import TranslatableModel
 from unfold.admin import ModelAdmin, TabularInline
 
@@ -816,12 +815,7 @@ class EmailAdmin(EmailPlaceholdersMixin, CustomTranslatableAdmin):
     def html_preview(self, obj):
         if not obj or not obj.content:
             return _("No preview yet")
-        html_content = markdown(
-            text=obj.content,
-            extensions=["extra", "sane_lists", "legacy_attrs", "nl2br"],
-            output_format="html",
-        )
-        html_content = sanitize_html(html_content)
+        html_content = sanitize_html(obj.content)
         return mark_safe(
             f"""
             <div class="markdown-html-preview">

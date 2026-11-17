@@ -56,8 +56,9 @@ Use the **By Email type** filter to see which templates are used as opening, clo
 An email template has:
 
 - a **Name**, which identifies it in the drop-downs of the reports and workflows. Operators never see it.
-- a **Subject** and a **Content**, which can be translated. The content is written in Markdown:
-  the **HTML preview** below it shows how it is formatted, once saved.
+- a **Subject** and a **Content**, which can be translated. The content is formatted in the editor itself,
+  with its toolbar: bold, italic, headings, lists, quotes and links. The **HTML preview** below it shows,
+  once saved, the content as the email sends it.
 
 .. figure:: /_static/images/incident-notification/configuration-02.png
    :alt: Change Email form with the language tabs, the Name, Subject and Content fields and the Available placeholders button outlined

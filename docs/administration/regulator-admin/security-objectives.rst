@@ -52,8 +52,9 @@ The **Email templates** list shows the **Name**, **Subject** and **Content** of 
 A template has:
 
 - a **Name**, which identifies it in the drop-downs of the standards. Operators never see it.
-- a **Subject** and a **Content**, which can be translated. The content is written in Markdown:
-  the **HTML preview** below it shows how it is formatted, once saved.
+- a **Subject** and a **Content**, which can be translated. The content is formatted in the editor itself,
+  with its toolbar: bold, italic, headings, lists, quotes and links. The **HTML preview** below it shows,
+  once saved, the content as the email sends it.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-01.png
    :alt: Change Email template form with its name, subject, content, the Available placeholders button and HTML preview
