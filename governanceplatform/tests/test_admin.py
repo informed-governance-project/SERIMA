@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from django.urls import reverse
 from unfold.admin import BaseInlineMixin, ModelAdmin
 from unfold.sites import UnfoldAdminSite
@@ -133,19 +134,47 @@ def test_header_links_and_favicon_are_on_every_kind_of_admin_page(otp_client, po
 
 
 @pytest.mark.django_db
+def test_change_form_keeps_the_header_and_moves_history_above_the_form(otp_client, populate_db):
+    user = platform_admin(populate_db["users"])
+    client = otp_client(user)
+
+    body = client.get(reverse("admin:governanceplatform_user_change", args=[user.pk])).content.decode()
+    tools = body[body.index('class="changeform-tools"') : body.index('id="user_form"')]
+
+    assert body.count(f'href="{reverse("logout")}"') == 1
+    assert 'class="addlink' not in body
+    assert reverse("admin:governanceplatform_user_history", args=[user.pk]) in tools
+
+
+@pytest.mark.django_db
 def test_user_menu_is_in_the_header_not_the_sidebar(otp_client, populate_db):
     user = platform_admin(populate_db["users"])
     client = otp_client(user)
 
     body = client.get("/admin/").content.decode()
-    menu = body[body.index('class="admin-user-menu"') :]
+    menu = body[body.index('class="admin-dropdown admin-user-menu"') :]
 
     assert "openUserLinks" not in body
     assert "switchTheme(" not in body
     assert '<html lang="en" dir="ltr" class="light"' in body
     assert user.email in menu
+    assert f'<span class="admin-user-menu-role">{user.get_permissions_groups()}</span>' in menu
     assert reverse("two_factor:profile") in menu
     assert reverse("password_change") in menu
+
+
+@pytest.mark.django_db
+def test_language_dropdown_submits_each_language(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    body = client.get("/admin/").content.decode()
+    form = body[body.index('id="set_language_form"') :]
+
+    assert 'id="language_selector"' not in body
+    assert form.count('name="language"') == len(settings.LANGUAGES)
+    for code, _name in settings.LANGUAGES:
+        assert f'value="{code}"' in form
+    assert form.count('aria-current="true"') == 1
 
 
 @pytest.mark.django_db
