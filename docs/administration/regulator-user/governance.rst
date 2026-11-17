@@ -120,7 +120,8 @@ Change an account
 """""""""""""""""
 
 Click a name to open the account. For an operator or incident user account, you can change its contact details
-and untick **Active** to deactivate it: its owner can no longer log in. Its **Roles**, **Date joined**,
+and untick **Active** to deactivate it: its owner can no longer log in, and it leaves the users of its operators.
+Its **Roles**, **Date joined**,
 **Email verified** and **2FA Activated** are read-only, and its operators are changed in the form of the operator.
 
 .. figure:: /_static/images/administration/regulator-user/governance-05.png

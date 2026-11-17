@@ -85,7 +85,7 @@ The **Observer users** section at the bottom of the form of your observer lists 
 
 Each row has:
 
-- **User**: the account. The drop-down lists the accounts of your observer and the observer administrator accounts
+- **User**: the account. The drop-down lists the active accounts of your observer and the active observer administrator accounts
   linked to no observer.
 - **Is administrator**: keep it ticked: every member of an observer's staff is an observer administrator.
   Changing it switches the role of the account and logs it out.

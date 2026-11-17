@@ -41,7 +41,7 @@ administrators and users, one card each. The cards are closed: each shows the na
 to open it; a card you add opens by itself.
 
 .. figure:: /_static/images/administration/regulator-admin/governance-02.png
-   :alt: Regulator users section with the row of a regulator user and the Add another Regulator user link outlined
+   :alt: Regulator users section with the card of a regulator user and the Add another Regulator user link outlined
    :target: ../../_static/images/administration/regulator-admin/governance-02.png
 
 Each card has:
@@ -64,7 +64,7 @@ Add an account
 """"""""""""""
 
 1. Click **Add another Regulator user**.
-2. Select the account in the **User** drop-down, which lists the regulator accounts not yet attached to a regulator,
+2. Select the account in the **User** drop-down, which lists the active regulator accounts not yet attached to a regulator,
    or click the plus icon beside it to create the account in a pop-up, with its **First name**, **Last name**,
    **Email address** and **Phone number**.
 3. Tick **Is administrator** to make it a regulator administrator. Otherwise, choose its **Sectors**.
@@ -76,18 +76,17 @@ The new account has no password yet. Its owner chooses one with **Password forgo
 (see :doc:`/getting-started/enable-2fa`).
 
 You can also create the account with **Add User** in the **Users** list: it is created as a regulator user
-attached to no regulator. Open it, choose your regulator in its **Regulator user** section (see `Users`_),
-and click **Save**.
+attached to no regulator. Attach it to your regulator as above: the **User** drop-down lists it.
 
 Remove an account
 """""""""""""""""
 
-Tick **Delete?** on the row of the account and click **Save**. The account is not deleted, but deactivated:
+Click the bin icon at the right of the card of the account and click **Save**. The account is not deleted, but deactivated:
 its owner can no longer log in.
 
 .. warning::
 
-   Your own account is listed too. Unticking **Is administrator** or ticking **Delete?** on your own row
+   Your own account is listed too. Unticking **Is administrator** or removing your own card
    takes away your own access.
 
 .. _regulator-users:
@@ -107,11 +106,13 @@ whether the email address is verified and two-factor authentication is activated
    :target: ../../_static/images/administration/regulator-admin/governance-03.png
 
 Click a name to open the account. You can change its contact details and untick **Active** to deactivate it:
-its owner can no longer log in. The account of a regulator user or administrator also has its
-**Regulator user** section, which works like a row of the **Regulator users** section of your regulator.
+its owner can no longer log in, and it leaves the **Regulator users** section of your regulator. Whether it is
+an administrator, what it may export and its sectors are set in that section (see :ref:`regulator-accounts`).
+To add back an account you removed or deactivated, tick its **Active** box first: the **User** drop-down lists
+active accounts only.
 
 .. figure:: /_static/images/administration/regulator-admin/governance-04.png
-   :alt: Change User form of a regulator user with the Active box, the Reset 2FA token button and the Regulator user section outlined
+   :alt: Change User form of a regulator user with the Active box and the Reset 2FA token button outlined
    :target: ../../_static/images/administration/regulator-admin/governance-04.png
 
 The accounts of an operator are attached to it by a regulator user or by its operator administrators

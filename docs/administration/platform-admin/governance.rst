@@ -63,7 +63,7 @@ The other accounts of the regulator are created by these administrators, and are
 
 To add an administrator, click **Add another Regulator user**, then either:
 
-- select the account in the **User** drop-down, which lists the accounts that have no role yet;
+- select the account in the **User** drop-down, which lists the active accounts that have no role yet;
 - or click the plus icon beside it to create the account in a pop-up, with its **First name**, **Last name**,
   **Email address** and **Phone number**.
 
@@ -313,7 +313,8 @@ Change or deactivate an account
 """""""""""""""""""""""""""""""
 
 Click a name to open the account. You can change its contact details and, for a platform or regulator administrator,
-untick **Active** to deactivate it: its owner can no longer log in.
+untick **Active** to deactivate it: its owner can no longer log in, and a regulator or observer administrator
+leaves the **Regulator users** or **Observer users** section of its regulator or observer.
 
 .. figure:: /_static/images/administration/platform-admin/governance-11.png
    :alt: Change User form of a regulator administrator with the Active box and the Reset 2FA token button
