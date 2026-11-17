@@ -434,7 +434,9 @@ class CompanyUserInline(TabularInline):
         return super().has_delete_permission(request, obj)
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
+        # A deactivated account is gone from its company, as from its regulator or observer:
+        # its row would hold a user the User drop-down no longer offers, which fails validation.
+        queryset = super().get_queryset(request).filter(user__is_active=True)
         user = request.user
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
@@ -651,17 +653,19 @@ class CompanyAdmin(ModelAdmin):
 
 
 class userRegulatorInline(StackedInline):
+    """The accounts of a regulator, in its form."""
+
     model = RegulatorUser
     extra = 0
     min_num = 1
-    max_num = 1
+    collapsible = True
 
     filter_horizontal = [
         "sectors",
     ]
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request).select_related("user")
+        qs = super().get_queryset(request).filter(user__is_active=True).select_related("user").prefetch_related("sectors")
         user = request.user
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
@@ -676,15 +680,6 @@ class userRegulatorInline(StackedInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "regulator":
-            user = request.user
-            # Platform Admin
-            if user_in_group(user, "PlatformAdmin"):
-                kwargs["queryset"] = Regulator.objects.all()
-            # Regulator Admin
-            if user_in_group(user, "RegulatorAdmin"):
-                kwargs["queryset"] = user.regulators.all()
-
         if db_field.name == "user":
             RegulatorAdminGroupId = get_group_id(name="RegulatorAdmin")
             RegulatorUserGroupId = get_group_id(name="RegulatorUser")
@@ -693,6 +688,7 @@ class userRegulatorInline(StackedInline):
             current_id = None
             if request.resolver_match.kwargs.get("object_id"):
                 current_id = request.resolver_match.kwargs["object_id"]
+            # Active accounts only: saving a RegulatorUser reactivates its account (signals.py).
             if user_in_group(user, "PlatformAdmin"):
                 kwargs["queryset"] = User.objects.filter(
                     Q(groups=None)
@@ -703,7 +699,8 @@ class userRegulatorInline(StackedInline):
                     | Q(
                         groups__in=[RegulatorAdminGroupId],
                         regulators=current_id,
-                    )
+                    ),
+                    is_active=True,
                 )
             # Regulator Admin
             if user_in_group(user, "RegulatorAdmin"):
@@ -715,26 +712,11 @@ class userRegulatorInline(StackedInline):
                     | Q(
                         groups__in=[RegulatorAdminGroupId, RegulatorUserGroupId],
                         regulators=user.regulators.first(),
-                    )
+                    ),
+                    is_active=True,
                 )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    # Revoke the permissions of the logged user
-    def has_add_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_add_permission(request, obj)
-
-    def has_change_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_change_permission(request, obj)
-
-    def has_delete_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_delete_permission(request, obj)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -765,15 +747,6 @@ class userRegulatorInline(StackedInline):
         # Django appends readonly fields after the editable ones, which splits the export flags apart.
         order = ["user", "regulator", "is_regulator_administrator", "can_export_incidents", "can_export_security_objectives", "sectors"]
         return sorted(super().get_fields(request, obj), key=order.index)
-
-
-class userRegulatorMultipleInline(userRegulatorInline):
-    max_num = None
-    # A regulator lists all its users; the user form has a single card, left open.
-    collapsible = True
-
-    def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("sectors")
 
 
 # reset the 2FA we delete the TOTP devices
@@ -1400,36 +1373,6 @@ class UserAdmin(ModelAdmin):
 
         return fieldsets
 
-    def get_inline_instances(self, request, obj=None):
-        inline_instances = super().get_inline_instances(request, obj)
-        user = request.user
-
-        # Exclude all inlines for the logged-in user
-        if obj and obj == user:
-            return []
-
-        # PlatformAdmin inlines
-        if user_in_group(user, "PlatformAdmin"):
-            inline_instances = []
-
-        # RegulatorAdmin inlines
-        if user_in_group(user, "RegulatorAdmin"):
-            if obj and is_user_regulator(obj):
-                inline_instances = [userRegulatorInline(self.model, self.admin_site)]
-            if obj and is_user_operator(obj):
-                inline_instances = []
-
-        # RegulatorUser inlines
-        if user_in_group(user, "RegulatorUser"):
-            if obj and user_in_group(obj, "OperatorAdmin"):
-                inline_instances = []
-
-        # OperatorAdmin inlines
-        if user_in_group(user, "OperatorAdmin"):
-            inline_instances = []
-
-        return inline_instances
-
     def get_list_display(self, request):
         list_display = super().get_list_display(request)
 
@@ -1717,7 +1660,7 @@ class RegulatorAdmin(CustomTranslatableAdmin):
 
         return readonly_fields
 
-    inlines = (userRegulatorMultipleInline,)
+    inlines = (userRegulatorInline,)
 
     def has_change_permission(self, request, obj=None):
         user = request.user
@@ -1764,7 +1707,7 @@ class ObserverUserInline(TabularInline):
     min_num = 0
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = super().get_queryset(request).filter(user__is_active=True)
         user = request.user
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
@@ -1779,6 +1722,7 @@ class ObserverUserInline(TabularInline):
             current_id = None
             if "object_id" in request.resolver_match.kwargs:
                 current_id = request.resolver_match.kwargs["object_id"]
+            # Active accounts only: saving an ObserverUser reactivates its account (signals.py).
             if user_in_group(user, "PlatformAdmin"):
                 kwargs["queryset"] = User.objects.filter(
                     Q(groups=None)
@@ -1789,7 +1733,8 @@ class ObserverUserInline(TabularInline):
                     | Q(
                         groups__in=[ObserverAdminGroupID],
                         observers=current_id,
-                    )
+                    ),
+                    is_active=True,
                 )
             # Observer Admin
             if user_in_group(user, "ObserverAdmin"):
@@ -1801,7 +1746,8 @@ class ObserverUserInline(TabularInline):
                     | Q(
                         groups__in=[ObserverAdminGroupID, ObserverUserGroupID],
                         observers=user.observers.first(),
-                    )
+                    ),
+                    is_active=True,
                 )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
