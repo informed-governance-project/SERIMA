@@ -8,6 +8,9 @@ from governanceplatform.admin import admin_site
 from governanceplatform.helpers import user_in_group
 from governanceplatform.models import (
     ApplicationConfig,
+    ObserverRegulation,
+    RegulatorUser,
+    Sector,
     User,
 )
 
@@ -201,6 +204,69 @@ def test_unpaginated_list_shows_only_the_count(otp_client, populate_db):
 
     assert "admin-pagination-pages" not in pagination
     assert str(User._meta.verbose_name_plural) in pagination.split("</div>")[0]
+
+
+@pytest.mark.django_db
+def test_regulator_user_cards_are_titled_with_the_user(otp_client, populate_db):
+    admin = next(user for user in populate_db["users"] if user_in_group(user, "RegulatorAdmin"))
+    regulator = admin.regulators.first()
+
+    body = otp_client(admin).get(reverse("admin:governanceplatform_regulator_change", args=[regulator.pk])).content.decode()
+
+    for regulator_user in regulator.regulatoruser_set.select_related("user"):
+        assert f'<strong class="font-semibold select-none">{regulator_user}</strong>' in body
+
+
+@pytest.mark.django_db
+def test_regulator_user_cards_collapse_with_a_summary_and_a_toggle(otp_client, populate_db):
+    admin = next(user for user in populate_db["users"] if user_in_group(user, "RegulatorAdmin"))
+    regulator = admin.regulators.first()
+    regulator_users = list(regulator.regulatoruser_set.all())
+
+    body = otp_client(admin).get(reverse("admin:governanceplatform_regulator_change", args=[regulator.pk])).content.decode()
+
+    assert body.count('class="inline-toggle"') == len(regulator_users) + 1  # the empty form for "Add another" too
+    for regulator_user in regulator_users:
+        assert f'<span class="inline-summary" x-show="!openRow">{regulator_user.get_inline_summary()}</span>' in body
+
+
+@pytest.mark.django_db
+def test_regulator_user_summary_names_the_role_or_counts_the_sectors(populate_db):
+    regulator_user = RegulatorUser.objects.filter(is_regulator_administrator=False).first()
+    regulator_user.sectors.set(Sector.objects.all()[:2])
+
+    assert regulator_user.get_inline_summary() == "2 sectors"
+
+    regulator_user.is_regulator_administrator = True
+    assert regulator_user.get_inline_summary() == "Administrator"
+
+
+@pytest.mark.django_db
+def test_observer_regulation_cards_are_titled_with_the_regulation(otp_client, populate_db):
+    observer_regulation = ObserverRegulation.objects.select_related("observer", "regulation").first()
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    body = client.get(reverse("admin:governanceplatform_observer_change", args=[observer_regulation.observer.pk])).content.decode()
+    card = body[body.index(f'<strong class="font-semibold select-none">{observer_regulation.regulation}</strong>') :]
+
+    assert f'<span class="inline-summary" x-show="!openRow">{observer_regulation.get_inline_summary()}</span>' in card
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("sector_count", "incident_rule", "summary"),
+    [
+        (0, {}, "All sectors · All incidents"),
+        (2, {"conditions": [{"include": ["PUBLIC"]}]}, "2 sectors · 1 rule"),
+        (1, {"conditions": [{"include": ["PUBLIC"]}, {"include": ["CRITICAL_INFRA"]}]}, "1 sector · 2 rules"),
+    ],
+)
+def test_observer_regulation_summary_counts_sectors_and_rules(populate_db, sector_count, incident_rule, summary):
+    observer_regulation = ObserverRegulation.objects.first()
+    observer_regulation.incident_rule = incident_rule
+    observer_regulation.sectors.set(Sector.objects.all()[:sector_count])
+
+    assert observer_regulation.get_inline_summary() == summary
 
 
 @pytest.mark.django_db
