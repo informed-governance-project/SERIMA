@@ -107,6 +107,7 @@ class DomainAdmin(
         "label_display",
         "creator",
     ]
+    list_display_links = ["label_display"]
 
     fields = [
         "standard",
@@ -696,7 +697,7 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         "security_objective_closure_email",
     )
     list_display = ["active", "label_display", "description_display", "regulator"]
-    list_display_links = ["active", "label_display"]
+    list_display_links = ["label_display"]
     search_fields = [
         "translations__label",
         "translations__description",
@@ -895,6 +896,7 @@ class MaturityLevelAdmin(
         "label_display",
         "creator",
     ]
+    list_display_links = ["label_display"]
     list_filter = ["standard", "level", "creator"]
     translated_fields = ["label"]
     related_fields = [("standard", "label")]
@@ -997,6 +999,7 @@ class SecurityObjectiveAdmin(
         "domain",
         "creator",
     ]
+    list_display_links = ["unique_code", "objective_display"]
     exclude = ["is_archived", "creator_name", "creator"]
     list_filter = [
         "standard",
@@ -1151,6 +1154,7 @@ class SecurityMeasureAdmin(
         "description_display",
         "creator",
     ]
+    list_display_links = ["description_display"]
     search_fields = [
         "security_objective__standard_link__standard__translations__label",
         "security_objective__unique_code",

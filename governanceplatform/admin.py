@@ -465,6 +465,7 @@ class CompanyAdmin(ModelAdmin):
         "email",
         "phone_number",
     ]
+    list_display_links = ["identifier", "name"]
     filter_horizontal = ["entity_categories", "sectors"]
     search_fields = [
         "name",
@@ -1606,6 +1607,7 @@ class UserAdmin(ModelAdmin):
 class FunctionalityAdmin(CustomTranslatableAdmin):
     form = FunctionalityAdminForm
     list_display = ["type", "name_display", "get_roles"]
+    list_display_links = ["type", "name_display"]
     fields = (
         "type",
         "name",
