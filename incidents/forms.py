@@ -11,6 +11,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from django_countries import countries
 from parler.widgets import SortedCheckboxSelectMultiple
+from unfold.widgets import UnfoldAdminSelectWidget
 
 from governanceplatform.forms import FreeTextField
 from governanceplatform.helpers import (
@@ -1341,21 +1342,26 @@ class QuestionOptionsModelChoiceField(forms.ModelChoiceField):
 
 
 class ConditionalQuestionOptionForm(forms.ModelForm):
+    # Declared on the form, these fields miss the widgets Unfold gives model fields.
     report = ReportModelChoiceField(
         queryset=Workflow.objects.none(),
         label=_("Report"),
+        widget=UnfoldAdminSelectWidget,
     )
     question_options = QuestionOptionsModelChoiceField(
         queryset=QuestionOptions.objects.none(),
         label=_("Question"),
+        widget=UnfoldAdminSelectWidget,
     )
     predefined_answer = forms.ModelChoiceField(
         queryset=PredefinedAnswer.objects.none(),
         label=_("Selected answer"),
+        widget=UnfoldAdminSelectWidget,
     )
     next_question_options = forms.ModelChoiceField(
         queryset=QuestionOptions.objects.none(),
         label=_("Next question"),
+        widget=UnfoldAdminSelectWidget,
     )
 
     class Meta:
