@@ -81,6 +81,8 @@ class ObservationRecommendationAdmin(FunctionalityMixin, CustomTranslatableAdmin
 class ColorInline(TabularInline):
     model = Color
     extra = 0
+    # Unfold titles each row with the object's text, which only repeats the colour of the row.
+    show_title = False
     fields = ("position", "color")
 
 
@@ -88,6 +90,8 @@ class TemplateInline(TabularInline):
     model = Template
     form = TemplateAdminForm
     extra = 0
+    # Unfold titles each row with the object's text, which only repeats its Language.
+    show_title = False
     fields = ("language", "template_file", "download_link")
     readonly_fields = ("download_link",)
 
@@ -96,7 +100,7 @@ class TemplateInline(TabularInline):
         if obj.pk and obj.template_file:
             url = reverse("reporting_template_download", args=[obj.pk])
             return format_html(
-                '<a class="viewlink" href="{}" download>{}</a>',
+                '<a class="font-medium text-primary-600" href="{}" download>{}</a>',
                 url,
                 _("Download"),
             )
