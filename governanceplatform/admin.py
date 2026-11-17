@@ -33,7 +33,7 @@ from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
 from .decorators import check_user_is_correct
 from .email import send_html_email
-from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm
+from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm, UserAdminForm
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     delete_file_and_parents,
@@ -883,6 +883,7 @@ class UserPermissionsGroupListFilter(SimpleListFilter):
 
 @admin.register(User, site=admin_site)
 class UserAdmin(ModelAdmin):
+    form = UserAdminForm
     list_display = [
         "is_active",
         "first_name",
@@ -951,7 +952,7 @@ class UserAdmin(ModelAdmin):
 
         if not obj and user_in_group(request.user, "OperatorAdmin"):
 
-            class DynamicForm(forms.ModelForm):
+            class DynamicForm(UserAdminForm):
                 is_administrator = forms.BooleanField(required=False, label=_("Create this user as an administrator"))
 
                 class Meta:
