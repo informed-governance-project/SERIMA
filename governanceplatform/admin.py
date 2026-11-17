@@ -26,7 +26,7 @@ from import_export_extensions.admin.model_admins.export_job_admin import ExportJ
 from import_export_extensions.admin.model_admins.import_job_admin import ImportJobAdmin
 from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
-from unfold.admin import ModelAdmin, TabularInline
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
 from unfold.sites import UnfoldAdminSite
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
@@ -650,7 +650,7 @@ class CompanyAdmin(ModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class userRegulatorInline(TabularInline):
+class userRegulatorInline(StackedInline):
     model = RegulatorUser
     extra = 0
     min_num = 1
@@ -661,7 +661,7 @@ class userRegulatorInline(TabularInline):
     ]
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = super().get_queryset(request).select_related("user")
         user = request.user
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
@@ -769,6 +769,11 @@ class userRegulatorInline(TabularInline):
 
 class userRegulatorMultipleInline(userRegulatorInline):
     max_num = None
+    # A regulator lists all its users; the user form has a single card, left open.
+    collapsible = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("sectors")
 
 
 # reset the 2FA we delete the TOTP devices
@@ -1731,13 +1736,17 @@ for name, method in generate_display_methods(["name", "full_name", "description"
     setattr(RegulatorAdmin, name, method)
 
 
-class ObserverRegulationInline(TabularInline):
+class ObserverRegulationInline(StackedInline):
     model = ObserverRegulation
     verbose_name = _("Observer regulation")
     filter_horizontal = ("sectors",)
     verbose_name_plural = _("Observer regulations")
     extra = 0
     min_num = 0
+    collapsible = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("regulation").prefetch_related("regulation__translations", "sectors")
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "sectors":
