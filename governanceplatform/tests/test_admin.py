@@ -1,5 +1,8 @@
+import re
+
 import pytest
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from unfold.admin import BaseInlineMixin, ModelAdmin
 from unfold.sites import UnfoldAdminSite
@@ -8,7 +11,9 @@ from governanceplatform.admin import admin_site
 from governanceplatform.helpers import user_in_group
 from governanceplatform.models import (
     ApplicationConfig,
+    CompanyUser,
     ObserverRegulation,
+    ObserverUser,
     RegulatorUser,
     Sector,
     User,
@@ -230,6 +235,64 @@ def test_regulator_user_cards_collapse_with_a_summary_and_a_toggle(otp_client, p
     assert body.count('class="inline-toggle"') == len(regulator_users) + 1  # the empty form for "Add another" too
     for regulator_user in regulator_users:
         assert f'<span class="inline-summary" x-show="!openRow">{regulator_user.get_inline_summary()}</span>' in body
+
+
+@pytest.mark.django_db
+def test_regulator_accounts_are_managed_from_the_regulator_not_the_user_form(otp_client, populate_db):
+    admin = next(user for user in populate_db["users"] if user_in_group(user, "RegulatorAdmin"))
+    account = User.objects.filter(regulators=admin.regulators.first()).exclude(pk=admin.pk).first()
+    client = otp_client(admin)
+
+    user_form = client.get(reverse("admin:governanceplatform_user_change", args=[account.pk])).content.decode()
+    regulator_form = client.get(reverse("admin:governanceplatform_regulator_change", args=[admin.regulators.first().pk])).content.decode()
+
+    assert 'id="regulatoruser_set-group"' not in user_form
+    assert 'id="regulatoruser_set-group"' in regulator_form
+
+
+def _initial_forms(body, prefix):
+    return int(re.search(rf'name="{prefix}-INITIAL_FORMS" value="(\d+)"', body).group(1))
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("viewer_role", "link_model", "parent", "prefix"),
+    [
+        ("RegulatorAdmin", RegulatorUser, "regulator", "regulatoruser_set"),
+        ("PlatformAdmin", ObserverUser, "observer", "observeruser_set"),
+        ("RegulatorUser", CompanyUser, "company", "companyuser_set"),
+    ],
+)
+def test_inlines_leave_out_deactivated_accounts(otp_client, populate_db, viewer_role, link_model, parent, prefix):
+    viewer = next(user for user in populate_db["users"] if user_in_group(user, viewer_role))
+    links = link_model.objects.exclude(user=viewer).select_related("user")
+    if viewer_role == "RegulatorAdmin":
+        links = links.filter(regulator=viewer.regulators.first())
+    link = links.first()
+    if viewer_role == "PlatformAdmin":
+        # A platform administrator only sees the administrators of an observer.
+        link.is_observer_administrator = True
+        link.save()
+    parent_pk = getattr(link, f"{parent}_id")
+    url = reverse(f"admin:governanceplatform_{parent}_change", args=[parent_pk])
+    client = otp_client(viewer)
+    before = _initial_forms(client.get(url).content.decode(), prefix)
+
+    link.user.is_active = False
+    link.user.save()
+
+    assert _initial_forms(client.get(url).content.decode(), prefix) == before - 1
+
+
+@pytest.mark.django_db
+def test_regulator_user_drop_down_offers_no_deactivated_account(otp_client, populate_db):
+    admin = next(user for user in populate_db["users"] if user_in_group(user, "RegulatorAdmin"))
+    removed = User.objects.create(email="removed@regulator.lu", is_active=False)
+    removed.groups.add(Group.objects.get(name="RegulatorUser"))
+
+    body = otp_client(admin).get(reverse("admin:governanceplatform_regulator_change", args=[admin.regulators.first().pk])).content.decode()
+
+    assert "removed@regulator.lu" not in body
 
 
 @pytest.mark.django_db
