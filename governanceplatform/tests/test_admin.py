@@ -178,6 +178,32 @@ def test_language_dropdown_submits_each_language(otp_client, populate_db):
 
 
 @pytest.mark.django_db
+def test_pagination_links_to_the_neighbouring_pages(otp_client, populate_db, monkeypatch):
+    monkeypatch.setattr(admin_site._registry[User], "list_per_page", 1)
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    body = client.get("/admin/governanceplatform/user/?p=2").content.decode()
+    pagination = body[body.index('class="admin-pagination"') :]
+    total = pagination.split(" entries")[0].split()[-1]
+
+    assert f"Showing 2 to 2 of {total} entries" in " ".join(pagination.split())
+    assert '<span aria-current="page">2</span>' in pagination
+    assert 'href="?p=1"' in pagination
+    assert 'href="?p=3"' in pagination
+
+
+@pytest.mark.django_db
+def test_unpaginated_list_shows_only_the_count(otp_client, populate_db):
+    client = otp_client(platform_admin(populate_db["users"]))
+
+    body = client.get("/admin/governanceplatform/user/").content.decode()
+    pagination = body[body.index('class="admin-pagination"') :]
+
+    assert "admin-pagination-pages" not in pagination
+    assert str(User._meta.verbose_name_plural) in pagination.split("</div>")[0]
+
+
+@pytest.mark.django_db
 def test_add_button_is_labelled_in_the_list_toolbar(otp_client, populate_db):
     client = otp_client(platform_admin(populate_db["users"]))
 
