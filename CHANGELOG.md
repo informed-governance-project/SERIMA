@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The administration interface now uses Django Unfold, including translatable models, inline forms, and import/export screens.
 
+- A regulator administrator sets the role, export permission and sectors of the regulator accounts only in the **Regulator users** section of the regulator, now one card per account: the **Regulator user** section of the account's own form, which did the same, is gone. An account created with **Add User** is attached to the regulator from that section, whose **User** drop-down lists it.
+
 - The objective selector of a security objectives declaration is now grouped by the domains of the evaluation framework, each labelled D1, D2… from its position, and the objectives are numbered domain by domain. When the selector is too narrow for every objective, the other domains collapse to their code and one symbol summing up their objectives, which shows their name and the count of objectives in each state on hover and opens their first objective still to fill or to review on click; if the current domain still does not fit, its objectives are shown a page at a time. A line above each objective names its domain and its place in it; the PDF of the declaration shows the same line and lists the objectives in the same order, domain by domain. A declaration now opens on the first objective still to fill (operators) or to review (regulators) instead of the first one (#925)
 
 - On the security objectives dashboard, the button that starts a declaration is now "New assessment" instead of "New submission", and an empty dashboard now reads "No security objectives statements have been created yet." instead of "…submitted yet." (#934)
@@ -22,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The header of an incident report and of a security objectives declaration now shows the **Reference** of the incident or declaration. Operators no longer see the **Company** there, nor the contact icon, which only regulators (and, for incidents, observers) still have (#942)
 
 ### Fixed
+
+- A deactivated account was still listed in the users of its operator, regulator or observer. On an operator's form its row lost its **User**, so the form could not be saved until the account was reactivated; and choosing a deactivated account in the **User** drop-down of a regulator or observer reactivated it. Deactivated accounts are now left out of these sections and of their **User** drop-downs.
 
 - Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)
 
