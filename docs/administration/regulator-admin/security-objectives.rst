@@ -274,7 +274,12 @@ Export
 """"""
 
 Click **Export**, tick the columns to export, choose the **Format** (for instance csv or xlsx) and click **Submit**.
-The file is prepared in the background; click **Download export data** when it is ready.
+The file is prepared in the background; click **Download export data** when it is ready. The file can be downloaded
+once: it is deleted from the platform as soon as it is sent.
+
+**Export** takes the standards the list shows: search or filter the list first to export only some of them.
+To pick them one by one, tick them in the list, choose **Export selected standards** in the **Action** drop-down
+and click **Run**; the export page then says how many standards are selected.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-12.png
    :alt: Export page with the list of columns to export and the format drop-down
