@@ -16,6 +16,8 @@ hide = [
   # The footer version string would otherwise re-diff every screenshot on each
   # release, for a number the docs never refer to.
   "footer .justify-content-between > .text-end",
+  # The same version string in the console's footer (theme parts/footer_admin.html).
+  ".admin-footer-top > div:last-child",
 ]
 # Matches the red of the hand-drawn callouts already in the manual.
 annotation_color = "#0e0acc"
@@ -983,7 +985,7 @@ path = "/admin/governanceplatform/regulator/1/change/"
 viewport = { width = 1920, height = 900 }
 selector = "#regulatoruser_set-group"
 annotate = [
-  { selector = "#regulatoruser_set-data tbody:has(#id_regulatoruser_set-1-user)", box = true },
+  { selector = "#regulatoruser_set-data > .form-group:has(#id_regulatoruser_set-1-user)", box = true },
   { selector = "#regulatoruser_set-group a.add-row", box = true },
 ]
 
@@ -1009,7 +1011,6 @@ selector = "#main"
 annotate = [
   { selector = "#content .field-is_active", box = true },
   { selector = "#content button[formaction$='/reset-2fa-token/']", box = true },
-  { selector = "#regulatoruser_set-group", box = true },
 ]
 
 [[shots]]
@@ -1320,7 +1321,7 @@ name = "images/incident-notification/configuration-01"
 role = "regulator_admin"
 path = "/admin/incidents/email/"
 annotate = [
-  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1329,7 +1330,7 @@ name = "images/incident-notification/configuration-02"
 role = "regulator_admin"
 path = "/admin/incidents/email/1/change/"
 selector = "#content"
-hide = [".field-html_preview", ".submit-row"]
+hide = [".field-line:has(.markdown-html-preview)", "#submit-row"]
 annotate = [
   { selector = ".parler-language-tabs", box = true },
   { selector = ["#id_name", "#id_subject"], box = true },
@@ -1342,7 +1343,7 @@ name = "images/incident-notification/configuration-03"
 role = "regulator_admin"
 path = "/admin/incidents/question/"
 annotate = [
-  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1352,7 +1353,7 @@ role = "regulator_admin"
 # Question 1 has never been answered, so it opens as an editable form.
 path = "/admin/incidents/question/1/change/"
 selector = "#content"
-hide = [".submit-row"]
+hide = ["#submit-row"]
 annotate = [{ selector = "#predefinedanswer_set-group", box = true }]
 
 [[shots]]
@@ -1367,7 +1368,7 @@ name = "images/incident-notification/configuration-06"
 role = "regulator_admin"
 path = "/admin/incidents/workflow/"
 annotate = [
-  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1378,7 +1379,7 @@ role = "regulator_admin"
 path = "/admin/incidents/workflow/11/change/"
 # Tall enough to reach the Notification Email section below General.
 viewport = { width = 1440, height = 1000 }
-annotate = [{ selector = "#nav-sidebar tr.current-model", box = true }]
+annotate = [{ selector = "#nav-sidebar li.current-model", box = true }]
 
 [[shots]]
 name = "images/incident-notification/configuration-08"
@@ -1387,8 +1388,8 @@ path = "/admin/incidents/workflow/10/change/"
 selector = "#questionoptions_set-group"
 # Four questions are enough to show the columns.
 hide = [
-  "#questionoptions_set-group tr.dynamic-questionoptions_set:nth-child(n+5)",
-  "#questionoptions_set-group tr.add-row",
+  "#questionoptions_set-group tbody.form-group.original:nth-of-type(n+5)",
+  "#questionoptions_set-group a.add-row",
 ]
 annotate = [{ selector = "#questionoptions_set-group thead", box = true }]
 
@@ -1397,7 +1398,7 @@ name = "images/incident-notification/configuration-09"
 role = "regulator_admin"
 path = "/admin/incidents/conditionalquestionoption/"
 annotate = [
-  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1414,16 +1415,16 @@ steps = [
   { action = "select", selector = "#id_predefined_answer", value = "Yes" },
   { action = "select", selector = "#id_next_question_options", value = "How many time ?" },
   # Moves focus off the last select, so no focus ring shows.
-  { action = "click", selector = "#content h1" },
+  { action = "click", selector = "#header-inner h1" },
 ]
-hide = [".submit-row"]
+hide = ["#submit-row"]
 
 [[shots]]
 name = "images/incident-notification/configuration-11"
 role = "regulator_admin"
 path = "/admin/incidents/impact/"
 annotate = [
-  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1433,14 +1434,14 @@ role = "regulator_admin"
 # Impact 68 is "DNS 1h".
 path = "/admin/incidents/impact/68/change/"
 selector = "#content"
-hide = [".submit-row"]
+hide = ["#submit-row"]
 
 [[shots]]
 name = "images/incident-notification/configuration-13"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
 annotate = [
-  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1461,16 +1462,16 @@ steps = [
   { action = "click", selector = "#id_sectors_add_all" },
 ]
 hide = [
-  "#sectorregulation_form fieldset:has(#fieldset-0-3-heading)",
+  "#sectorregulation_form fieldset:has(#id_opening_email)",
   "#sectorregulationworkflow_set-group",
-  ".submit-row",
+  "#submit-row",
 ]
 
 [[shots]]
 name = "images/incident-notification/configuration-15"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/add/"
-selector = "#sectorregulation_form fieldset:has(#fieldset-0-3-heading)"
+selector = "#sectorregulation_form fieldset:has(#id_opening_email)"
 steps = [
   { action = "select", selector = "#id_opening_email", value = "Regulator A - New incident creation" },
   { action = "select", selector = "#id_closing_email", value = "Regulator A - Incident closure" },
@@ -1483,8 +1484,8 @@ role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/add/"
 selector = "#sectorregulationworkflow_set-group"
 steps = [
-  { action = "click", selector = "#sectorregulationworkflow_set-group tr.add-row a" },
-  { action = "click", selector = "#sectorregulationworkflow_set-group tr.add-row a" },
+  { action = "click", selector = "#sectorregulationworkflow_set-group a.add-row" },
+  { action = "click", selector = "#sectorregulationworkflow_set-group a.add-row" },
   { action = "select", selector = "#id_sectorregulationworkflow_set-0-workflow", value = "Preliminary Incident Report" },
   { action = "fill", selector = "#id_sectorregulationworkflow_set-0-position", value = "1" },
   { action = "fill", selector = "#id_sectorregulationworkflow_set-0-delay_in_hours_before_deadline", value = "24" },
@@ -1510,8 +1511,8 @@ path = "/admin/incidents/sectorregulation/1/change/"
 # the sticky sidebar short.
 viewport = { width = 1440, height = 1420 }
 annotate = [
-  { selector = "ul.messagelist", box = true },
-  { selector = "input[name=_saveasnew]", box = true },
+  { selector = "#main ul:has(> li > .bg-orange-100)", box = true },
+  { selector = "button[name=_saveasnew]", box = true },
 ]
 
 [[shots]]
@@ -1519,7 +1520,7 @@ name = "images/incident-notification/configuration-18"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
 steps = [
-  { action = "click", selector = "#result_list tbody tr:nth-child(3) input.action-select" },
+  { action = "click", selector = "#result_list > tbody:nth-of-type(3) input.action-select" },
   { action = "click", selector = "select[name=action]" },
 ]
 annotate = [{ selector = "select[name=action]", box = true }]
@@ -1529,7 +1530,7 @@ name = "images/incident-notification/configuration-19"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulationworkflowemail/"
 annotate = [
-  { selector = "#nav-sidebar tr.current-model", box = true },
+  { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1538,7 +1539,7 @@ name = "images/incident-notification/configuration-20"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulationworkflowemail/1/change/"
 selector = "#content"
-hide = [".submit-row"]
+hide = ["#submit-row"]
 
 # --- Security objectives configuration (docs/administration/regulator-admin/security-objectives.rst) ---
 #
