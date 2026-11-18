@@ -417,3 +417,14 @@ def test_conditional_question_option_selects_are_unfold_selects():
 
     for name in ("report", "question_options", "predefined_answer", "next_question_options"):
         assert isinstance(form.fields[name].widget, UnfoldAdminSelectWidget), name
+
+
+@pytest.mark.django_db
+def test_sidebar_categories_fold_with_a_button_and_keep_the_current_one_open(otp_client, populate_db):
+    body = otp_client(platform_admin(populate_db["users"])).get("/admin/governanceplatform/user/").content.decode()
+
+    assert 'aria-controls="admin-nav-governanceplatform"' in body
+    assert 'id="admin-nav-governanceplatform"' in body
+    current = body[body.index('class="app-governanceplatform module current-app"') :]
+    assert current.index('x-data="{ open: true }"') < current.index("admin-nav-group-toggle")
+    assert "$persist(true).as('admin-nav-admin')" in body
