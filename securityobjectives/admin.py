@@ -7,6 +7,7 @@ from django.contrib.admin.utils import unquote
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
+from django.template.response import TemplateResponse
 from django.utils.encoding import force_str
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -24,7 +25,7 @@ from markdown import markdown
 from parler.forms import TranslatableModelForm
 from tablib import Dataset
 from unfold.admin import TabularInline
-from unfold.contrib.import_export.forms import ExportForm, ImportForm
+from unfold.contrib.import_export.forms import ImportForm, SelectableFieldsExportForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
 from governanceplatform.helpers import (
@@ -675,11 +676,31 @@ class SecurityObjectiveInline(TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class UnfoldCeleryImportExportMixin(CeleryImportExportMixin):
+    """django-import-export-extensions renders its export status and results and its import status
+    pages without the admin site's context, which Unfold needs for its sidebar, header and menus."""
+
+    def _with_admin_context(self, request, response):
+        if isinstance(response, TemplateResponse):
+            response.context_data = {**self.admin_site.each_context(request), **response.context_data}
+        return response
+
+    def export_job_status_view(self, request, job_id, *args, **kwargs):
+        return self._with_admin_context(request, super().export_job_status_view(request, job_id, *args, **kwargs))
+
+    def export_job_results_view(self, request, job_id, *args, **kwargs):
+        return self._with_admin_context(request, super().export_job_results_view(request, job_id, *args, **kwargs))
+
+    def celery_import_job_status_view(self, request, job_id, *args, **kwargs):
+        return self._with_admin_context(request, super().celery_import_job_status_view(request, job_id, *args, **kwargs))
+
+
 @admin.register(Standard, site=admin_site)
-class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin):
+class StandardAdmin(UnfoldCeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin):
     form = StandardAdminForm
     import_form_class = ImportForm
-    export_form_class = ExportForm
+    # The selectable form lists the resource's fields, each with a checkbox, as before Unfold.
+    export_form_class = SelectableFieldsExportForm
     resource_class = StandardResource
     should_escape_html = False
     # The declaration table columns are presentation and stay editable for the life

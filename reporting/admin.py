@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ImportExportModelAdmin
 from unfold.admin import ModelAdmin, TabularInline
-from unfold.contrib.import_export.forms import ExportForm, ImportForm
+from unfold.contrib.import_export.forms import ImportForm, SelectableFieldsExportForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
 from governanceplatform.mixins import FunctionalityMixin, TranslationUpdateMixin
@@ -51,7 +51,7 @@ class ObservationRecommendationResource(TranslationUpdateMixin, resources.ModelR
 @admin.register(ObservationRecommendation, site=admin_site)
 class ObservationRecommendationAdmin(FunctionalityMixin, CustomTranslatableAdmin, ImportExportModelAdmin):
     import_form_class = ImportForm
-    export_form_class = ExportForm
+    export_form_class = SelectableFieldsExportForm
     resource_class = ObservationRecommendationResource
     list_display = ["code", "description", "get_sector_name"]
     search_fields = ["code", "description"]
