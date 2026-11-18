@@ -27,6 +27,9 @@ The home page lists the sections of the console you can use. Each item of a sect
 read it, and **Add** and **Change** when you can edit it. The lists and forms work the same way everywhere,
 as described in :doc:`platform-admin/governance`.
 
+The sidebar on the left lists the same sections. Click the name of a section to fold or unfold its items: the console
+remembers your choice, and always shows the section of the page you are on.
+
 .. toctree::
    :maxdepth: 2
    :hidden:
