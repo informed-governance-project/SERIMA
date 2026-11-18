@@ -7,7 +7,9 @@ from django.contrib.admin.utils import unquote
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import redirect
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -701,6 +703,7 @@ class StandardAdmin(UnfoldCeleryImportExportMixin, FunctionalityMixin, Permissio
     import_form_class = ImportForm
     # The selectable form lists the resource's fields, each with a checkbox, as before Unfold.
     export_form_class = SelectableFieldsExportForm
+    actions = ["export_selected"]
     resource_class = StandardResource
     should_escape_html = False
     # The declaration table columns are presentation and stay editable for the life
@@ -785,6 +788,29 @@ class StandardAdmin(UnfoldCeleryImportExportMixin, FunctionalityMixin, Permissio
         kwargs["user_id"] = request.user.pk
         kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
         return kwargs
+
+    @admin.action(description=_("Export selected standards"), permissions=["export"])
+    def export_selected(self, request, queryset):
+        ids = ",".join(str(pk) for pk in queryset.values_list("pk", flat=True))
+        # A changelist lookup: the extensions export the changelist queryset of the request
+        # (CeleryExportAdminMixin.get_resource_kwargs), and the export form posts back to its URL.
+        return redirect(f"{reverse('admin:securityobjectives_standard_export')}?id__in={ids}")
+
+    @staticmethod
+    def _selected_export_ids(request) -> list[int]:
+        return [int(pk) for pk in request.GET.get("id__in", "").split(",") if pk.isdigit()]
+
+    def celery_export_action(self, request, *args, **kwargs):
+        response = super().celery_export_action(request, *args, **kwargs)
+        ids = self._selected_export_ids(request)
+        if ids and isinstance(response, TemplateResponse) and "form" in response.context_data:
+            form = response.context_data["form"]
+            # Unfold's export.html counts form.initial["export_items"] for its "Export N selected
+            # items" note. The field itself is dropped: its hidden inputs would be posted against
+            # empty choices, and the selection already travels in the URL.
+            form.initial["export_items"] = ids
+            form.fields.pop("export_items", None)
+        return response
 
     def get_export_resource_kwargs(self, request, **kwargs):
         kwargs = super().get_export_resource_kwargs(request, **kwargs)
