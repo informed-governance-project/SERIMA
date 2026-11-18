@@ -425,6 +425,6 @@ def test_sidebar_categories_fold_with_a_button_and_keep_the_current_one_open(otp
 
     assert 'aria-controls="admin-nav-governanceplatform"' in body
     assert 'id="admin-nav-governanceplatform"' in body
-    current = body[body.index('class="app-governanceplatform module current-app"') :]
+    current = body[re.search(r'class="app-governanceplatform module\s+current-app\s*"', body).start() :]
     assert current.index('x-data="{ open: true }"') < current.index("admin-nav-group-toggle")
     assert "$persist(true).as('admin-nav-admin')" in body

@@ -4,6 +4,7 @@ import pytest
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
+from governanceplatform import unfold_colors as unfold_colors_module
 from governanceplatform.unfold_colors import THEME_SCSS, primary_scale, scss_colour
 
 WEIGHTS = ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "950"]
@@ -16,7 +17,20 @@ def _lightness(colour: str) -> float:
 def test_admin_primary_is_the_theme_brand_colour():
     brand = re.search(r"^\$primary:\s*(#[0-9a-fA-F]{6})\s*;", THEME_SCSS.read_text(), re.MULTILINE).group(1)
 
-    assert settings.UNFOLD["COLORS"]["primary"]["600"] == brand
+    assert settings.UNFOLD["COLORS"]["primary"](None)["600"] == brand
+
+
+def test_settings_do_not_read_the_theme(monkeypatch):
+    """The docs build imports the settings from a checkout that has no theme/ clone."""
+
+    def no_theme(name, scss=THEME_SCSS):
+        raise FileNotFoundError(scss)
+
+    monkeypatch.setattr(unfold_colors_module, "scss_colour", no_theme)
+
+    colors = unfold_colors_module.unfold_colors()
+
+    assert callable(colors["primary"])
 
 
 def test_scss_colour_ignores_commented_palettes(tmp_path):
