@@ -4,8 +4,12 @@ Unfold writes UNFOLD["COLORS"] to its --color-<name>-<weight> CSS variables. Pri
 generated from $primary in theme/static/scss/custom.scss, so the admin follows the public
 site's brand colour; Unfold draws buttons, links and checkboxes from its 600. Base is
 Bootstrap's gray scale, which the theme does not set either.
+
+The SCSS is read when the admin first renders a page, not when the settings are imported:
+the documentation build imports them (docs/conf.py) from a checkout without the theme repo.
 """
 
+import functools
 import math
 import re
 from pathlib import Path
@@ -92,5 +96,16 @@ def primary_scale(brand: str) -> dict[str, str]:
     return scale
 
 
-def unfold_colors() -> dict[str, dict[str, str]]:
-    return {"base": BASE_SCALE, "primary": primary_scale(scss_colour("primary"))}
+@functools.cache
+def _theme_primary_scale() -> dict[str, str]:
+    return primary_scale(scss_colour("primary"))
+
+
+def theme_primary(_request=None) -> dict[str, str]:
+    """Unfold calls a colour's callable for every page; it converts the values in place, so it
+    gets a copy of the scale, which is only computed once."""
+    return dict(_theme_primary_scale())
+
+
+def unfold_colors() -> dict[str, object]:
+    return {"base": BASE_SCALE, "primary": theme_primary}
