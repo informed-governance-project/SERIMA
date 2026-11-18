@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A regulator can export only some security objectives standards: tick them in the **Standards** list and choose **Export selected standards** in the **Action** drop-down. The **Export** button also exports only the standards the list shows once it is searched or filtered.
+
 - A table of contents button beside the Icon Guide of a security objectives declaration opens a side panel with the number of objectives in each state, and every domain with its objectives, their state and how many of them are filled (operators) or reviewed (regulators); clicking an objective opens it. Unlike the objective selector, it is available on every screen size (#925)
 
 
