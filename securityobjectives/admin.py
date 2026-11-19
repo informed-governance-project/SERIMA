@@ -24,12 +24,12 @@ from import_export.resources import Diff
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
 from markdown import markdown
-from parler.forms import TranslatableModelForm
 from tablib import Dataset
 from unfold.admin import TabularInline
 from unfold.contrib.import_export.forms import ImportForm, SelectableFieldsExportForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
+from governanceplatform.forms import CustomTranslatableAdminForm
 from governanceplatform.helpers import (
     generate_display_methods,
     is_user_regulator,
@@ -1162,11 +1162,7 @@ class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
 
 # add a custom form for SecurityMeasure to ensure that
 # all the standard are the same
-class SecurityMeasureAdminForm(TranslatableModelForm, PermissionMixin):
-    class Meta:
-        model = SecurityMeasure
-        exclude = ["creator_name", "creator", "is_archived"]
-
+class SecurityMeasureAdminForm(CustomTranslatableAdminForm, PermissionMixin):
     def clean(self):
         cleaned_data = super().clean()
 
