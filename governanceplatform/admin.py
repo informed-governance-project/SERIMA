@@ -28,6 +28,7 @@ from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
 from unfold.admin import ModelAdmin, StackedInline, TabularInline
 from unfold.sites import UnfoldAdminSite
+from unfold.widgets import UnfoldBooleanSwitchWidget
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
@@ -953,7 +954,9 @@ class UserAdmin(ModelAdmin):
         if not obj and user_in_group(request.user, "OperatorAdmin"):
 
             class DynamicForm(UserAdminForm):
-                is_administrator = forms.BooleanField(required=False, label=_("Create this user as an administrator"))
+                is_administrator = forms.BooleanField(
+                    required=False, label=_("Create this user as an administrator"), widget=UnfoldBooleanSwitchWidget
+                )
 
                 class Meta:
                     model = self.model
@@ -1161,7 +1164,7 @@ class UserAdmin(ModelAdmin):
 
         return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
-    def action_button(self, url_name, obj, label, message, css_class="button"):
+    def action_button(self, url_name, obj, label, message, css_class="admin-button admin-button--secondary"):
         """
         One account action button. It posts to its own endpoint rather than to the enclosing admin
         form, and carries the text the confirmation dialog shows before letting the post through.
@@ -1216,14 +1219,14 @@ class UserAdmin(ModelAdmin):
                     obj,
                     _("Approve"),
                     _("Approving %(user)s will associate the account with your company, including their notified incidents."),
-                    css_class="button approve-button",
+                    css_class="admin-button admin-button--status-ok",
                 ),
                 self.action_button(
                     "reject_company_link",
                     obj,
                     _("Reject"),
                     _("Rejecting %(user)s will remove the suggested link with your company."),
-                    css_class="button reject-button",
+                    css_class="admin-button admin-button--status-ko",
                 ),
             )
 
@@ -1360,10 +1363,12 @@ class UserAdmin(ModelAdmin):
                 extra_fields.remove("get_permissions_groups")
 
             # A tuple inside "fields" is one row, which puts each action beside the field it changes.
+            # An action with no button for this account (a link awaiting approval, your own account)
+            # is left out.
             for field, action in (("get_2FA_activation", "reset_2FA_action"), ("get_is_administrator", "administrator_action")):
                 if action in extra_fields:
                     extra_fields.remove(action)
-                    if field in extra_fields:
+                    if field in extra_fields and getattr(self, action)(obj):
                         extra_fields[extra_fields.index(field)] = (field, action)
 
             fieldsets = list(fieldsets) + [
@@ -1860,7 +1865,7 @@ class ObserverAdmin(CustomTranslatableAdmin):
         url = reverse("admin:observer-test-rt-connection", args=[obj.pk])
         return format_html(
             """
-            <button type="button" class="button rt-test-btn" data-url="{}">{}</button>
+            <button type="button" class="admin-button admin-button--primary rt-test-btn" data-url="{}">{}</button>
             <span id="rt-test-result"></span>
             <p id="rt-test-help" class="help">{}</p>
             """,
