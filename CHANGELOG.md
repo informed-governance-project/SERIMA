@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - A deactivated account was still listed in the users of its operator, regulator or observer. On an operator's form its row lost its **User**, so the form could not be saved until the account was reactivated; and choosing a deactivated account in the **User** drop-down of a regulator or observer reactivated it. Deactivated accounts are now left out of these sections and of their **User** drop-downs.
+- The **Submission date** column of the security objectives dashboard, its sorting and declaration exports now keep the date of the first submitted version instead of replacing it with the date of each revised version (#965)
+
 - Adding a user in the administration interface with the email address of an existing account written in a different case (e.g. `Jane.Doe@…` for `jane.doe@…`) now shows "An account with this email address already exists." instead of an error page
 
 - Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)

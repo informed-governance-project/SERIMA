@@ -86,7 +86,7 @@ Its parts are numbered in the screenshot below and described one by one.
         - The date and time of the last change to the declaration.
       * - 3
         - Submission date
-        - The date and time at which the declaration was submitted; empty until then.
+        - The date and time at which the first version of the declaration was submitted; empty until then. This date does not change when a revised version is submitted.
       * - 4
         - Identifier
         - The reference the platform gives the declaration, starting with ``SO_``.
