@@ -5,7 +5,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 from governanceplatform import unfold_colors as unfold_colors_module
-from governanceplatform.unfold_colors import THEME_SCSS, primary_scale, scss_colour
+from governanceplatform.unfold_colors import THEME_SCSS, primary_scale, scss_colour, shade
 
 WEIGHTS = ["50", "100", "200", "300", "400", "500", "600", "700", "800", "900", "950"]
 
@@ -20,6 +20,17 @@ def test_admin_primary_is_the_theme_brand_colour():
     assert settings.UNFOLD["COLORS"]["primary"](None)["600"] == brand
 
 
+def test_admin_secondary_is_the_theme_secondary_colour():
+    secondary = re.search(r"^\$secondary:\s*(#[0-9a-fA-F]{6})\s*;", THEME_SCSS.read_text(), re.MULTILINE).group(1)
+
+    assert settings.UNFOLD["COLORS"]["secondary"](None)["600"] == secondary
+
+
+def test_shade_darkens_like_bootstraps_shade_color():
+    # Bootstrap's .btn-secondary hover for $secondary: #212529 is #1c1f23.
+    assert shade("#212529") == "#1c1f23"
+
+
 def test_settings_do_not_read_the_theme(monkeypatch):
     """The docs build imports the settings from a checkout that has no theme/ clone."""
 
@@ -31,6 +42,7 @@ def test_settings_do_not_read_the_theme(monkeypatch):
     colors = unfold_colors_module.unfold_colors()
 
     assert callable(colors["primary"])
+    assert callable(colors["secondary"])
 
 
 def test_scss_colour_ignores_commented_palettes(tmp_path):

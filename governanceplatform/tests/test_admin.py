@@ -105,6 +105,21 @@ def test_operator_admin_add_user_rejects_existing_email_in_other_case(otp_client
     assert_add_user_rejects_email(client, context["member"].email.upper())
 
 
+@pytest.mark.django_db
+def test_operator_admin_add_user_administrator_field_is_a_switch(otp_client, operator_admin_with_pending_link):
+    context = operator_admin_with_pending_link
+    client = otp_client(context["operator_admin"])
+    session = client.session
+    session["company_in_use"] = context["company"].id
+    session.save()
+
+    body = client.get(reverse("admin:governanceplatform_user_add")).content.decode()
+
+    field = re.search(r'<input[^>]*id="id_is_administrator"[^>]*>', body).group(0)
+    assert 'type="checkbox"' in field
+    assert "rounded-full" in field
+
+
 def platform_admin(users):
     return next(user for user in users if user_in_group(user, "PlatformAdmin"))
 

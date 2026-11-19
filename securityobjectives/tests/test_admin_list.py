@@ -8,7 +8,7 @@ from governanceplatform.admin import admin_site
 from governanceplatform.helpers import user_in_group
 from governanceplatform.models import User
 from securityobjectives.admin import StandardResource
-from securityobjectives.models import Standard
+from securityobjectives.models import MaturityLevel, SecurityMeasure, SecurityObjectivesInStandard, Standard
 
 
 @pytest.mark.django_db()
@@ -111,3 +111,50 @@ def test_export_of_selected_standards_leaves_the_others_out(populate_so_db, secu
     dataset = StandardResource(**model_admin.get_export_resource_kwargs(request)).export()
 
     assert set(dataset["label"]) == {standard.label}
+
+
+@pytest.mark.django_db()
+@pytest.mark.parametrize("field", ["description", "evidence"])
+def test_security_measure_translated_text_fields_are_unfold_textareas(populate_so_db, otp_client, field):
+    standard = populate_so_db["sas"][0].standard
+
+    body = otp_client(_regulator_admin(standard)).get("/admin/securityobjectives/securitymeasure/add/").content.decode()
+
+    textarea = re.search(rf'<textarea[^>]*id="id_{field}"[^>]*>', body).group(0)
+    assert "border-base-200" in textarea
+
+
+def _security_measure_post(standard, **extra):
+    security_objective = SecurityObjectivesInStandard.objects.filter(standard=standard).first().security_objective
+    maturity_level = MaturityLevel.objects.filter(standard=standard).first()
+    return {
+        "security_objective": security_objective.pk,
+        "maturity_level": maturity_level.pk,
+        "position": 99,
+        "description": "Measure added from the admin",
+        "evidence": "Its evidence",
+        **extra,
+    }
+
+
+@pytest.mark.django_db()
+def test_security_measure_cannot_be_created_without_its_default_language(populate_so_db, otp_client):
+    standard = populate_so_db["sas"][0].standard
+    client = otp_client(_regulator_admin(standard))
+
+    response = client.post("/admin/securityobjectives/securitymeasure/add/?language=fr", _security_measure_post(standard))
+
+    assert response.status_code == 200
+    assert "Default language translation (English) is missing" in response.content.decode()
+    assert not SecurityMeasure.objects.filter(translations__description="Measure added from the admin").exists()
+
+
+@pytest.mark.django_db()
+def test_security_measure_is_created_in_its_default_language(populate_so_db, otp_client):
+    standard = populate_so_db["sas"][0].standard
+    client = otp_client(_regulator_admin(standard))
+
+    response = client.post("/admin/securityobjectives/securitymeasure/add/?language=en", _security_measure_post(standard, en=""))
+
+    assert response.status_code == 302
+    assert SecurityMeasure.objects.filter(translations__description="Measure added from the admin").exists()
