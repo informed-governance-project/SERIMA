@@ -1374,6 +1374,13 @@ annotate = [
 name = "images/incident-notification/configuration-01"
 role = "regulator_admin"
 path = "/admin/incidents/email/"
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1396,6 +1403,13 @@ annotate = [
 name = "images/incident-notification/configuration-03"
 role = "regulator_admin"
 path = "/admin/incidents/question/"
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1427,6 +1441,13 @@ annotate = [{ selector = "#id_question_type", box = true }]
 name = "images/incident-notification/configuration-06"
 role = "regulator_admin"
 path = "/admin/incidents/workflow/"
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1462,6 +1483,13 @@ hide = [
 name = "images/incident-notification/configuration-09"
 role = "regulator_admin"
 path = "/admin/incidents/conditionalquestionoption/"
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1489,6 +1517,13 @@ hide = ["#submit-row"]
 name = "images/incident-notification/configuration-11"
 role = "regulator_admin"
 path = "/admin/incidents/impact/"
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1506,6 +1541,13 @@ hide = ["#submit-row"]
 name = "images/incident-notification/configuration-13"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1575,7 +1617,14 @@ role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/1/change/"
 # Tall enough to reach the Save as new button. A full-page capture would cut
 # the sticky sidebar short.
-viewport = { width = 1440, height = 1420 }
+viewport = { width = 1920, height = 1420 }
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#main" },
+]
 annotate = [
   { selector = "#main ul:has(> li > .bg-orange-100)", box = true },
   { selector = "button[name=_saveasnew]", box = true },
@@ -1586,6 +1635,10 @@ name = "images/incident-notification/configuration-18"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
 steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "click", selector = "#result_list > tbody:nth-of-type(3) input.action-select" },
   { action = "click", selector = "select[name=action]" },
 ]
@@ -1595,6 +1648,13 @@ annotate = [{ selector = "select[name=action]", box = true }]
 name = "images/incident-notification/configuration-19"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulationworkflowemail/"
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
