@@ -13,6 +13,7 @@ from django.template import loader
 from django.utils.translation import get_language_info
 from django.utils.translation import gettext_lazy as _
 from parler.forms import TranslatableModelForm
+from unfold.widgets import UnfoldAdminPasswordWidget
 
 from .email import Base64EmailMultiAlternatives
 from .globals import FUNCTIONALITY_ELIGIBLE_ROLES
@@ -304,6 +305,13 @@ class CustomTranslatableAdminForm(TranslatableModelForm):
             )
 
 
+class UserAdminForm(forms.ModelForm):
+    def clean_email(self):
+        # User.save() lowercases the email, so the unique check has to see the lowercased value or a
+        # case variant of an existing address passes the form and fails on the database constraint.
+        return self.cleaned_data["email"].lower()
+
+
 class TermsAcceptanceForm(forms.Form):
     accept = forms.BooleanField(label=_("I acknowledge and agree to the"))
 
@@ -337,7 +345,8 @@ class CustomObserverAdminForm(CustomTranslatableAdminForm):
         instance = kwargs.get("instance")
         existing_token = instance.rt_token if instance else ""
         if existing_token:
-            self.fields["rt_token"].widget = forms.TextInput(attrs={"type": "password", "class": "vTextField"})
+            # render_value shows the masked placeholder below, which save() recognises.
+            self.fields["rt_token"].widget = UnfoldAdminPasswordWidget(render_value=True)
 
             self.fields["rt_token"].help_text = _(
                 "A token is already set. To remove it, clear the field and save. To update it, enter a new token."
@@ -346,7 +355,7 @@ class CustomObserverAdminForm(CustomTranslatableAdminForm):
             self.fields["rt_token"].initial = "*" * len(existing_token)
 
     rt_token = forms.CharField(
-        widget=forms.PasswordInput(render_value=False, attrs={"class": "vTextField"}),
+        widget=UnfoldAdminPasswordWidget,
         required=False,
         label=_("Token"),
     )

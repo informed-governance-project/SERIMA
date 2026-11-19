@@ -7,6 +7,9 @@ from django.contrib.admin.utils import unquote
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import redirect
+from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
@@ -20,12 +23,12 @@ from import_export.formats import base_formats
 from import_export.resources import Diff
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
-from parler.forms import TranslatableModelForm
 from tablib import Dataset
 from unfold.admin import TabularInline
-from unfold.contrib.import_export.forms import ExportForm, ImportForm
+from unfold.contrib.import_export.forms import ImportForm, SelectableFieldsExportForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
+from governanceplatform.forms import CustomTranslatableAdminForm
 from governanceplatform.helpers import (
     generate_display_methods,
     is_user_regulator,
@@ -106,6 +109,7 @@ class DomainAdmin(
         "label_display",
         "creator",
     ]
+    list_display_links = ["label_display"]
 
     fields = [
         "standard",
@@ -673,11 +677,32 @@ class SecurityObjectiveInline(TabularInline):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class UnfoldCeleryImportExportMixin(CeleryImportExportMixin):
+    """django-import-export-extensions renders its export status and results and its import status
+    pages without the admin site's context, which Unfold needs for its sidebar, header and menus."""
+
+    def _with_admin_context(self, request, response):
+        if isinstance(response, TemplateResponse):
+            response.context_data = {**self.admin_site.each_context(request), **response.context_data}
+        return response
+
+    def export_job_status_view(self, request, job_id, *args, **kwargs):
+        return self._with_admin_context(request, super().export_job_status_view(request, job_id, *args, **kwargs))
+
+    def export_job_results_view(self, request, job_id, *args, **kwargs):
+        return self._with_admin_context(request, super().export_job_results_view(request, job_id, *args, **kwargs))
+
+    def celery_import_job_status_view(self, request, job_id, *args, **kwargs):
+        return self._with_admin_context(request, super().celery_import_job_status_view(request, job_id, *args, **kwargs))
+
+
 @admin.register(Standard, site=admin_site)
-class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin):
+class StandardAdmin(UnfoldCeleryImportExportMixin, FunctionalityMixin, PermissionMixin, CustomTranslatableAdmin):
     form = StandardAdminForm
     import_form_class = ImportForm
-    export_form_class = ExportForm
+    # The selectable form lists the resource's fields, each with a checkbox, as before Unfold.
+    export_form_class = SelectableFieldsExportForm
+    actions = ["export_selected"]
     resource_class = StandardResource
     should_escape_html = False
     # The declaration table columns are presentation and stay editable for the life
@@ -695,7 +720,7 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         "security_objective_closure_email",
     )
     list_display = ["active", "label_display", "description_display", "regulator"]
-    list_display_links = ["active", "label_display"]
+    list_display_links = ["label_display"]
     search_fields = [
         "translations__label",
         "translations__description",
@@ -762,6 +787,29 @@ class StandardAdmin(CeleryImportExportMixin, FunctionalityMixin, PermissionMixin
         kwargs["user_id"] = request.user.pk
         kwargs["lang"] = get_language() or PARLER_DEFAULT_LANGUAGE_CODE
         return kwargs
+
+    @admin.action(description=_("Export selected standards"), permissions=["export"])
+    def export_selected(self, request, queryset):
+        ids = ",".join(str(pk) for pk in queryset.values_list("pk", flat=True))
+        # A changelist lookup: the extensions export the changelist queryset of the request
+        # (CeleryExportAdminMixin.get_resource_kwargs), and the export form posts back to its URL.
+        return redirect(f"{reverse('admin:securityobjectives_standard_export')}?id__in={ids}")
+
+    @staticmethod
+    def _selected_export_ids(request) -> list[int]:
+        return [int(pk) for pk in request.GET.get("id__in", "").split(",") if pk.isdigit()]
+
+    def celery_export_action(self, request, *args, **kwargs):
+        response = super().celery_export_action(request, *args, **kwargs)
+        ids = self._selected_export_ids(request)
+        if ids and isinstance(response, TemplateResponse) and "form" in response.context_data:
+            form = response.context_data["form"]
+            # Unfold's export.html counts form.initial["export_items"] for its "Export N selected
+            # items" note. The field itself is dropped: its hidden inputs would be posted against
+            # empty choices, and the selection already travels in the URL.
+            form.initial["export_items"] = ids
+            form.fields.pop("export_items", None)
+        return response
 
     def get_export_resource_kwargs(self, request, **kwargs):
         kwargs = super().get_export_resource_kwargs(request, **kwargs)
@@ -894,6 +942,7 @@ class MaturityLevelAdmin(
         "label_display",
         "creator",
     ]
+    list_display_links = ["label_display"]
     list_filter = ["standard", "level", "creator"]
     translated_fields = ["label"]
     related_fields = [("standard", "label")]
@@ -996,6 +1045,7 @@ class SecurityObjectiveAdmin(
         "domain",
         "creator",
     ]
+    list_display_links = ["unique_code", "objective_display"]
     exclude = ["is_archived", "creator_name", "creator"]
     list_filter = [
         "standard",
@@ -1111,11 +1161,7 @@ class SecurityMeasureResource(TranslationUpdateMixin, resources.ModelResource):
 
 # add a custom form for SecurityMeasure to ensure that
 # all the standard are the same
-class SecurityMeasureAdminForm(TranslatableModelForm, PermissionMixin):
-    class Meta:
-        model = SecurityMeasure
-        exclude = ["creator_name", "creator", "is_archived"]
-
+class SecurityMeasureAdminForm(CustomTranslatableAdminForm, PermissionMixin):
     def clean(self):
         cleaned_data = super().clean()
 
@@ -1150,6 +1196,7 @@ class SecurityMeasureAdmin(
         "description_display",
         "creator",
     ]
+    list_display_links = ["description_display"]
     search_fields = [
         "security_objective__standard_link__standard__translations__label",
         "security_objective__unique_code",

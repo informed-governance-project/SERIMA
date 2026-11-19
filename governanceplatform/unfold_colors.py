@@ -2,10 +2,15 @@
 
 Unfold writes UNFOLD["COLORS"] to its --color-<name>-<weight> CSS variables. Primary is
 generated from $primary in theme/static/scss/custom.scss, so the admin follows the public
-site's brand colour; Unfold draws buttons, links and checkboxes from its 600. Base is
-Bootstrap's gray scale, which the theme does not set either.
+site's brand colour; Unfold draws buttons, links and checkboxes from its 600. Secondary is
+$secondary and its hover, for the admin's dark action buttons, as the public site's
+.btn-secondary. Base is Bootstrap's gray scale, which the theme does not set either.
+
+The SCSS is read when the admin first renders a page, not when the settings are imported:
+the documentation build imports them (docs/conf.py) from a checkout without the theme repo.
 """
 
+import functools
 import math
 import re
 from pathlib import Path
@@ -92,5 +97,35 @@ def primary_scale(brand: str) -> dict[str, str]:
     return scale
 
 
-def unfold_colors() -> dict[str, dict[str, str]]:
-    return {"base": BASE_SCALE, "primary": primary_scale(scss_colour("primary"))}
+@functools.cache
+def _theme_primary_scale() -> dict[str, str]:
+    return primary_scale(scss_colour("primary"))
+
+
+def theme_primary(_request=None) -> dict[str, str]:
+    """Unfold calls a colour's callable for every page; it converts the values in place, so it
+    gets a copy of the scale, which is only computed once."""
+    return dict(_theme_primary_scale())
+
+
+def shade(colour: str, amount: float = 0.15) -> str:
+    """Mix #rrggbb with black, as Bootstrap's shade-color() darkens .btn-secondary on hover."""
+    channels = (round(int(colour[i : i + 2], 16) * (1 - amount)) for i in (1, 3, 5))
+    return "#" + "".join(f"{channel:02x}" for channel in channels)
+
+
+@functools.cache
+def _theme_secondary_scale() -> dict[str, str]:
+    # Two weights rather than a scale: primary_scale anchors 600 between Tailwind's lightest
+    # and darkest steps, and the near-black $secondary is darker than the darkest one.
+    colour = scss_colour("secondary")
+    return {"600": colour, "700": shade(colour)}
+
+
+def theme_secondary(_request=None) -> dict[str, str]:
+    """$secondary as --color-secondary-600, and its hover as -700, for .admin-button--secondary."""
+    return dict(_theme_secondary_scale())
+
+
+def unfold_colors() -> dict[str, object]:
+    return {"base": BASE_SCALE, "primary": theme_primary, "secondary": theme_secondary}

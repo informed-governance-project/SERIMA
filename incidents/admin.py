@@ -445,6 +445,7 @@ class QuestionOptionsAdmin(ModelAdmin):
 class ConditionalQuestionOptionAdmin(PermissionMixin, ModelAdmin):
     form = ConditionalQuestionOptionForm
     list_display = ["get_workflow", "question_options", "predefined_answer", "next_question_options", "creator"]
+    list_display_links = ["question_options"]
     list_filter = ["question_options__report", "question_options__category_option__question_category"]
     search_fields = [
         "question_options__question__translations__label",
@@ -634,6 +635,7 @@ class ImpactAdmin(PermissionMixin, CustomTranslatableAdmin):
         "get_subsector_name",
         "headline_display",
     ]
+    list_display_links = ["headline_display"]
     translated_fields = ["headline"]
     search_fields = [
         "translations__label",
@@ -1129,6 +1131,7 @@ class SectorRegulationWorkflowEmailAdmin(CustomTranslatableAdmin):
         "trigger_event",
         "delay_in_hours",
     ]
+    list_display_links = ["headline_display"]
     translated_fields = ["headline"]
     search_fields = [
         "sector_regulation_workflow__sector_regulation__regulation__translations__label",

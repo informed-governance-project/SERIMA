@@ -1,5 +1,6 @@
 """Account actions an OperatorAdmin performs on the user accounts of its own company (#861)."""
 
+import re
 from types import SimpleNamespace
 
 import pytest
@@ -631,7 +632,7 @@ def test_the_prompt_sits_above_the_form(otp_client, operator_admin_with_pending_
         .content.decode()
     )
 
-    assert body.index('class="titles-and-tools"') < body.index('class="pending-link-prompt"') < body.index('id="content-main"')
+    assert body.index('class="pending-link-prompt"') < body.index('id="content-main"')
 
 
 @pytest.mark.django_db
@@ -781,7 +782,9 @@ def test_the_delete_link_carries_a_confirmation_message(otp_client, operator_adm
     )
     holder = body[body.index('id="account-delete-confirm"') :][:400]
 
-    assert 'class="deletelink"' in body
+    # admin_account_actions.js intercepts the submit row's link to the delete view.
+    submit_row = body[body.index('id="submit-row"') :]
+    assert f"{CHANGELIST_URL}{context['member'].pk}/delete/" in submit_row
     assert "data-confirm-message" in holder
     assert context["member"].email in holder
 
@@ -1072,3 +1075,33 @@ def test_the_own_profile_offers_no_2fa_reset(otp_client, populate_db):
     body = otp_client(actor).get(f"{CHANGELIST_URL}{actor.pk}/change/").content.decode()
 
     assert reset_2fa_url(actor) not in body
+
+
+# A label-less row holding only "-": an account action field with no button for the account.
+EMPTY_ACTION_ROW = re.compile(r'<label[^>]*></label>\s*</div>\s*<div class="grow relative">\s*<div class="readonly[^"]*">\s*-\s*</div>')
+
+
+@pytest.mark.django_db
+def test_an_account_awaiting_approval_shows_no_empty_action_rows(otp_client, operator_admin_with_pending_link):
+    context = operator_admin_with_pending_link
+
+    body = (
+        operator_client(otp_client, context["operator_admin"], context["company"])
+        .get(f"{CHANGELIST_URL}{context['incident_user'].pk}/change/")
+        .content.decode()
+    )
+
+    assert not EMPTY_ACTION_ROW.search(body)
+
+
+@pytest.mark.django_db
+def test_an_approved_account_keeps_the_administrator_button_beside_its_field(otp_client, operator_admin_with_pending_link):
+    context = operator_admin_with_pending_link
+
+    body = (
+        operator_client(otp_client, context["operator_admin"], context["company"])
+        .get(f"{CHANGELIST_URL}{context['member'].pk}/change/")
+        .content.decode()
+    )
+
+    assert f"{CHANGELIST_URL}{context['member'].pk}/toggle-user-role/" in body

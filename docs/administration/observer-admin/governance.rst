@@ -85,21 +85,23 @@ The **Observer users** section at the bottom of the form of your observer lists 
 
 Each row has:
 
-- **User**: the account. The drop-down lists the accounts of your observer and the observer administrator accounts
+- **User**: the account. The drop-down lists the active accounts of your observer and the active observer administrator accounts
   linked to no observer.
-- **Is administrator**: keep it ticked: every member of an observer's staff is an observer administrator.
+- **Is administrator**: keep it on: every member of an observer's staff is an observer administrator.
   Changing it switches the role of the account and logs it out.
 - **Can export incidents**: whether the account can export the incidents your observer receives, read-only:
   the platform administrator sets it (see :ref:`incident-export`).
-- **Delete?**: removes the account from your observer. The account is logged out, and can no longer use the platform;
+- the bin icon at the right of the row: removes the account from your observer. The row is covered with
+  **This item will be deleted.**, and **Click to cancel** keeps it; the account is removed when you click **Save**.
+  It is logged out, and can no longer use the platform;
   an observer administrator left without any observer to administer is also deactivated.
 
-To make an existing account of your observer an observer administrator, tick **Is administrator** on its row
+To make an existing account of your observer an observer administrator, turn on **Is administrator** on its row
 and click **Save**. To add a row, click **Add another Observer user** and choose the account.
 
 .. warning::
 
-   Your own row is in the list too. Unticking **Is administrator** or ticking **Delete?** on it removes your access
+   Your own row is in the list too. Turning off **Is administrator** or clicking its bin icon removes your access
    to the console as soon as you save.
 
 .. _observer-admin-users:
@@ -110,10 +112,10 @@ Users
 The **Users** list shows the accounts of your observer, your own included. For each account, it shows
 the contact details, its **Observer** and **Roles**, whether the email address is verified and two-factor authentication
 is activated, when the account was created, and its **Account actions**. To narrow the list down, search for a name
-or an email address, or use **By Roles** in the **Filter** panel.
+or an email address, or use **By Roles** under **Filters**, above the list.
 
 .. figure:: /_static/images/administration/observer-admin/governance-05.png
-   :alt: Users list of an observer administrator with the column headers and the Filter panel outlined
+   :alt: Users list of an observer administrator with the column headers and the Filters button outlined
    :target: ../../_static/images/administration/observer-admin/governance-05.png
 
 Create an account
@@ -131,7 +133,7 @@ The account is linked to your observer straight away, but without the administra
 
 .. important::
 
-   Every member of an observer's staff is an observer administrator: after creating the account, tick
+   Every member of an observer's staff is an observer administrator: after creating the account, turn on
    **Is administrator** on its row in `Observer accounts`_ and click **Save**.
 
 The account has no password yet: its owner chooses one with **Password forgotten?** on the login page

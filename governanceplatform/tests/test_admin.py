@@ -1,18 +1,25 @@
+import re
+
 import pytest
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.urls import reverse
 from unfold.admin import BaseInlineMixin, ModelAdmin
 from unfold.sites import UnfoldAdminSite
+from unfold.widgets import UnfoldAdminSelectWidget
 
 from governanceplatform.admin import admin_site
 from governanceplatform.helpers import user_in_group
 from governanceplatform.models import (
     ApplicationConfig,
+    CompanyUser,
     ObserverRegulation,
+    ObserverUser,
     RegulatorUser,
     Sector,
     User,
 )
+from incidents.forms import ConditionalQuestionOptionForm
 
 
 def test_all_admin_registrations_use_unfold():
@@ -63,6 +70,54 @@ def test_add_user_via_admin(otp_client, populate_db):
         assert response.status_code == 200
         created_user = User.objects.get(email=email)
         assert user_in_group(created_user, expected_group), f"{creator_group} → {expected_group} expected, but got something else"
+
+
+def assert_add_user_rejects_email(client, email):
+    user_count = User.objects.count()
+
+    response = client.post(
+        "/admin/governanceplatform/user/add/",
+        {"email": email, "first_name": "test", "last_name": "test"},
+    )
+
+    assert response.status_code == 200
+    assert "email" in response.context["adminform"].form.errors
+    assert User.objects.count() == user_count
+
+
+@pytest.mark.django_db
+def test_add_user_via_admin_rejects_existing_email_in_other_case(otp_client, populate_db):
+    users = populate_db["users"]
+    creator = platform_admin(users)
+    existing = next(user for user in users if user != creator)
+
+    assert_add_user_rejects_email(otp_client(creator), existing.email.upper())
+
+
+@pytest.mark.django_db
+def test_operator_admin_add_user_rejects_existing_email_in_other_case(otp_client, operator_admin_with_pending_link):
+    context = operator_admin_with_pending_link
+    client = otp_client(context["operator_admin"])
+    session = client.session
+    session["company_in_use"] = context["company"].id
+    session.save()
+
+    assert_add_user_rejects_email(client, context["member"].email.upper())
+
+
+@pytest.mark.django_db
+def test_operator_admin_add_user_administrator_field_is_a_switch(otp_client, operator_admin_with_pending_link):
+    context = operator_admin_with_pending_link
+    client = otp_client(context["operator_admin"])
+    session = client.session
+    session["company_in_use"] = context["company"].id
+    session.save()
+
+    body = client.get(reverse("admin:governanceplatform_user_add")).content.decode()
+
+    field = re.search(r'<input[^>]*id="id_is_administrator"[^>]*>', body).group(0)
+    assert 'type="checkbox"' in field
+    assert "rounded-full" in field
 
 
 def platform_admin(users):
@@ -116,9 +171,11 @@ def test_reset_buttons_ask_for_confirmation(otp_client, populate_db):
     client = otp_client(platform_admin(populate_db["users"]))
 
     body = client.get("/admin/governanceplatform/user/").content.decode()
+    header, toolbar = body.split('class="changelist-tools"', 1)
 
     for url in ("reset-accepted-terms/", "reset-cookie-acceptation/"):
-        assert f'formaction="{url}"' in body
+        assert f'formaction="{url}"' not in header
+        assert f'formaction="{url}"' in toolbar
     assert body.count("data-confirm-message=") >= 2
     assert 'id="account-action-confirm"' in body
 
@@ -231,6 +288,64 @@ def test_regulator_user_cards_collapse_with_a_summary_and_a_toggle(otp_client, p
 
 
 @pytest.mark.django_db
+def test_regulator_accounts_are_managed_from_the_regulator_not_the_user_form(otp_client, populate_db):
+    admin = next(user for user in populate_db["users"] if user_in_group(user, "RegulatorAdmin"))
+    account = User.objects.filter(regulators=admin.regulators.first()).exclude(pk=admin.pk).first()
+    client = otp_client(admin)
+
+    user_form = client.get(reverse("admin:governanceplatform_user_change", args=[account.pk])).content.decode()
+    regulator_form = client.get(reverse("admin:governanceplatform_regulator_change", args=[admin.regulators.first().pk])).content.decode()
+
+    assert 'id="regulatoruser_set-group"' not in user_form
+    assert 'id="regulatoruser_set-group"' in regulator_form
+
+
+def _initial_forms(body, prefix):
+    return int(re.search(rf'name="{prefix}-INITIAL_FORMS" value="(\d+)"', body).group(1))
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("viewer_role", "link_model", "parent", "prefix"),
+    [
+        ("RegulatorAdmin", RegulatorUser, "regulator", "regulatoruser_set"),
+        ("PlatformAdmin", ObserverUser, "observer", "observeruser_set"),
+        ("RegulatorUser", CompanyUser, "company", "companyuser_set"),
+    ],
+)
+def test_inlines_leave_out_deactivated_accounts(otp_client, populate_db, viewer_role, link_model, parent, prefix):
+    viewer = next(user for user in populate_db["users"] if user_in_group(user, viewer_role))
+    links = link_model.objects.exclude(user=viewer).select_related("user")
+    if viewer_role == "RegulatorAdmin":
+        links = links.filter(regulator=viewer.regulators.first())
+    link = links.first()
+    if viewer_role == "PlatformAdmin":
+        # A platform administrator only sees the administrators of an observer.
+        link.is_observer_administrator = True
+        link.save()
+    parent_pk = getattr(link, f"{parent}_id")
+    url = reverse(f"admin:governanceplatform_{parent}_change", args=[parent_pk])
+    client = otp_client(viewer)
+    before = _initial_forms(client.get(url).content.decode(), prefix)
+
+    link.user.is_active = False
+    link.user.save()
+
+    assert _initial_forms(client.get(url).content.decode(), prefix) == before - 1
+
+
+@pytest.mark.django_db
+def test_regulator_user_drop_down_offers_no_deactivated_account(otp_client, populate_db):
+    admin = next(user for user in populate_db["users"] if user_in_group(user, "RegulatorAdmin"))
+    removed = User.objects.create(email="removed@regulator.lu", is_active=False)
+    removed.groups.add(Group.objects.get(name="RegulatorUser"))
+
+    body = otp_client(admin).get(reverse("admin:governanceplatform_regulator_change", args=[admin.regulators.first().pk])).content.decode()
+
+    assert "removed@regulator.lu" not in body
+
+
+@pytest.mark.django_db
 def test_regulator_user_summary_names_the_role_or_counts_the_sectors(populate_db):
     regulator_user = RegulatorUser.objects.filter(is_regulator_administrator=False).first()
     regulator_user.sectors.set(Sector.objects.all()[:2])
@@ -279,3 +394,52 @@ def test_add_button_is_labelled_in_the_list_toolbar(otp_client, populate_db):
     assert 'class="changelist-add-link' in toolbar
     assert f"Add {User._meta.verbose_name}" in toolbar
     assert 'class="addlink' not in body
+
+
+def _token_input(otp_client, users):
+    """Only observer accounts see the RT configuration, on their own observer."""
+    observer_admin = next(user for user in users if user_in_group(user, "ObserverAdmin"))
+    observer = observer_admin.observers.first()
+    body = otp_client(observer_admin).get(reverse("admin:governanceplatform_observer_change", args=[observer.pk])).content.decode()
+    return re.search(r'<input[^>]*name="rt_token"[^>]*>', body).group(0)
+
+
+@pytest.mark.django_db
+def test_observer_token_field_is_an_unfold_password_input(otp_client, populate_db):
+    token_input = _token_input(otp_client, populate_db["users"])
+
+    assert token_input.count("type=") == 1
+    assert 'type="password"' in token_input
+    assert "value=" not in token_input
+    assert "border-base-200" in token_input  # Unfold's input classes
+
+
+@pytest.mark.django_db
+def test_observer_token_field_masks_a_stored_token(otp_client, populate_db):
+    observer = next(user for user in populate_db["users"] if user_in_group(user, "ObserverAdmin")).observers.first()
+    observer.rt_token = "secret-token"
+    observer.save()
+
+    token_input = _token_input(otp_client, populate_db["users"])
+
+    assert token_input.count("type=") == 1
+    assert 'type="password"' in token_input
+    assert f'value="{"*" * len("secret-token")}"' in token_input
+
+
+def test_conditional_question_option_selects_are_unfold_selects():
+    form = ConditionalQuestionOptionForm()
+
+    for name in ("report", "question_options", "predefined_answer", "next_question_options"):
+        assert isinstance(form.fields[name].widget, UnfoldAdminSelectWidget), name
+
+
+@pytest.mark.django_db
+def test_sidebar_categories_fold_with_a_button_and_keep_the_current_one_open(otp_client, populate_db):
+    body = otp_client(platform_admin(populate_db["users"])).get("/admin/governanceplatform/user/").content.decode()
+
+    assert 'aria-controls="admin-nav-governanceplatform"' in body
+    assert 'id="admin-nav-governanceplatform"' in body
+    current = body[re.search(r'class="app-governanceplatform module\s+current-app\s*"', body).start() :]
+    assert current.index('x-data="{ open: true }"') < current.index("admin-nav-group-toggle")
+    assert "$persist(true).as('admin-nav-admin')" in body

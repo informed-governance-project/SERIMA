@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The administration interface now uses Django Unfold, including translatable models, inline forms, and import/export screens.
 
 - The content of the incident and security objectives email templates is edited in a rich-text editor instead of being written in Markdown. Existing templates are converted to HTML when the platform is updated, keeping the formatting their emails had. Sector regulation configuration files are now exported in version 2 of the format, whose email content is HTML; files of version 1 can still be imported, their email content being converted on the way in. Security objectives email templates imported from a file must now hold HTML.
+- A regulator administrator sets the role, export permission and sectors of the regulator accounts only in the **Regulator users** section of the regulator, now one card per account: the **Regulator user** section of the account's own form, which did the same, is gone. An account created with **Add User** is attached to the regulator from that section, whose **User** drop-down lists it.
 
 - The objective selector of a security objectives declaration is now grouped by the domains of the evaluation framework, each labelled D1, D2… from its position, and the objectives are numbered domain by domain. When the selector is too narrow for every objective, the other domains collapse to their code and one symbol summing up their objectives, which shows their name and the count of objectives in each state on hover and opens their first objective still to fill or to review on click; if the current domain still does not fit, its objectives are shown a page at a time. A line above each objective names its domain and its place in it; the PDF of the declaration shows the same line and lists the objectives in the same order, domain by domain. A declaration now opens on the first objective still to fill (operators) or to review (regulators) instead of the first one (#925)
 
@@ -24,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The header of an incident report and of a security objectives declaration now shows the **Reference** of the incident or declaration. Operators no longer see the **Company** there, nor the contact icon, which only regulators (and, for incidents, observers) still have (#942)
 
 ### Fixed
+
+- A deactivated account was still listed in the users of its operator, regulator or observer. On an operator's form its row lost its **User**, so the form could not be saved until the account was reactivated; and choosing a deactivated account in the **User** drop-down of a regulator or observer reactivated it. Deactivated accounts are now left out of these sections and of their **User** drop-downs.
+- The **Submission date** column of the security objectives dashboard, its sorting and declaration exports now keep the date of the first submitted version instead of replacing it with the date of each revised version (#965)
+
+- Adding a user in the administration interface with the email address of an existing account written in a different case (e.g. `Jane.Doe@…` for `jane.doe@…`) now shows "An account with this email address already exists." instead of an error page
 
 - Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)
 
@@ -37,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The referrer policy set in the configuration was ignored, because the setting was named `REFERRER_POLICY` instead of Django's `SECURE_REFERRER_POLICY`, so pages were always sent with Django's default `Referrer-Policy: same-origin`. That remains the default, and `SECURE_REFERRER_POLICY` in `config.py` now changes it. Rename `REFERRER_POLICY` to `SECURE_REFERRER_POLICY` in an existing `config.py`, as the old name is no longer read (#613)
 
 ### Added
+
+- A regulator can export only some security objectives standards: tick them in the **Standards** list and choose **Export selected standards** in the **Action** drop-down. The **Export** button also exports only the standards the list shows once it is searched or filtered.
 
 - A table of contents button beside the Icon Guide of a security objectives declaration opens a side panel with the number of objectives in each state, and every domain with its objectives, their state and how many of them are filled (operators) or reviewed (regulators); clicking an objective opens it. Unlike the objective selector, it is available on every screen size (#925)
 
