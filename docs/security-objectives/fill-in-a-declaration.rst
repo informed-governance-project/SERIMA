@@ -48,7 +48,7 @@ Its parts are numbered in the screenshot below and described one by one.
    :alt: Declaration screen with its parts numbered
    :target: ../_static/images/security-objectives/fill-in-a-declaration-01.png
 
-1. **Submission date** and **Last update**: The submission date stays empty until the declaration is submitted.
+1. **Submission date** and **Last update**: The submission date stays empty until the declaration is submitted. On the dashboard, it remains the date of the first submitted version when the declaration is revised.
 
 2. **Reference** and **Evaluation Framework**: The reference of the declaration, shared by all its versions,
    and the framework it answers.

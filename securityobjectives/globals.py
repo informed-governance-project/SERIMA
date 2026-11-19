@@ -59,7 +59,7 @@ ALLOWED_SORT_FIELDS = {
         "type": "datetime",
     },
     "submit_date": {
-        "field": "submit_date",
+        "field": "first_submit_date",
         "type": "datetime",
     },
     "identifier": {

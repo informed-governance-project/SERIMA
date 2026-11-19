@@ -54,7 +54,7 @@ def get_export_rows(queryset) -> list[list]:
         [
             declaration.get_status_display(),
             format_export_datetime(declaration.last_update),
-            format_export_datetime(declaration.submit_date),
+            format_export_datetime(declaration.first_submit_date),
             declaration.group.group_id if declaration.group else "",
             declaration.standard.label if declaration.standard else "",
             declaration.creator_company_name,

@@ -10,6 +10,7 @@ import pytest
 from django.contrib.admin.models import LogEntry
 from django.core import mail
 from django.urls import reverse
+from django.utils import timezone
 from kombu.exceptions import OperationalError
 
 from governanceplatform.globals import EXPORT
@@ -241,10 +242,21 @@ def test_export_view_rejects_an_empty_multiselect(otp_client, populate_so_db):
 
 
 @pytest.mark.django_db
-def test_xlsx_export_holds_the_dashboard_values(populate_so_db, settings, tmp_path):
+def test_xlsx_export_holds_the_dashboard_values(populate_so_db, settings, tmp_path, create_standard_answer):
     regulator_admin = get_user(populate_so_db, "regadmin@reg1.lu")
     grant_export_right(regulator_admin)
     declaration = populate_so_db["sas"][0]
+    first_submit_date = declaration.submit_date
+    create_standard_answer(
+        standard=declaration.standard,
+        submitter_user=declaration.submitter_user,
+        submitter_company=declaration.submitter_company,
+        creator_name=declaration.creator_name,
+        creator_company_name=declaration.creator_company_name,
+        group=declaration.group,
+        status=declaration.status,
+        year_of_submission=declaration.year_of_submission,
+    )
 
     export = run_export(regulator_admin, build_filters(populate_so_db), settings, tmp_path)
 
@@ -257,6 +269,7 @@ def test_xlsx_export_holds_the_dashboard_values(populate_so_db, settings, tmp_pa
     header, row = rows[0], rows[1]
     assert header[0] == "Status"
     assert row[0] == declaration.get_status_display()
+    assert row[2] == timezone.localtime(first_submit_date).strftime("%d/%m/%y %H:%M")
     assert row[3] == declaration.group.group_id
     assert row[4] == declaration.standard.label
     assert row[5] == declaration.creator_company_name

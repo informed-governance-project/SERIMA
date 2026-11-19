@@ -1033,6 +1033,42 @@ def test_dashboard_shows_the_newer_version_after_the_older_one_was_updated(otp_c
 
 
 @pytest.mark.django_db
+def test_dashboard_shows_and_sorts_by_the_first_submission_date(
+    otp_client,
+    populate_so_db,
+    create_standard_answer_group,
+    create_standard_answer,
+):
+    old_version, new_version = _superseded_declaration(otp_client, populate_so_db)
+    now = timezone.now()
+    first_submit_date = now - dt.timedelta(days=2)
+    StandardAnswer.objects.filter(pk=old_version.pk).update(submit_date=first_submit_date)
+    StandardAnswer.objects.filter(pk=new_version.pk).update(submit_date=now)
+    other_declaration = create_standard_answer(
+        standard=old_version.standard,
+        submitter_user=old_version.submitter_user,
+        submitter_company=old_version.submitter_company,
+        creator_name=old_version.creator_name,
+        creator_company_name=old_version.creator_company_name,
+        group=create_standard_answer_group(company=old_version.submitter_company),
+        status="DELIV",
+        year_of_submission=old_version.year_of_submission,
+    )
+    StandardAnswer.objects.filter(pk=other_declaration.pk).update(submit_date=now - dt.timedelta(days=1))
+    client, _url = _declaration_as_operator(otp_client, populate_so_db)
+
+    response = client.get(
+        reverse("securityobjectives"),
+        {"sort_field": "submit_date", "sort_direction": "asc"},
+    )
+
+    declarations = list(response.context["standard_answers"])
+    assert [declaration.pk for declaration in declarations] == [new_version.pk, other_declaration.pk]
+    assert declarations[0].first_submit_date == first_submit_date
+    assert timezone.localtime(first_submit_date).strftime("%d/%m/%y") in response.content.decode()
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("newer_status", ["UNDE", "DELIV"])
 def test_operator_cannot_update_a_version_that_has_a_newer_one(otp_client, populate_so_db, newer_status):
     old_version = _reviewed_declaration(populate_so_db, "FAILM")
