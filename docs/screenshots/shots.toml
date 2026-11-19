@@ -786,26 +786,32 @@ annotate = [
 name = "images/administration/platform-admin/index-01"
 role = "platform_admin"
 path = "/admin/"
-viewport = { width = 1440, height = 640 }
+viewport = { width = 1440, height = 800 }
 annotate = [
   { selector = " .app-admin", box = true },
   { selector = " .app-governanceplatform", box = true },
   { selector = " .app-sites", box = true },
-  { selector = "#recent-actions-module", box = true },
+  { selector = "#content-related", box = true },
 ]
 
 [[shots]]
 name = "images/administration/platform-admin/sites-01"
 role = "platform_admin"
 path = "/admin/sites/site/1/change/"
+viewport = { width = 1440, height = 500 }
 selector = "#main"
 
 [[shots]]
 name = "images/administration/platform-admin/administration-01"
 role = "platform_admin"
 path = "/admin/admin/logentry/"
+steps = [
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-sites .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
-  { selector = "#changelist-filter", box = true },
+  { selector = ".filter-open-button", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -843,7 +849,18 @@ name = "images/administration/platform-admin/governance-03"
 role = "platform_admin"
 path = "/admin/governanceplatform/regulator/1/change/"
 selector = "#regulatoruser_set-group"
-annotate = [{ selector = "#add_id_regulatoruser_set-0-user", box = true }]
+# The first administrator's card opened, then the menu beside its User drop-down, which Unfold
+# teleports to <body>: the selector still clips it, as it opens over the card.
+steps = [
+  { action = "click", selector = "#regulatoruser_set-group .inline-toggle >> nth=0" },
+  { action = "click", selector = "[x-ref='relatedWidgetWrapperregulatoruser_set-0-user']" },
+  { action = "wait_for", selector = "#add_id_regulatoruser_set-0-user" },
+]
+hide = ["#submit-row"]
+annotate = [
+  { selector = "#regulatoruser_set-group" },
+  { selector = "#add_id_regulatoruser_set-0-user", box = true }
+]
 
 [[shots]]
 name = "images/administration/platform-admin/governance-04"
@@ -895,6 +912,13 @@ path = "/admin/governanceplatform/observer/2/change/"
 # At 1440px the two sector lists squeeze the Legal basis drop-down down to "Reg".
 viewport = { width = 1920, height = 900 }
 selector = "#observerregulation_set-group"
+# Both regulation cards opened, so their legal basis, sectors and incident rules show.
+steps = [
+  { action = "click", selector = "#observerregulation_set-group .inline-toggle >> nth=0" },
+  { action = "click", selector = "#observerregulation_set-group .inline-toggle >> nth=1" },
+  { action = "hover", selector = "#observerregulation_set-heading" },
+]
+hide = ["#submit-row"]
 
 [[shots]]
 name = "images/administration/platform-admin/governance-10"
@@ -902,9 +926,14 @@ role = "platform_admin"
 path = "/admin/governanceplatform/user/"
 # Wide enough for the columns after Roles, which the prose lists, to fit.
 viewport = { width = 1920, height = 900 }
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-sites .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = ["button[formaction='reset-accepted-terms/']", "button[formaction='reset-cookie-acceptation/']"], box = true },
-  { selector = "#changelist-filter", box = true },
+  { selector = ".filter-open-button", box = true },
 ]
 
 [[shots]]
@@ -912,6 +941,7 @@ name = "images/administration/platform-admin/governance-11"
 role = "platform_admin"
 # User 143 is regulator-admin@example.org: a regulator administrator's form has the Active box.
 path = "/admin/governanceplatform/user/143/change/"
+viewport = { width = 1440, height = 1000 }
 selector = "#main"
 annotate = [
   { selector = "#content .field-is_active", box = true },
@@ -938,22 +968,29 @@ name = "images/administration/regulator-admin/index-01"
 role = "regulator_admin"
 path = "/admin/"
 # Tall enough for the Security objectives section, the last one.
-viewport = { width = 1440, height = 1800 }
+viewport = { width = 1440, height = 1600 }
 annotate = [
   { selector = ".app-admin", box = true },
   { selector = " .app-governanceplatform", box = true },
   { selector = " .app-incidents", box = true },
   { selector = " .app-reporting", box = true },
   { selector = " .app-securityobjectives", box = true },
-  { selector = "#recent-actions-module", box = true },
+  { selector = "#content-related", box = true },
 ]
 
 [[shots]]
 name = "images/administration/regulator-admin/administration-01"
 role = "regulator_admin"
 path = "/admin/admin/logentry/"
+steps = [
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
-  { selector = "#changelist-filter", box = true },
+  { selector = ".filter-open-button", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -966,7 +1003,7 @@ steps = [
   { action = "click", selector = "#result_list tbody tr:first-child th a" },
   { action = "wait_for", selector = "#logentry_form" },
 ]
-selector = "#content"
+selector = "#main"
 
 [[shots]]
 name = "images/administration/regulator-admin/governance-01"
@@ -984,8 +1021,14 @@ path = "/admin/governanceplatform/regulator/1/change/"
 # At 1440px the User drop-down is squeezed down to "regulat".
 viewport = { width = 1920, height = 900 }
 selector = "#regulatoruser_set-group"
+# Every card opened, so the fields the prose lists are shown for an administrator and a regulator user.
+steps = [
+  { action = "click", selector = "#regulatoruser_set-data > .form-group:has(#id_regulatoruser_set-0-user) .inline-toggle" },
+  { action = "click", selector = "#regulatoruser_set-data > .form-group:has(#id_regulatoruser_set-1-user) .inline-toggle" },
+  { action = "hover", selector = "#regulatoruser_set-heading" },
+]
+hide = ["#submit-row"]
 annotate = [
-  { selector = "#regulatoruser_set-data > .form-group:has(#id_regulatoruser_set-1-user)", box = true },
   { selector = "#regulatoruser_set-group a.add-row", box = true },
 ]
 
@@ -995,9 +1038,16 @@ role = "regulator_admin"
 path = "/admin/governanceplatform/user/"
 # Wide enough for the Account actions column, which the prose describes.
 viewport = { width = 1920, height = 900 }
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#result_list thead", box = true },
-  { selector = "#changelist-filter", box = true },
+  { selector = ".filter-open-button", box = true },
 ]
 
 [[shots]]
@@ -1006,7 +1056,7 @@ role = "regulator_admin"
 # User 144 is regulator-user@example.org, a regulator user of Regulator A.
 path = "/admin/governanceplatform/user/144/change/"
 # At 1440px the Regulator drop-down is squeezed down to "Regulato".
-viewport = { width = 1920, height = 900 }
+viewport = { width = 1920, height = 1000 }
 selector = "#main"
 annotate = [
   { selector = "#content .field-is_active", box = true },
@@ -1026,6 +1076,7 @@ annotate = [
 name = "images/administration/regulator-admin/governance-06"
 role = "regulator_admin"
 path = "/admin/governanceplatform/sector/add/"
+viewport = { width = 1920, height = 550 }
 selector = "#main"
 hide = ["#submit-row"]
 
@@ -1050,13 +1101,14 @@ path = "/admin/"
 viewport = { width = 1440, height = 400 }
 annotate = [
   { selector = " .app-governanceplatform", box = true },
-  { selector = "#recent-actions-module", box = true },
+  { selector = "#content-related", box = true },
 ]
 
 [[shots]]
 name = "images/administration/regulator-user/governance-01"
 role = "regulator_user"
 path = "/admin/governanceplatform/company/"
+viewport = { width = 1440, height = 600 }
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1076,9 +1128,12 @@ name = "images/administration/regulator-user/governance-03"
 role = "regulator_user"
 path = "/admin/governanceplatform/company/46/change/"
 selector = "#companyuser_set-group"
+# The menu beside the User drop-down holds Add another User, which used to be a plus icon.
+steps = [
+  { action = "click", selector = "[x-ref='relatedWidgetWrappercompanyuser_set-0-user']" },
+  { action = "wait_for", selector = "#add_id_companyuser_set-0-user" },
+]
 annotate = [
-  { selector = "#companyuser_set-data tbody:has(#id_companyuser_set-0-user)", box = true },
-  { selector = "#add_id_companyuser_set-0-user", box = true },
   { selector = "#companyuser_set-group a.add-row", box = true },
 ]
 
@@ -1090,7 +1145,7 @@ path = "/admin/governanceplatform/user/"
 viewport = { width = 1920, height = 900 }
 annotate = [
   { selector = "#result_list thead", box = true },
-  { selector = "#changelist-filter", box = true },
+  { selector = ".filter-open-button", box = true },
 ]
 
 [[shots]]
@@ -1098,6 +1153,7 @@ name = "images/administration/regulator-user/governance-05"
 role = "regulator_user"
 # User 146 is operator-user@example.org, an operator user of Operator B.
 path = "/admin/governanceplatform/user/146/change/"
+viewport = { width = 1440, height = 1000 }
 selector = "#main"
 annotate = [
   { selector = "#content .field-is_active", box = true },
@@ -1125,6 +1181,7 @@ annotate = [
 name = "images/administration/operator-admin/governance-01"
 role = "operator_admin"
 path = "/admin/governanceplatform/company/"
+viewport = { width = 1440, height = 500 }
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1137,7 +1194,6 @@ role = "operator_admin"
 path = "/admin/governanceplatform/company/46/change/"
 selector = "#main"
 hide = ["#submit-row"]
-annotate = [{ selector = "#content .field-email", box = true }]
 
 [[shots]]
 name = "images/administration/operator-admin/governance-03"
@@ -1146,7 +1202,7 @@ path = "/account/login?next=/admin/governanceplatform/user/"
 credentials_from = "operator_admin"
 fresh = true
 # Wide enough for the Account actions column, which the prose describes.
-viewport = { width = 1920, height = 900 }
+viewport = { width = 1920, height = 700 }
 steps = [
   { action = "click", selector = "#with-account" },
   { action = "fill", selector = "#id_auth-username", value = "${username}" },
@@ -1166,8 +1222,7 @@ annotate = [
 name = "images/administration/operator-admin/governance-04"
 role = "operator_admin"
 path = "/admin/governanceplatform/user/add/"
-# Moves the focus off the autofocused First name, whose ring reads as a callout.
-steps = [{ action = "click", selector = "#content" }]
+viewport = { width = 1440, height = 600 }
 selector = "#main"
 hide = ["#submit-row"]
 annotate = [{ selector = "#content .field-is_administrator", box = true }]
@@ -1176,6 +1231,7 @@ annotate = [{ selector = "#content .field-is_administrator", box = true }]
 name = "images/administration/operator-admin/governance-05"
 # User 146 is operator-user@example.org, the operator user of Operator B.
 path = "/account/login?next=/admin/governanceplatform/user/146/change/"
+viewport = { width = 1440, height = 1000 }
 credentials_from = "operator_admin"
 fresh = true
 steps = [
@@ -1195,13 +1251,6 @@ annotate = [
   { selector = "#submit-row a[href$='/delete/']", box = true },
 ]
 
-# --- Observer admin (docs/administration/observer-admin/) ---------------------
-#
-# The Django admin under /admin/, as the observer administrator of Observer A,
-# the only account of that observer in the fixture: no shot shows the Reset 2FA
-# token button, which is never offered on your own account. Change forms are
-# only opened, never saved, and the RT connection is never tested.
-
 [[shots]]
 name = "images/administration/operator-admin/governance-06"
 # incident-user@example.org is suggested to Operator A in the fixture and
@@ -1210,7 +1259,6 @@ path = "/admin/governanceplatform/user/"
 role = "operator_admin"
 viewport = { width = 1920, height = 520 }
 annotate = [
-  { selector = "#main > .px-4 ul", box = true },
   { selector = "#result_list tbody tr:has(.link-pending) td.field-account_actions", box = true },
 ]
 
@@ -1218,8 +1266,16 @@ annotate = [
 name = "images/administration/operator-admin/governance-07"
 path = "/admin/governanceplatform/user/150/change/"
 role = "operator_admin"
-viewport = { width = 1440, height = 700 }
+selector = "#main"
+hide = ["#submit-row"]
 annotate = [{ selector = ".pending-link-prompt", box = true }]
+
+# --- Observer admin (docs/administration/observer-admin/) ---------------------
+#
+# The Django admin under /admin/, as the observer administrator of Observer A,
+# the only account of that observer in the fixture: no shot shows the Reset 2FA
+# token button, which is never offered on your own account. Change forms are
+# only opened, never saved, and the RT connection is never tested.
 
 [[shots]]
 name = "images/administration/observer-admin/index-01"
@@ -1234,6 +1290,7 @@ annotate = [
 name = "images/administration/observer-admin/governance-01"
 role = "observer_admin"
 path = "/admin/governanceplatform/observer/"
+viewport = { width = 1440, height = 500 }
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1260,7 +1317,6 @@ path = "/admin/governanceplatform/observer/2/change/"
 steps = [{ action = "click", selector = "#content fieldset.collapse summary" }]
 selector = "#content fieldset.collapse"
 annotate = [
-  { selector = ["#id_rt_url", "#id_rt_token", "#id_rt_queue"], box = true },
   { selector = "#content .rt-test-btn", box = true },
 ]
 
@@ -1279,21 +1335,19 @@ name = "images/administration/observer-admin/governance-05"
 role = "observer_admin"
 path = "/admin/governanceplatform/user/"
 # Wide enough for the Account actions column, which the prose describes.
-viewport = { width = 1920, height = 900 }
+viewport = { width = 1440, height = 600 }
 annotate = [
   { selector = "#result_list thead", box = true },
-  { selector = "#changelist-filter", box = true },
+  { selector = ".filter-open-button", box = true },
 ]
 
 [[shots]]
 name = "images/administration/observer-admin/governance-06"
 role = "observer_admin"
 path = "/admin/governanceplatform/user/add/"
-# Moves the focus off the autofocused First name, whose ring reads as a callout.
-steps = [{ action = "click", selector = "#content" }]
-selector = "#content"
+viewport = { width = 1440, height = 500 }
+selector = "#main"
 hide = ["#submit-row"]
-annotate = [{ selector = "#content fieldset.module", box = true }]
 
 [[shots]]
 name = "images/administration/observer-admin/governance-07"
@@ -1329,7 +1383,7 @@ annotate = [
 name = "images/incident-notification/configuration-02"
 role = "regulator_admin"
 path = "/admin/incidents/email/1/change/"
-selector = "#content"
+selector = "#main"
 hide = [".field-line:has(.markdown-html-preview)", "#submit-row"]
 annotate = [
   { selector = ".parler-language-tabs", box = true },
@@ -1352,7 +1406,7 @@ name = "images/incident-notification/configuration-04"
 role = "regulator_admin"
 # Question 1 has never been answered, so it opens as an editable form.
 path = "/admin/incidents/question/1/change/"
-selector = "#content"
+selector = "#main"
 hide = ["#submit-row"]
 annotate = [{ selector = "#predefinedanswer_set-group", box = true }]
 
@@ -1360,7 +1414,13 @@ annotate = [{ selector = "#predefinedanswer_set-group", box = true }]
 name = "images/incident-notification/configuration-05"
 role = "regulator_admin"
 path = "/admin/incidents/question/1/change/"
-steps = [{ action = "click", selector = "#id_question_type" }]
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "click", selector = "#id_question_type" }
+]
 annotate = [{ selector = "#id_question_type", box = true }]
 
 [[shots]]
@@ -1378,7 +1438,14 @@ role = "regulator_admin"
 # Report 11 is a final report, with impacts disclosure required.
 path = "/admin/incidents/workflow/11/change/"
 # Tall enough to reach the Notification Email section below General.
-viewport = { width = 1440, height = 1000 }
+viewport = { width = 1440, height = 1100 }
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
+  { action = "hover", selector = "#main" }
+]
 annotate = [{ selector = "#nav-sidebar li.current-model", box = true }]
 
 [[shots]]
@@ -1389,9 +1456,7 @@ selector = "#questionoptions_set-group"
 # Four questions are enough to show the columns.
 hide = [
   "#questionoptions_set-group tbody.form-group.original:nth-of-type(n+5)",
-  "#questionoptions_set-group a.add-row",
 ]
-annotate = [{ selector = "#questionoptions_set-group thead", box = true }]
 
 [[shots]]
 name = "images/incident-notification/configuration-09"
@@ -1408,7 +1473,8 @@ role = "regulator_admin"
 # The question lists load from the selected report; select_option waits for
 # each option to arrive. The form is never saved.
 path = "/admin/incidents/conditionalquestionoption/add/"
-selector = "#content"
+viewport = { width = 1440, height = 550 }
+selector = "#main"
 steps = [
   { action = "select", selector = "#id_report", value = "Regulator A - Regulation A - Final Incident Report" },
   { action = "select", selector = "#id_question_options", value = "Is this a recurring incident?" },
@@ -1433,7 +1499,7 @@ name = "images/incident-notification/configuration-12"
 role = "regulator_admin"
 # Impact 68 is "DNS 1h".
 path = "/admin/incidents/impact/68/change/"
-selector = "#content"
+selector = "#main"
 hide = ["#submit-row"]
 
 [[shots]]
@@ -1453,7 +1519,7 @@ annotate = [
 name = "images/incident-notification/configuration-14"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/add/"
-selector = "#content"
+selector = "#main"
 steps = [
   { action = "fill", selector = "#id_name", value = "Regulation A workflow" },
   { action = "click", selector = "#id_is_detection_date_needed" },
@@ -1538,7 +1604,8 @@ annotate = [
 name = "images/incident-notification/configuration-20"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulationworkflowemail/1/change/"
-selector = "#content"
+viewport = { width = 1440, height = 650 }
+selector = "#main"
 hide = ["#submit-row"]
 
 # --- Security objectives configuration (docs/administration/regulator-admin/security-objectives.rst) ---
@@ -1559,12 +1626,20 @@ annotate = [{ selector = "button[data-placeholders-help-open]", box = true }]
 name = "images/administration/regulator-admin/security-objectives-02"
 role = "regulator_admin"
 path = "/admin/securityobjectives/standard/"
-# The Security Objectives entries are the last of the sidebar: the list shots
-# are tall enough to show them.
-viewport = { width = 1440, height = 1260 }
+# The other sections of the sidebar folded, so the Security Objectives entries show
+# without a tall capture. The console remembers folded sections in the browser, so
+# the shot has a browser of its own, which the later shots of the role do not share.
+fresh = true
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
-  { selector = ".object-tools", box = true },
+  { selector = ".changelist-tools-actions", box = true },
   { selector = "#result_list thead", box = true },
 ]
 
@@ -1573,8 +1648,6 @@ name = "images/administration/regulator-admin/security-objectives-03"
 role = "regulator_admin"
 path = "/admin/securityobjectives/standard/add/"
 selector = "#main"
-# Moves focus off the Active box the form focuses on load.
-steps = [{ action = "click", selector = "#content" }]
 hide = [
   "#standard_form > div > fieldset:has(.field-maturity_level_label)",
   "#standard_form > div > fieldset:has(.field-score_display)",
@@ -1599,13 +1672,21 @@ path = "/admin/securityobjectives/standard/8/change/"
 selector = "#security_objectives_set-group"
 # Five objectives are enough to show the columns.
 hide = ["#security_objectives_set-data > tbody:nth-of-type(n+6)"]
-annotate = [{ selector = "#security_objectives_set-group thead", box = true }]
 
 [[shots]]
 name = "images/administration/regulator-admin/security-objectives-06"
 role = "regulator_admin"
 path = "/admin/securityobjectives/maturitylevel/"
-viewport = { width = 1440, height = 1260 }
+# The other sections of the sidebar folded, as in security-objectives-02, in a
+# browser of its own so the folding does not carry over to the later shots.
+fresh = true
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1615,7 +1696,16 @@ annotate = [
 name = "images/administration/regulator-admin/security-objectives-07"
 role = "regulator_admin"
 path = "/admin/securityobjectives/domain/"
-viewport = { width = 1440, height = 1260 }
+# The other sections of the sidebar folded, as in security-objectives-02, in a
+# browser of its own so the folding does not carry over to the later shots.
+fresh = true
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1625,7 +1715,16 @@ annotate = [
 name = "images/administration/regulator-admin/security-objectives-08"
 role = "regulator_admin"
 path = "/admin/securityobjectives/securityobjective/"
-viewport = { width = 1440, height = 1260 }
+# The other sections of the sidebar folded, as in security-objectives-02, in a
+# browser of its own so the folding does not carry over to the later shots.
+fresh = true
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1636,8 +1735,6 @@ name = "images/administration/regulator-admin/security-objectives-09"
 role = "regulator_admin"
 path = "/admin/securityobjectives/securityobjective/add/"
 selector = "#main"
-# Moves focus off the first field, which the form focuses on load.
-steps = [{ action = "click", selector = "#content" }]
 hide = ["#submit-row"]
 
 [[shots]]
@@ -1646,6 +1743,16 @@ role = "regulator_admin"
 path = "/admin/securityobjectives/securitymeasure/"
 # Wide enough to keep the complete table visible instead of switching to cards.
 viewport = { width = 1920, height = 900 }
+# The other sections of the sidebar folded, as in security-objectives-02, in a
+# browser of its own so the folding does not carry over to the later shots.
+fresh = true
+steps = [
+  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
+  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [{ selector = "#result_list thead", box = true }]
 
 [[shots]]
@@ -1653,7 +1760,6 @@ name = "images/administration/regulator-admin/security-objectives-11"
 role = "regulator_admin"
 path = "/admin/securityobjectives/securitymeasure/add/"
 selector = "#main"
-steps = [{ action = "click", selector = "#content" }]
 hide = ["#submit-row"]
 
 [[shots]]
