@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The **Submission date** column of the security objectives dashboard, its sorting and declaration exports now keep the date of the first submitted version instead of replacing it with the date of each revised version (#965)
+
 - Adding a user in the administration interface with the email address of an existing account written in a different case (e.g. `Jane.Doe@…` for `jane.doe@…`) now shows "An account with this email address already exists." instead of an error page
 
 - Security objectives framework CSV exports from the administration interface and declaration mass exports from the dashboard now include a UTF-8 byte order mark, so spreadsheet applications display accented headers and data correctly (#953)

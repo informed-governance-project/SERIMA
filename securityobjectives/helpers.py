@@ -73,7 +73,13 @@ def set_declaration_column_widths(column_config: dict[str, dict[str, str | bool 
 
 
 def get_standard_answers_with_progress(standard_answer_queryset: QuerySet[StandardAnswer]) -> QuerySet[StandardAnswer]:
+    first_submission_date = (
+        StandardAnswer.objects.filter(group_id=OuterRef("group_id"), submit_date__isnull=False)
+        .order_by("creation_date")
+        .values("submit_date")[:1]
+    )
     return standard_answer_queryset.annotate(
+        first_submit_date=Subquery(first_submission_date),
         # A new version keeps the verdicts of the review it was copied from, so an objective can
         # be fully filled and still wait for the revision the regulator asked for.
         has_failed_objectives=Exists(SecurityObjectiveStatus.objects.filter(standard_answer=OuterRef("pk"), status="FAIL")),
