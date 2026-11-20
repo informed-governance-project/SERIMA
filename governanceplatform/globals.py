@@ -5,6 +5,10 @@ def get_functionality_choices():
     return FUNCTIONALITIES
 
 
+def get_api_module_choices():
+    return API_MODULES
+
+
 # New flag used for logs
 ADDITION = 1
 CHANGE = 2
@@ -35,6 +39,24 @@ FUNCTIONALITIES = {
 FUNCTIONALITY_ELIGIBLE_ROLES = {
     "securityobjectives": ["RegulatorAdmin", "RegulatorUser", "OperatorAdmin", "OperatorUser"],
     "reporting": ["RegulatorAdmin", "RegulatorUser"],
+}
+
+# Modules the read-only API serves, one per viewset `module`. Listed explicitly rather than derived from
+# FUNCTIONALITIES: a module belongs here only once it has an endpoint, or granting it would do nothing.
+# Incidents is not a functionality: every role reaches it on the web. The APIModuleAccess rows follow
+# this dict on every migrate (signals.sync_api_modules).
+API_MODULES = {
+    "incidents": _("Incident notification"),
+    "securityobjectives": FUNCTIONALITIES["securityobjectives"],
+    "reporting": FUNCTIONALITIES["reporting"],
+}
+
+# Roles a platform admin may grant API access to, per module. The API never widens web access, so
+# each list stays within the roles that reach the module on the web.
+API_ELIGIBLE_ROLES = {
+    "incidents": ["RegulatorAdmin", "RegulatorUser", "OperatorAdmin", "OperatorUser", "IncidentUser", "ObserverAdmin", "ObserverUser"],
+    "securityobjectives": FUNCTIONALITY_ELIGIBLE_ROLES["securityobjectives"],
+    "reporting": FUNCTIONALITY_ELIGIBLE_ROLES["reporting"],
 }
 
 # Crockford base32 omits I, L, O and U so a reference survives being read aloud or

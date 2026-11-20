@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Opt-in read-only APIs for incidents, security-objective declarations, reporting projects and the current user, with expiring personal API keys stored as hashes, account-based key creation/revocation, OpenAPI YAML and Swagger UI. The API is disabled by default; once enabled, platform administrators grant it per module and role under **API access**, and it follows the key owner's current organization, sector and module permissions. An operator's key reads only the company selected when it was created. Incidents and declarations opened through the API are recorded in their Access Log with the action `API READ`, as on the web.
+
 ### Changed
 
 - The objective selector of a security objectives declaration is now grouped by the domains of the evaluation framework, each labelled D1, D2… from its position, and the objectives are numbered domain by domain. When the selector is too narrow for every objective, the other domains collapse to their code and one symbol summing up their objectives, which shows their name and the count of objectives in each state on hover and opens their first objective still to fill or to review on click; if the current domain still does not fit, its objectives are shown a page at a time. A line above each objective names its domain and its place in it; the PDF of the declaration shows the same line and lists the objectives in the same order, domain by domain. A declaration now opens on the first objective still to fill (operators) or to review (regulators) instead of the first one (#925)

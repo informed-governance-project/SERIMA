@@ -459,6 +459,7 @@ class Template(models.Model):
 
 
 class Project(models.Model):
+    api_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     task_id = models.UUIDField(blank=True, null=True)
     task_status = models.CharField(
         max_length=10,
