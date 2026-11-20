@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, Group
+from django.core.exceptions import DisallowedRedirect
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
@@ -334,3 +335,17 @@ def test_the_default_key_field_breaks_ties_on_another_sort():
     qs = helpers.sort_queryset_by_field(User.objects.all(), "email", "asc", "joined", SORT_FIELDS)
 
     assert qs.query.order_by[-1] == "-date_joined"
+
+
+def test_redirect_to_current_page_stays_on_the_page():
+    request = RequestFactory().get("/incidents/", {"reset": ""})
+
+    assert helpers.redirect_to_current_page(request).url == "/incidents/"
+
+
+def test_redirect_to_current_page_refuses_a_path_read_as_another_host():
+    request = RequestFactory().get("/incidents/")
+    request.path = "//evil.example/incidents/"
+
+    with pytest.raises(DisallowedRedirect):
+        helpers.redirect_to_current_page(request)

@@ -9,6 +9,7 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from drf_spectacular.generators import SchemaGenerator
 
 from governanceplatform.globals import API_ELIGIBLE_ROLES
 from governanceplatform.models import (
@@ -322,6 +323,13 @@ def test_schema_hides_modules_whose_functionality_grants_no_role(client, api_use
     paths = yaml.safe_load(client.get(reverse("api:schema")).content)["paths"]
     assert "/api/v1/reporting/projects/" in paths
     assert "/api/v1/security-objectives/" not in paths
+
+
+def test_schema_generated_outside_a_request_lists_every_module_without_reading_the_database(django_assert_num_queries):
+    # What `check --deploy` and `make openapi` run, where no database may be reachable.
+    with django_assert_num_queries(0):
+        paths = SchemaGenerator().get_schema(request=None, public=True)["paths"]
+    assert {"/api/v1/incidents/", "/api/v1/security-objectives/", "/api/v1/reporting/projects/"} <= set(paths)
 
 
 def test_swagger_page_uses_the_platform_layout_without_inline_script(client, api_user):

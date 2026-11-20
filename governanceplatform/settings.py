@@ -211,7 +211,6 @@ SPECTACULAR_SETTINGS = {
     "Governance Platform</a> by NC3-LU.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "PREPROCESSING_HOOKS": ["governanceplatform.api.views.hide_inactive_modules"],
     "SWAGGER_UI_DIST": "SIDECAR",
     "SWAGGER_UI_SETTINGS": {"persistAuthorization": False},
 }

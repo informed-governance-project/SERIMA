@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 from django.conf import settings
 from django.db.models import Prefetch
 from django.http import Http404
+from drf_spectacular.generators import EndpointEnumerator, SchemaGenerator
 from drf_spectacular.renderers import OpenApiYamlRenderer
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerSplitView
@@ -207,14 +208,24 @@ class ProjectViewSet(ReadOnlyViewSet):
         return projects_for_user(self.request.user).select_related("standard").prefetch_related("standard__translations")
 
 
-def hide_inactive_modules(endpoints: list[tuple], **kwargs) -> list[tuple]:
-    """drf-spectacular preprocessing hook: a module whose functionality grants no role cannot answer anyone,
-    so its endpoints are left out of the schema and the documentation page."""
-    active = set(Functionality.objects.filter(roles__isnull=False).values_list("type", flat=True))
-    return [endpoint for endpoint in endpoints if getattr(endpoint[3].cls, "module", "incidents") in active | {"incidents"}]
+class ActiveModulesEndpointEnumerator(EndpointEnumerator):
+    """A module whose functionality grants no role cannot answer anyone, so its endpoints are left out of
+    the served schema and the documentation page."""
+
+    def get_api_endpoints(self, patterns=None, prefix=""):
+        active = set(Functionality.objects.filter(roles__isnull=False).values_list("type", flat=True)) | {"incidents"}
+        endpoints = super().get_api_endpoints(patterns, prefix)
+        return [endpoint for endpoint in endpoints if getattr(endpoint[3].cls, "module", "incidents") in active]
+
+
+class ActiveModulesSchemaGenerator(SchemaGenerator):
+    # Only the served schema reads the database: `check --deploy` and `make openapi` generate the
+    # full schema with the default generator, where no database may be reachable.
+    endpoint_inspector_cls = ActiveModulesEndpointEnumerator
 
 
 class OpenAPIView(APIEnabledMixin, SpectacularAPIView):
+    generator_class = ActiveModulesSchemaGenerator
     authentication_classes = []
     permission_classes = []
     throttle_classes = []

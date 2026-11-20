@@ -12,7 +12,7 @@ from celery import current_app
 from django import forms
 from django.conf import settings
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import DisallowedRedirect, ValidationError
 from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
@@ -679,6 +679,13 @@ def get_list_filters(request: HttpRequest, page: str) -> dict[str, Any]:
     return {**get_preferences(user, page)["filters"], **request.session.get(list_session_key(page), {})}
 
 
+def redirect_to_current_page(request: HttpRequest) -> HttpResponseRedirect:
+    # request.path comes from the client, and one starting with "//" would be followed to another host.
+    if not url_has_allowed_host_and_scheme(request.path, allowed_hosts=None):
+        raise DisallowedRedirect(f"Unsafe redirect to {request.path!r}")
+    return redirect(request.path)
+
+
 def update_list_params(
     request: HttpRequest,
     page: str,
@@ -698,18 +705,18 @@ def update_list_params(
         delete_preference(user, page, "sort")
         session_params.pop("page", None)
         request.session[session_key] = session_params
-        return redirect(request.path)
+        return redirect_to_current_page(request)
 
     if "reset" in request.GET:
         delete_preference(user, page, "filters")
         request.session.pop(session_key, None)
-        return redirect(request.path)
+        return redirect_to_current_page(request)
 
     if request.GET.get("search") == "":
         session_params.pop("search", None)
         session_params.pop("page", None)
         request.session[session_key] = session_params
-        return redirect(request.path)
+        return redirect_to_current_page(request)
 
     preferences = get_preferences(user, page)
     filters = dict(preferences["filters"])
