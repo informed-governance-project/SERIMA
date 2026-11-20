@@ -1629,6 +1629,25 @@ webauthn = ["webauthn (>=2.0,<2.99)"]
 yubikey = ["django-otp-yubikey"]
 
 [[package]]
+name = "django-unfold"
+version = "0.110.1"
+description = "Modern Django Admin"
+optional = false
+python-versions = "<4.0,>=3.12"
+groups = ["main"]
+files = [
+    {file = "django_unfold-0.110.1-py3-none-any.whl", hash = "sha256:92b1bb09e56fcbc8535cef53d19579bd417483fdb8981ceac00de409e8cc5a98"},
+    {file = "django_unfold-0.110.1.tar.gz", hash = "sha256:8274da7e3c92583c7f875b3ac3ceef0ed75346a1a28b03bede667aba3205e286"},
+]
+
+[package.dependencies]
+django = ">=5.2"
+
+[package.extras]
+jsonschema = ["jsonschema"]
+pygments = ["pygments"]
+
+[[package]]
 name = "djangorestframework"
 version = "3.18.3"
 description = "Web APIs for Django, made easy."
@@ -5016,4 +5035,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14,<4"
-content-hash = "9597315563e3d1196e5b2c87db96a423347f213b77840e46cf2e9fab90ccdc68"
+content-hash = "f61409a92b4db3a46a67723d629dca4af129e49deae9f91f7e0560e082a28ad2"

@@ -8,15 +8,20 @@ This page describes them in the order of the set-up (see :doc:`index`).
 
 Every item works the same way:
 
-- Click its name to open the list. Click **Add** next to the name, or the **Add** button at the top right of the list,
-  to create a new one; click a name in the list to open and change it.
+- Click its name to open the list. Click **Add** next to the name, or the **Add** button (for example **Add User**)
+  next to **Filters** above the list, to create a new one. To open and change an object, click its name in the list,
+  or whichever of its values is shown as a link, in red.
+- To filter a list, click **Filters** above it: the filters open in a panel on the right. A choice applies at once,
+  and the **Filters** button turns red while a filter is active. **Show counts** shows how many objects each choice holds,
+  and **Clear all filters** shows the whole list again. Click outside the panel, or press :kbd:`Esc`, to close it.
 - To delete objects, tick them in the list, choose **Delete selected** in the **Action** drop-down and click **Run**.
   A confirmation page lists everything that will be deleted along with them.
 - Names, labels and descriptions can be translated: the tabs above the form (**English**, **French**, **Dutch**, **German**)
   switch between the languages of the platform. Save your changes before you leave the tab of a language,
   as the banner at the top of the form reminds you.
-- Beside a drop-down, the pencil icon changes the selected object, the plus icon creates a new one in a pop-up,
-  the cross icon, where shown, deletes the selected object, and the eye icon displays it.
+- Beside a drop-down, the menu (⋮) holds **Change selected**, which changes the selected object, **Add another**,
+  which creates a new one in a pop-up, **Delete selected**, where shown, which deletes it, and **View selected**,
+  which displays it.
 
 .. _platform-regulators:
 
@@ -58,13 +63,13 @@ The **Regulator users** section at the bottom of the form lists the regulator ad
 The other accounts of the regulator are created by these administrators, and are not shown to you.
 
 .. figure:: /_static/images/administration/platform-admin/governance-03.png
-   :alt: Regulator users section with the plus icon that creates an account outlined
+   :alt: Regulator users section with a card opened and the Add another User entry of the menu beside its User drop-down outlined
    :target: ../../_static/images/administration/platform-admin/governance-03.png
 
 To add an administrator, click **Add another Regulator user**, then either:
 
-- select the account in the **User** drop-down, which lists the accounts that have no role yet;
-- or click the plus icon beside it to create the account in a pop-up, with its **First name**, **Last name**,
+- select the account in the **User** drop-down, which lists the active accounts that have no role yet;
+- or open the menu (⋮) beside it and click **Add another User** to create the account in a pop-up, with its **First name**, **Last name**,
   **Email address** and **Phone number**.
 
 Click **Save**: the account becomes a regulator administrator of this regulator.
@@ -72,16 +77,17 @@ It has no password yet. Its owner chooses one with **Password forgotten?** on th
 (see :doc:`/getting-started/login`), then sets up two-factor authentication at the first login
 (see :doc:`/getting-started/enable-2fa`).
 
-Two boxes on each row grant export rights:
+Two switches on each card grant export rights:
 
 - **Can export incidents** lets the administrator export the incidents of the regulator (see :ref:`incident-export`).
-  Only a platform administrator can tick it.
+  Only a platform administrator can turn it on.
 - **Can export security objectives** lets the administrator export the list of security objectives declarations
   (see :doc:`/security-objectives/review-a-declaration`).
 
 Every export is recorded in the :doc:`log entries <administration>`.
 
-To remove an administrator from the regulator, tick **Delete?** on its row and click **Save**.
+To remove an administrator from the regulator, click the bin icon at the right of its card: the card is covered
+with **This item will be deleted.**, and **Click to cancel** keeps it. Then click **Save**.
 The account is not deleted, but deactivated: its owner can no longer log in.
 
 .. warning::
@@ -215,7 +221,7 @@ Create an observer
    (see :ref:`observer-admin-rt`).
 3. Add the first observer administrator in the **Observer users** section, as for a regulator
    (see `Regulator administrators`_): click **Add another Observer user**, then select the account or create it
-   with the plus icon. Tick **Can export incidents** to let it export the incidents the observer receives (see :ref:`incident-export`).
+   with **Add another User** in the menu (⋮) beside it. Turn on **Can export incidents** to let it export the incidents the observer receives (see :ref:`incident-export`).
 
    .. figure:: /_static/images/administration/platform-admin/governance-08.png
       :alt: Change Observer form with its contact fields and the Observer users section outlined
@@ -234,6 +240,10 @@ An observer receives only the incidents covered by its observer regulations.
 .. important::
 
    An observer without any observer regulation receives no incidents.
+
+Each observer regulation is a card. Saved cards are closed and show the regulation, then what the observer receives
+from it: *All sectors* or the number of sectors chosen, and *All incidents* or the number of incident rules.
+Click the regulation or the arrow at the right of a card to open it.
 
 Click **Add another Observer regulation** for each regulation the observer is entitled to, and fill in:
 
@@ -286,11 +296,11 @@ Users
 The **Users** list shows the platform administrators, the regulator and observer administrators,
 and the accounts that have no role yet. Next to the contact details, it shows the **Regulator** or **Observer**
 of each account, its **Roles**, whether the email address is verified and two-factor authentication is activated,
-and when the account was created. Narrow the list down with the search field or the **Filter** panel:
+and when the account was created. Narrow the list down with the search field or, under **Filters**,
 **By Regulators**, **By Observer** or **By Roles**.
 
 .. figure:: /_static/images/administration/platform-admin/governance-10.png
-   :alt: Users list with the Reset accepted terms and Reset accepted cookies buttons and the Filter panel outlined
+   :alt: Users list with the Reset accepted terms and Reset accepted cookies buttons and the Filters button outlined
    :target: ../../_static/images/administration/platform-admin/governance-10.png
 
 Create a platform administrator
@@ -309,7 +319,8 @@ Change or deactivate an account
 """""""""""""""""""""""""""""""
 
 Click a name to open the account. You can change its contact details and, for a platform or regulator administrator,
-untick **Active** to deactivate it: its owner can no longer log in.
+turn off **Active** to deactivate it: its owner can no longer log in, and a regulator or observer administrator
+leaves the **Regulator users** or **Observer users** section of its regulator or observer.
 
 .. figure:: /_static/images/administration/platform-admin/governance-11.png
    :alt: Change User form of a regulator administrator with the Active box and the Reset 2FA token button
@@ -326,7 +337,7 @@ Reset two-factor authentication
 When someone has lost access to their authentication app, click **Reset 2FA token** on their row of the list,
 or on their account. To reset several accounts at once, tick them, choose **Reset 2FA** in the **Action** drop-down
 and click **Run**. At their next login, they set up two-factor authentication again (see :doc:`/getting-started/enable-2fa`).
-You cannot reset your own: use **Account security** at the top of the console.
+You cannot reset your own: use **Account security** in the menu under your name, at the top right of the console.
 
 Terms of service and cookies
 """"""""""""""""""""""""""""

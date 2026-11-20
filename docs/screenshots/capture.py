@@ -87,13 +87,19 @@ ANNOTATION_JS = """
     }
 
     if (item.box) {
+      // The outline sits 4px outside the element, which would push its stroke off
+      // the canvas for an element flush with the page edge, such as the sidebar.
+      const pageWidth = document.documentElement.scrollWidth;
+      const left = Math.max(0, box.left - 4);
+      const top = Math.max(0, box.top - 4);
+      const right = Math.min(pageWidth, box.right + 4);
       const outline = document.createElement('div');
       outline.style.cssText =
-        `width:${rect.width + 8}px;height:${rect.height + 8}px;border:3px solid ${color};` +
+        `width:${right - left}px;height:${box.bottom + 4 - top}px;border:3px solid ${color};` +
         // A white rule either side of the stroke keeps the callout legible on
         // whatever it lands on — brand-red buttons included, and in greyscale.
         'border-radius:6px;box-sizing:border-box;box-shadow:0 0 0 1px #fff, inset 0 0 0 1px #fff';
-      place(outline, box.left - 4, box.top - 4);
+      place(outline, left, top);
     }
 
     if (!item.arrow) continue;

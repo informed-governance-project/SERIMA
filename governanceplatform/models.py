@@ -17,6 +17,7 @@ from django.db import models
 from django.db.models import Deferrable
 from django.utils import timezone
 from django.utils.functional import cached_property
+from django.utils.translation import gettext, ngettext
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.debug import sensitive_variables
 from django_countries.fields import CountryField
@@ -554,7 +555,7 @@ class CompanyUser(models.Model):
         verbose_name_plural = _("Company Users")
 
     def __str__(self):
-        return ""
+        return self.user.get_full_name() or self.user.email
 
     def clean(self):
         is_incident_user = self.user.groups.filter(name="IncidentUser").exists()
@@ -596,7 +597,15 @@ class RegulatorUser(models.Model):
         verbose_name_plural = _("Regulator users")
 
     def __str__(self):
-        return ""
+        return self.user.get_full_name() or self.user.email
+
+    def get_inline_summary(self) -> str:
+        """Shown in the title of a collapsed admin card, so the role stays visible closed."""
+        if self.is_regulator_administrator:
+            return gettext("Administrator")
+        # len() of all() rather than count(): the admin prefetches the sectors.
+        count = len(self.sectors.all())
+        return ngettext("%(count)d sector", "%(count)d sectors", count) % {"count": count}
 
 
 # link between the admin observer users and the observer entity.
@@ -622,7 +631,7 @@ class ObserverUser(models.Model):
         verbose_name_plural = _("Observer users")
 
     def __str__(self):
-        return ""
+        return self.user.get_full_name() or self.user.email
 
 
 # Different regulation like NIS etc.
@@ -712,7 +721,23 @@ class ObserverRegulation(models.Model):
         verbose_name_plural = _("Observer regulations")
 
     def __str__(self):
-        return ""
+        return str(self.regulation)
+
+    def get_inline_summary(self) -> str:
+        """Shown in the title of a collapsed admin card: what the observer receives, as
+        incidents.access_control.get_observer_incidents reads it."""
+        # len() of all() rather than count(): the admin prefetches the sectors.
+        sector_count = len(self.sectors.all())
+        rule_count = len((self.incident_rule or {}).get("conditions", []))
+        sectors = (
+            ngettext("%(count)d sector", "%(count)d sectors", sector_count) % {"count": sector_count}
+            if sector_count
+            else gettext("All sectors")
+        )
+        rules = (
+            ngettext("%(count)d rule", "%(count)d rules", rule_count) % {"count": rule_count} if rule_count else gettext("All incidents")
+        )
+        return f"{sectors} · {rules}"
 
 
 # class to record the script logs

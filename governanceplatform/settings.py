@@ -14,7 +14,10 @@ import logging
 import os
 import sys
 
+from django.templatetags.static import static
+
 from governanceplatform.tools import get_private_files_root
+from governanceplatform.unfold_colors import unfold_colors
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +133,8 @@ except Exception:
 
 # Application definition
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.import_export",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -162,6 +167,19 @@ INSTALLED_APPS = [
     "captcha",
     "colorfield",
 ]
+
+UNFOLD = {
+    "SITE_TITLE": SITE_NAME,
+    "SITE_HEADER": SITE_NAME,
+    "SITE_LOGO": lambda _request: static("images/logo.svg"),
+    "STYLES": [
+        lambda _request: static("css/admin.css"),
+    ],
+    "SCRIPTS": [lambda _request: static("js/admin_responsive_cards.js")],
+    "COLORS": unfold_colors(),
+    # The public site has no dark mode, so the admin does not offer one either.
+    "THEME": "light",
+}
 
 AUTHENTICATION_BACKENDS = [
     "governanceplatform.custom_auth_backend.CaseInsensitiveEmailBackend",

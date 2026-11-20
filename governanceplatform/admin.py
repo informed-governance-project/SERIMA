@@ -26,6 +26,9 @@ from import_export_extensions.admin.model_admins.export_job_admin import ExportJ
 from import_export_extensions.admin.model_admins.import_job_admin import ImportJobAdmin
 from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
+from unfold.sites import UnfoldAdminSite
+from unfold.widgets import UnfoldAdminPasswordWidget, UnfoldBooleanSwitchWidget
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
@@ -84,7 +87,7 @@ def get_group_id(name=""):
     return group_id
 
 
-class CustomAdminSite(admin.AdminSite):
+class CustomAdminSite(UnfoldAdminSite):
     site_header = SITE_NAME + " " + _("Settings")
     site_title = SITE_NAME
 
@@ -128,7 +131,7 @@ admin_site = CustomAdminSite()
 
 
 @admin.register(ImportJob, site=admin_site)
-class CustomImportJobAdmin(ImportJobAdmin):
+class CustomImportJobAdmin(ModelAdmin, ImportJobAdmin):
     def import_job_progress_view(self, request, job_id, **kwargs):
         try:
             response = super().import_job_progress_view(request, job_id, **kwargs)
@@ -149,7 +152,7 @@ class CustomImportJobAdmin(ImportJobAdmin):
 
 
 @admin.register(ExportJob, site=admin_site)
-class CustomExportJobAdmin(ExportJobAdmin):
+class CustomExportJobAdmin(ModelAdmin, ExportJobAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -201,7 +204,7 @@ class CustomExportJobAdmin(ExportJobAdmin):
         return response
 
 
-class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmin):
+class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, ModelAdmin, TranslatableAdmin):
     form = CustomTranslatableAdminForm
 
     translated_fields: list[str] = []
@@ -250,7 +253,7 @@ class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmi
         return qs.annotate(**final_annotations)
 
 
-class CustomTranslatableTabularInline(TranslatableTabularInline):
+class CustomTranslatableTabularInline(TabularInline, TranslatableTabularInline):
     form = CustomTranslatableAdminForm
 
 
@@ -263,7 +266,7 @@ class SettingsDummy(Model):
 
 
 @admin.register(SettingsDummy, site=admin_site)
-class SettingsAdmin(admin.ModelAdmin):
+class SettingsAdmin(ModelAdmin):
     change_list_template = "admin/settings_list.html"
 
     def changelist_view(self, request, extra_context=None):
@@ -281,7 +284,7 @@ class SettingsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Site, site=admin_site)
-class SiteAdmin(admin.ModelAdmin):
+class SiteAdmin(ModelAdmin):
     pass
 
 
@@ -334,7 +337,7 @@ for name, method in generate_display_methods(["label"]).items():
     setattr(EntityCategoryAdmin, name, method)
 
 
-class CompanyUserInline(admin.TabularInline):
+class CompanyUserInline(TabularInline):
     model = CompanyUser
     verbose_name = _("Contact for company")
     verbose_name_plural = _("Contacts for company")
@@ -440,7 +443,9 @@ class CompanyUserInline(admin.TabularInline):
         return super().has_delete_permission(request, obj)
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
+        # A deactivated account is gone from its company, as from its regulator or observer:
+        # its row would hold a user the User drop-down no longer offers, which fails validation.
+        queryset = super().get_queryset(request).filter(user__is_active=True)
         user = request.user
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
@@ -460,7 +465,7 @@ class CompanyUserMultipleInline(CompanyUserInline):
 
 
 @admin.register(Company, site=admin_site)
-class CompanyAdmin(admin.ModelAdmin):
+class CompanyAdmin(ModelAdmin):
     list_display = [
         "identifier",
         "name",
@@ -469,6 +474,7 @@ class CompanyAdmin(admin.ModelAdmin):
         "email",
         "phone_number",
     ]
+    list_display_links = ["identifier", "name"]
     filter_horizontal = ["entity_categories", "sectors"]
     search_fields = [
         "name",
@@ -656,18 +662,20 @@ class CompanyAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class userRegulatorInline(admin.TabularInline):
+class userRegulatorInline(StackedInline):
+    """The accounts of a regulator, in its form."""
+
     model = RegulatorUser
     extra = 0
     min_num = 1
-    max_num = 1
+    collapsible = True
 
     filter_horizontal = [
         "sectors",
     ]
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = super().get_queryset(request).filter(user__is_active=True).select_related("user").prefetch_related("sectors")
         user = request.user
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
@@ -682,15 +690,6 @@ class userRegulatorInline(admin.TabularInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "regulator":
-            user = request.user
-            # Platform Admin
-            if user_in_group(user, "PlatformAdmin"):
-                kwargs["queryset"] = Regulator.objects.all()
-            # Regulator Admin
-            if user_in_group(user, "RegulatorAdmin"):
-                kwargs["queryset"] = user.regulators.all()
-
         if db_field.name == "user":
             RegulatorAdminGroupId = get_group_id(name="RegulatorAdmin")
             RegulatorUserGroupId = get_group_id(name="RegulatorUser")
@@ -699,6 +698,7 @@ class userRegulatorInline(admin.TabularInline):
             current_id = None
             if request.resolver_match.kwargs.get("object_id"):
                 current_id = request.resolver_match.kwargs["object_id"]
+            # Active accounts only: saving a RegulatorUser reactivates its account (signals.py).
             if user_in_group(user, "PlatformAdmin"):
                 kwargs["queryset"] = User.objects.filter(
                     Q(groups=None)
@@ -709,7 +709,8 @@ class userRegulatorInline(admin.TabularInline):
                     | Q(
                         groups__in=[RegulatorAdminGroupId],
                         regulators=current_id,
-                    )
+                    ),
+                    is_active=True,
                 )
             # Regulator Admin
             if user_in_group(user, "RegulatorAdmin"):
@@ -721,26 +722,11 @@ class userRegulatorInline(admin.TabularInline):
                     | Q(
                         groups__in=[RegulatorAdminGroupId, RegulatorUserGroupId],
                         regulators=user.regulators.first(),
-                    )
+                    ),
+                    is_active=True,
                 )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    # Revoke the permissions of the logged user
-    def has_add_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_add_permission(request, obj)
-
-    def has_change_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_change_permission(request, obj)
-
-    def has_delete_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_delete_permission(request, obj)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -771,10 +757,6 @@ class userRegulatorInline(admin.TabularInline):
         # Django appends readonly fields after the editable ones, which splits the export flags apart.
         order = ["user", "regulator", "is_regulator_administrator", "can_export_incidents", "can_export_security_objectives", "sectors"]
         return sorted(super().get_fields(request, obj), key=order.index)
-
-
-class userRegulatorMultipleInline(userRegulatorInline):
-    max_num = None
 
 
 # reset the 2FA we delete the TOTP devices
@@ -909,7 +891,7 @@ class UserPermissionsGroupListFilter(SimpleListFilter):
 
 
 @admin.register(User, site=admin_site)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(ModelAdmin):
     form = UserAdminForm
     list_display = [
         "is_active",
@@ -980,7 +962,9 @@ class UserAdmin(admin.ModelAdmin):
         if not obj and user_in_group(request.user, "OperatorAdmin"):
 
             class DynamicForm(UserAdminForm):
-                is_administrator = forms.BooleanField(required=False, label=_("Create this user as an administrator"))
+                is_administrator = forms.BooleanField(
+                    required=False, label=_("Create this user as an administrator"), widget=UnfoldBooleanSwitchWidget
+                )
 
                 class Meta:
                     model = self.model
@@ -1188,7 +1172,7 @@ class UserAdmin(admin.ModelAdmin):
 
         return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
-    def action_button(self, url_name, obj, label, message, css_class="button"):
+    def action_button(self, url_name, obj, label, message, css_class="admin-button admin-button--secondary"):
         """
         One account action button. It posts to its own endpoint rather than to the enclosing admin
         form, and carries the text the confirmation dialog shows before letting the post through.
@@ -1243,14 +1227,14 @@ class UserAdmin(admin.ModelAdmin):
                     obj,
                     _("Approve"),
                     _("Approving %(user)s will associate the account with your company, including their notified incidents."),
-                    css_class="button approve-button",
+                    css_class="admin-button admin-button--status-ok",
                 ),
                 self.action_button(
                     "reject_company_link",
                     obj,
                     _("Reject"),
                     _("Rejecting %(user)s will remove the suggested link with your company."),
-                    css_class="button reject-button",
+                    css_class="admin-button admin-button--status-ko",
                 ),
             )
 
@@ -1387,10 +1371,12 @@ class UserAdmin(admin.ModelAdmin):
                 extra_fields.remove("get_permissions_groups")
 
             # A tuple inside "fields" is one row, which puts each action beside the field it changes.
+            # An action with no button for this account (a link awaiting approval, your own account)
+            # is left out.
             for field, action in (("get_2FA_activation", "reset_2FA_action"), ("get_is_administrator", "administrator_action")):
                 if action in extra_fields:
                     extra_fields.remove(action)
-                    if field in extra_fields:
+                    if field in extra_fields and getattr(self, action)(obj):
                         extra_fields[extra_fields.index(field)] = (field, action)
 
             fieldsets = list(fieldsets) + [
@@ -1401,36 +1387,6 @@ class UserAdmin(admin.ModelAdmin):
             ]
 
         return fieldsets
-
-    def get_inline_instances(self, request, obj=None):
-        inline_instances = super().get_inline_instances(request, obj)
-        user = request.user
-
-        # Exclude all inlines for the logged-in user
-        if obj and obj == user:
-            return []
-
-        # PlatformAdmin inlines
-        if user_in_group(user, "PlatformAdmin"):
-            inline_instances = []
-
-        # RegulatorAdmin inlines
-        if user_in_group(user, "RegulatorAdmin"):
-            if obj and is_user_regulator(obj):
-                inline_instances = [userRegulatorInline(self.model, self.admin_site)]
-            if obj and is_user_operator(obj):
-                inline_instances = []
-
-        # RegulatorUser inlines
-        if user_in_group(user, "RegulatorUser"):
-            if obj and user_in_group(obj, "OperatorAdmin"):
-                inline_instances = []
-
-        # OperatorAdmin inlines
-        if user_in_group(user, "OperatorAdmin"):
-            inline_instances = []
-
-        return inline_instances
 
     def get_list_display(self, request):
         list_display = super().get_list_display(request)
@@ -1665,6 +1621,7 @@ class UserAdmin(admin.ModelAdmin):
 class FunctionalityAdmin(CustomTranslatableAdmin):
     form = FunctionalityAdminForm
     list_display = ["type", "name_display", "get_roles"]
+    list_display_links = ["type", "name_display"]
     fields = (
         "type",
         "name",
@@ -1742,7 +1699,7 @@ class RegulatorAdmin(CustomTranslatableAdmin):
 
         return readonly_fields
 
-    inlines = (userRegulatorMultipleInline,)
+    inlines = (userRegulatorInline,)
 
     def has_change_permission(self, request, obj=None):
         user = request.user
@@ -1761,13 +1718,17 @@ for name, method in generate_display_methods(["name", "full_name", "description"
     setattr(RegulatorAdmin, name, method)
 
 
-class ObserverRegulationInline(admin.TabularInline):
+class ObserverRegulationInline(StackedInline):
     model = ObserverRegulation
     verbose_name = _("Observer regulation")
     filter_horizontal = ("sectors",)
     verbose_name_plural = _("Observer regulations")
     extra = 0
     min_num = 0
+    collapsible = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("regulation").prefetch_related("regulation__translations", "sectors")
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "sectors":
@@ -1777,7 +1738,7 @@ class ObserverRegulationInline(admin.TabularInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class ObserverUserInline(admin.TabularInline):
+class ObserverUserInline(TabularInline):
     model = ObserverUser
     verbose_name = _("Observer user")
     verbose_name_plural = _("Observer users")
@@ -1785,7 +1746,7 @@ class ObserverUserInline(admin.TabularInline):
     min_num = 0
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = super().get_queryset(request).filter(user__is_active=True)
         user = request.user
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
@@ -1800,6 +1761,7 @@ class ObserverUserInline(admin.TabularInline):
             current_id = None
             if "object_id" in request.resolver_match.kwargs:
                 current_id = request.resolver_match.kwargs["object_id"]
+            # Active accounts only: saving an ObserverUser reactivates its account (signals.py).
             if user_in_group(user, "PlatformAdmin"):
                 kwargs["queryset"] = User.objects.filter(
                     Q(groups=None)
@@ -1810,7 +1772,8 @@ class ObserverUserInline(admin.TabularInline):
                     | Q(
                         groups__in=[ObserverAdminGroupID],
                         observers=current_id,
-                    )
+                    ),
+                    is_active=True,
                 )
             # Observer Admin
             if user_in_group(user, "ObserverAdmin"):
@@ -1822,7 +1785,8 @@ class ObserverUserInline(admin.TabularInline):
                     | Q(
                         groups__in=[ObserverAdminGroupID, ObserverUserGroupID],
                         observers=user.observers.first(),
-                    )
+                    ),
+                    is_active=True,
                 )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -1971,7 +1935,7 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
             attrs = {f"config__{field_name}": field for field_name, field in impl.config_form().fields.items()}
             if impl.requires_secret:
                 attrs["secret"] = forms.CharField(
-                    widget=forms.PasswordInput(render_value=False, attrs={"class": "vTextField"}),
+                    widget=UnfoldAdminPasswordWidget,
                     required=False,
                     label=impl.secret_label,
                 )
@@ -2025,7 +1989,7 @@ class ObserverConnectorAdmin(admin.ModelAdmin):
         url = reverse("admin:observerconnector-test-connection", args=[obj.pk])
         return format_html(
             """
-            <button type="button" class="button connector-test-btn" data-url="{}">{}</button>
+            <button type="button" class="admin-button admin-button--primary connector-test-btn" data-url="{}">{}</button>
             <span id="connector-test-result"></span>
             <p id="connector-test-help" class="help">{}</p>
             """,
@@ -2093,7 +2057,7 @@ for name, method in generate_display_methods(["label"]).items():
 
 
 @admin.register(ScriptLogEntry, site=admin_site)
-class ScriptLogEntryAdmin(admin.ModelAdmin):
+class ScriptLogEntryAdmin(ModelAdmin):
     list_display = ["action_time", "action", "object_repr", "additional_info"]
     readonly_fields = [
         "action_time",

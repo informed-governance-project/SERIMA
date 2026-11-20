@@ -13,6 +13,7 @@ from django.template import loader
 from django.utils.translation import get_language_info
 from django.utils.translation import gettext_lazy as _
 from parler.forms import TranslatableModelForm
+from unfold.widgets import UnfoldAdminPasswordWidget
 
 from .connectors.registry import connector_type_choices
 from .email import Base64EmailMultiAlternatives
@@ -374,7 +375,8 @@ class ObserverConnectorAdminForm(forms.ModelForm):
                 self.initial[field_name] = instance.config.get(config_key, self.fields[field_name].initial)
 
         if "secret" in self.fields and instance.secret:
-            self.fields["secret"].widget = forms.TextInput(attrs={"type": "password", "class": "vTextField"})
+            # render_value shows the masked placeholder below, which save() recognises.
+            self.fields["secret"].widget = UnfoldAdminPasswordWidget(render_value=True)
             self.fields["secret"].help_text = _(
                 "A secret is already set. To remove it, clear the field and save. To update it, enter a new one."
             )
