@@ -333,6 +333,14 @@ steps = [
 ]
 annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
 
+[[shots]]
+name = "images/getting-started/homepage-07"
+# Needs API_ENABLED on the instance. The key listed is the one
+# screenshot_fixture --create issues to this account.
+role = "regulator_user"
+path = "/account/api-keys/"
+selector = "main"
+
 # --- Incident dashboard (docs/incident-notification/dashboard.rst) ----------
 #
 # The operator's dashboard. Row callouts target the fixture incident NI_ZDTBC16Y
@@ -902,8 +910,11 @@ role = "platform_admin"
 # Observer 2 is Observer A, the fixture's only observer.
 path = "/admin/governanceplatform/observer/2/change/"
 selector = "#main"
-hide = ["#observerregulation_set-group", "#submit-row"]
-annotate = [{ selector = "#observeruser_set-group", box = true }]
+hide = ["#observerregulation_set-group", "#connectors-group", "#submit-row"]
+annotate = [
+  { selector = "#content .field-allowed_connector_types", box = true },
+  { selector = "#observeruser_set-group", box = true },
+]
 
 [[shots]]
 name = "images/administration/platform-admin/governance-09"
@@ -956,6 +967,23 @@ viewport = { width = 1440, height = 700 }
 # The first row lists the names of the hidden settings in one unbroken line,
 # which would fill the capture; the prose describes the settings themselves.
 hide = ["#content table.table tbody tr:first-child"]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-13"
+role = "platform_admin"
+path = "/admin/governanceplatform/apimoduleaccess/"
+annotate = [
+  { selector = "#nav-sidebar li.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-14"
+role = "platform_admin"
+# API access 1 is incident notification, granted to every eligible role in the fixture.
+path = "/admin/governanceplatform/apimoduleaccess/1/change/"
+selector = "#content"
+hide = ["#submit-row"]
 
 # --- Regulator admin (docs/administration/regulator-admin/) -------------------
 #
@@ -1349,6 +1377,36 @@ hide = ["#submit-row"]
 annotate = [
   { selector = "#content fieldset.module:has(.field-email)", box = true },
   { selector = "#user_form > div > fieldset.module:has(.readonly)", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-08"
+role = "observer_admin"
+path = "/admin/governanceplatform/observerconnector/"
+annotate = [
+  { selector = "#nav-sidebar li.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-09"
+role = "observer_admin"
+path = "/admin/governanceplatform/observerconnector/add/"
+selector = "#main"
+hide = ["#submit-row"]
+annotate = [{ selector = "#content .field-connector_type", box = true }]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-10"
+role = "observer_admin"
+# Connector 1 is the RT connector of Observer A; screenshot_fixture --create sets its
+# token, which the form masks. The connection is never tested.
+path = "/admin/governanceplatform/observerconnector/1/change/"
+selector = "#main"
+hide = ["#submit-row"]
+annotate = [
+  { selector = "#content .field-secret", box = true },
+  { selector = "#content .connector-test-btn", box = true },
 ]
 
 # --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---

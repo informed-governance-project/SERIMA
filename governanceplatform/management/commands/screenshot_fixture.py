@@ -1,6 +1,7 @@
 import json
 import os
 import secrets
+from datetime import timedelta
 from pathlib import Path
 from typing import NamedTuple
 
@@ -10,7 +11,7 @@ from django.db import transaction
 from django.utils.timezone import now
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from governanceplatform.models import User
+from governanceplatform.models import APIKey, ObserverConnector, User
 from governanceplatform.permissions import set_platform_admin_permissions
 
 SCREENSHOTS_DIR = Path(settings.BASE_DIR) / "docs" / "screenshots"
@@ -19,6 +20,10 @@ CREDENTIALS_FILE = SCREENSHOTS_DIR / ".fixture-credentials.json"
 # Created by the sign-up shot in shots.toml; the form refuses an email that
 # already exists, so every run has to start without it.
 SIGNUP_EMAIL = "new-account@example.org"
+# The RT connector of Observer A in FIXTURE, and the key the API keys shot lists.
+RT_CONNECTOR_PK = 1
+API_KEY_ROLE = "regulator_user"
+API_KEY_NAME = "Monitoring"
 
 
 class Account(NamedTuple):
@@ -86,6 +91,16 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"set a password on {user.email} ({role})"))
 
         User.objects.filter(email=SIGNUP_EMAIL).delete()
+
+        # Neither can live in FIXTURE: a connector secret is encrypted with this instance's
+        # CONNECTOR_SECRET_KEY, and only the digest of an API key is stored. Issued after the
+        # passwords above, as a password change revokes the account's keys.
+        connector = ObserverConnector.objects.get(pk=RT_CONNECTOR_PK)
+        connector.secret = secrets.token_urlsafe(24)
+        connector.save()
+        api_user = users[API_KEY_ROLE]
+        APIKey.objects.filter(user=api_user, name=API_KEY_NAME).delete()
+        APIKey.issue(user=api_user, name=API_KEY_NAME, expires_at=now() + timedelta(days=90))
 
         # Handed to the capture script through a file so nothing has to be
         # exported by hand; readable only by the owner, and gitignored.
