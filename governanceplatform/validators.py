@@ -96,7 +96,11 @@ def resolve_rt_url(base_url: str) -> list[str]:
     return addresses
 
 
-def validate_rt_url(base_url: str) -> bool:
-    """Field validator for Observer.rt_url. Referenced by name in migration 0056."""
+def validate_external_https_url(base_url: str) -> bool:
+    """Field validator for the URLs the RT and webhook connectors post to."""
     resolve_rt_url(base_url)
     return True
+
+
+# Migration 0056 references this name by dotted path.
+validate_rt_url = validate_external_https_url
