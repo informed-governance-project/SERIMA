@@ -14,6 +14,8 @@ import logging
 import os
 import sys
 
+from governanceplatform.tools import get_private_files_root
+
 logger = logging.getLogger(__name__)
 
 DJANGO_CI = os.getenv("DJANGO_CI") == "True"
@@ -542,6 +544,47 @@ except AttributeError:
 CELERY_TASK_TRACK_STARTED = True
 CELERY_RESULT_EXTENDED = True
 
+# Tasks are queued by how they behave, so that each kind can get its own worker: a user
+# waiting on a spinner, report generation holding Kaleido and LibreOffice for minutes,
+# and everything else. A worker started without -Q consumes all three.
+# "celery" is Celery's own default name, kept so that nothing queued before an upgrade
+# is left on a queue no worker reads.
+INTERACTIVE_QUEUE = "interactive"
+REPORTS_QUEUE = "reports"
+DEFAULT_QUEUE = "celery"
+CELERY_TASK_DEFAULT_QUEUE = DEFAULT_QUEUE
+CELERY_TASK_QUEUES = {INTERACTIVE_QUEUE: {}, REPORTS_QUEUE: {}, DEFAULT_QUEUE: {}}
+CELERY_TASK_ROUTES = {
+    **{
+        task: {"queue": INTERACTIVE_QUEUE}
+        for task in [
+            "incidents.tasks.generate_incident_pdf_task",
+            "securityobjectives.tasks.generate_declaration_pdf_task",
+            "securityobjectives.tasks.generate_so_export_task",
+            "reporting.tasks.import_risk_analysis_task",
+        ]
+    },
+    # The whole generation chain, so that a report run depends on a single worker.
+    **{
+        task: {"queue": REPORTS_QUEUE}
+        for task in [
+            "reporting.tasks.generate_data",
+            "reporting.tasks.generate_docx_task",
+            "reporting.tasks.generate_pdf_task",
+            "reporting.tasks.save_file_task",
+            "reporting.tasks.zip_files_task",
+            "reporting.tasks.on_chord_error",
+            "reporting.tasks.cleanup_files",
+        ]
+    },
+}
+# Each worker process holds at most one task in reserve besides the one it runs, instead of
+# Celery's four, so a busy worker keeps few tasks away from an idle one.
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+# Redis hands an unacknowledged message out again after this delay. It must exceed the
+# longest countdown (the one-hour file cleanups) and the longest acks_late task.
+CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timeout": 7200}
+
 try:
     CELERY_BROKER_URL = config.CELERY_BROKER_URL
     CELERY_RESULT_BACKEND = config.CELERY_RESULT_BACKEND
@@ -561,14 +604,11 @@ try:
 except AttributeError:
     KALEIDO_CONCURRENCY_PER_WORKER = 1
 
-# Paths for deliveries
+# Private files
 # Deliberately not MEDIA_ROOT: this holds generated reports and admin exports of
 # regulated-entity data, reachable only through the permission-checked download views,
 # and must never be statically served.
-try:
-    PATH_FOR_REPORTING_PDF = config.PATH_FOR_REPORTING_PDF
-except AttributeError:
-    PATH_FOR_REPORTING_PDF = f"{os.getcwd()}/tmp/"
+PRIVATE_FILES_ROOT = get_private_files_root(config, default=f"{os.getcwd()}/tmp/")
 # Email adress for FROM field and RETURN-PATH
 try:
     EMAIL_CONTACT_FROM = config.EMAIL_CONTACT_FROM
@@ -749,7 +789,7 @@ STORAGES = {
     "django_import_export_extensions": {
         "BACKEND": "django.core.files.storage.filesystem.FileSystemStorage",
         "OPTIONS": {
-            "location": PATH_FOR_REPORTING_PDF,
+            "location": PRIVATE_FILES_ROOT,
             # Without this the storage falls back to MEDIA_URL and publishes the absolute
             # server path in the admin. Nothing routes /media/, so the link stays inert.
             "base_url": "/media/",

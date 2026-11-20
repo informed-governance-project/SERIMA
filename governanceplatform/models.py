@@ -55,7 +55,7 @@ class Sector(TranslatableModel):
         verbose_name=_("Parent Sector"),
         related_name="children",
     )
-    acronym = models.CharField(verbose_name=_("Acronym"), max_length=4)
+    acronym = models.CharField(verbose_name=_("Acronym"), max_length=4, unique=True)
 
     # name of the regulator who create the object
     creator_name = models.CharField(
@@ -797,3 +797,26 @@ class APIKey(models.Model):
     @property
     def is_active(self) -> bool:
         return self.revoked_at is None and self.expires_at > timezone.now()
+
+
+class UserPreference(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="preferences",
+    )
+    # "<page>.<aspect>", one row per aspect so the list view (filters, sort) and the
+    # preferences endpoint (columns, legend) never overwrite each other's values.
+    key = models.CharField(max_length=64)
+    value = models.JSONField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("User preference")
+        verbose_name_plural = _("User preferences")
+        constraints = [
+            models.UniqueConstraint(fields=["user", "key"], name="unique_user_preference_key"),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.key}"

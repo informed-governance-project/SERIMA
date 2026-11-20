@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-11 09:38+0100\n"
+"POT-Creation-Date: 2026-11-12 13:08+0100\n"
 "PO-Revision-Date: 2026-09-17 08:05+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
@@ -15,7 +15,7 @@ msgstr ""
 "X-Generator: Weblate 2026.6.1\n"
 
 #: governanceplatform/admin.py:80 governanceplatform/context_processors.py:29
-#: governanceplatform/views.py:98
+#: governanceplatform/views.py:115
 msgid "Settings"
 msgstr "Instellingen"
 
@@ -47,13 +47,13 @@ msgstr "Categorieën van entiteiten"
 
 #: governanceplatform/admin.py:505 governanceplatform/models.py:82
 #: governanceplatform/models.py:607 incidents/admin.py:596
-#: incidents/admin.py:664 incidents/admin.py:1000 incidents/filters.py:31
+#: incidents/admin.py:664 incidents/admin.py:1000 incidents/filters.py:33
 #: incidents/forms.py:842 incidents/models.py:57 incidents/models.py:334
-#: incidents/views.py:1049 reporting/admin.py:65 reporting/filters.py:31
+#: incidents/views.py:1036 reporting/admin.py:65 reporting/filters.py:31
 #: reporting/forms.py:47 reporting/forms.py:166 reporting/models.py:323
 #: reporting/models.py:497 securityobjectives/filters.py:34
-#: securityobjectives/forms.py:307 securityobjectives/globals.py:43
-#: securityobjectives/tasks.py:85
+#: securityobjectives/forms.py:307 securityobjectives/globals.py:47
+#: securityobjectives/tasks.py:87
 msgid "Sectors"
 msgstr "Sectoren"
 
@@ -68,7 +68,7 @@ msgstr "2FA resetten"
 #: governanceplatform/admin.py:783 governanceplatform/models.py:236
 #: governanceplatform/models.py:344 governanceplatform/models.py:558
 #: governanceplatform/models.py:561 incidents/models.py:580
-#: incidents/views.py:1048
+#: incidents/views.py:1035
 msgid "Regulators"
 msgstr "Regulatoren"
 
@@ -274,6 +274,10 @@ msgstr "RT-verbinding mislukt. Controleer URL, wachtrij en token."
 msgid "Governance"
 msgstr "Governance"
 
+#: governanceplatform/async_pdf.py:54 governanceplatform/views.py:347
+msgid "An error occurred while generating the report."
+msgstr "Er is een fout opgetreden bij het genereren van het rapport."
+
 #: governanceplatform/config.py:105 governanceplatform/config_dev.py:106
 msgid "Dutch"
 msgstr "Nederlands"
@@ -358,7 +362,7 @@ msgid "Dark/light theme settings"
 msgstr "Instellingen voor donker/licht thema"
 
 #: governanceplatform/context_processors.py:53
-#: governanceplatform/context_processors.py:56 governanceplatform/views.py:121
+#: governanceplatform/context_processors.py:56 governanceplatform/views.py:138
 #: incidents/apps.py:7
 msgid "Incident notification"
 msgstr "Incidentmelding"
@@ -402,7 +406,7 @@ msgid "Email address"
 msgstr "E-mailadres"
 
 #: governanceplatform/forms.py:51 incidents/models.py:970
-#: reporting/models.py:377 securityobjectives/models.py:682
+#: reporting/models.py:377 securityobjectives/models.py:686
 msgid "Role"
 msgstr "Rol"
 
@@ -462,42 +466,42 @@ msgstr ""
 msgid "There must be at least one administrator user."
 msgstr "Er moet minstens een administrator bestaan."
 
-#: governanceplatform/globals.py:18
+#: governanceplatform/globals.py:20
 msgid "Addition"
 msgstr "Toevoeging"
 
-#: governanceplatform/globals.py:19
+#: governanceplatform/globals.py:21
 msgid "Modification"
 msgstr "Wijziging"
 
-#: governanceplatform/globals.py:20
+#: governanceplatform/globals.py:22
 msgid "Deletion"
 msgstr "Verwijdering"
 
-#: governanceplatform/globals.py:22 governanceplatform/views.py:89
+#: governanceplatform/globals.py:24 governanceplatform/views.py:106
 msgid "Login"
 msgstr "Inloggen"
 
-#: governanceplatform/globals.py:23
+#: governanceplatform/globals.py:25
 msgid "Logout"
 msgstr "Uitloggen"
 
-#: governanceplatform/globals.py:24
+#: governanceplatform/globals.py:26
 msgid "Export"
 msgstr "Exporteren"
 
-#: governanceplatform/globals.py:29 securityobjectives/models.py:191
+#: governanceplatform/globals.py:31 securityobjectives/models.py:191
 #: securityobjectives/models.py:383 securityobjectives/models.py:412
-#: securityobjectives/models.py:627
+#: securityobjectives/models.py:631
 msgid "Security Objective"
 msgstr "Beveiligingsdoelstelling"
 
-#: governanceplatform/globals.py:30 governanceplatform/views.py:135
+#: governanceplatform/globals.py:32 governanceplatform/views.py:152
 #: reporting/apps.py:7
 msgid "Reporting"
 msgstr "Reporting"
 
-#: governanceplatform/helpers.py:128
+#: governanceplatform/helpers.py:142
 #, python-brace-format
 msgid ""
 "<strong>Modification and deletion actions are not allowed.</strong><br>- "
@@ -507,6 +511,14 @@ msgstr ""
 "<strong>Wijzigings- en verwijderingsacties zijn niet toegestaan.</"
 "strong><br>- {object_name} is ofwel in gebruik<br> - of u bent niet de maker "
 "({creator_name})"
+
+#: governanceplatform/helpers.py:655
+msgid "Invalid legend state."
+msgstr ""
+
+#: governanceplatform/helpers.py:664
+msgid "Invalid choice of columns."
+msgstr ""
 
 #: governanceplatform/managers.py:15
 msgid "User must have an email address"
@@ -688,8 +700,8 @@ msgstr "Gebruikers"
 #: governanceplatform/models.py:438 governanceplatform/models.py:461
 #: governanceplatform/models.py:497 governanceplatform/models.py:525
 #: incidents/models.py:964 incidents/templatetags/custom_filters.py:84
-#: reporting/models.py:371 securityobjectives/models.py:676
-#: securityobjectives/models.py:701
+#: reporting/models.py:371 securityobjectives/models.py:680
+#: securityobjectives/models.py:705
 #: securityobjectives/templatetags/SO_custom_filters.py:138
 msgid "User"
 msgstr "Gebruiker"
@@ -746,7 +758,7 @@ msgstr "Regelgevingen"
 #: governanceplatform/models.py:571 incidents/forms.py:1254
 #: incidents/models.py:490 reporting/admin.py:108 reporting/forms.py:141
 #: securityobjectives/forms.py:289 securityobjectives/models.py:286
-#: securityobjectives/models.py:707 securityobjectives/tasks.py:79
+#: securityobjectives/models.py:711 securityobjectives/tasks.py:81
 msgid "Regulation"
 msgstr "Regelgeving"
 
@@ -770,7 +782,7 @@ msgstr "Regels voor incidenten"
 #: governanceplatform/models.py:638 incidents/models.py:858
 #: incidents/models.py:967 incidents/models.py:1023 incidents/models.py:1044
 #: incidents/models.py:1246 reporting/models.py:374 reporting/models.py:587
-#: securityobjectives/models.py:679 securityobjectives/models.py:721
+#: securityobjectives/models.py:683 securityobjectives/models.py:725
 msgid "Timestamp"
 msgstr "Tijdstempel"
 
@@ -798,6 +810,14 @@ msgstr "Gebruikerssessie"
 #: governanceplatform/models.py:672
 msgid "User sessions"
 msgstr "Gebruikerssessies"
+
+#: governanceplatform/models.py:688
+msgid "User preference"
+msgstr ""
+
+#: governanceplatform/models.py:689
+msgid "User preferences"
+msgstr ""
 
 #: governanceplatform/validators.py:29
 msgid "Your new password must differ from your current password."
@@ -829,78 +849,78 @@ msgstr "Ongeldige host"
 msgid "Internal addresses are not allowed"
 msgstr "Interne adressen niet toegelaten"
 
-#: governanceplatform/views.py:54
+#: governanceplatform/views.py:71
 msgid "The account has successfully been saved."
 msgstr "De account werd opgeslagen."
 
-#: governanceplatform/views.py:83 governanceplatform/views.py:96
-#: governanceplatform/views.py:98
+#: governanceplatform/views.py:100 governanceplatform/views.py:113
+#: governanceplatform/views.py:115
 msgid "Home"
 msgstr "Home"
 
-#: governanceplatform/views.py:84
+#: governanceplatform/views.py:101
 msgid "Terms of service"
 msgstr "Algemene gebruiksvoorwaarden"
 
-#: governanceplatform/views.py:85
+#: governanceplatform/views.py:102
 msgid "Cookies policy"
 msgstr "Cookiebeleid"
 
-#: governanceplatform/views.py:86
+#: governanceplatform/views.py:103
 msgid "Accessibility statement"
 msgstr "Toegankelijkheidsverklaring"
 
-#: governanceplatform/views.py:88 governanceplatform/views.py:100
+#: governanceplatform/views.py:105 governanceplatform/views.py:117
 msgid "Account"
 msgstr "Account"
 
-#: governanceplatform/views.py:90
+#: governanceplatform/views.py:107
 msgid "Create account"
 msgstr "Een account aanmaken"
 
-#: governanceplatform/views.py:96 incidents/views.py:1046
+#: governanceplatform/views.py:113 incidents/views.py:1033
 #: reporting/globals.py:15
 msgid "Contact"
 msgstr "Aanspreekpunt"
 
-#: governanceplatform/views.py:101
+#: governanceplatform/views.py:118
 msgid "Account management"
 msgstr "Accountbeheer"
 
-#: governanceplatform/views.py:102
+#: governanceplatform/views.py:119
 msgid "Account security"
 msgstr "Accountbeveiliging"
 
-#: governanceplatform/views.py:103
+#: governanceplatform/views.py:120
 msgid "Change password"
 msgstr "Wachtwoord wijzigen"
 
-#: governanceplatform/views.py:104
+#: governanceplatform/views.py:121
 msgid "Log out"
 msgstr "Uitloggen"
 
-#: governanceplatform/views.py:111
+#: governanceplatform/views.py:128
 msgid "Overview"
 msgstr "Overzicht"
 
-#: governanceplatform/views.py:112
+#: governanceplatform/views.py:129
 msgid "Report an incident"
 msgstr "Een incident melden"
 
-#: governanceplatform/views.py:117
+#: governanceplatform/views.py:134
 msgid "My reported incidents"
 msgstr "Mijn gemelde incidenten"
 
-#: governanceplatform/views.py:125 governanceplatform/views.py:132
+#: governanceplatform/views.py:142 governanceplatform/views.py:149
 msgid "Dashboard"
 msgstr "Dashboard"
 
-#: governanceplatform/views.py:128 securityobjectives/apps.py:7
+#: governanceplatform/views.py:145 securityobjectives/apps.py:7
 #: securityobjectives/models.py:291
 msgid "Security objectives"
 msgstr "Beveiligingsdoelstellingen"
 
-#: governanceplatform/views.py:170
+#: governanceplatform/views.py:187
 msgid ""
 "Account created. A password reset email has been sent. Please check your "
 "inbox to set your password."
@@ -908,18 +928,26 @@ msgstr ""
 "Account gecreëerd. Er is een e-mail verzonden om het wachtwoord opnieuw in "
 "te stellen. Controleer uw inbox om uw wachtwoord in te stellen."
 
-#: governanceplatform/views.py:255
+#: governanceplatform/views.py:272
 #, python-format
 msgid "%(name)s Contact page"
 msgstr "Contactpagina van %(name)s"
 
-#: governanceplatform/views.py:264
+#: governanceplatform/views.py:281
 msgid "Your message has been sent."
 msgstr "Uw bericht is verzonden."
 
-#: governanceplatform/views.py:268
+#: governanceplatform/views.py:285
 msgid "Invalid captcha"
 msgstr "Ongeldige captcha"
+
+#: governanceplatform/views.py:365
+msgid "Invalid request."
+msgstr ""
+
+#: governanceplatform/views.py:368
+msgid "Invalid preference."
+msgstr ""
 
 #: incidents/admin.py:227 incidents/forms.py:1350 incidents/models.py:176
 #: incidents/models.py:184 incidents/models.py:1053
@@ -1071,7 +1099,19 @@ msgstr "leeg wanneer de regulator geen opmerkingen heeft geformuleerd"
 msgid "Deadline of the next report"
 msgstr "Deadline voor het volgende rapport"
 
-#: incidents/filters.py:34 reporting/filters.py:50 reporting/filters.py:102
+#: incidents/filters.py:37
+msgid "Yes"
+msgstr ""
+
+#: incidents/filters.py:37
+msgid "No"
+msgstr ""
+
+#: incidents/filters.py:38 incidents/models.py:574
+msgid "Significant impact"
+msgstr "Aanzienlijke impact"
+
+#: incidents/filters.py:42 reporting/filters.py:50 reporting/filters.py:102
 #: securityobjectives/filters.py:36
 msgid "Search"
 msgstr "Zoeken"
@@ -1122,14 +1162,14 @@ msgstr "Selecteer datum en uur"
 
 #: incidents/forms.py:947 incidents/globals.py:41 incidents/globals.py:49
 #: incidents/globals.py:70 securityobjectives/forms.py:97
-#: securityobjectives/globals.py:9 securityobjectives/models.py:636
+#: securityobjectives/globals.py:9 securityobjectives/models.py:640
 msgid "Passed"
 msgstr "Geslaagd"
 
 #: incidents/forms.py:948 incidents/globals.py:42 incidents/globals.py:50
 #: incidents/globals.py:75 securityobjectives/forms.py:98
 #: securityobjectives/globals.py:11 securityobjectives/helpers.py:253
-#: securityobjectives/helpers.py:263 securityobjectives/models.py:637
+#: securityobjectives/helpers.py:263 securityobjectives/models.py:641
 msgid "Revision required"
 msgstr "Revisie vereist"
 
@@ -1179,7 +1219,7 @@ msgid "Report"
 msgstr "Rapport"
 
 #: incidents/forms.py:1272 securityobjectives/forms.py:319
-#: securityobjectives/tasks.py:87
+#: securityobjectives/tasks.py:89
 msgid "File format"
 msgstr "Bestandsindeling"
 
@@ -1254,7 +1294,7 @@ msgid "Impact"
 msgstr "Impact"
 
 #: incidents/models.py:86 incidents/models.py:571 incidents/models.py:868
-#: incidents/views.py:1453
+#: incidents/views.py:1440
 msgid "Impacts"
 msgstr "Gevolgen"
 
@@ -1441,10 +1481,6 @@ msgstr "Getroffen dienst"
 msgid "Impacted sectors"
 msgstr "Getroffen sectoren"
 
-#: incidents/models.py:574
-msgid "Significant impact"
-msgstr "Aanzienlijke impact"
-
 #: incidents/models.py:589 incidents/models.py:860
 msgid "Report status"
 msgstr "Status rapport"
@@ -1469,7 +1505,7 @@ msgstr "Datum van aanvang van het incident"
 msgid "Report timeline timezone"
 msgstr "Rapport tijdlijn tijdzone"
 
-#: incidents/models.py:871 incidents/views.py:1457
+#: incidents/models.py:871 incidents/views.py:1444
 msgid "Comment/Explanation"
 msgstr "Opmerking/toelichting"
 
@@ -1482,7 +1518,7 @@ msgid "Full username"
 msgstr "Volledige gebruikersnaam"
 
 #: incidents/models.py:971 reporting/models.py:378
-#: securityobjectives/models.py:683
+#: securityobjectives/models.py:687
 msgid "Entity name"
 msgstr "Naam van de entiteit"
 
@@ -1491,7 +1527,7 @@ msgid "Incident report processed"
 msgstr "Incidentrapport verwerkt"
 
 #: incidents/models.py:987 reporting/models.py:386
-#: securityobjectives/models.py:690
+#: securityobjectives/models.py:694
 msgid "Action performed"
 msgstr "Actie uitgevoerd"
 
@@ -1564,69 +1600,64 @@ msgstr "Bijgewerkt op"
 msgid "Deleted date"
 msgstr "Datum van verwijdering"
 
-#: incidents/pdf_generation.py:142
+#: incidents/pdf_generation.py:137
 msgid "Details"
 msgstr "Details"
 
-#: incidents/views.py:338
+#: incidents/views.py:333
 msgid "Missing data, incident report not created."
 msgstr "Ontbrekende gegevens, incidentrapport niet gemaakt."
 
-#: incidents/views.py:345 incidents/views.py:433
+#: incidents/views.py:340 incidents/views.py:428
 msgid "Workflow not found"
 msgstr "Workflow niet gevonden"
 
-#: incidents/views.py:349 incidents/views.py:436 incidents/views.py:514
-#: incidents/views.py:556 incidents/views.py:589 incidents/views.py:678
+#: incidents/views.py:344 incidents/views.py:431 incidents/views.py:509
+#: incidents/views.py:551 incidents/views.py:586 incidents/views.py:665
 msgid "Incident not found"
 msgstr "Incident niet gevonden"
 
-#: incidents/views.py:353 incidents/views.py:439
+#: incidents/views.py:348 incidents/views.py:434
 msgid "The incident has been closed"
 msgstr "Het incident is afgesloten"
 
-#: incidents/views.py:357 incidents/views.py:364 incidents/views.py:411
-#: incidents/views.py:443 incidents/views.py:453 incidents/views.py:497
-#: incidents/views.py:560 incidents/views.py:593 incidents/views.py:637
-#: incidents/views.py:682 incidents/views.py:718 reporting/views.py:111
-#: reporting/views.py:505 reporting/views.py:914 reporting/views.py:939
-#: reporting/views.py:946 reporting/views.py:1253
-#: securityobjectives/views.py:965 securityobjectives/views.py:1141
+#: incidents/views.py:352 incidents/views.py:359 incidents/views.py:406
+#: incidents/views.py:438 incidents/views.py:448 incidents/views.py:492
+#: incidents/views.py:555 incidents/views.py:589 incidents/views.py:609
+#: incidents/views.py:645 incidents/views.py:669 incidents/views.py:705
+#: reporting/views.py:117 reporting/views.py:484 reporting/views.py:886
+#: reporting/views.py:911 reporting/views.py:918 reporting/views.py:1240
+#: securityobjectives/views.py:906 securityobjectives/views.py:1082
 msgid "Forbidden"
 msgstr "Verboden"
 
-#: incidents/views.py:382 incidents/views.py:388 incidents/views.py:427
-#: incidents/views.py:450 incidents/views.py:633
+#: incidents/views.py:377 incidents/views.py:383 incidents/views.py:422
+#: incidents/views.py:445 incidents/views.py:605
 msgid "No incident report could be found."
 msgstr "Geen incidentrapport gevonden."
 
-#: incidents/views.py:609 incidents/views.py:653
-#: securityobjectives/views.py:938
-msgid "An error occurred while generating the report."
-msgstr "Er is een fout opgetreden bij het genereren van het rapport."
-
-#: incidents/views.py:692
+#: incidents/views.py:679
 msgid "The incident could not be deleted."
 msgstr "Het incident kon niet verwijderd worden."
 
-#: incidents/views.py:695
+#: incidents/views.py:682
 msgid "The incident has been deleted."
 msgstr "Het incident is verwijderd."
 
-#: incidents/views.py:706
+#: incidents/views.py:693
 msgid "An error occurred while deleting the incident."
 msgstr "Er is een fout opgetreden bij het verwijderen van het incident."
 
-#: incidents/views.py:813 incidents/views.py:911
+#: incidents/views.py:800 incidents/views.py:898
 msgid "No incidents available for export."
 msgstr "Geen incidenten beschikbaar voor export."
 
-#: incidents/views.py:986
+#: incidents/views.py:973
 #, python-brace-format
 msgid "[{site}] New incident mass export"
 msgstr "[{site}] Bulkexport van nieuwe incidenten"
 
-#: incidents/views.py:1009
+#: incidents/views.py:996
 msgid ""
 "The daily limit of incident reports has been reached. Please try again "
 "tomorrow."
@@ -1634,24 +1665,24 @@ msgstr ""
 "De daglimiet voor incidentrapporten is bereikt. Probeer morgen nog eens, "
 "a.u.b."
 
-#: incidents/views.py:1047
+#: incidents/views.py:1034
 msgid "Legal bases"
 msgstr "Wettelijke basis"
 
-#: incidents/views.py:1050
+#: incidents/views.py:1037
 msgid "Detection date"
 msgstr "Datum van ontdekking"
 
-#: incidents/views.py:1124
+#: incidents/views.py:1111
 msgid "Not verified"
 msgstr "Niet geverifieerd"
 
-#: incidents/views.py:1141
+#: incidents/views.py:1128
 msgid "No incident notification workflow found for the selected criteria."
 msgstr ""
 "Geen workflow voor incidentmelding gevonden voor de geselecteerde criteria."
 
-#: incidents/views.py:1441
+#: incidents/views.py:1428
 msgid "Incident Timeline"
 msgstr "Tijdlijn van het incident"
 
@@ -1668,7 +1699,7 @@ msgid "JSON File"
 msgstr "JSON-bestand"
 
 #: reporting/forms.py:33 reporting/models.py:24 reporting/models.py:541
-#: securityobjectives/forms.py:192 securityobjectives/globals.py:42
+#: securityobjectives/forms.py:192 securityobjectives/globals.py:46
 #: securityobjectives/models.py:465
 msgid "Company"
 msgstr "Onderneming"
@@ -1676,7 +1707,7 @@ msgstr "Onderneming"
 #: reporting/forms.py:41 reporting/globals.py:30
 #: securityobjectives/forms.py:165 securityobjectives/forms.py:200
 #: securityobjectives/forms.py:221 securityobjectives/forms.py:301
-#: securityobjectives/globals.py:44 securityobjectives/tasks.py:84
+#: securityobjectives/globals.py:48 securityobjectives/tasks.py:86
 msgid "Year"
 msgstr "Jaar"
 
@@ -1846,9 +1877,9 @@ msgid "Deadline"
 msgstr "Deadline"
 
 #: reporting/globals.py:43 securityobjectives/filters.py:32
-#: securityobjectives/forms.py:313 securityobjectives/globals.py:37
-#: securityobjectives/models.py:502 securityobjectives/models.py:641
-#: securityobjectives/models.py:719 securityobjectives/tasks.py:86
+#: securityobjectives/forms.py:313 securityobjectives/globals.py:41
+#: securityobjectives/models.py:502 securityobjectives/models.py:645
+#: securityobjectives/models.py:723 securityobjectives/tasks.py:88
 msgid "Status"
 msgstr "Status"
 
@@ -1918,7 +1949,7 @@ msgstr "Opmerking"
 
 #: reporting/models.py:57 reporting/models.py:83 reporting/models.py:109
 #: reporting/models.py:162 reporting/models.py:248 reporting/models.py:584
-#: securityobjectives/models.py:712
+#: securityobjectives/models.py:716
 msgid "uuid"
 msgstr "uuid"
 
@@ -2122,7 +2153,7 @@ msgstr "Volgorde van observaties"
 msgid "Observation order"
 msgstr "Volgorde van observatie"
 
-#: reporting/models.py:376 securityobjectives/models.py:681
+#: reporting/models.py:376 securityobjectives/models.py:685
 msgid "User full name"
 msgstr "Volledige gebruikersnaam"
 
@@ -2168,7 +2199,7 @@ msgstr "Status taak"
 msgid "Created at"
 msgstr "Gemaakt op"
 
-#: reporting/models.py:477 securityobjectives/tasks.py:77
+#: reporting/models.py:477 securityobjectives/tasks.py:79
 msgid "Author"
 msgstr "Auteur"
 
@@ -2204,11 +2235,11 @@ msgstr "Statistieken"
 msgid "Governance report"
 msgstr "Governancerapport"
 
-#: reporting/models.py:586 securityobjectives/models.py:713
+#: reporting/models.py:586 securityobjectives/models.py:717
 msgid "Filename"
 msgstr "Bestandsnaam"
 
-#: reporting/views.py:409
+#: reporting/views.py:388
 msgid ""
 "Report generation is in progress for this project. Please cancel the report "
 "generation before deleting the project."
@@ -2216,60 +2247,60 @@ msgstr ""
 "Er wordt een rapport aangemaakt voor dit project. Annuleer de aanmaak van "
 "rapporten voordat u het project verwijdert."
 
-#: reporting/views.py:422
+#: reporting/views.py:401
 msgid "The project has been deleted."
 msgstr "Het project is verwijderd."
 
-#: reporting/views.py:425
+#: reporting/views.py:404
 msgid "Project not found"
 msgstr "Project niet gevonden"
 
-#: reporting/views.py:439
+#: reporting/views.py:418
 msgid "No project found"
 msgstr "Geen project gevonden"
 
-#: reporting/views.py:445 reporting/views.py:636
+#: reporting/views.py:424 reporting/views.py:615
 msgid "Failed to start report generation. Please try again."
 msgstr "Kan de aanmaak van rapporten niet starten. Probeer het opnieuw."
 
-#: reporting/views.py:451
+#: reporting/views.py:430
 msgid "Report generation is already in progress for this project."
 msgstr "Voor dit project worden reeds rapporten aangemaakt."
 
-#: reporting/views.py:456
+#: reporting/views.py:435
 msgid "Missing high risk rate threshold or ranking value"
 msgstr "Drempel voor hoog risico of rankschikkingswaarde ontbreekt"
 
-#: reporting/views.py:468
+#: reporting/views.py:447
 msgid "Nothing selected"
 msgstr "Niets geselecteerd"
 
-#: reporting/views.py:502
+#: reporting/views.py:481
 #, python-format
 msgid "%(sector)s forbidden"
 msgstr "%(sector)s verboden"
 
-#: reporting/views.py:518
+#: reporting/views.py:497
 msgid "No reporting data"
 msgstr "Geen rapporteringsgegevens"
 
-#: reporting/views.py:540
+#: reporting/views.py:519
 msgid "No data found for security objectives report"
 msgstr "Geen gegevens gevonden voor rapport beveiligingsdoelstellingen"
 
-#: reporting/views.py:552
+#: reporting/views.py:531
 msgid "No data found for risk report"
 msgstr "Geen gegevens gevonden voor risicorapport"
 
-#: reporting/views.py:582
+#: reporting/views.py:561
 msgid "No report template"
 msgstr "Geen rapportsjablonen"
 
-#: reporting/views.py:598
+#: reporting/views.py:577
 msgid "annual_report"
 msgstr "jaarlijks_verslag"
 
-#: reporting/views.py:627
+#: reporting/views.py:606
 msgid ""
 "Reports are being generated with some issues. Please check the error log in "
 "the download zip file for more details."
@@ -2277,73 +2308,83 @@ msgstr ""
 "De rapporten worden met enkele problemen gegenereerd. Controleer de "
 "foutenlog in het te downloaden zip-bestand voor meer details."
 
-#: reporting/views.py:630
+#: reporting/views.py:609
 msgid "Reports are being generated."
 msgstr "De rapporten worden gegenereerd."
 
-#: reporting/views.py:633
+#: reporting/views.py:612
 msgid "Report is being generated."
 msgstr "Het rapport wordt gegenereerd."
 
-#: reporting/views.py:665
+#: reporting/views.py:644
 msgid "Report generation failed."
 msgstr "De aanmaak van rapporten is mislukt."
 
-#: reporting/views.py:668
+#: reporting/views.py:647
 msgid "The report has been generated successfully."
 msgstr "Het rapport werd succesvol gegenereerd."
 
-#: reporting/views.py:671
+#: reporting/views.py:650
 msgid "Report generation was cancelled."
 msgstr "De aanmaak van rapporten werd geannuleerd."
 
-#: reporting/views.py:818
+#: reporting/views.py:790
 msgid "Recommendations have been added successfully"
 msgstr "Aanbevelingen werden toegevoegd"
 
-#: reporting/views.py:852
+#: reporting/views.py:824
 #, python-format
 msgid "No recommendations from %s"
 msgstr "Geen aanbevelingen van %s"
 
-#: reporting/views.py:858
+#: reporting/views.py:830
 #, python-format
 msgid "Recommendations have been copied from %s"
 msgstr "Aanbevelingen werden gekopieerd van %s"
 
-#: reporting/views.py:889
+#: reporting/views.py:861
 msgid "No report recommendation found"
 msgstr "Geen rapportaanbeveling gevonden"
 
-#: reporting/views.py:893
+#: reporting/views.py:865
 msgid "The report recommendation has been deleted."
 msgstr "De rapportaanbeveling is verwijderd."
 
-#: reporting/views.py:954 securityobjectives/views.py:975
+#: reporting/views.py:926 securityobjectives/views.py:916
 msgid "Invalid request"
 msgstr "Ongeldig verzoek"
 
-#: reporting/views.py:1080
+#: reporting/views.py:945
+msgid "The risk analysis import could not be started. Please try again later."
+msgstr ""
+
+#: reporting/views.py:1062
+msgid ""
+"The risk analysis import has stopped progressing. Check the imported data "
+"later before importing it again."
+msgstr ""
+
+#: reporting/views.py:1067
 msgid "Risk analysis successfully imported"
 msgstr "De risicoanalyse werd geïmporteerd"
 
-#: reporting/views.py:1088
+#: reporting/views.py:1075
 msgid "Failed to import risk analysis. Please try again."
 msgstr "Import van de risicoanalyse is mislukt. Probeer het opnieuw."
 
-#: reporting/views.py:1222
+#: reporting/views.py:1209
 msgid "No company found"
 msgstr "Geen onderneming gevonden"
 
-#: reporting/views.py:1231
+#: reporting/views.py:1218
 msgid "No sector found"
 msgstr "Geen sector gevonden"
 
-#: reporting/views.py:1240
+#: reporting/views.py:1227
 msgid "Year value is not a valid number"
 msgstr "Jaarwaarde is geen geldig getal"
 
-#: reporting/views.py:1248
+#: reporting/views.py:1235
 msgid "Invalid year. Please provide a valid year."
 msgstr "Ongeldig jaartal. Geef een geldig jaartal op."
 
@@ -2457,7 +2498,7 @@ msgstr ""
 "vereiste vallen."
 
 #: securityobjectives/forms.py:96 securityobjectives/helpers.py:261
-#: securityobjectives/models.py:635
+#: securityobjectives/models.py:639
 msgid "Not reviewed"
 msgstr "Niet gecontroleerd"
 
@@ -2470,8 +2511,8 @@ msgid "All revision required"
 msgstr "Alles moet worden herzien"
 
 #: securityobjectives/forms.py:157 securityobjectives/forms.py:186
-#: securityobjectives/forms.py:295 securityobjectives/globals.py:41
-#: securityobjectives/tasks.py:81
+#: securityobjectives/forms.py:295 securityobjectives/globals.py:45
+#: securityobjectives/tasks.py:83
 msgid "Evaluation Framework"
 msgstr "Evaluatiekader"
 
@@ -2483,61 +2524,61 @@ msgstr "Geslaagd en verzonden"
 msgid "Revision required and sent"
 msgstr "Revisie vereist en verzonden"
 
-#: securityobjectives/globals.py:38 securityobjectives/models.py:495
+#: securityobjectives/globals.py:42 securityobjectives/models.py:495
 msgid "Last update"
 msgstr "Laatste update"
 
-#: securityobjectives/globals.py:39 securityobjectives/models.py:496
+#: securityobjectives/globals.py:43 securityobjectives/models.py:496
 msgid "Submission date"
 msgstr "Verzenddatum"
 
-#: securityobjectives/globals.py:40
+#: securityobjectives/globals.py:44
 msgid "Identifier"
 msgstr ""
 
-#: securityobjectives/globals.py:45
+#: securityobjectives/globals.py:49
 msgid "Progress"
 msgstr ""
 
-#: securityobjectives/globals.py:98 securityobjectives/models.py:67
+#: securityobjectives/globals.py:102 securityobjectives/models.py:67
 msgid "Maturity level"
 msgstr "Maturiteitsniveau"
 
-#: securityobjectives/globals.py:99 securityobjectives/models.py:449
-#: securityobjectives/models.py:595
+#: securityobjectives/globals.py:103 securityobjectives/models.py:449
+#: securityobjectives/models.py:599
 msgid "Security Measure"
 msgstr "Veiligheidsmaatregel"
 
-#: securityobjectives/globals.py:100 securityobjectives/models.py:418
+#: securityobjectives/globals.py:104 securityobjectives/models.py:418
 msgid "Evidence"
 msgstr "Bewijs"
 
-#: securityobjectives/globals.py:101
+#: securityobjectives/globals.py:105
 msgid "Measure Implemented?"
 msgstr "Maatregel uitgevoerd?"
 
-#: securityobjectives/globals.py:102 securityobjectives/models.py:602
+#: securityobjectives/globals.py:106 securityobjectives/models.py:606
 msgid "Justification"
 msgstr "Toelichting"
 
-#: securityobjectives/globals.py:103 securityobjectives/models.py:533
-#: securityobjectives/models.py:604
+#: securityobjectives/globals.py:107 securityobjectives/models.py:533
+#: securityobjectives/models.py:608
 msgid "Review comment"
 msgstr "Opmerking bekijken"
 
-#: securityobjectives/globals.py:108 securityobjectives/models.py:655
+#: securityobjectives/globals.py:112 securityobjectives/models.py:659
 msgid "Planned Measures"
 msgstr "Geplande maatregelen"
 
-#: securityobjectives/globals.py:116
+#: securityobjectives/globals.py:120
 msgid "Score and maximum"
 msgstr "Score en maximum"
 
-#: securityobjectives/globals.py:117
+#: securityobjectives/globals.py:121
 msgid "Score only"
 msgstr "Alleen score"
 
-#: securityobjectives/globals.py:118
+#: securityobjectives/globals.py:122
 msgid "Hidden"
 msgstr "Verborgen"
 
@@ -2643,7 +2684,7 @@ msgstr "Label voor geplande maatregelen"
 msgid "Show"
 msgstr "Weergeven"
 
-#: securityobjectives/models.py:274 securityobjectives/models.py:645
+#: securityobjectives/models.py:274 securityobjectives/models.py:649
 msgid "Score"
 msgstr "Score"
 
@@ -2671,7 +2712,7 @@ msgstr "Prioriteit"
 msgid "Security Measures"
 msgstr "Veiligheidsmaatregelen"
 
-#: securityobjectives/models.py:461 securityobjectives/models.py:583
+#: securityobjectives/models.py:461 securityobjectives/models.py:587
 msgid "Notification date"
 msgstr "Meldingsdatum"
 
@@ -2695,118 +2736,119 @@ msgstr "Jaar van indiening"
 msgid "Group"
 msgstr "Groep"
 
-#: securityobjectives/models.py:586
+#: securityobjectives/models.py:590
 msgid "Standard Answer"
 msgstr "Standaardantwoord"
 
-#: securityobjectives/models.py:603
+#: securityobjectives/models.py:607
 msgid "Implemented"
 msgstr "Toegepast"
 
-#: securityobjectives/models.py:619
+#: securityobjectives/models.py:623
 msgid "Security objectives statement"
 msgstr "Rapport van beveiligingsdoelstellingen"
 
-#: securityobjectives/models.py:658
+#: securityobjectives/models.py:662
 msgid "It is completely filled out"
 msgstr "Het is volledig ingevuld"
 
-#: securityobjectives/models.py:714
+#: securityobjectives/models.py:718
 msgid "Task id"
 msgstr ""
 
-#: securityobjectives/models.py:724
+#: securityobjectives/models.py:728
 msgid "Security objective export"
 msgstr ""
 
-#: securityobjectives/models.py:725
+#: securityobjectives/models.py:729
 msgid "Security objective exports"
 msgstr ""
 
-#: securityobjectives/tasks.py:78
+#: securityobjectives/tasks.py:80
 msgid "Export date"
 msgstr ""
 
-#: securityobjectives/tasks.py:88
+#: securityobjectives/tasks.py:90
 msgid "Number of rows"
 msgstr ""
 
-#: securityobjectives/tasks.py:109
+#: securityobjectives/tasks.py:111
 msgid "Declarations"
 msgstr ""
 
-#: securityobjectives/tasks.py:115
+#: securityobjectives/tasks.py:117
 msgid "Metadata"
 msgstr ""
 
-#: securityobjectives/views.py:202 securityobjectives/views.py:950
+#: securityobjectives/views.py:188 securityobjectives/views.py:891
 msgid "No data available"
 msgstr "Geen gegevens beschikbaar"
 
-#: securityobjectives/views.py:228
+#: securityobjectives/views.py:214
 msgid "Standard does not exist"
 msgstr "Norm bestaat niet"
 
-#: securityobjectives/views.py:249 securityobjectives/views.py:253
-#: securityobjectives/views.py:576 securityobjectives/views.py:668
-#: securityobjectives/views.py:701 securityobjectives/views.py:717
-#: securityobjectives/views.py:824 securityobjectives/views.py:852
+#: securityobjectives/views.py:235 securityobjectives/views.py:239
+#: securityobjectives/views.py:563 securityobjectives/views.py:655
+#: securityobjectives/views.py:688 securityobjectives/views.py:704
+#: securityobjectives/views.py:811 securityobjectives/views.py:839
+#: securityobjectives/views.py:868
 msgid "Declaration not found"
 msgstr "Verklaring niet gevonden"
 
-#: securityobjectives/views.py:265
+#: securityobjectives/views.py:251
 msgid "A newer version of this declaration already exists."
 msgstr ""
 
-#: securityobjectives/views.py:558
+#: securityobjectives/views.py:544
 #, python-brace-format
 msgid "{label} required"
 msgstr "{label} vereist"
 
-#: securityobjectives/views.py:648
+#: securityobjectives/views.py:635
 msgid "The security objectives declaration has been duplicated."
 msgstr "De verklaring van de beveiligingsdoelstellingen is gedupliceerd."
 
-#: securityobjectives/views.py:682
+#: securityobjectives/views.py:669
 msgid "The security objectives declaration has been submitted."
 msgstr "De verklaring van de beveiligingsdoelstellingen is ingediend."
 
-#: securityobjectives/views.py:699
+#: securityobjectives/views.py:686
 msgid "The security objectives declaration has been deleted."
 msgstr "De verklaring van de beveiligingsdoelstellingen is verwijderd."
 
-#: securityobjectives/views.py:734
+#: securityobjectives/views.py:721
 msgid ""
 "A newer version of this declaration was submitted. Review that version "
 "instead."
 msgstr ""
 
-#: securityobjectives/views.py:761
+#: securityobjectives/views.py:748
 msgid "The security objectives review has been sent."
 msgstr "De controle van de beveiligingsdoelstellingen is verzonden."
 
-#: securityobjectives/views.py:994
+#: securityobjectives/views.py:935
 msgid "Error opening the file: {}"
 msgstr "Fout bij het openen van het bestand: {}"
 
-#: securityobjectives/views.py:1012
+#: securityobjectives/views.py:953
 msgid "No users for this company"
 msgstr "Geen gebruikers voor deze onderneming"
 
-#: securityobjectives/views.py:1034
+#: securityobjectives/views.py:975
 msgid "An error occurred while importing the declaration file."
 msgstr ""
 "Er is een fout opgetreden tijdens het importeren van het verklaringsbestand."
 
-#: securityobjectives/views.py:1338
+#: securityobjectives/views.py:1279
 msgid "No security objective declarations available for export."
 msgstr ""
 
-#: securityobjectives/views.py:1355
+#: securityobjectives/views.py:1296
 msgid "The export could not be started. Please try again later."
 msgstr ""
 
-#: securityobjectives/views.py:1400
+#: securityobjectives/views.py:1341
 msgid "The export failed."
 msgstr ""
 

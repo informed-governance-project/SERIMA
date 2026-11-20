@@ -297,3 +297,23 @@ def test_sanitize_spreadsheet_cell_strips_characters_openpyxl_rejects(control_ch
 
 def test_sanitize_spreadsheet_cell_neutralizes_formula_hidden_behind_control_character():
     assert helpers.sanitize_spreadsheet_cell("\x0b=HYPERLINK()") == "'=HYPERLINK()"
+
+
+SORT_FIELDS = {
+    "joined": {"field": "date_joined", "type": "datetime"},
+    "email": {"field": "email", "type": "string"},
+}
+
+
+@pytest.mark.django_db
+def test_an_unknown_sort_field_falls_back_to_the_default_key_field():
+    qs = helpers.sort_queryset_by_field(User.objects.all(), "password", "asc", "joined", SORT_FIELDS)
+
+    assert qs.query.order_by == ("-date_joined",)
+
+
+@pytest.mark.django_db
+def test_the_default_key_field_breaks_ties_on_another_sort():
+    qs = helpers.sort_queryset_by_field(User.objects.all(), "email", "asc", "joined", SORT_FIELDS)
+
+    assert qs.query.order_by[-1] == "-date_joined"

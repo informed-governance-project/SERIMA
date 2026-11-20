@@ -2,6 +2,7 @@ import datetime as dt
 import json
 import re
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from django.db import connection
@@ -18,9 +19,10 @@ from governanceplatform.helpers import (
     user_in_group,
 )
 from securityobjectives.globals import SO_DECLARATION_COLUMNS
-from securityobjectives.helpers import get_scoped_standard_answers
+from securityobjectives.helpers import get_scoped_standard_answers, get_standard_answers_with_progress
 from securityobjectives.models import (
     Domain,
+    LogStandardAnswer,
     SecurityMeasure,
     SecurityMeasureAnswer,
     SecurityObjective,
@@ -28,6 +30,7 @@ from securityobjectives.models import (
     SecurityObjectiveStatus,
     StandardAnswer,
 )
+from securityobjectives.pdf_generation import get_declaration_pdf
 from securityobjectives.templatetags.SO_custom_filters import get_all_versions, status_tooltip
 
 
@@ -117,7 +120,17 @@ def test_pdf_download_so(otp_client, populate_so_db):
     # only one Standard answers in the DB
     sa = next((u for u in sas), None)
     url = "/securityobjectives/download/" + str(sa.id)
-    test_get_with_otp(otp_client, users, authorized_users, unauthorized_user, url)
+    for user in users:
+        client = otp_client(user)
+        with patch("securityobjectives.views.generate_declaration_pdf_task.delay") as delay:
+            delay.return_value.id = str(uuid4())
+            response = client.post(url)
+        if user in authorized_users:
+            assert response.status_code == 200, user.email
+        elif user in unauthorized_user:
+            assert response.status_code == 404, user.email
+        else:
+            assert response.status_code in (302, 403), user.email
 
 
 @pytest.mark.django_db
@@ -286,7 +299,7 @@ def test_answers_are_saved_while_columns_are_hidden(otp_client, populate_so_db):
 
 
 @pytest.mark.django_db
-def test_pdf_export_works_while_columns_are_hidden(otp_client, populate_so_db):
+def test_pdf_export_works_while_columns_are_hidden(populate_so_db):
     """Hidden columns must not break the WeasyPrint export."""
     standard_answer = populate_so_db["sas"][0]
     standard = populate_so_db["so_standard"][0]
@@ -294,15 +307,9 @@ def test_pdf_export_works_while_columns_are_hidden(otp_client, populate_so_db):
     standard.show_maturity_level_column = False
     standard.save()
     operator = next(user for user in populate_so_db["users"] if user.email == "opadmin@com1.lu")
-    client = otp_client(operator)
-    session = client.session
-    session["company_in_use"] = standard_answer.submitter_company_id
-    session.save()
+    standard_answer = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer.pk)).get()
 
-    response = client.get(f"/securityobjectives/download/{standard_answer.pk}")
-
-    assert response.status_code == 200
-    assert response["Content-Type"] == "application/pdf"
+    assert get_declaration_pdf(standard_answer, operator).startswith(b"%PDF")
 
 
 @pytest.mark.django_db
@@ -422,22 +429,16 @@ def test_hiding_the_score_removes_it_entirely(otp_client, populate_so_db):
 
 
 @pytest.mark.django_db
-def test_the_pdf_export_honours_a_hidden_score(otp_client, populate_so_db):
+def test_the_pdf_export_honours_a_hidden_score(populate_so_db):
     """Hiding the score must not break WeasyPrint rendering."""
     standard_answer = populate_so_db["sas"][0]
     standard = populate_so_db["so_standard"][0]
     standard.score_display = "NONE"
     standard.save()
     operator = next(user for user in populate_so_db["users"] if user.email == "opadmin@com1.lu")
-    client = otp_client(operator)
-    session = client.session
-    session["company_in_use"] = standard_answer.submitter_company_id
-    session.save()
+    standard_answer = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer.pk)).get()
 
-    response = client.get(f"/securityobjectives/download/{standard_answer.pk}")
-
-    assert response.status_code == 200
-    assert response["Content-Type"] == "application/pdf"
+    assert get_declaration_pdf(standard_answer, operator).startswith(b"%PDF")
 
 
 @pytest.mark.django_db
@@ -672,6 +673,35 @@ def test_hiding_the_justification_column_widens_the_others(otp_client, populate_
     header = content.split('id="declaration_table"')[1].split("<thead>")[1].split("</thead>")[0]
 
     assert "col-4" in header
+
+
+@pytest.mark.django_db
+def test_so_log_hides_deleted_regulator_user_from_operator(otp_client, populate_so_db):
+    users = populate_so_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    regulator_user = next(u for u in users if u.email == "reguser@reg1.lu")
+    standard_answer = populate_so_db["sas"][0]
+    log = LogStandardAnswer.objects.create(user=regulator_user, standard_answer=standard_answer, action="READ", role="RegulatorUser")
+    regulator_user.delete()
+
+    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.id]))
+
+    assert log not in response.context["log"]
+
+
+@pytest.mark.django_db
+def test_so_log_shows_deleted_user_name(otp_client, populate_so_db):
+    users = populate_so_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    operator_user = next(u for u in users if u.email == "opuser@com1.lu")
+    standard_answer = populate_so_db["sas"][0]
+    log = LogStandardAnswer.objects.create(user=operator_user, standard_answer=standard_answer, action="READ", role="OperatorUser")
+    operator_user.delete()
+
+    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.id]))
+
+    assert log.user_full_name
+    assert log.user_full_name in response.content.decode()
 
 
 def _dashboard_with_status(otp_client, populate_so_db, email, stored_status, status_filter):
@@ -1144,10 +1174,10 @@ def test_sending_the_review_waits_for_other_requests_on_the_declaration(otp_clie
     assert _locks_the_versions(queries.captured_queries)
 
 
-def _pdf_html(otp_client, declaration, user):
-    with patch("securityobjectives.views.HTML") as html:
-        html.return_value.write_pdf.return_value = b""
-        otp_client(user).get(reverse("download_so_declaration_pdf", args=[declaration.pk]))
+def _pdf_html(declaration, user):
+    declaration = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=declaration.pk)).get()
+    with patch("securityobjectives.pdf_generation.HTML") as html:
+        get_declaration_pdf(declaration, user)
     return html.call_args.kwargs["string"]
 
 
@@ -1156,45 +1186,59 @@ def _pdf_html(otp_client, declaration, user):
     ("stored_status", "comments_shown", "cover_status"),
     [(s, False, "Under review") for s in REVIEW_IN_PROGRESS] + [("PASSM", True, "Passed"), ("FAILM", True, "Revision required")],
 )
-def test_operator_pdf_hides_the_review_until_sent(otp_client, populate_so_db, stored_status, comments_shown, cover_status):
+def test_operator_pdf_hides_the_review_until_sent(populate_so_db, stored_status, comments_shown, cover_status):
     declaration = _reviewed_declaration(populate_so_db, stored_status)
 
-    rendered = _pdf_html(otp_client, declaration, _operator(populate_so_db))
+    rendered = _pdf_html(declaration, _operator(populate_so_db))
 
     assert (MEASURE_COMMENT in rendered) is comments_shown
     assert re.search(rf"Review status\s*:\s*</span>\s*{cover_status}\s*<", rendered)
 
 
 @pytest.mark.django_db
-def test_regulator_pdf_shows_the_draft_review(otp_client, populate_so_db):
+def test_regulator_pdf_shows_the_draft_review(populate_so_db):
     declaration = _reviewed_declaration(populate_so_db, "PASS")
     regulator = next(u for u in populate_so_db["users"] if u.email == "regadmin@reg1.lu")
 
-    rendered = _pdf_html(otp_client, declaration, regulator)
+    rendered = _pdf_html(declaration, regulator)
 
     assert MEASURE_COMMENT in rendered
     assert re.search(r"Review status\s*:\s*</span>\s*Passed\s*<", rendered)
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("email", ["opadmin@com1.lu", "regadmin@reg1.lu"])
+def test_dashboard_pdf_button_uses_the_async_download(otp_client, populate_so_db, email):
+    """The download view starts a task and answers JSON, which a plain fetch would save as the PDF."""
+    declaration = populate_so_db["sas"][0]
+    user = next(u for u in populate_so_db["users"] if u.email == email)
+
+    html = otp_client(user).get(reverse("securityobjectives")).content.decode()
+
+    pdf_url = reverse("download_so_declaration_pdf", args=[declaration.pk])
+    assert re.search(rf'<a class="[^"]*\bjs-async-pdf\b[^"]*"\s+href="{re.escape(pdf_url)}"', html)
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize(("stored_status", "shown"), [(s, False) for s in REVIEW_IN_PROGRESS] + [(s, True) for s in REVIEW_SENT])
-def test_operator_pdf_shows_objective_statuses_only_once_sent(otp_client, populate_so_db, stored_status, shown):
+def test_operator_pdf_shows_objective_statuses_only_once_sent(populate_so_db, stored_status, shown):
     declaration = _reviewed_declaration(populate_so_db, stored_status)
     SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status="PASS")
 
-    rendered = _pdf_html(otp_client, declaration, _operator(populate_so_db))
+    rendered = _pdf_html(declaration, _operator(populate_so_db))
 
     assert ("[Passed]" in rendered) is shown
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("stored_status", REVIEW_IN_PROGRESS + REVIEW_SENT)
-def test_regulator_pdf_shows_objective_statuses(otp_client, populate_so_db, stored_status):
+def test_regulator_pdf_shows_objective_statuses(populate_so_db, stored_status):
+    """The task renders without a request, so the role must come from the user passed in, not a context processor."""
     declaration = _reviewed_declaration(populate_so_db, stored_status)
     SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status="PASS")
     regulator = next(u for u in populate_so_db["users"] if u.email == "regadmin@reg1.lu")
 
-    rendered = _pdf_html(otp_client, declaration, regulator)
+    rendered = _pdf_html(declaration, regulator)
 
     assert "[Passed]" in rendered
 
