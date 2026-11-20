@@ -1317,6 +1317,14 @@ msgstr "leeg wanneer de regulator geen opmerkingen heeft geformuleerd"
 msgid "Deadline of the next report"
 msgstr "Deadline voor het volgende rapport"
 
+#: incidents/email.py:115
+msgid "Cross-border"
+msgstr "Grensoverschrijdend"
+
+#: incidents/email.py:154
+msgid "empty unless the incident is reported as cross-border"
+msgstr "leeg tenzij het incident als grensoverschrijdend is gemeld"
+
 #: incidents/filters.py:25
 msgid "Yes"
 msgstr ""
