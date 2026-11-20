@@ -7,9 +7,10 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 
-from governanceplatform.models import User
+from governanceplatform.models import ApplicationConfig, User
 from incidents.email import INCIDENT_EMAIL_PLACEHOLDERS, EmailContext, render_notification, replace_email_variables
-from incidents.models import Email, IncidentWorkflow, ReportTimeline, Workflow
+from incidents.helpers import CROSS_BORDER_POSITIVE_ANSWER_KEY, CROSS_BORDER_QUESTION_REFERENCE_KEY
+from incidents.models import Answer, Email, IncidentWorkflow, PredefinedAnswer, QuestionOptions, ReportTimeline, Workflow
 
 
 @pytest.fixture
@@ -313,6 +314,150 @@ def test_a_placeholder_rendering_empty_leaves_no_spacing_in_the_subject(incident
     subject, _body = render_notification(email_template("#REPORT_COMMENT_ADDED# Report  for #INCIDENT_ID#"), EmailContext(incident))
 
     assert subject == f"Report for {incident.incident_id}"
+
+
+# --- #CROSS_BORDER# ------------------------------------------------------------------------------
+
+CROSS_BORDER_QUESTION_REFERENCE = "1"
+CROSS_BORDER_MARKER = "[Cross-border]"
+
+
+def designate_cross_border_question(positive_answer=None):
+    ApplicationConfig.objects.create(key=CROSS_BORDER_QUESTION_REFERENCE_KEY, value=CROSS_BORDER_QUESTION_REFERENCE)
+    if positive_answer is not None:
+        ApplicationConfig.objects.create(key=CROSS_BORDER_POSITIVE_ANSWER_KEY, value=positive_answer)
+
+
+def answer_cross_border(incident, predefined_answer_label, submitted_at=None):
+    """Submit a report answering the cross-border question."""
+    submitted_at = submitted_at or timezone.now()
+    question_options = QuestionOptions.objects.filter(question__reference=CROSS_BORDER_QUESTION_REFERENCE).first()
+    incident_workflow = IncidentWorkflow.objects.create(
+        incident=incident,
+        workflow=Workflow.objects.first(),
+        timestamp=submitted_at,
+        report_timeline=ReportTimeline.objects.create(incident_detection_date=submitted_at),
+    )
+    answer = Answer.objects.create(incident_workflow=incident_workflow, question_options=question_options, timestamp=submitted_at)
+    answer.predefined_answers.set(
+        PredefinedAnswer.objects.filter(question=question_options.question, translations__predefined_answer=predefined_answer_label)
+    )
+    return incident_workflow
+
+
+def cross_border(incident):
+    return replace_email_variables("#CROSS_BORDER#", EmailContext(incident))
+
+
+@pytest.mark.django_db
+def test_cross_border_renders_nothing_until_a_question_is_designated(incident):
+    answer_cross_border(incident, "Yes")
+    assert cross_border(incident) == ""
+
+
+@pytest.mark.django_db
+def test_cross_border_marks_an_incident_reported_as_cross_border(incident):
+    designate_cross_border_question()
+    answer_cross_border(incident, "Yes")
+    assert cross_border(incident) == CROSS_BORDER_MARKER
+
+
+@pytest.mark.django_db
+def test_cross_border_renders_nothing_for_an_incident_reported_otherwise(incident):
+    designate_cross_border_question()
+    answer_cross_border(incident, "No")
+    assert cross_border(incident) == ""
+
+
+@pytest.mark.django_db
+def test_cross_border_renders_nothing_before_any_report(incident):
+    designate_cross_border_question()
+    assert cross_border(incident) == ""
+
+
+@pytest.mark.django_db
+def test_cross_border_follows_the_latest_report_both_ways(incident):
+    designate_cross_border_question()
+    answer_cross_border(incident, "Yes", timezone.now() - timedelta(days=2))
+    assert cross_border(incident) == CROSS_BORDER_MARKER
+
+    answer_cross_border(incident, "No", timezone.now() - timedelta(days=1))
+    assert cross_border(incident) == ""
+
+    answer_cross_border(incident, "Yes", timezone.now())
+    assert cross_border(incident) == CROSS_BORDER_MARKER
+
+
+@pytest.mark.django_db
+def test_cross_border_reads_the_positive_answer_from_the_configuration(incident):
+    designate_cross_border_question(positive_answer="No")
+    answer_cross_border(incident, "No")
+    assert cross_border(incident) == CROSS_BORDER_MARKER
+
+
+@pytest.mark.django_db
+def test_cross_border_marks_the_subject_and_the_body(incident):
+    designate_cross_border_question()
+    answer_cross_border(incident, "Yes")
+
+    subject, body = render_notification(
+        email_template("#CROSS_BORDER# Report for #INCIDENT_ID#", "<p>#CROSS_BORDER# A report was submitted.</p>"),
+        EmailContext(incident),
+    )
+
+    assert subject == f"{CROSS_BORDER_MARKER} Report for {incident.incident_id}"
+    assert CROSS_BORDER_MARKER in body
+
+
+@pytest.mark.django_db
+def test_an_empty_cross_border_marker_leaves_no_spacing_in_the_subject(incident):
+    designate_cross_border_question()
+    answer_cross_border(incident, "No")
+
+    subject, _body = render_notification(email_template("#CROSS_BORDER# Report  for #INCIDENT_ID#"), EmailContext(incident))
+
+    assert subject == f"Report for {incident.incident_id}"
+
+
+@pytest.mark.django_db
+def test_a_template_without_the_placeholder_is_left_as_written(incident):
+    designate_cross_border_question()
+    answer_cross_border(incident, "Yes")
+
+    subject, body = render_notification(email_template("Report for #INCIDENT_ID#"), EmailContext(incident))
+
+    assert subject == f"Report for {incident.incident_id}"
+    assert CROSS_BORDER_MARKER not in body
+
+
+@pytest.mark.django_db
+def test_the_cross_border_marker_follows_the_instance_language(incident, settings):
+    """An operator submitting in English on a French instance must not get an English marker in a French subject."""
+    settings.LANGUAGE_CODE = "fr"
+    with override("fr"):
+        if str(_("Cross-border")) == "Cross-border":
+            pytest.skip("French catalogue is not compiled; run manage.py compilemessages")
+    designate_cross_border_question()
+    answer_cross_border(incident, "Yes")
+
+    with override("en"):
+        subject, _body = render_notification(email_template("#CROSS_BORDER# Report"), EmailContext(incident))
+
+    assert subject == "[Transfrontalier] Report"
+
+
+@pytest.mark.django_db
+def test_the_body_marks_each_language_section_in_its_own_language(incident):
+    with override("fr"):
+        if str(_("Cross-border")) == "Cross-border":
+            pytest.skip("French catalogue is not compiled; run manage.py compilemessages")
+    designate_cross_border_question()
+    answer_cross_border(incident, "Yes")
+
+    _subject, body = render_notification(email_template("Report", "<p>#CROSS_BORDER#</p>"), EmailContext(incident))
+
+    for marker in ("[Cross-border]", "[Transfrontalier]", "[Grenzüberschreitend]", "[Grensoverschrijdend]"):
+        assert marker in body
 
 
 # --- the placeholder help dialog on the change form -------------------------------------------

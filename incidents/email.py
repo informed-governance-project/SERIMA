@@ -25,7 +25,7 @@ from governanceplatform.models import Observer, RegulatorUser
 
 from .access_control import observer_can_access_incident
 from .globals import WORKFLOW_REVIEW_STATUS
-from .helpers import is_deadline_exceeded
+from .helpers import is_cross_border_incident, is_deadline_exceeded
 from .models import ConnectorDelivery, Email, Incident, IncidentWorkflow, ReportTimeline, Workflow
 
 logger = logging.getLogger(__name__)
@@ -110,6 +110,15 @@ def _resolve_comment_added(context: EmailContext) -> str | Promise:
     return COMMENT_ADDED_NOTICE if submission is not None and submission.comment else ""
 
 
+# A marker rather than a value: it either marks the message or adds nothing, so a template carrying it reads
+# correctly in both cases.
+CROSS_BORDER_MARKER = format_lazy("[{}]", _("Cross-border"))
+
+
+def _resolve_cross_border(context: EmailContext) -> str | Promise:
+    return CROSS_BORDER_MARKER if is_cross_border_incident(context.incident) else ""
+
+
 def _resolve_deadline(context: EmailContext) -> str:
     deadline = context.incident.get_deadline()
     if deadline is None:
@@ -140,6 +149,11 @@ INCIDENT_EMAIL_PLACEHOLDERS = [
         _resolve_comment_added,
     ),
     EmailPlaceholder("#DEADLINE#", _("Deadline of the next report"), _resolve_deadline),
+    EmailPlaceholder(
+        "#CROSS_BORDER#",
+        format_lazy('"{}" — {}', CROSS_BORDER_MARKER, _("empty unless the incident is reported as cross-border")),
+        _resolve_cross_border,
+    ),
 ]
 
 

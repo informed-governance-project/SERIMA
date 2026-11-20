@@ -1269,6 +1269,14 @@ msgstr ""
 msgid "Deadline of the next report"
 msgstr ""
 
+#: incidents/email.py:115
+msgid "Cross-border"
+msgstr ""
+
+#: incidents/email.py:154
+msgid "empty unless the incident is reported as cross-border"
+msgstr ""
+
 #: incidents/filters.py:37
 msgid "Yes"
 msgstr ""
