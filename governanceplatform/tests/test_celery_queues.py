@@ -29,6 +29,8 @@ EXPECTED_QUEUES = {
     "so_declarations_cleaning": "celery",
     "unactive_account_cleaning": "celery",
     "workflow_update_status": "celery",
+    # Sent to the observers' own systems after a notification, retried on failure; nobody waits on it.
+    "deliver_connector_notification": "celery",
     "governanceplatform.tasks.cleanup_async_pdf_file": "celery",
     "reporting.tasks.cleanup_ra_tmp_file_task": "celery",
     "reporting.tasks.delete_project_task": "celery",

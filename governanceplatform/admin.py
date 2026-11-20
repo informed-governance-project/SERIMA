@@ -1645,7 +1645,7 @@ for name, method in generate_display_methods(["name"]).items():
 
 
 @admin.register(APIModuleAccess, site=admin_site)
-class APIModuleAccessAdmin(admin.ModelAdmin):
+class APIModuleAccessAdmin(ModelAdmin):
     form = APIModuleAccessAdminForm
     list_display = ["module", "get_roles"]
     fields = ("roles",)
@@ -1814,7 +1814,7 @@ class ObserverUserInline(TabularInline):
         return readonly_fields
 
 
-class ObserverConnectorInline(admin.TabularInline):
+class ObserverConnectorInline(TabularInline):
     model = ObserverConnector
     fields = ("name", "connector_type", "is_active")
     readonly_fields = ("name", "connector_type", "is_active")
@@ -1900,7 +1900,7 @@ class ObserverAdmin(CustomTranslatableAdmin):
 
 
 @admin.register(ObserverConnector, site=admin_site)
-class ObserverConnectorAdmin(admin.ModelAdmin):
+class ObserverConnectorAdmin(ModelAdmin):
     form = ObserverConnectorAdminForm
     list_display = ["name", "observer", "connector_type", "is_active"]
     list_filter = ["connector_type", "is_active"]

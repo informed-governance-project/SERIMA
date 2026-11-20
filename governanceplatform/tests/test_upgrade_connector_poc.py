@@ -2,6 +2,7 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 from django.db import connection
+from django.db.migrations.loader import MigrationLoader
 from django.db.migrations.recorder import MigrationRecorder
 
 from governanceplatform.management.commands.upgrade_connector_poc import POC_MIGRATIONS
@@ -19,7 +20,10 @@ RENUMBERED_MIGRATIONS = [
 def _record_as_poc_server(poc_migrations):
     """Rewrite django_migrations as a server that ran feat/observer-connectors would have it."""
     recorder = MigrationRecorder(connection)
-    for app, name in RENUMBERED_MIGRATIONS:
+    graph = MigrationLoader(connection).graph
+    # Such a server never ran the migrations numbered after the connector ones either; leaving
+    # them recorded would make the history inconsistent before the command even runs.
+    for app, name in {later for migration in RENUMBERED_MIGRATIONS for later in graph.backwards_plan(migration)}:
         recorder.record_unapplied(app, name)
     for app, name in poc_migrations:
         recorder.record_applied(app, name)
