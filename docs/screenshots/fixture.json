@@ -458,9 +458,6 @@
    "country": "LU",
    "address": "3 Example Square, 3000 Example City",
    "email_for_notification": "observer-a@example.org",
-   "rt_url": null,
-   "_rt_token": null,
-   "rt_queue": null,
    "functionalities": []
   }
  },

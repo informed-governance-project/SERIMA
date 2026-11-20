@@ -4,8 +4,9 @@ Governance
 The **Governance** section of the console is where you manage your observer and its accounts.
 For an observer administrator, it lists:
 
-- **Observers**, where you change your observer, its RT connection and who administers it,
-  see `Your observer`_, `RT ticketing system`_ and `Observer accounts`_;
+- **Observers**, where you change your observer, how it receives incidents and who administers it,
+  see `Your observer`_, `Notification mode`_ and `Observer accounts`_;
+- **Observer connectors**, where you connect your observer to your own systems, see `Connectors`_;
 - **Users**, where you add and change the accounts of your observer, see `Users`_.
 
 The lists and forms work as described in :doc:`/administration/platform-admin/governance`.
@@ -27,50 +28,72 @@ Click its name to open it. You can change:
   fill in the fields and save before switching to another tab;
 - its **Country** and **Address**;
 - its **E-mail address for incident notification**, the shared address that receives the emails the platform sends
-  about the incidents your observer receives, unless an RT ticketing system receives them instead
-  (see `RT ticketing system`_).
+  about the incidents your observer receives;
+- its **Notification mode**, see `Notification mode`_.
 
 Then click **Save**.
 
 .. figure:: /_static/images/administration/observer-admin/governance-02.png
-   :alt: Change Observer form with the language tabs and the E-mail address for incident notification field outlined
+   :alt: Change Observer form with the language tabs, the E-mail address for incident notification and the Notification mode fields outlined
    :target: ../../_static/images/administration/observer-admin/governance-02.png
 
+.. _observer-admin-notification-mode:
+
+Notification mode
+~~~~~~~~~~~~~~~~~
+
+The **Notification mode** of your observer decides where the platform sends the incidents your observer receives:
+
+- **Default (e-mail when no active connector)**: by email while your observer has no active connector,
+  and only through the connectors once one is active;
+- **E-mail and connectors**: by email, and through every active connector;
+- **Connectors only (never e-mail)**: only through the active connectors, never by email.
+
+The emails go to the **E-mail address for incident notification** and to every account of your observer.
+
+.. warning::
+
+   With **Connectors only (never e-mail)** and no active connector, your observer receives nothing.
+
+.. _observer-admin-connectors:
+
+Connectors
+~~~~~~~~~~
+
+A connector sends the incidents your observer receives to one of your own systems. The types you can choose are
+the ones the platform administrator made available to your observer:
+
+- **RT (Request Tracker)**: opens a ticket in a queue of an RT instance. Enter the **URL** of the instance, such as
+  ``https://rt.example.com``, the **Queue** that receives the tickets, and the **Token** of an RT account allowed
+  to create tickets in it. The first notification about an incident opens a ticket, and the following ones are added
+  to that ticket as replies.
+- **Webhook (HTTPS API)**: posts the incident as JSON to the **URL** of your API. Each request is signed with the
+  **HMAC secret** you enter, in the ``X-Serima-Signature`` header, with the time it was sent in ``X-Serima-Timestamp``.
+- **GPG-encrypted JSON (e-mail)**: emails the incident as JSON, encrypted with the **GPG public key** you paste
+  (ASCII-armored), to the **E-mail address for incident notification** of your observer.
+
+The **Observer connectors** list shows the **Name**, **Observer**, **Type** and **Active** state of each connector
+of your observer. The form of your observer also lists them at the bottom, with a link to each.
+
+To add a connector:
+
+1. Click **Add Observer connector**, choose its **Type**, give it a **Name**, keep **Active** on and click **Save**.
+2. The form opens again with the fields of that type: fill them in and click **Save and continue editing**.
+3. Click **Test connection**. The result is shown beside the button.
+
 .. note::
 
-   When no RT ticketing system is connected, the emails about an incident also go to every account of your observer.
+   The URL of an RT instance or a webhook must use HTTPS and point to a public address. Once saved, the token or
+   secret is masked: to replace it, enter the new one; to remove it, clear the field and save.
 
-.. _observer-admin-rt:
-
-RT ticketing system
-~~~~~~~~~~~~~~~~~~~
-
-Instead of emails, your observer can receive the incidents as tickets in a queue of a Request Tracker (RT) instance.
-Click **RT Configuration** in the form of your observer to unfold it, then:
-
-1. Enter the **URL** of the RT instance, such as ``https://rt.example.com``, the **Token** of an RT account
-   allowed to create tickets, and the **Queue** that receives them.
-2. Click **Save and continue editing**.
-3. Click **Test RT Connection**. The result is shown beside the button: **RT connection successful.**,
-   or **RT connection failed. Check URL, queue and token.**
-
-.. figure:: /_static/images/administration/observer-admin/governance-03.png
-   :alt: RT Configuration section unfolded, with its URL, Token and Queue fields and the Test RT Connection button outlined
-   :target: ../../_static/images/administration/observer-admin/governance-03.png
-
-A successful test creates a test ticket in the queue, which you can delete. From then on, the first email about
-an incident opens a ticket in the queue, and the following ones are added to that ticket as replies.
-Your observer's address and accounts no longer receive these emails.
-
-.. note::
-
-   The URL must use HTTPS and point to a public address. Once saved, the token is masked:
-   to replace it, enter the new one; to remove it, clear the field and save.
+To stop using a connector without deleting it, turn off **Active** and save. When the platform administrator
+withdraws a type from your observer, its connectors of that type are turned off.
 
 .. important::
 
-   The emails go back to your observer's address and accounts whenever the RT instance cannot be reached
-   with the URL, token and queue saved. Test the connection again after changing any of them.
+   A notification a connector cannot deliver is retried up to five times over about half an hour, then given up.
+   It is not sent by email instead: choose **E-mail and connectors** as the notification mode to keep
+   receiving the emails as well.
 
 .. _observer-admin-accounts:
 

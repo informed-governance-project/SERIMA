@@ -5,7 +5,8 @@ An observer is an organisation that receives, read-only, the incidents forwarded
 the rules set by the platform administrator (see :ref:`platform-observers`). An observer administrator reads
 those incidents in the incident notification module of the platform, and exports them when the platform administrator
 allows it (see :doc:`/getting-started/roles-and-permissions`). In the administration console, they keep the details
-of their observer up to date, connect it to an RT ticketing system, and create the other accounts of the observer.
+of their observer up to date, choose how it receives incidents, connect it to their own systems, and create
+the other accounts of the observer.
 The observer itself, the incidents it receives and its first administrator are set up by the platform administrator.
 
 Open the console with **Settings** in the header of the platform (see :doc:`/administration/index`).

@@ -1275,7 +1275,7 @@ annotate = [{ selector = ".pending-link-prompt", box = true }]
 # The Django admin under /admin/, as the observer administrator of Observer A,
 # the only account of that observer in the fixture: no shot shows the Reset 2FA
 # token button, which is never offered on your own account. Change forms are
-# only opened, never saved, and the RT connection is never tested.
+# only opened, never saved, and no connector connection is ever tested.
 
 [[shots]]
 name = "images/administration/observer-admin/index-01"
@@ -1302,22 +1302,12 @@ role = "observer_admin"
 # Observer 2 is Observer A.
 path = "/admin/governanceplatform/observer/2/change/"
 selector = "#main"
-# The RT configuration and the accounts have shots of their own below.
-hide = ["#content fieldset.collapse", "#observeruser_set-group", "#submit-row"]
+# The connectors and the accounts are documented in sections of their own.
+hide = ["#connectors-group", "#observeruser_set-group", "#submit-row"]
 annotate = [
   { selector = "#content .parler-language-tabs", box = true },
   { selector = "#content .field-email_for_notification", box = true },
-]
-
-[[shots]]
-name = "images/administration/observer-admin/governance-03"
-role = "observer_admin"
-path = "/admin/governanceplatform/observer/2/change/"
-# Unfolds the collapsed RT Configuration fieldset; nothing is saved or tested.
-steps = [{ action = "click", selector = "#content fieldset.collapse summary" }]
-selector = "#content fieldset.collapse"
-annotate = [
-  { selector = "#content .rt-test-btn", box = true },
+  { selector = "#content .field-notification_mode", box = true },
 ]
 
 [[shots]]

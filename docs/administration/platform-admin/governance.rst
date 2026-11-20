@@ -216,10 +216,13 @@ Create an observer
 1. Click **Add observer** and fill in the **Name** and, optionally, the **Full name** and **Description**,
    then the **Country** and **Address**.
 2. In **E-mail address for incident notification**, enter the shared address of the observer:
-   it receives the emails the platform sends about the incidents the observer receives, unless the observer
-   administrator connects the observer to an RT ticketing system, which then receives them as tickets
-   (see :ref:`observer-admin-rt`).
-3. Add the first observer administrator in the **Observer users** section, as for a regulator
+   it receives the emails the platform sends about the incidents the observer receives. The observer administrator
+   chooses whether they are sent by email, through connectors to the observer's own systems, or both
+   (see :ref:`observer-admin-notification-mode`).
+3. In **Available connectors**, tick the connector types the observer may use: **RT (Request Tracker)**,
+   **Webhook (HTTPS API)** and **GPG-encrypted JSON (e-mail)** (see :ref:`observer-admin-connectors`).
+   None is ticked by default. Unticking a type later turns off the observer's connectors of that type.
+4. Add the first observer administrator in the **Observer users** section, as for a regulator
    (see `Regulator administrators`_): click **Add another Observer user**, then select the account or create it
    with **Add another User** in the menu (⋮) beside it. Turn on **Can export incidents** to let it export the incidents the observer receives (see :ref:`incident-export`).
 
@@ -227,7 +230,7 @@ Create an observer
       :alt: Change Observer form with its contact fields and the Observer users section outlined
       :target: ../../_static/images/administration/platform-admin/governance-08.png
 
-4. Add its observer regulations, as described below, and click **Save**.
+5. Add its observer regulations, as described below, and click **Save**.
 
 The observer administrator then creates the other accounts of the observer (see :ref:`observer-admin-users`).
 Removing an administrator from the **Observer users** section deactivates the account.

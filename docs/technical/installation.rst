@@ -145,7 +145,9 @@ These settings are optional; the application applies a default when they are mis
 - ``SESSION_COOKIE_AGE`` — after how many seconds of inactivity users are logged out;
 - ``SECURE_REFERRER_POLICY`` — the ``Referrer-Policy`` header sent with every page
   (default ``same-origin``);
-- ``RT_SECRET_KEY`` — the key encrypting observers' RT tokens (defaults to ``HASH_KEY``).
+- ``CONNECTOR_SECRET_KEY`` — the Fernet key encrypting the tokens and secrets of observer connectors. It was
+  formerly called ``RT_SECRET_KEY``, which is still read when ``CONNECTOR_SECRET_KEY`` is not set; without either,
+  ``HASH_KEY`` is used. Changing it makes every stored connector secret unreadable.
 
 When ``DEBUG`` is ``True``, emails are not sent but written to the ``sent_emails`` folder at the root of the project.
 
