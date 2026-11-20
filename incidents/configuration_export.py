@@ -22,7 +22,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
 FORMAT_NAME = "governance-platform-sector-regulation"
-FORMAT_VERSION = 1
+# 2: email content is HTML instead of Markdown.
+FORMAT_VERSION = 2
 
 
 def _translations(instance, field_names: tuple[str, ...]) -> list[dict[str, Any]]:

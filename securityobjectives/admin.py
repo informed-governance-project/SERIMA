@@ -23,7 +23,6 @@ from import_export.formats import base_formats
 from import_export.resources import Diff
 from import_export_extensions.admin import CeleryImportExportMixin
 from import_export_extensions.resources import CeleryModelResource
-from markdown import markdown
 from tablib import Dataset
 from unfold.admin import TabularInline
 from unfold.contrib.import_export.forms import ImportForm, SelectableFieldsExportForm
@@ -1338,12 +1337,7 @@ class SOEmailAdmin(
     def html_preview(self, obj):
         if not obj or not obj.content:
             return _("No preview yet")
-        html_content = markdown(
-            text=obj.content,
-            extensions=["extra", "sane_lists", "legacy_attrs", "nl2br"],
-            output_format="html",
-        )
-        html_content = sanitize_html(html_content)
+        html_content = sanitize_html(obj.content)
         return mark_safe(
             f"""
             <div class="markdown-html-preview">

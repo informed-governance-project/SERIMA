@@ -25,7 +25,6 @@ from django.utils import translation
 from django.utils.html import format_html
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
-from markdown import markdown
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
 from .globals import (
@@ -348,7 +347,6 @@ def render_to_string_multi_languages(
                     content.safe_translation_getter("content", language_code=lang_code),
                     object,
                 )
-                context["content"] = markdown(text=context["content"], output_format="html")
                 context["content"] = sanitize_html(context["content"])
             return render_to_string(template_name, context)
 
@@ -390,6 +388,11 @@ def sanitize_html(
     if tags is None:
         tags = [
             "p",
+            # div, blockquote and u are what the admin's rich-text editor (Trix) writes for a
+            # paragraph, a quote and an underline.
+            "div",
+            "blockquote",
+            "u",
             "pre",
             "code",
             "h1",
@@ -414,6 +417,7 @@ def sanitize_html(
             "a",
             "abbr",
             "img",
+            "figure",
         ]
     if attributes is None:
         attributes = {

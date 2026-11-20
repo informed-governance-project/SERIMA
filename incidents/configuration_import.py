@@ -1,5 +1,7 @@
 from typing import TYPE_CHECKING, Any
 
+from markdown import markdown
+
 from governanceplatform.models import Sector
 from incidents.configuration_export import FORMAT_NAME, FORMAT_VERSION
 from incidents.globals import (
@@ -28,6 +30,8 @@ if TYPE_CHECKING:
 INCIDENT_EMAIL_TRIGGER_VALUES = {value for value, _label in INCIDENT_EMAIL_TRIGGER_EVENT}
 QUESTION_TYPE_VALUES = {value for value, _label in QUESTION_TYPES}
 WORKFLOW_TRIGGER_VALUES = {value for value, _label in SECTOR_REGULATION_WORKFLOW_TRIGGER_EVENT}
+# Version of the files whose email content is Markdown, still imported.
+MARKDOWN_EMAIL_FORMAT_VERSION = 1
 
 
 class ConfigurationImportError(ValueError):
@@ -219,10 +223,24 @@ class SectorRegulationConfigurationImporter:
     def _validate_document(self) -> None:
         if self.data.get("format") != FORMAT_NAME:
             raise ConfigurationImportError("Unsupported configuration format.")
-        if self.data.get("format_version") != FORMAT_VERSION:
+        if self.data.get("format_version") == MARKDOWN_EMAIL_FORMAT_VERSION:
+            self._convert_markdown_emails()
+        elif self.data.get("format_version") != FORMAT_VERSION:
             raise ConfigurationImportError(f"Unsupported format version {self.data.get('format_version')!r}; expected {FORMAT_VERSION}.")
         if not isinstance(self.data.get("sector_regulation"), dict):
             raise ConfigurationImportError("Missing sector_regulation object.")
+
+    def _convert_markdown_emails(self) -> None:
+        """Files exported before email content became HTML hold Markdown: convert it as the
+        email content migrations did, so they import like a current file."""
+        emails = self.data.get("emails")
+        if not isinstance(emails, list):
+            return
+        for email in emails:
+            translations = email.get("translations") if isinstance(email, dict) else None
+            for translation in translations if isinstance(translations, list) else []:
+                if isinstance(translation, dict) and isinstance(translation.get("content"), str):
+                    translation["content"] = markdown(text=translation["content"], output_format="html")
 
     def _catalog(self, name: str) -> dict[str, dict[str, Any]]:
         items = self.data.get(name)

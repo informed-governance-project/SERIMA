@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.admin.utils import unquote
 from django.template.loader import render_to_string
 from django.utils.translation import gettext_lazy as _
+from unfold.contrib.forms.widgets import WysiwygWidget
 
 from .helpers import can_change_or_delete_obj, filter_languages_not_translated
 
@@ -97,13 +98,19 @@ class ShowReminderForTranslationsMixin:
 
 
 class EmailPlaceholdersMixin:
-    """Lists the placeholders of an email template admin in a dialog, opened from the fieldset holding the content.
+    """Lists the placeholders of an email template admin in a dialog, opened from the fieldset holding the content,
+    and edits the content, which is HTML, in a rich-text editor.
 
     The dialog goes in the fieldset description rather than in a change form template, which some admins
     already take from another mixin (ExportActionModelAdmin).
     """
 
     email_placeholders: Sequence[EmailPlaceholder] = ()
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == "content":
+            kwargs["widget"] = WysiwygWidget
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
 
     def get_fieldsets(self, request, obj=None):
         help_dialog = render_to_string("admin/includes/email_placeholders_help.html", {"email_placeholders": self.email_placeholders})

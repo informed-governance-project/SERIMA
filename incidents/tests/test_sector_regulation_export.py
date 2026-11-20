@@ -4,6 +4,7 @@ import pytest
 from django.core.management import call_command
 from django.core.management.base import CommandError
 
+from incidents.configuration_export import FORMAT_VERSION
 from incidents.models import (
     ConditionalQuestionOption,
     PredefinedAnswer,
@@ -54,7 +55,7 @@ def test_export_sector_regulation_configuration(populate_incident_db, tmp_path):
 
     data = json.loads(output_path.read_text(encoding="utf-8"))
     assert data["format"] == "governance-platform-sector-regulation"
-    assert data["format_version"] == 1
+    assert data["format_version"] == FORMAT_VERSION
     assert data["sector_regulation"]["translations"] == [{"language_code": "en", "name": "asectorial workflow"}]
     assert [report["name"] for report in data["reports"]] == [
         "Reg 1 preli",
