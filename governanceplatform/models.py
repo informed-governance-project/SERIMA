@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+import hashlib
 import importlib
 import logging
+import secrets
 import uuid
+from typing import TYPE_CHECKING
 
 from cryptography.fernet import Fernet, InvalidToken
 from django.conf import settings
@@ -8,18 +13,24 @@ from django.contrib import admin
 from django.contrib.auth.models import AbstractUser, Group, PermissionsMixin
 from django.contrib.sessions.base_session import AbstractBaseSession
 from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator
 from django.db import models
 from django.db.models import Deferrable
+from django.utils import timezone
+from django.utils.functional import cached_property
+from django.utils.translation import gettext, ngettext
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.debug import sensitive_variables
 from django_countries.fields import CountryField
 from parler.models import TranslatableModel, TranslatedFields
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .globals import ACTION_FLAG_CHOICES, get_functionality_choices
+from .connectors.registry import connector_type_choices
+from .globals import ACTION_FLAG_CHOICES, API_ELIGIBLE_ROLES, get_api_module_choices, get_functionality_choices
 from .managers import CustomUserManager
-from .settings import RT_SECRET_KEY
-from .validators import validate_rt_url
+from .settings import CONNECTOR_SECRET_KEY
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +56,7 @@ class Sector(TranslatableModel):
         verbose_name=_("Parent Sector"),
         related_name="children",
     )
-    acronym = models.CharField(verbose_name=_("Acronym"), max_length=4)
+    acronym = models.CharField(verbose_name=_("Acronym"), max_length=4, unique=True)
 
     # name of the regulator who create the object
     creator_name = models.CharField(
@@ -128,6 +139,18 @@ class Functionality(TranslatableModel):
         ]
         verbose_name = _("Functionality")
         verbose_name_plural = _("Functionalities")
+
+
+class APIModuleAccess(models.Model):
+    module = models.CharField(verbose_name=_("Module"), max_length=100, choices=get_api_module_choices, unique=True)
+    roles = models.ManyToManyField(Group, verbose_name=_("Roles"), blank=True, related_name="api_modules")
+
+    def __str__(self):
+        return str(get_api_module_choices().get(self.module, self.module))
+
+    class Meta:
+        verbose_name = _("API access")
+        verbose_name_plural = _("API access")
 
 
 # operator has type (critical, essential, etc.) who give access to functionalities
@@ -261,51 +284,24 @@ class Observer(TranslatableModel):
         verbose_name=_("Functionalities"),
         blank=True,
     )
+    # connector types this observer is allowed to use; set by PlatformAdmin, acts as a filter
+    allowed_connector_types = models.JSONField(default=list, blank=True, verbose_name=_("Available connectors"))
 
-    rt_url = models.URLField(
-        blank=True,
-        null=True,
-        help_text="e.g., https://rt.exemple.com",
-        verbose_name=_("URL"),
-        validators=[
-            URLValidator(),
-            validate_rt_url,
-        ],
-    )
-    _rt_token = models.CharField(
-        db_column="rt_token",
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name=_("Token"),
+    class NotificationMode(models.TextChoices):
+        DEFAULT = "default", _("Default (e-mail when no active connector)")
+        DEFAULT_AND_CONNECTORS = "default_and_connectors", _("E-mail and connectors")
+        CONNECTORS_ONLY = "connectors_only", _("Connectors only (never e-mail)")
+
+    notification_mode = models.CharField(
+        max_length=32,
+        choices=NotificationMode.choices,
+        default=NotificationMode.DEFAULT,
+        verbose_name=_("Notification mode"),
     )
 
-    @property
-    def rt_token(self):
-        if self._rt_token is None or self._rt_token == "" or self._rt_token.strip() == "":
-            return ""
-        try:
-            cipher_suite = Fernet(RT_SECRET_KEY)
-            val = cipher_suite.decrypt(str.encode(self._rt_token))
-            return val.decode()
-        except InvalidToken, ValueError, TypeError:
-            # A rotated or malformed RT_SECRET_KEY makes every stored token unreadable.
-            # Degrade to "no token" so the admin still renders, but say so in the logs.
-            logger.exception("Unable to decrypt the RT token of observer %s", self.pk)
-            return ""
-
-    @rt_token.setter
-    def rt_token(self, val):
-        if not val:
-            self._rt_token = None
-            return
-
-        cipher_suite = Fernet(RT_SECRET_KEY)
-
-        enc_val = cipher_suite.encrypt(str.encode(val))
-        self._rt_token = enc_val.decode()
-
-    rt_queue = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Queue"))
+    def deactivate_disallowed_connectors(self):
+        # connectors whose type is no longer in the allow-list are switched off
+        self.connectors.exclude(connector_type__in=self.allowed_connector_types or []).update(is_active=False)
 
     def __str__(self):
         name_translation = self.safe_translation_getter("name", any_language=True)
@@ -314,6 +310,79 @@ class Observer(TranslatableModel):
     class Meta:
         verbose_name = _("Observer")
         verbose_name_plural = _("Observers")
+
+
+class ObserverConnector(models.Model):
+    observer = models.ForeignKey(
+        Observer,
+        on_delete=models.CASCADE,
+        related_name="connectors",
+        verbose_name=_("Observer"),
+    )
+    connector_type = models.CharField(max_length=32, choices=connector_type_choices, verbose_name=_("Type"))
+    name = models.CharField(max_length=100, verbose_name=_("Name"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+    config = models.JSONField(default=dict, blank=True, verbose_name=_("Configuration"))
+    _secret = models.CharField(
+        db_column="secret",
+        max_length=512,
+        blank=True,
+        null=True,
+        verbose_name=_("Secret"),
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def secret(self):
+        if self._secret is None or self._secret.strip() == "":
+            return ""
+        try:
+            cipher_suite = Fernet(CONNECTOR_SECRET_KEY)
+            val = cipher_suite.decrypt(str.encode(self._secret))
+            return val.decode()
+        except InvalidToken, ValueError, TypeError:
+            # A rotated or malformed CONNECTOR_SECRET_KEY makes every stored secret unreadable.
+            # Degrade to "no secret" so the admin still renders, but say so in the logs.
+            logger.exception("Unable to decrypt the secret of connector %s", self.pk)
+            return ""
+
+    @secret.setter
+    def secret(self, val):
+        if not val:
+            self._secret = None
+            return
+
+        cipher_suite = Fernet(CONNECTOR_SECRET_KEY)
+
+        enc_val = cipher_suite.encrypt(str.encode(val))
+        self._secret = enc_val.decode()
+
+    def get_impl(self):
+        from .connectors.registry import get_connector_class
+
+        return get_connector_class(self.connector_type)(self)
+
+    def clean(self):
+        super().clean()
+        try:
+            impl = self.get_impl()
+        except KeyError:
+            raise ValidationError({"connector_type": _("Unknown connector type")})
+        # the admin add view exposes no config fields (two-step flow); the
+        # configuration is validated on the change view once the type is known
+        if self.pk or self.config:
+            self.config = impl.validate_config(self.config or {})
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Observer connector")
+        verbose_name_plural = _("Observer connectors")
+        constraints = [
+            models.UniqueConstraint(fields=["observer", "name"], name="unique_connector_name_per_observer"),
+        ]
 
 
 # define an abstract class which make  the difference between operator and regulator
@@ -424,14 +493,28 @@ class User(AbstractUser, PermissionsMixin):
             sectors = Sector.objects.all()
         return sectors
 
-    def get_module_permissions(self) -> list[str]:
+    def get_module_permissions(self, roles: list[Group] | None = None) -> list[str]:
         """A module needs the user's role enabled on it first; regulators then also need it
-        enabled on their regulator. Operators have no entity switch."""
+        enabled on their regulator. Operators have no entity switch.
+
+        ``roles`` overrides the user's groups, for an API key acting with its company's role."""
         # Listing the groups reuses the prefetch done at authentication instead of a subquery
-        functionalities = Functionality.objects.filter(roles__in=list(self.groups.all()))
+        roles = list(self.groups.all()) if roles is None else roles
+        functionalities = Functionality.objects.filter(roles__in=roles)
         if self.is_regulator():
             functionalities = functionalities.filter(regulator__in=self.regulators.all())
         return list(functionalities.values_list("type", flat=True).distinct())
+
+    def get_api_modules(self, roles: list[Group] | None = None) -> set[str]:
+        """The modules this user may read through the API: granted to their role, and reachable on the web."""
+        roles = list(self.groups.all()) if roles is None else roles
+        if not roles:
+            return set()
+        role_names = {group.name for group in roles}
+        granted = set(APIModuleAccess.objects.filter(roles__in=roles).values_list("module", flat=True))
+        # The API skips RestrictViewsMiddleware, so it re-checks eligibility in case a grant bypassed the admin form.
+        eligible = {module for module in granted if role_names & set(API_ELIGIBLE_ROLES.get(module, []))}
+        return eligible & ({"incidents"} | set(self.get_module_permissions(roles)))
 
     class Meta:
         verbose_name_plural = _("Users")
@@ -472,7 +555,7 @@ class CompanyUser(models.Model):
         verbose_name_plural = _("Company Users")
 
     def __str__(self):
-        return ""
+        return self.user.get_full_name() or self.user.email
 
     def clean(self):
         is_incident_user = self.user.groups.filter(name="IncidentUser").exists()
@@ -514,7 +597,15 @@ class RegulatorUser(models.Model):
         verbose_name_plural = _("Regulator users")
 
     def __str__(self):
-        return ""
+        return self.user.get_full_name() or self.user.email
+
+    def get_inline_summary(self) -> str:
+        """Shown in the title of a collapsed admin card, so the role stays visible closed."""
+        if self.is_regulator_administrator:
+            return gettext("Administrator")
+        # len() of all() rather than count(): the admin prefetches the sectors.
+        count = len(self.sectors.all())
+        return ngettext("%(count)d sector", "%(count)d sectors", count) % {"count": count}
 
 
 # link between the admin observer users and the observer entity.
@@ -540,7 +631,7 @@ class ObserverUser(models.Model):
         verbose_name_plural = _("Observer users")
 
     def __str__(self):
-        return ""
+        return self.user.get_full_name() or self.user.email
 
 
 # Different regulation like NIS etc.
@@ -630,7 +721,23 @@ class ObserverRegulation(models.Model):
         verbose_name_plural = _("Observer regulations")
 
     def __str__(self):
-        return ""
+        return str(self.regulation)
+
+    def get_inline_summary(self) -> str:
+        """Shown in the title of a collapsed admin card: what the observer receives, as
+        incidents.access_control.get_observer_incidents reads it."""
+        # len() of all() rather than count(): the admin prefetches the sectors.
+        sector_count = len(self.sectors.all())
+        rule_count = len((self.incident_rule or {}).get("conditions", []))
+        sectors = (
+            ngettext("%(count)d sector", "%(count)d sectors", sector_count) % {"count": sector_count}
+            if sector_count
+            else gettext("All sectors")
+        )
+        rules = (
+            ngettext("%(count)d rule", "%(count)d rules", rule_count) % {"count": rule_count} if rule_count else gettext("All incidents")
+        )
+        return f"{sectors} · {rules}"
 
 
 # class to record the script logs
@@ -670,3 +777,71 @@ class UserSession(AbstractBaseSession):
     class Meta:
         verbose_name = _("User session")
         verbose_name_plural = _("User sessions")
+
+
+class APIKey(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="api_keys")
+    name = models.CharField(max_length=100)
+    prefix = models.CharField(max_length=14, editable=False)
+    digest = models.CharField(max_length=64, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    # An operator key reads only this company's records, like the web shows only the company in use.
+    company = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, related_name="api_keys")
+
+    @classmethod
+    @sensitive_variables("token")
+    def issue(cls, *, user: User, name: str, expires_at: datetime, company: Company | None = None) -> tuple[APIKey, str]:
+        if expires_at <= timezone.now():
+            raise ValidationError(_("The expiry must be in the future."))
+        # 256 random bits make a fast, unsalted digest safe; no recoverable key is stored.
+        token = "serima_" + secrets.token_urlsafe(32)
+        key = cls.objects.create(
+            user=user,
+            name=name,
+            prefix=token[:14],
+            digest=hashlib.sha256(token.encode()).hexdigest(),
+            expires_at=expires_at,
+            company=company,
+        )
+        return key, token
+
+    @cached_property
+    def roles(self) -> list[Group]:
+        """The roles the key acts with. An operator key takes the user's role in its company, not the group
+        left by the company last selected on the web; it has none once that membership is no longer approved."""
+        if self.company_id is None:
+            return [] if self.user.is_operator() else list(self.user.groups.all())
+        membership = self.user.companyuser_set.filter(company_id=self.company_id, approved=True).first()
+        if membership is None:
+            return []
+        return list(Group.objects.filter(name="OperatorAdmin" if membership.is_company_administrator else "OperatorUser"))
+
+    @property
+    def is_active(self) -> bool:
+        return self.revoked_at is None and self.expires_at > timezone.now()
+
+
+class UserPreference(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="preferences",
+    )
+    # "<page>.<aspect>", one row per aspect so the list view (filters, sort) and the
+    # preferences endpoint (columns, legend) never overwrite each other's values.
+    key = models.CharField(max_length=64)
+    value = models.JSONField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("User preference")
+        verbose_name_plural = _("User preferences")
+        constraints = [
+            models.UniqueConstraint(fields=["user", "key"], name="unique_user_preference_key"),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.key}"

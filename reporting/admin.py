@@ -5,6 +5,8 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 from import_export import fields, resources
 from import_export.admin import ImportExportModelAdmin
+from unfold.admin import ModelAdmin, TabularInline
+from unfold.contrib.import_export.forms import ImportForm, SelectableFieldsExportForm
 
 from governanceplatform.admin import CustomTranslatableAdmin, admin_site
 from governanceplatform.mixins import FunctionalityMixin, TranslationUpdateMixin
@@ -48,6 +50,8 @@ class ObservationRecommendationResource(TranslationUpdateMixin, resources.ModelR
 
 @admin.register(ObservationRecommendation, site=admin_site)
 class ObservationRecommendationAdmin(FunctionalityMixin, CustomTranslatableAdmin, ImportExportModelAdmin):
+    import_form_class = ImportForm
+    export_form_class = SelectableFieldsExportForm
     resource_class = ObservationRecommendationResource
     list_display = ["code", "description", "get_sector_name"]
     search_fields = ["code", "description"]
@@ -74,16 +78,20 @@ class ObservationRecommendationAdmin(FunctionalityMixin, CustomTranslatableAdmin
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class ColorInline(admin.TabularInline):
+class ColorInline(TabularInline):
     model = Color
     extra = 0
+    # Unfold titles each row with the object's text, which only repeats the colour of the row.
+    show_title = False
     fields = ("position", "color")
 
 
-class TemplateInline(admin.TabularInline):
+class TemplateInline(TabularInline):
     model = Template
     form = TemplateAdminForm
     extra = 0
+    # Unfold titles each row with the object's text, which only repeats its Language.
+    show_title = False
     fields = ("language", "template_file", "download_link")
     readonly_fields = ("download_link",)
 
@@ -92,7 +100,7 @@ class TemplateInline(admin.TabularInline):
         if obj.pk and obj.template_file:
             url = reverse("reporting_template_download", args=[obj.pk])
             return format_html(
-                '<a class="viewlink" href="{}" download>{}</a>',
+                '<a class="font-medium text-primary-600" href="{}" download>{}</a>',
                 url,
                 _("Download"),
             )
@@ -100,7 +108,7 @@ class TemplateInline(admin.TabularInline):
 
 
 @admin.register(Configuration, site=admin_site)
-class ConfigurationAdmin(FunctionalityMixin, admin.ModelAdmin):
+class ConfigurationAdmin(FunctionalityMixin, ModelAdmin):
     inlines = [TemplateInline, ColorInline]
     list_display = ("display_regulation", "standard", "regulator")
     fields = ["standard"]

@@ -16,8 +16,8 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
-from markdown import markdown
 from parler.models import TranslatableModel
+from unfold.admin import ModelAdmin, TabularInline
 
 from governanceplatform.admin import (
     CustomTranslatableAdmin,
@@ -123,7 +123,7 @@ class ActionFlagFilter(SimpleListFilter):
 
 # add a view to see the logs
 @admin.register(LogEntry, site=admin_site)
-class LogEntryAdmin(admin.ModelAdmin):
+class LogEntryAdmin(ModelAdmin):
     # to have a date-based drilldown navigation in the admin page
     date_hierarchy = "action_time"
 
@@ -221,7 +221,7 @@ class QuestionCategoryAdmin(PermissionMixin, CustomTranslatableAdmin):
         return False
 
 
-class QuestionOptionsInline(PermissionMixin, admin.TabularInline):
+class QuestionOptionsInline(PermissionMixin, TabularInline):
     model = QuestionOptions
     form = QuestionOptionsInlineForm
     verbose_name = _("Question")
@@ -425,7 +425,7 @@ for name, method in generate_display_methods(
 
 
 @admin.register(QuestionOptions, site=admin_site)
-class QuestionOptionsAdmin(admin.ModelAdmin):
+class QuestionOptionsAdmin(ModelAdmin):
     list_display = ["position", "question", "is_mandatory", "is_conditional", "category_option"]
     list_display_links = ["position", "question"]
     ordering = ["position"]
@@ -442,9 +442,10 @@ class QuestionOptionsAdmin(admin.ModelAdmin):
 
 
 @admin.register(ConditionalQuestionOption, site=admin_site)
-class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
+class ConditionalQuestionOptionAdmin(PermissionMixin, ModelAdmin):
     form = ConditionalQuestionOptionForm
     list_display = ["get_workflow", "question_options", "predefined_answer", "next_question_options", "creator"]
+    list_display_links = ["question_options"]
     list_filter = ["question_options__report", "question_options__category_option__question_category"]
     search_fields = [
         "question_options__question__translations__label",
@@ -582,7 +583,7 @@ class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
 
 
 @admin.register(QuestionCategoryOptions, site=admin_site)
-class QuestionCategoryOptionsAdmin(PermissionMixin, admin.ModelAdmin):
+class QuestionCategoryOptionsAdmin(PermissionMixin, ModelAdmin):
     list_display = ["question_category", "position"]
     list_display_links = ["position", "question_category"]
     fields = ["question_category", "position"]
@@ -634,6 +635,7 @@ class ImpactAdmin(PermissionMixin, CustomTranslatableAdmin):
         "get_subsector_name",
         "headline_display",
     ]
+    list_display_links = ["headline_display"]
     translated_fields = ["headline"]
     search_fields = [
         "translations__label",
@@ -815,12 +817,7 @@ class EmailAdmin(EmailPlaceholdersMixin, CustomTranslatableAdmin):
     def html_preview(self, obj):
         if not obj or not obj.content:
             return _("No preview yet")
-        html_content = markdown(
-            text=obj.content,
-            extensions=["extra", "sane_lists", "legacy_attrs", "nl2br"],
-            output_format="html",
-        )
-        html_content = sanitize_html(html_content)
+        html_content = sanitize_html(obj.content)
         return mark_safe(
             f"""
             <div class="markdown-html-preview">
@@ -933,7 +930,7 @@ for name, method in generate_display_methods(["label", "description"]).items():
     setattr(WorkflowAdmin, name, method)
 
 
-class SectorRegulationInline(admin.TabularInline):
+class SectorRegulationInline(TabularInline):
     model = SectorRegulation.workflows.through
     verbose_name = _("Incident report")
     verbose_name_plural = _("Incident reports")
@@ -1134,6 +1131,7 @@ class SectorRegulationWorkflowEmailAdmin(CustomTranslatableAdmin):
         "trigger_event",
         "delay_in_hours",
     ]
+    list_display_links = ["headline_display"]
     translated_fields = ["headline"]
     search_fields = [
         "sector_regulation_workflow__sector_regulation__regulation__translations__label",

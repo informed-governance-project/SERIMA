@@ -56,7 +56,7 @@ Create an account
 
 1. Click **Add User**.
 2. Enter the **First name**, **Last name**, **Email address** and **Phone number** of the account.
-3. Tick **Create this user as an administrator** to make it an operator administrator; leave it unticked for an operator user.
+3. Turn on **Create this user as an administrator** to make it an operator administrator; leave it off for an operator user.
 4. Click **Save**.
 
 .. figure:: /_static/images/administration/operator-admin/governance-04.png
@@ -90,7 +90,7 @@ and work as in the list:
   The account is logged out either way. You cannot change your own role.
 - **Reset 2FA token** removes the authentication app of the account, when its owner has lost access to it.
   At the next login, they set up two-factor authentication again (see :doc:`/getting-started/enable-2fa`).
-  To reset your own, use **Account security** at the top of the console.
+  To reset your own, use **Account security** in the menu under your name, at the top right of the console.
 
 .. _operator-admin-approve:
 
@@ -103,7 +103,7 @@ suggested: it joins your operator once you approve it. Unless the account alread
 the email address of your operator and its administrators receive an email about the suggestion.
 
 The **Users** list then shows **There is a suggestion to link a User Account to your company. Please Approve or Reject
-the suggestion.** The row of the suggested account has **Approved** unticked, and **Approve** and **Reject**
+the suggestion.** The row of the suggested account shows a red cross under **Approved**, and **Approve** and **Reject**
 in **Account actions**.
 
 .. figure:: /_static/images/administration/operator-admin/governance-06.png

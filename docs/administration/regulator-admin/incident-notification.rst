@@ -47,7 +47,7 @@ Emails
 ~~~~~~
 
 The **Emails** list holds the email templates of the module, with their **Name**, **Subject** and **Content**.
-Use the **By Email type** filter to see which templates are used as opening, closing, status update or reminder emails.
+Use the **By Email type** filter, under **Filters**, to see which templates are used as opening, closing, status update or reminder emails.
 
 .. figure:: /_static/images/incident-notification/configuration-01.png
    :alt: Emails list with the Emails entry of the sidebar and the column headers outlined
@@ -56,8 +56,9 @@ Use the **By Email type** filter to see which templates are used as opening, clo
 An email template has:
 
 - a **Name**, which identifies it in the drop-downs of the reports and workflows. Operators never see it.
-- a **Subject** and a **Content**, which can be translated. The content is written in Markdown:
-  the **HTML preview** below it shows how it is formatted, once saved.
+- a **Subject** and a **Content**, which can be translated. The content is formatted in the editor itself,
+  with its toolbar: bold, italic, headings, lists, quotes and links. The **HTML preview** below it shows,
+  once saved, the content as the email sends it.
 
 .. figure:: /_static/images/incident-notification/configuration-02.png
    :alt: Change Email form with the language tabs, the Name, Subject and Content fields and the Available placeholders button outlined
@@ -177,7 +178,7 @@ Incident reports
 ~~~~~~~~~~~~~~~~
 
 The **Incident reports** list shows the **Name**, **Label** and **Description** of each report,
-whether **Impacts disclosure required** is ticked, and its **Submission email**.
+whether **Impacts disclosure required** is on, and its **Submission email**.
 
 .. figure:: /_static/images/incident-notification/configuration-06.png
    :alt: Incident reports list with the Incident reports entry of the sidebar and the column headers outlined
@@ -216,15 +217,16 @@ Click **Add another Question** for each question of the report, and fill in its 
   (see `Conditional questions`_).
 - **Position**: the order of the question within its category.
 - **Category option**: the category of the question. Each category is a form of the report, under the title of the category.
-  The drop-down lists the categories already used in this report. To add one, click the plus icon beside it:
-  in the pop-up, select the **Question category**, or create it with the plus icon, and give its **Position**,
+  The drop-down lists the categories already used in this report. To add one, click **Add another** in the menu (⋮) beside it:
+  in the pop-up, select the **Question category**, or create it the same way, and give its **Position**,
   the order of this form in the report.
 
 .. figure:: /_static/images/incident-notification/configuration-08.png
    :alt: Questionnaire section of a report with its column headers outlined
    :target: ../../_static/images/incident-notification/configuration-08.png
 
-To remove a question from the report, tick **Delete?** on its row and click **Save**.
+To remove a question from the report, click the bin icon at the right of its row: the row is covered with
+**This item will be deleted.**, and **Click to cancel** keeps it. Then click **Save**.
 
 .. important::
 
@@ -254,7 +256,7 @@ The list shows the **Workflow** (the report), **Question**, **Selected answer** 
 
 To create a rule:
 
-1. In the questionnaire of the report, tick **Conditional display** on the question to display, and save the report.
+1. In the questionnaire of the report, turn on **Conditional display** on the question to display, and save the report.
 2. Click **Add conditional question** and select the **Report**. Only the reports with a question marked
    **Conditional display** are listed.
 3. Select the **Question** that triggers the display, the **Selected answer** that triggers it,
@@ -280,11 +282,11 @@ Impacts
 ~~~~~~~
 
 Impacts describe the consequences an incident can have, such as an outage of a given duration.
-When a report has **Impacts disclosure required** ticked, its last form lists the impacts of the regulation and
+When a report has **Impacts disclosure required** turned on, its last form lists the impacts of the regulation and
 sectors of the incident, grouped by sector, and the operator selects those that apply.
 
 The **Impact** list shows the **Regulations**, **Sector**, **Sub-sector** and **Headline** of each impact.
-Use the **By Sectors** and **By Legal basis** filters, or the search box, to find one.
+Use the **By Sectors** and **By Legal basis** filters, under **Filters**, or the search box, to find one.
 
 .. figure:: /_static/images/incident-notification/configuration-11.png
    :alt: Impact list with the Impact entry of the sidebar and the column headers outlined
@@ -307,7 +309,7 @@ Incident notification workflows
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The **Incident notification workflows** list shows whether each workflow is **Active**, its **Name**,
-**Legal basis** and **Regulator**, and whether the **Incident detection date required** is ticked.
+**Legal basis** and **Regulator**, and whether **Incident detection date required** is on.
 It also lists the workflows of the other regulators, which you can open read-only.
 The user pages call a workflow a notification procedure.
 
@@ -323,7 +325,7 @@ Create a workflow
    - **Active**: only the active workflows create incidents.
    - **Name**: the name of the workflow.
    - **Incident detection date required**: the operator must give the date the incident was detected when
-     notifying it (see :doc:`/incident-notification/report-an-incident`). Tick it when a report deadline is counted
+     notifying it (see :doc:`/incident-notification/report-an-incident`). Turn it on when a report deadline is counted
      from the detection date.
 
 2. In **Supervision**, select the **Legal basis** and the **Regulator**. Only the regulations of your regulator

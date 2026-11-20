@@ -4,7 +4,7 @@ import re
 import kaleido
 import plotly.io as pio
 import psutil
-from celery.signals import worker_process_init, worker_process_shutdown
+from celery.signals import celeryd_after_setup, worker_process_init, worker_process_shutdown
 from celery.utils.log import get_task_logger
 from choreographer.browsers.chromium import Chromium
 from django.apps import apps
@@ -193,8 +193,22 @@ def cleanup_orphaned_soffice(**kwargs):
             continue
 
 
+# Filled in the worker's main process before it forks its pool, so every pool process
+# inherits it.
+worker_queues: set[str] = set()
+
+
+@celeryd_after_setup.connect
+def record_worker_queues(sender, instance, **kwargs):
+    worker_queues.update(instance.app.amqp.queues.consume_from)
+
+
 @worker_process_init.connect
 def init_kaleido(**kwargs):
+    # Chrome only renders report charts, and costs memory in every process that starts it.
+    if settings.REPORTS_QUEUE not in worker_queues:
+        return
+
     original_get_cli = Chromium.get_cli
 
     def patched_get_cli(self):
@@ -228,4 +242,5 @@ def init_kaleido(**kwargs):
 
 @worker_process_shutdown.connect
 def shutdown_kaleido(**kwargs):
-    kaleido.stop_sync_server()
+    if settings.REPORTS_QUEUE in worker_queues:
+        kaleido.stop_sync_server()

@@ -1,5 +1,7 @@
 import django_filters
+from django import forms
 from django.db.models import Q
+from django.db.models.fields import BLANK_CHOICE_DASH
 from django.utils.translation import gettext_lazy as _
 
 from governanceplatform.helpers import get_sectors_grouped, normalize_reference
@@ -29,6 +31,12 @@ def reference_matches(value: str) -> Q:
 class IncidentFilter(django_filters.FilterSet):
     incident_id = django_filters.CharFilter(method="filter_reference")
     affected_sectors = django_filters.MultipleChoiceFilter(widget=DropdownCheckboxSelectMultiple(), label=_("Sectors"))
+    # Declared rather than generated from Meta.fields: the generated one offers "Unknown" for no filter,
+    # where the other fields of the pop-up offer the usual blank choice.
+    is_significative_impact = django_filters.BooleanFilter(
+        widget=forms.Select(choices=[*BLANK_CHOICE_DASH, ("true", _("Yes")), ("false", _("No"))]),
+        label=_("Significant impact"),
+    )
     sector_regulation = django_filters.ModelChoiceFilter(queryset=sector_regulation)
 
     search = django_filters.CharFilter(method="filter_search", label=_("Search"))

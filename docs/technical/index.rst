@@ -26,4 +26,5 @@ and the theme, which lives in its own Git repository.
    architecture
    modules
    security
+   api
    development

@@ -1629,6 +1629,25 @@ webauthn = ["webauthn (>=2.0,<2.99)"]
 yubikey = ["django-otp-yubikey"]
 
 [[package]]
+name = "django-unfold"
+version = "0.110.1"
+description = "Modern Django Admin"
+optional = false
+python-versions = "<4.0,>=3.12"
+groups = ["main"]
+files = [
+    {file = "django_unfold-0.110.1-py3-none-any.whl", hash = "sha256:92b1bb09e56fcbc8535cef53d19579bd417483fdb8981ceac00de409e8cc5a98"},
+    {file = "django_unfold-0.110.1.tar.gz", hash = "sha256:8274da7e3c92583c7f875b3ac3ceef0ed75346a1a28b03bede667aba3205e286"},
+]
+
+[package.dependencies]
+django = ">=5.2"
+
+[package.extras]
+jsonschema = ["jsonschema"]
+pygments = ["pygments"]
+
+[[package]]
 name = "djangorestframework"
 version = "3.18.3"
 description = "Web APIs for Django, made easy."
@@ -3763,6 +3782,18 @@ lxml = ">=3.1.0"
 typing_extensions = ">=4.9.0"
 
 [[package]]
+name = "python-gnupg"
+version = "0.5.7"
+description = "A wrapper for the Gnu Privacy Guard (GPG or GnuPG)"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "python_gnupg-0.5.7-py2.py3-none-any.whl", hash = "sha256:dc7afba57a9bc50163c27c726c66cb2fc9692248597f5201f4f7d9eb6097dd1d"},
+    {file = "python_gnupg-0.5.7.tar.gz", hash = "sha256:73ea46219f992b361eb1ce54cb0968101670654454916a3ee5df8bb9bf0cc8cc"},
+]
+
+[[package]]
 name = "pytz"
 version = "2026.6"
 description = "World timezone definitions, modern and historical"
@@ -3934,6 +3965,26 @@ urllib3 = ">=1.26,<3"
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
 use-chardet-on-py3 = ["chardet (>=3.0.2,<8)"]
+
+[[package]]
+name = "responses"
+version = "0.26.3"
+description = "A utility library for mocking out the `requests` Python library."
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "responses-0.26.3-py3-none-any.whl", hash = "sha256:74474f799334ac4f37d93b6437ecc3bb1bb5c77a8d31780a338643be2dce0af8"},
+    {file = "responses-0.26.3.tar.gz", hash = "sha256:b0c11ca8131b8b227b8d5108e6ed39772222bd5aab030ed430e8f99057c4c409"},
+]
+
+[package.dependencies]
+pyyaml = "*"
+requests = ">=2.30.0,<3.0"
+urllib3 = ">=1.25.10,<3.0"
+
+[package.extras]
+tests = ["coverage (>=6.0.0)", "flake8", "mypy", "pytest (>=7.0.0)", "pytest-asyncio", "pytest-cov", "pytest-httpserver", "tomli ; python_version < \"3.11\"", "tomli-w", "types-PyYAML", "types-requests"]
 
 [[package]]
 name = "rich"
@@ -4984,4 +5035,4 @@ test = ["pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.14,<4"
-content-hash = "dbc0e56f5a6b6a7def009f3c2d1864cd981e313c7505b31a091543b471977029"
+content-hash = "f61409a92b4db3a46a67723d629dca4af129e49deae9f91f7e0560e082a28ad2"

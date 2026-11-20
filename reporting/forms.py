@@ -4,6 +4,7 @@ from django.forms import modelformset_factory
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from parler.forms import TranslatableModelForm
+from unfold.widgets import UnfoldAdminFileFieldWidget, UnfoldAdminSelectWidget
 
 from governanceplatform.helpers import get_sectors_grouped
 from governanceplatform.models import Regulation, Sector
@@ -99,9 +100,10 @@ class ObservationRecommendationOrderForm(forms.ModelForm):
 
 
 class TemplateAdminForm(forms.ModelForm):
+    # Declared on the form, these fields miss the widgets Unfold gives model fields.
     template_file = forms.FileField(
         required=True,
-        widget=forms.FileInput(attrs={"accept": ".docx"}),
+        widget=UnfoldAdminFileFieldWidget(attrs={"accept": ".docx"}),
     )
 
     class Meta:
@@ -113,7 +115,7 @@ class TemplateAdminForm(forms.ModelForm):
 
         languages_choices = [(code, _(name)) for code, name in settings.LANGUAGES]
 
-        self.fields["language"] = forms.ChoiceField(choices=languages_choices)
+        self.fields["language"] = forms.ChoiceField(choices=languages_choices, widget=UnfoldAdminSelectWidget)
 
     def clean_template_file(self):
         file = self.cleaned_data.get("template_file")

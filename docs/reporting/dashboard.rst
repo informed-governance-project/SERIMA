@@ -36,6 +36,12 @@ Due to the complexity of the screen, its different parts will be presented one b
    :alt: Filter
    :target: ../_static/images/reporting/dashboard-05.png
 
+.. note::
+
+   The filter, the sort order and the number of entries per page are saved in your account:
+   they still apply after you log out and back in, on any computer or browser.
+   The search is kept only until you log out.
+
 7.	**Icon guide**: The **Icon Guide** is represented by a book-shaped icon labeled **AZ**. Clicking this icon displays the legend above the report list.
 
 8.	**Dashboard table column headings**: The header displays key information about the report, including when it was created (Created) and last modified (Modified), the report author (Author), the project name (Name), the applicable regulation (Regulation), the selected standard (Standard), the reference year used for reporting (Base Year), and the selected sectors.
@@ -51,6 +57,7 @@ Clicking the icon opens the **Choice of columns** pop-up, showing all available 
    :target: ../_static/images/reporting/dashboard-06.png
 
 For example, if most of your reports are related to the same sector and the same base year, displaying these columns may not be necessary. Hiding them can make the report list on the dashboard cleaner and easier to understand. Once you uncheck a checkbox, the relevant column immediately disappears from the dashboard.
+Your choice of columns is saved in your account, so the dashboard shows the same columns after you log in again, on any computer or browser.
 
 In the example below, the **Regulation** and the **Standard** columns were hidden (since the values were always NIS as the regulation, and NIS ENISA SO as the standard). As a result, only the columns with varying values remain visible:
 

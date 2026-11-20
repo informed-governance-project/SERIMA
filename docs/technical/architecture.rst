@@ -20,7 +20,7 @@ A SERIMA instance is made of the following components:
 - **Celery worker**: runs the slow tasks outside the web requests — report generation (DOCX, PDF and the charts
   rendered with Kaleido), security objectives exports and imports.
 - **Celery beat**: triggers the scheduled tasks, such as reminders and data retention (see :doc:`installation`).
-- **File storage**: generated reports and import/export files, written to ``PATH_FOR_REPORTING_PDF``.
+- **File storage**: generated reports and import/export files, written to ``PRIVATE_FILES_ROOT``.
 - **Email server**: notifications, reminders and password resets.
 
 

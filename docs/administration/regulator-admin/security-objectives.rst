@@ -25,13 +25,13 @@ How the pieces fit together
 Since each item refers to the previous ones, set them up in this order:
 
 1. `Email templates`_
-2. `Standards`_, with **Active** unticked
+2. `Standards`_, with **Active** turned off
 3. `Maturity levels`_
 4. `Domains`_
 5. :ref:`Security objectives <regadmin-security-objectives>`
 6. The objectives of the standard (see `Objectives of the standard`_)
 7. `Security measures`_
-8. Tick **Active** on the standard, so that operators can declare against it.
+8. Turn on **Active** on the standard, so that operators can declare against it.
 
 Alternatively, create the standard and import the rest from a file (see `Import and export a framework`_).
 
@@ -52,8 +52,9 @@ The **Email templates** list shows the **Name**, **Subject** and **Content** of 
 A template has:
 
 - a **Name**, which identifies it in the drop-downs of the standards. Operators never see it.
-- a **Subject** and a **Content**, which can be translated. The content is written in Markdown:
-  the **HTML preview** below it shows how it is formatted, once saved.
+- a **Subject** and a **Content**, which can be translated. The content is formatted in the editor itself,
+  with its toolbar: bold, italic, headings, lists, quotes and links. The **HTML preview** below it shows,
+  once saved, the content as the email sends it.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-01.png
    :alt: Change Email template form with its name, subject, content, the Available placeholders button and HTML preview
@@ -89,7 +90,7 @@ Standards
 ~~~~~~~~~
 
 The **Standards** list shows whether each standard is **Active**, its **Label**, **Description** and **Regulator**.
-The **Import** and **Export** buttons at the top right are described in `Import and export a framework`_.
+The **Import** and **Export** buttons next to **Filters**, above the list, are described in `Import and export a framework`_.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-02.png
    :alt: Standards list with the Standards entry of the sidebar, the Import and Export buttons and the column headers outlined
@@ -101,7 +102,7 @@ Create a standard
 1. Click **Add standard** and fill in the **General** section:
 
    - **Active**: operators can create a declaration, with **New assessment** on the :doc:`/security-objectives/dashboard`,
-     only on an active standard that contains objectives, and duplicate one only if its standard is active. Untick it until the framework is complete.
+     only on an active standard that contains objectives, and duplicate one only if its standard is active. Keep it off until the framework is complete.
    - **Regulation**: the regulation the framework belongs to. Only the regulations of your regulator are listed
      (see :ref:`platform-regulations`).
    - **Label** and **Description**: the name of the framework, shown to operators as the **Evaluation Framework**.
@@ -171,7 +172,7 @@ the **Justification** and **Planned Measures** settings and the list of security
 .. warning::
 
    Deleting a standard also deletes its security objectives, domains, maturity levels and security measures.
-   A standard in use cannot be deleted: untick **Active** instead to stop new declarations.
+   A standard in use cannot be deleted: turn off **Active** instead to stop new declarations.
 
 Maturity levels
 ~~~~~~~~~~~~~~~
@@ -219,7 +220,7 @@ Security objectives
 ~~~~~~~~~~~~~~~~~~~
 
 The **Security Objectives** list shows the **Standard**, **Unique code**, **Objective**, **Description** and **Domain**
-of each objective. Use the filters on the right, for instance **By Standard**, to find one.
+of each objective. Click **Filters** above the list and use, for instance, **By Standard** to find one.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-08.png
    :alt: Security Objectives list with the Security Objectives entry of the sidebar and the column headers outlined
@@ -242,7 +243,7 @@ Security measures
 ~~~~~~~~~~~~~~~~~
 
 The **Security Measures** list shows the **Standard**, **Security Objective**, **Level**, **Position** and **Description**
-of each measure. Use the **By standard** and **By Security Objective** filters to find one.
+of each measure. Use the **By standard** and **By Security Objective** filters, under **Filters**, to find one.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-10.png
    :alt: Security Measures list, sidebar collapsed, with the column headers outlined
@@ -274,7 +275,12 @@ Export
 """"""
 
 Click **Export**, tick the columns to export, choose the **Format** (for instance csv or xlsx) and click **Submit**.
-The file is prepared in the background; click **Download export data** when it is ready.
+The file is prepared in the background; click **Download export data** when it is ready. The file can be downloaded
+once: it is deleted from the platform as soon as it is sent.
+
+**Export** takes the standards the list shows: search or filter the list first to export only some of them.
+To pick them one by one, tick them in the list, choose **Export selected standards** in the **Action** drop-down
+and click **Run**; the export page then says how many standards are selected.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-12.png
    :alt: Export page with the list of columns to export and the format drop-down

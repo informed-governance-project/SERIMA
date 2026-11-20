@@ -459,6 +459,7 @@ class Template(models.Model):
 
 
 class Project(models.Model):
+    api_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     task_id = models.UUIDField(blank=True, null=True)
     task_status = models.CharField(
         max_length=10,
@@ -590,4 +591,4 @@ class GeneratedReport(models.Model):
         return f"{self.filename} ({self.user.email})"
 
     def get_file_path(self):
-        return os.path.join(settings.PATH_FOR_REPORTING_PDF, str(self.project.id), str(self.file_uuid))
+        return os.path.join(settings.PRIVATE_FILES_ROOT, str(self.project.id), str(self.file_uuid))

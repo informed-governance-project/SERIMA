@@ -221,10 +221,16 @@ def test_the_migration_frees_the_duplicates_already_in_the_database():
     kept = historical_incident.objects.create(incident_id="FOO_ENE_ELE_0003_2026")
     renumbered = historical_incident.objects.create(incident_id="FOO_ENE_ELE_0003_2026")
 
-    MigrationExecutor(connection).migrate([after])
+    try:
+        MigrationExecutor(connection).migrate([after])
 
-    assert historical_incident.objects.get(pk=kept.pk).incident_id == "FOO_ENE_ELE_0003_2026"
-    assert historical_incident.objects.get(pk=renumbered.pk).incident_id == "FOO_ENE_ELE_0004_2026"
+        assert historical_incident.objects.get(pk=kept.pk).incident_id == "FOO_ENE_ELE_0003_2026"
+        assert historical_incident.objects.get(pk=renumbered.pk).incident_id == "FOO_ENE_ELE_0004_2026"
+    finally:
+        # Going back to `before` also unapplied every later migration; the teardown flush
+        # needs the schema the current models describe.
+        executor = MigrationExecutor(connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())
 
 
 @pytest.mark.django_db

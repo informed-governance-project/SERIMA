@@ -1,8 +1,9 @@
 import copy
 import json
 import logging
-import os
 from collections import defaultdict
+from functools import partial
+from typing import TYPE_CHECKING
 
 import openpyxl
 from celery.exceptions import CeleryError
@@ -26,9 +27,8 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django.forms.models import model_to_dict
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import FileResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.text import format_lazy
@@ -37,18 +37,22 @@ from django.utils.translation import override
 from django.views.decorators.http import require_http_methods
 from django_otp.decorators import otp_required
 from kombu.exceptions import OperationalError
-from weasyprint import CSS, HTML
-from weasyprint.text.fonts import FontConfiguration
 
+from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
+from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
+    bind_applicable_filters,
     celery_health_check,
+    default_sort_key,
     get_active_company_from_session,
+    get_preferences,
     get_sectors_grouped,
     is_user_operator,
     is_user_regulator,
     render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
+    update_list_params,
     user_in_group,
 )
 from governanceplatform.models import Company, Regulation, Sector, User
@@ -74,7 +78,6 @@ from .helpers import (
     get_exportable_standard_answers,
     get_scoped_standard_answers,
     get_standard_answers_with_progress,
-    group_objectives_by_domain,
     objectives_in_domain_order,
     security_objective_exists,
     set_declaration_column_widths,
@@ -91,12 +94,12 @@ from .models import (
     StandardAnswer,
     StandardAnswerGroup,
 )
-from .tasks import generate_so_export_task
+from .tasks import generate_declaration_pdf_task, generate_so_export_task
 
-# Increasing weasyprint log level
-for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.ERROR)
+if TYPE_CHECKING:
+    from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -105,33 +108,11 @@ def get_security_objectives(request):
     user = request.user
     standard_answer_queryset = StandardAnswer.objects.none()
     template = "operator/so_dashboard.html"
-    search_value = request.GET.get("search", None)
-
-    if "reset_sort" in request.GET:
-        request.session.pop("so_sort_params", None)
-        return redirect("securityobjectives")
-
-    if "reset" in request.GET or search_value == "":
-        request.session.pop("so_filter_params", None)
-        return redirect("securityobjectives")
-
-    # Save filter params in user's session
-    current_filter_params = request.session.get("so_filter_params", {}).copy()
-    current_sort_params = request.session.get("so_sort_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        if key in ["sort_field", "sort_direction"]:
-            continue
-        current_filter_params[key] = values if key == "sectors" else values[0]
-
-    for key, value in request.GET.items():
-        if key in ("sort_field", "sort_direction"):
-            current_sort_params[key] = value
-
-    so_filter_params = current_filter_params
-    so_sort_params = current_sort_params
-    request.session["so_filter_params"] = so_filter_params
-    request.session["so_sort_params"] = so_sort_params
+    list_preferences = update_list_params(request, "securityobjectives", StandardAnswerFilter, ALLOWED_SORT_FIELDS)
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    so_filter_params = list_preferences.filters
+    so_sort_params = list_preferences.sort
 
     if is_user_regulator(user):
         regulator = user.regulators.first()
@@ -157,23 +138,23 @@ def get_security_objectives(request):
     standard_answer_queryset = get_standard_answers_with_progress(standard_answer_queryset)
 
     # Apply sorting
-    sort_field = so_sort_params.get("sort_field", "last_update")
-    sort_direction = so_sort_params.get("sort_direction", "desc")
+    sort_field = so_sort_params["sort_field"]
+    sort_direction = so_sort_params["sort_direction"]
     standard_answer_queryset = sort_queryset_by_field(
         standard_answer_queryset,
         sort_field,
         sort_direction,
-        "last_update",
+        default_sort_key("securityobjectives"),
         ALLOWED_SORT_FIELDS,
     )
 
-    security_objective_filter = StandardAnswerFilter(
-        so_filter_params, queryset=standard_answer_queryset, is_regulator=is_user_regulator(user)
+    security_objective_filter, so_filter_params = bind_applicable_filters(
+        partial(StandardAnswerFilter, queryset=standard_answer_queryset, is_regulator=is_user_regulator(user)), so_filter_params
     )
 
     # Filter
     so_answer_list = security_objective_filter.qs
-    per_page = so_filter_params.get("per_page", 10)
+    per_page = list_preferences.per_page
     page_number = so_filter_params.get("page")
     paginator = Paginator(so_answer_list, per_page)
     page_obj = paginator.get_page(page_number)
@@ -185,8 +166,12 @@ def get_security_objectives(request):
         "filter": security_objective_filter,
         "sort_field": sort_field,
         "sort_direction": sort_direction,
+        "default_sort_field": default_sort_key("securityobjectives"),
+        "per_page_choices": PER_PAGE_CHOICES,
         "is_filtered": bool(is_filtered),
         "can_export_security_objectives": can_export_security_objectives(user),
+        "visible_columns": list_preferences.columns,
+        "show_legend": list_preferences.legend,
     }
 
     return render(request, template, context=context)
@@ -552,6 +537,7 @@ def declaration(request):
             else ""
         ),
         "can_export_security_objectives": can_export_security_objectives(user),
+        "show_legend": get_preferences(user, "so_declaration")["legend"],
     }
 
     return render(request, "security_objectives/declaration.html", context=context)
@@ -819,6 +805,8 @@ def access_log(request, standard_answer_id: int):
     log = LogStandardAnswer.objects.filter(standard_answer__group=standard_answer.group).order_by("-timestamp")
     if is_user_operator(user) or user_in_group(user, "IncidentUser"):
         log = log.exclude(user__regulatoruser__isnull=False)
+        # A deleted user leaves user=NULL, so the role recorded at logging time is all that is left to filter on.
+        log = log.exclude(user__isnull=True, role__in=["RegulatorAdmin", "RegulatorUser"])
 
     context = {"log": log}
     return render(request, "modals/so_access_log.html", context=context)
@@ -835,102 +823,52 @@ def get_review_status_label(standard_answer: StandardAnswer, user: User) -> str:
 
 @login_required
 @otp_required
+@require_http_methods(["POST"])
 def download_declaration_pdf(request, standard_answer_id: int):
-    user = request.user
-    standard_answer_queryset = StandardAnswer.objects.filter(pk=standard_answer_id)
-    standard_answer = get_standard_answers_with_progress(standard_answer_queryset)
+    standard_answer = StandardAnswer.objects.filter(pk=standard_answer_id).first()
+    if standard_answer is None:
+        return pdf_error_response(request, _("Declaration not found"), 404)
 
-    if not standard_answer:
+    # has_change_permission adds its own error message.
+    if not has_change_permission(request, standard_answer, "download"):
+        return JsonResponse({"messages": render_error_messages(request)}, status=403)
+
+    return queue_pdf_task(
+        request,
+        "security_objective",
+        generate_declaration_pdf_task,
+        (standard_answer.id, request.user.id, translation.get_language()),
+        {
+            "standard_answer_id": standard_answer.id,
+            "filename": f"Security_objective_declaration_{timezone.now().date()}.pdf",
+        },
+    )
+
+
+@login_required
+@otp_required
+@require_http_methods(["GET"])
+def declaration_pdf_download(request, task_id: UUID):
+    task_key = str(task_id)
+    pending_pdf = get_pdf_task(request, "security_objective", task_key)
+    forget_pdf_task(request, task_key)
+
+    standard_answer = StandardAnswer.objects.filter(pk=pending_pdf["standard_answer_id"]).first()
+    if standard_answer is None:
+        discard_pdf(task_key)
         messages.error(request, _("Declaration not found"))
-        rendered_messages = render_error_messages(request)
-        return JsonResponse({"messages": rendered_messages}, status=400)
-    try:
-        standard_answer = standard_answer.first()
-        if not has_change_permission(request, standard_answer, "download"):
-            return redirect("securityobjectives")
-        standard = standard_answer.standard
-        show_review_comments = can_see_review_comments(user, standard_answer)
-
-        levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
-        security_objectives_queryset = objectives_in_domain_order(standard)
-        security_objectives = defaultdict(lambda: defaultdict(list))
-
-        for so_in_standard in security_objectives_queryset:
-            security_objective = so_in_standard.security_objective
-            security_objective.declaration_status = standard_answer.status
-            security_measures = security_objective.securitymeasure_set.all().order_by("position")
-            try:
-                so_status = SecurityObjectiveStatus.objects.get(
-                    standard_answer=standard_answer,
-                    security_objective=security_objective,
-                )
-                security_objective.status = so_status
-            except SecurityObjectiveStatus.DoesNotExist:
-                security_objective.status = None
-
-            for measure in security_measures:
-                try:
-                    sm_answer = SecurityMeasureAnswer.objects.get(
-                        standard_answer=standard_answer,
-                        security_measure=measure,
-                    )
-                    measure.is_implemented = sm_answer.is_implemented
-                    measure.justification = sm_answer.justification
-                    measure.review_comment = sm_answer.review_comment if show_review_comments else None
-                except SecurityMeasureAnswer.DoesNotExist:
-                    measure.is_implemented = False
-
-                security_objective = measure.security_objective
-                maturity_level = measure.maturity_level
-                security_objectives[security_objective][maturity_level].append(measure)
-
-        security_objectives = {so: dict(levels) for so, levels in security_objectives.items()}
-        domains = group_objectives_by_domain(list(security_objectives))
-        static_theme_dir = settings.STATIC_THEME_DIR
-        font_config = FontConfiguration()
-
-        column_config = standard.get_column_config()
-        column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and show_review_comments
-        set_declaration_column_widths(column_config)
-
-        output_from_parsed_template = render_to_string(
-            "report/security_objectives/template.html",
-            {
-                "last_maturity_level": levels["last_level"],
-                "standard_answer": standard_answer,
-                "review_status": get_review_status_label(standard_answer, user),
-                "show_objective_status": is_user_regulator(user) or standard_answer.is_review_sent,
-                "security_objectives": security_objectives,
-                "is_grouped": len(domains) > 1,
-                "column_config": column_config,
-                "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
-                "score_display": standard.get_score_display_config(),
-                "actions_config": standard.get_actions_config(),
-            },
-            request=request,
-        )
-
-        htmldoc = HTML(string=output_from_parsed_template, base_url=static_theme_dir)
-
-        stylesheets = [
-            CSS(
-                os.path.join(static_theme_dir, "css/custom.css"),
-                font_config=font_config,
-            ),
-            CSS(
-                os.path.join(static_theme_dir, "css/report.css"),
-                font_config=font_config,
-            ),
-        ]
-
-        pdf_report = htmldoc.write_pdf(stylesheets=stylesheets, font_config=font_config)
-        response = HttpResponse(pdf_report, content_type="application/pdf")
-        response["Content-Disposition"] = f"attachment;filename=Security_objective_declaration_{timezone.now().date()}.pdf"
-        create_entry_log(user, standard_answer, "DOWNLOAD", request)
-        return response
-    except Exception:
-        messages.warning(request, _("An error occurred while generating the report."))
         return redirect("securityobjectives")
+
+    # Access can be revoked between the request and the download, so it is checked again
+    # rather than trusted from the moment the file was produced.
+    if not has_change_permission(request, standard_answer, "download"):
+        discard_pdf(task_key)
+        return redirect("securityobjectives")
+
+    response = serve_pdf(task_key, pending_pdf["filename"])
+    create_entry_log(request.user, standard_answer, "DOWNLOAD", request)
+
+    return response
 
 
 @login_required
@@ -1381,7 +1319,7 @@ def security_objectives_export_status(request, export_id: int):
 
     # A queued job whose worker or broker is gone would never change status, leaving the
     # browser polling for it forever.
-    if export.task_status == "RUNNING" and not celery_health_check():
+    if export.task_status == "RUNNING" and not celery_health_check(settings.INTERACTIVE_QUEUE):
         export.task_status = "FAIL"
         export.save()
 
