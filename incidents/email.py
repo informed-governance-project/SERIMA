@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db import transaction
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -190,10 +190,17 @@ def get_recipient_list(incident):
 
 def render_notification(email_template: Email, context: EmailContext) -> tuple[str, str]:
     incident = context.incident
-    subject = replace_email_variables(
-        email_template.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
-        context,
-    )
+    # The subject text is taken in the instance language, so what is substituted into it follows the same
+    # language: left to the ambient one, a translated placeholder would render in the language of whoever
+    # triggered the send and mix two languages inside one subject line.
+    with translation.override(settings.LANGUAGE_CODE):
+        subject = replace_email_variables(
+            email_template.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
+            context,
+        )
+    # A placeholder that renders empty leaves the spacing its template author wrote around it: harmless in a
+    # body, visible in a subject line as a leading or doubled space.
+    subject = " ".join(subject.split())
     html_content = render_to_string_multi_languages(
         "emails/notification.html",
         {

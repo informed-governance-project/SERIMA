@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 
 from governanceplatform.models import User
-from incidents.email import INCIDENT_EMAIL_PLACEHOLDERS, EmailContext, replace_email_variables
+from incidents.email import INCIDENT_EMAIL_PLACEHOLDERS, EmailContext, render_notification, replace_email_variables
 from incidents.models import Email, IncidentWorkflow, ReportTimeline, Workflow
 
 
@@ -273,6 +273,46 @@ def test_deadline_renders_a_localised_datetime(populate_incident_db, create_inci
     )
     expected = timezone.localtime(detection_date + timedelta(hours=16)).strftime("%Y-%m-%d %H:%M %Z")
     assert replace_email_variables("#DEADLINE#", EmailContext(incident)) == expected
+
+
+# --- the subject of a notification --------------------------------------------------------------
+
+
+def email_template(subject, content="<p>A report was submitted.</p>"):
+    # Reuse a fixture email: the fixtures insert emails with explicit primary keys without advancing the
+    # sequence, so creating one collides on the id.
+    email = Email.objects.first()
+    email.set_current_language("en")
+    email.subject = subject
+    email.content = content
+    email.save()
+    return email
+
+
+@pytest.mark.django_db
+def test_the_subject_is_rendered_in_the_instance_language_not_the_ambient_one(incident, add_report, settings):
+    """An operator submitting in English on a French instance must not get an English notice in a French subject."""
+    settings.LANGUAGE_CODE = "fr"
+    with override("fr"):
+        if str(_("New comment added")) == "New comment added":
+            pytest.skip("French catalogue is not compiled; run manage.py compilemessages")
+    report = add_report(incident, workflow_id=1)
+    report.comment = "Please clarify the impact figures."
+    report.save()
+
+    with override("en"):
+        subject, _body = render_notification(email_template("#REPORT_COMMENT_ADDED# Report"), EmailContext(incident))
+
+    assert subject == "Ajout d'un nouveau commentaire Report"
+
+
+@pytest.mark.django_db
+def test_a_placeholder_rendering_empty_leaves_no_spacing_in_the_subject(incident, add_report):
+    add_report(incident, workflow_id=1)
+
+    subject, _body = render_notification(email_template("#REPORT_COMMENT_ADDED# Report  for #INCIDENT_ID#"), EmailContext(incident))
+
+    assert subject == f"Report for {incident.incident_id}"
 
 
 # --- the placeholder help dialog on the change form -------------------------------------------
