@@ -151,7 +151,9 @@ The **Sectors** list shows the **Acronym**, **Name** and **Parent Sector** of ea
    :target: ../../_static/images/administration/regulator-admin/governance-05.png
 
 To create one, click **Add Sector**, enter its **Name**, which can be translated, and its **Acronym**,
-of up to four characters, and click **Save**.
+of up to four characters, and click **Save**. The acronym must be unique among all sectors and sub-sectors,
+as the export and import of a workflow find sectors by it: an acronym already in use is refused with
+**Sector with this Acronym already exists.**
 
 .. figure:: /_static/images/administration/regulator-admin/governance-06.png
    :alt: Add Sector form with the language tabs and the Name, Parent Sector and Acronym fields

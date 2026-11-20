@@ -2,7 +2,7 @@ Governance
 ----------
 
 The **Governance** section of the console is where you set up the organisations that use the platform
-and their first accounts. For a platform administrator, it lists **Django Settings**, **Entity categories**,
+and their first accounts. For a platform administrator, it lists **API access**, **Django Settings**, **Entity categories**,
 **Functionalities**, **Observers**, **Regulations**, **Regulators** and **Users**.
 This page describes them in the order of the set-up (see :doc:`index`).
 
@@ -181,6 +181,23 @@ Removing a role from the functionality hides the module again for every account 
 .. warning::
 
    To close a module, remove its roles; do not delete the functionality.
+
+.. _platform-api-access:
+
+API access
+~~~~~~~~~~
+
+**API access** sets who may use the read-only API, which must also be enabled in the configuration
+(see :doc:`/technical/api`). It lists the three modules the API can read: **Incident notification**, **Security objectives** and **Reporting**, with the **Roles**
+allowed to read each one through the API. Modules cannot be added or deleted.
+
+Click a module, move the roles that may read it through the API from **Available Roles** to **Chosen Roles**,
+and click **Save**. Only the roles that can use the module on the web are offered. No role is chosen on a new
+platform, so nobody can use the API until you choose some.
+
+The API never gives more than the web: an account reads a module through the API only if its role is chosen here
+and it can use the module on the web, which for security objectives and reporting also depends on the
+functionality (see `Functionalities`_). Accounts whose role has no module here have no **API keys** page.
 
 .. _platform-entity-categories:
 
