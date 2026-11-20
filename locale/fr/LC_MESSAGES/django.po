@@ -1324,6 +1324,14 @@ msgstr "vide si le régulateur ne fait aucun commentaire"
 msgid "Deadline of the next report"
 msgstr "Date limite de remise du prochain rapport"
 
+#: incidents/email.py:115
+msgid "Cross-border"
+msgstr "Transfrontalier"
+
+#: incidents/email.py:154
+msgid "empty unless the incident is reported as cross-border"
+msgstr "vide sauf si l'incident est déclaré transfrontalier"
+
 #: incidents/filters.py:37
 msgid "Yes"
 msgstr ""
