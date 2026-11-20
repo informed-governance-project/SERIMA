@@ -9,9 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- A `#CROSS_BORDER#` placeholder for the incident email templates, in the subject as in the content: it renders "[Cross-border]" when the incident is reported as cross-border, and nothing otherwise, so a regulator decides whether and where the marker appears; a template that does not use it is unchanged. An incident is reported as cross-border when the latest report answering a designated question gives the positive answer. The questionnaire being configuration, the question is named by its reference in the `cross_border_question_reference` application configuration key, and the positive answer in `cross_border_positive_answer` (`Yes` by default); until a deployment sets the first, the placeholder always renders nothing (#846)
+
 ### Fixed
 
 - A security objective with no measure turned on is no longer shown as fully filled when its measures carry a justification and the planned measures are written: it is now partially filled, and the declaration cannot be submitted until at least one measure is on (#970)
+- The subject of an incident email replaced its placeholders in the language of whoever triggered the send instead of the language of the platform, so a subject could carry two languages at once; `#INCIDENT_STATUS#`, `#REPORT_REVIEW_STATUS#` and `#REPORT_COMMENT_ADDED#` were affected, the content never was. The subject is now rendered entirely in the language of the platform, as the documentation already stated, and the spacing a placeholder rendering empty left behind in it — a leading or doubled space — is collapsed (#846)
 
 ## [0.6.2] - 2026-11-25
 
