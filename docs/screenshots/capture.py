@@ -16,6 +16,7 @@ import hmac
 import json
 import os
 import struct
+import subprocess
 import sys
 import time
 import tomllib
@@ -30,6 +31,7 @@ from playwright.sync_api import BrowserContext, Page, sync_playwright
 HERE = Path(__file__).resolve().parent
 DEFAULT_SPEC = HERE / "shots.toml"
 DEFAULT_OUT = HERE.parent / "_static"
+MANAGE_PY = HERE.parent.parent / "manage.py"
 
 ANONYMOUS = "anonymous"
 
@@ -227,6 +229,20 @@ def log_in(context: BrowserContext, base_url: str, role: str, spec: dict[str, An
     page.fill("#id_auth-password", password)
     page.click("button.submit_login")
     page.wait_for_load_state("networkidle")
+
+    # Only a role with a device enrolled by `screenshot_fixture --create` is asked for a code.
+    if page.locator("#id_token-otp_token").count():
+        secret = secret_from_db(username)
+        for _attempt in range(2):
+            page.fill("#id_token-otp_token", totp_code(secret))
+            # "Use backup token" also carries .submit_login, so name the primary one.
+            page.click("button.btn-primary.submit_login")
+            page.wait_for_load_state("networkidle")
+            if not page.locator("#id_token-otp_token").count():
+                break
+            # django-otp refuses a code twice, so a second login within the same 30 seconds
+            # has to wait for the next code.
+            time.sleep(30 - time.time() % 30 + 1)
 
     if "/account/login" in page.url:
         raise CaptureError(f"login failed for role {role!r} — check the credentials and that the account is active")
@@ -455,6 +471,16 @@ def capture(
     return target
 
 
+def reset_preferences() -> None:
+    """Forget the list choices of the screenshot accounts.
+
+    They are saved on the account, not in the browser, so a fresh context alone no longer
+    gives the next shot the defaults. This runs against the local database, like
+    `manage.py screenshot_fixture --create` that set the accounts up.
+    """
+    subprocess.run([sys.executable, str(MANAGE_PY), "screenshot_fixture", "--reset-preferences"], check=True)
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--spec", type=Path, default=DEFAULT_SPEC, help="shot list (default: shots.toml)")
@@ -489,6 +515,8 @@ def main(argv: list[str] | None = None) -> int:
     defaults = spec.get("defaults", {})
     viewport = spec.get("viewport", {"width": 1440, "height": 900})
     args.out.mkdir(parents=True, exist_ok=True)
+    # An interrupted run can leave choices behind.
+    reset_preferences()
 
     with sync_playwright() as playwright:
         launch: dict[str, Any] = {"headless": not args.headed}
@@ -525,6 +553,7 @@ def main(argv: list[str] | None = None) -> int:
                     page.close()
                     if throwaway:
                         context.close()
+                        reset_preferences()
                 print(f"captured {target.relative_to(Path.cwd())}" if target.is_relative_to(Path.cwd()) else f"captured {target}")
         finally:
             for context in contexts.values():

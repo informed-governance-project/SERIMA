@@ -335,8 +335,9 @@ annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
 
 [[shots]]
 name = "images/getting-started/homepage-07"
-# Needs API_ENABLED on the instance. The key listed is the one
-# screenshot_fixture --create issues to this account.
+# Needs API_ENABLED on the instance. The page requires 2FA even under DEBUG:
+# screenshot_fixture --create enrols a device for this role, and capture.py
+# enters its code at login. The key listed is the one --create issues.
 role = "regulator_user"
 path = "/account/api-keys/"
 selector = "main"
@@ -350,9 +351,11 @@ selector = "main"
 # down and out of the cropped viewports. Run these shots before any shot that
 # notifies an incident.
 #
-# Filter and sort choices are kept in the Django session, and column choices
-# and the legend in localStorage — both shared by every shot of a role. Shots
-# that change any of them run `fresh`, so the next shot sees the defaults.
+# Column, legend, filter and sort choices are saved on the account (#673), so
+# they are shared by every shot of a role, even across browser contexts. Shots
+# that change any of them run `fresh`: capture.py clears the accounts' choices
+# after each one (screenshot_fixture --reset-preferences), so the next shot sees
+# the defaults. Column checkboxes are named after the column, not numbered.
 #
 # Tooltip shots crop with a short viewport rather than an element `selector`:
 # the tooltip is drawn outside the element it belongs to and would be cut off.
@@ -417,10 +420,10 @@ hide = ["#incidents-table tbody", "footer"]
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-3" },
-  { action = "click", selector = "#column-4" },
-  { action = "click", selector = "#column-5" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-detection_date" },
+  { action = "click", selector = "#column-starting_date" },
+  { action = "click", selector = "#column-resolution_date" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
 ]
@@ -711,8 +714,8 @@ viewport = { width = 1440, height = 430 }
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-last_update" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
 ]
@@ -742,8 +745,8 @@ viewport = { width = 1440, height = 420 }
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-last_update" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
 ]
@@ -758,8 +761,8 @@ selector = "#incidents-table"
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-last_update" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
   # There is no hover step. Focusing the link inside the report's tooltip

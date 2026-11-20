@@ -11,7 +11,7 @@ from django.db import transaction
 from django.utils.timezone import now
 from django_otp.plugins.otp_totp.models import TOTPDevice
 
-from governanceplatform.models import APIKey, ObserverConnector, User
+from governanceplatform.models import APIKey, ObserverConnector, User, UserPreference
 from governanceplatform.permissions import set_platform_admin_permissions
 
 SCREENSHOTS_DIR = Path(settings.BASE_DIR) / "docs" / "screenshots"
@@ -24,6 +24,10 @@ SIGNUP_EMAIL = "new-account@example.org"
 RT_CONNECTOR_PK = 1
 API_KEY_ROLE = "regulator_user"
 API_KEY_NAME = "Monitoring"
+# Roles that sign in with two-factor authentication, for the pages behind
+# @otp_required (the API keys page): DEBUG lifts only the middleware's 2FA check.
+# capture.py reads the secret of the device from the database at login.
+TOTP_ROLES = ("regulator_user",)
 
 
 class Account(NamedTuple):
@@ -45,12 +49,17 @@ ACCOUNTS = {
 
 
 class Command(BaseCommand):
-    help = "Give the screenshot accounts of docs/screenshots/fixture.json a password, or take it away again"
+    help = "Give the screenshot accounts of docs/screenshots/fixture.json a password, take it away again, or clear their saved list choices"
 
     def add_arguments(self, parser) -> None:
         group = parser.add_mutually_exclusive_group(required=True)
         group.add_argument("--create", action="store_true", help="set a password on every account and reset its 2FA")
         group.add_argument("--delete", action="store_true", help="make every account unusable again")
+        group.add_argument(
+            "--reset-preferences",
+            action="store_true",
+            help="forget the columns, legend, filters and sort the accounts chose on the lists",
+        )
         parser.add_argument(
             "--password",
             help="password to set on every account; defaults to each role's $SERIMA_SHOT_*_PASS, else generated",
@@ -68,6 +77,8 @@ class Command(BaseCommand):
 
         if options["create"]:
             self.create(users, options.get("password"))
+        elif options["reset_preferences"]:
+            UserPreference.objects.filter(user__in=users.values()).delete()
         else:
             self.delete(users)
 
@@ -92,9 +103,12 @@ class Command(BaseCommand):
 
         User.objects.filter(email=SIGNUP_EMAIL).delete()
 
+        for role in TOTP_ROLES:
+            TOTPDevice.objects.create(user=users[role], name="Screenshots", confirmed=True)
+
         # Neither can live in FIXTURE: a connector secret is encrypted with this instance's
         # CONNECTOR_SECRET_KEY, and only the digest of an API key is stored. Issued after the
-        # passwords above, as a password change revokes the account's keys.
+        # passwords and devices above, as a password change or a 2FA reset revokes the account's keys.
         connector = ObserverConnector.objects.get(pk=RT_CONNECTOR_PK)
         connector.secret = secrets.token_urlsafe(24)
         connector.save()
