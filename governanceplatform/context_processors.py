@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
@@ -9,7 +10,7 @@ from .helpers import (
     user_in_group,
 )
 from .models import ApplicationConfig, Functionality
-from .settings import API_ENABLED, COOKIEBANNER, REGULATOR_CONTACT, SITE_NAME
+from .settings import COOKIEBANNER, REGULATOR_CONTACT, SITE_NAME
 
 
 def extra_content_for_all_templates(request):
@@ -20,7 +21,7 @@ def extra_content_for_all_templates(request):
         "is_only_admin": False,
         "regulator_name": REGULATOR_CONTACT["name"],
         # the menu links to key management only for users the API would serve
-        "api_enabled": API_ENABLED and user.is_authenticated and bool(user.get_api_modules()),
+        "api_enabled": settings.API_ENABLED and user.is_authenticated and bool(user.get_api_modules()),
     }
     extra_data["is_regulator"] = is_user_regulator(user)
     extra_data["is_observer"] = is_observer_user(user)
