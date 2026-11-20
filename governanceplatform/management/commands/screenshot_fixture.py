@@ -24,10 +24,6 @@ SIGNUP_EMAIL = "new-account@example.org"
 RT_CONNECTOR_PK = 1
 API_KEY_ROLE = "regulator_user"
 API_KEY_NAME = "Monitoring"
-# Roles that sign in with two-factor authentication, for the pages behind
-# @otp_required (the API keys page): DEBUG lifts only the middleware's 2FA check.
-# capture.py reads the secret of the device from the database at login.
-TOTP_ROLES = ("regulator_user",)
 
 
 class Account(NamedTuple):
@@ -103,12 +99,9 @@ class Command(BaseCommand):
 
         User.objects.filter(email=SIGNUP_EMAIL).delete()
 
-        for role in TOTP_ROLES:
-            TOTPDevice.objects.create(user=users[role], name="Screenshots", confirmed=True)
-
         # Neither can live in FIXTURE: a connector secret is encrypted with this instance's
         # CONNECTOR_SECRET_KEY, and only the digest of an API key is stored. Issued after the
-        # passwords and devices above, as a password change or a 2FA reset revokes the account's keys.
+        # passwords above, as a password change or a 2FA reset revokes the account's keys.
         connector = ObserverConnector.objects.get(pk=RT_CONNECTOR_PK)
         connector.secret = secrets.token_urlsafe(24)
         connector.save()

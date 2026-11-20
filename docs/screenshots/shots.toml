@@ -335,12 +335,22 @@ annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
 
 [[shots]]
 name = "images/getting-started/homepage-07"
-# Needs API_ENABLED on the instance. The page requires 2FA even under DEBUG:
-# screenshot_fixture --create enrols a device for this role, and capture.py
-# enters its code at login. The key listed is the one --create issues.
+# Needs API_ENABLED on the instance. The key listed is the one
+# screenshot_fixture --create issues to this account. As for the password page,
+# opening it logs the account out (ForceReloginMiddleware), so the shot signs in
+# again on the login page it lands on.
 role = "regulator_user"
 path = "/account/api-keys/"
-selector = "main"
+credentials_from = "regulator_user"
+fresh = true
+viewport = { width = 1440, height = 560 }
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#api_keys_heading" },
+]
 
 # --- Incident dashboard (docs/incident-notification/dashboard.rst) ----------
 #

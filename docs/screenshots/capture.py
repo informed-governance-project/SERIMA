@@ -230,20 +230,6 @@ def log_in(context: BrowserContext, base_url: str, role: str, spec: dict[str, An
     page.click("button.submit_login")
     page.wait_for_load_state("networkidle")
 
-    # Only a role with a device enrolled by `screenshot_fixture --create` is asked for a code.
-    if page.locator("#id_token-otp_token").count():
-        secret = secret_from_db(username)
-        for _attempt in range(2):
-            page.fill("#id_token-otp_token", totp_code(secret))
-            # "Use backup token" also carries .submit_login, so name the primary one.
-            page.click("button.btn-primary.submit_login")
-            page.wait_for_load_state("networkidle")
-            if not page.locator("#id_token-otp_token").count():
-                break
-            # django-otp refuses a code twice, so a second login within the same 30 seconds
-            # has to wait for the next code.
-            time.sleep(30 - time.time() % 30 + 1)
-
     if "/account/login" in page.url:
         raise CaptureError(f"login failed for role {role!r} — check the credentials and that the account is active")
 
