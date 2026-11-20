@@ -681,9 +681,9 @@ def get_list_filters(request: HttpRequest, page: str) -> dict[str, Any]:
 
 def redirect_to_current_page(request: HttpRequest) -> HttpResponseRedirect:
     # request.path comes from the client, and one starting with "//" would be followed to another host.
-    if not url_has_allowed_host_and_scheme(request.path, allowed_hosts=None):
-        raise DisallowedRedirect(f"Unsafe redirect to {request.path!r}")
-    return redirect(request.path)
+    if url_has_allowed_host_and_scheme(request.path, allowed_hosts=None):
+        return redirect(request.path)
+    raise DisallowedRedirect(f"Unsafe redirect to {request.path!r}")
 
 
 def update_list_params(

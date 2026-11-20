@@ -9,6 +9,7 @@ import logging
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 from celery.exceptions import CeleryError
 from django.conf import settings
@@ -32,7 +33,8 @@ ASYNC_PDF_SESSION_KEY = "async_pdf_tasks"
 
 
 def get_pdf_file_path(task_id: str) -> str:
-    return os.path.join(settings.PRIVATE_FILES_ROOT, ASYNC_PDF_DIRECTORY, f"{task_id}.pdf")
+    # The name is rebuilt from the parsed UUID, so a task id can never carry a path into it.
+    return os.path.join(settings.PRIVATE_FILES_ROOT, ASYNC_PDF_DIRECTORY, f"{UUID(task_id)}.pdf")
 
 
 def pdf_error_response(request: HttpRequest, message: StrPromise, status: int) -> JsonResponse:

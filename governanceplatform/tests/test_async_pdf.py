@@ -64,3 +64,8 @@ def test_a_task_is_refused_under_another_kind():
 def test_an_unknown_task_is_refused():
     with pytest.raises(Http404):
         get_pdf_task(request_with_pending_pdfs({}), "incident", str(uuid4()))
+
+
+def test_pdf_file_path_refuses_a_task_id_that_is_not_a_uuid():
+    with pytest.raises(ValueError):
+        get_pdf_file_path("../../config")
