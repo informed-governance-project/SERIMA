@@ -86,6 +86,9 @@ Two switches on each card grant export rights:
 
 Every export is recorded in the :doc:`log entries <administration>`.
 
+These switches control only the spreadsheet export. They do not restrict the read-only API, which is granted per role
+(see :doc:`/technical/api`).
+
 To remove an administrator from the regulator, click the bin icon at the right of its card: the card is covered
 with **This item will be deleted.**, and **Click to cancel** keeps it. Then click **Save**.
 The account is not deleted, but deactivated: its owner can no longer log in.

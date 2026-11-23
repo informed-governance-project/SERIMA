@@ -32,6 +32,12 @@ security objectives and reporting, the functionality must also be enabled for
 their role and, for regulator users, on their regulator. ``/api/v1/me/`` needs at
 least one module.
 
+The API returns the incidents and declarations a user can already open one by
+one on the web. The **Can export incidents** and **Can export security
+objectives** switches only control the spreadsheet export on the web, and do not
+apply to the API. To keep a role from reading a module in bulk, do not grant it
+API access to that module.
+
 Users with no module granted see no **API keys** menu entry and cannot open the
 **API keys** page. Their existing keys are refused on every endpoint while no
 module is granted, and work again if a module is granted back before they expire.
