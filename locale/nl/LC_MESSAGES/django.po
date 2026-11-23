@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-20 16:00+0100\n"
-"PO-Revision-Date: 2026-09-17 08:05+0000\n"
+"PO-Revision-Date: 2026-11-23 13:29+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -620,7 +620,7 @@ msgstr ""
 #: governanceplatform/forms.py:427
 #, python-format
 msgid "These roles cannot access this functionality: %(roles)s"
-msgstr ""
+msgstr "Deze rollen hebben geen toegang tot deze functionaliteit: %(rollen)"
 
 #: governanceplatform/formset.py:25
 msgid "There must be at least one administrator user."
@@ -924,7 +924,7 @@ msgstr "Kan incidenten exporteren"
 
 #: governanceplatform/models.py:589
 msgid "Can export security objectives"
-msgstr ""
+msgstr "Kan beveiligingsdoelstellingen exporteren"
 
 #: governanceplatform/models.py:596
 msgid "Regulator user"
@@ -2713,19 +2713,19 @@ msgstr ""
 
 #: securityobjectives/email.py:100
 msgid "New security objectives export"
-msgstr ""
+msgstr "Export van nieuwe beveiligingsdoelstellingen"
 
 #: securityobjectives/email.py:120
 msgid "Reference of the declaration"
-msgstr ""
+msgstr "Referentie van de verklaring"
 
 #: securityobjectives/email.py:121
 msgid "Status of the declaration"
-msgstr ""
+msgstr "Status van de verklaring"
 
 #: securityobjectives/email.py:125
 msgid "empty until the review is sent with a comment"
-msgstr ""
+msgstr "leeg totdat de beoordeling is verzonden met opmerkingen"
 
 #: securityobjectives/forms.py:28
 msgid ""
@@ -2771,11 +2771,11 @@ msgstr "Verzenddatum"
 
 #: securityobjectives/globals.py:44
 msgid "Identifier"
-msgstr ""
+msgstr "Identificatiecode"
 
 #: securityobjectives/globals.py:49
 msgid "Progress"
-msgstr ""
+msgstr "Vordering"
 
 #: securityobjectives/globals.py:102 securityobjectives/models.py:67
 msgid "Maturity level"
@@ -2821,35 +2821,35 @@ msgstr "Verborgen"
 
 #: securityobjectives/helpers.py:256
 msgid "Not filled"
-msgstr ""
+msgstr "Niet ingevuld"
 
 #: securityobjectives/helpers.py:257
 msgid "Partially filled"
-msgstr ""
+msgstr "Gedeeltelijk ingevuld"
 
 #: securityobjectives/helpers.py:258
 msgid "Fully filled"
-msgstr ""
+msgstr "Volledig ingevuld"
 
 #. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 filled".
 #: securityobjectives/helpers.py:263
 #, python-format
 msgid "%(code)s, %(label)s, %(done)s of %(total)s filled"
-msgstr ""
+msgstr "%(codes), %(labels), %(dones) van %(totalen) ingevuld"
 
 #: securityobjectives/helpers.py:268
 msgid "Review passed"
-msgstr ""
+msgstr "Na onderzoek aanvaard"
 
 #. Translators: read out for a domain of the objective selector, e.g. "D6, Systems and development, 3 of 9 reviewed".
 #: securityobjectives/helpers.py:273
 #, python-format
 msgid "%(code)s, %(label)s, %(done)s of %(total)s reviewed"
-msgstr ""
+msgstr "%(codes), %(labels), %(dones) van %(totalen) beoordeeld"
 
 #: securityobjectives/helpers.py:300
 msgid "No domain"
-msgstr ""
+msgstr "Geen domeinniveau"
 
 #: securityobjectives/models.py:31 securityobjectives/models.py:415
 msgid "Level"
@@ -2987,31 +2987,31 @@ msgstr "Het is volledig ingevuld"
 
 #: securityobjectives/models.py:714
 msgid "Task id"
-msgstr ""
+msgstr "Taak-ID"
 
 #: securityobjectives/models.py:724
 msgid "Security objective export"
-msgstr ""
+msgstr "Export van beveiligingsdoelstellingen"
 
 #: securityobjectives/models.py:725
 msgid "Security objective exports"
-msgstr ""
+msgstr "Exports van beveiligingsdoelstellingen"
 
 #: securityobjectives/tasks.py:80
 msgid "Export date"
-msgstr ""
+msgstr "Exportdatum"
 
 #: securityobjectives/tasks.py:90
 msgid "Number of rows"
-msgstr ""
+msgstr "Aantal rijen"
 
 #: securityobjectives/tasks.py:111
 msgid "Declarations"
-msgstr ""
+msgstr "Verklaringen"
 
 #: securityobjectives/tasks.py:117
 msgid "Metadata"
-msgstr ""
+msgstr "Metagegevens"
 
 #: securityobjectives/views.py:188 securityobjectives/views.py:882
 msgid "No data available"
@@ -3031,7 +3031,7 @@ msgstr "Verklaring niet gevonden"
 
 #: securityobjectives/views.py:251
 msgid "A newer version of this declaration already exists."
-msgstr ""
+msgstr "Er bestaat al een nieuwere versie van deze verklaring."
 
 #: securityobjectives/views.py:535
 #, python-brace-format
@@ -3055,6 +3055,8 @@ msgid ""
 "A newer version of this declaration was submitted. Review that version "
 "instead."
 msgstr ""
+"Er werd een nieuwere versie van deze verklaring ingediend. Bekijk die versie "
+"in de plaats."
 
 #: securityobjectives/views.py:739
 msgid "The security objectives review has been sent."
@@ -3076,14 +3078,16 @@ msgstr ""
 #: securityobjectives/views.py:1270
 msgid "No security objective declarations available for export."
 msgstr ""
+"Er zijn geen verklaringen van beveiligingsdoelstellingen beschikbaar voor "
+"export."
 
 #: securityobjectives/views.py:1287
 msgid "The export could not be started. Please try again later."
-msgstr ""
+msgstr "Het exporteren kan niet worden gestart. Probeer het later opnieuw."
 
 #: securityobjectives/views.py:1332
 msgid "The export failed."
-msgstr ""
+msgstr "Het exporteren is mislukt."
 
 #: templates/admin/import_export_extensions/celery_export_results.html:16
 msgid "There are some errors during data exporting:"
