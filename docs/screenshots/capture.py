@@ -36,6 +36,15 @@ MANAGE_PY = HERE.parent.parent / "manage.py"
 ANONYMOUS = "anonymous"
 
 
+# Runs before the page's own scripts on every document the shot loads. Alpine $persist
+# stores each sidebar group under admin-nav-<app label> as JSON; a missing key means open.
+NAV_STATE_JS = """
+for (const key of Object.keys(localStorage)) {
+  if (key.startsWith("admin-nav-")) localStorage.removeItem(key);
+}
+for (const app of %s) localStorage.setItem(`admin-nav-${app}`, "false");
+"""
+
 ANNOTATION_JS = """
 (payload) => {
   const { items, color } = payload;
@@ -431,6 +440,10 @@ def capture(
         # Not a page of the platform: the email the previous shot made it send.
         page.set_content(latest_email_html(), wait_until="networkidle")
     else:
+        # The admin sidebar remembers folded groups in localStorage (Alpine $persist), which
+        # the role's shared context carries over from the previous shot. Each shot starts
+        # from its own nav_closed instead, so a batch run matches an --only run.
+        page.add_init_script(NAV_STATE_JS % json.dumps(shot.get("nav_closed", [])))
         page.goto(f"{base_url}{shot['path']}", wait_until="networkidle")
         dismiss_cookie_banner(page)
 
