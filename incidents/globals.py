@@ -8,6 +8,10 @@ except ModuleNotFoundError:
 # Marks a reference as an incident notification
 REFERENCE_PREFIX = "NI_"
 
+# Access log entry written when a connector sends the incident payload to an observer's system
+TRANSMIT_ACTION = "TRANSMIT"
+CONNECTOR_LOG_ROLE = "ObserverConnector"
+
 
 QUESTION_TYPES = [
     ("FREETEXT", "Freetext"),

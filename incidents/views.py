@@ -73,6 +73,7 @@ from .filters import IncidentFilter
 from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
 from .globals import (
     ALLOWED_SORT_FIELDS,
+    CONNECTOR_LOG_ROLE,
     REGIONAL_AREA,
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
@@ -565,7 +566,7 @@ def access_log(request, incident_id: int):
             log.exclude(user__regulatoruser__isnull=False)
             .exclude(user__observers__isnull=False)
             # A deleted user leaves user=NULL, so the role recorded at logging time is all that is left to filter on.
-            .exclude(user__isnull=True, role__in=["RegulatorAdmin", "RegulatorUser", "ObserverAdmin", "ObserverUser"])
+            .exclude(user__isnull=True, role__in=["RegulatorAdmin", "RegulatorUser", "ObserverAdmin", "ObserverUser", CONNECTOR_LOG_ROLE])
         )
     if is_regulator_incident:
         log = log.filter(user__regulatoruser__regulator=user.regulators.first())

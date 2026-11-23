@@ -74,6 +74,7 @@ class GPGJsonConnector(BaseConnector):
     type_id = "gpg_json"
     label = _("GPG-encrypted JSON (e-mail)")
     config_form = GPGJsonConfigForm
+    transmits_incident_payload = True
 
     def _recipient(self) -> str:
         # the encrypted payload goes to the observer's notification address only —

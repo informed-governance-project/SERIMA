@@ -42,6 +42,7 @@ class WebhookConnector(BaseConnector):
     config_form = WebhookConfigForm
     requires_secret = True
     secret_label = _("HMAC secret")
+    transmits_incident_payload = True
 
     def _post_signed(self, payload: dict):
         url = self.connector.config.get("url", "")
