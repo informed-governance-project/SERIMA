@@ -69,8 +69,40 @@ the ones the platform administrator made available to your observer:
   to that ticket as replies.
 - **Webhook (HTTPS API)**: posts the incident as JSON to the **URL** of your API. Each request is signed with the
   **HMAC secret** you enter, in the ``X-Serima-Signature`` header, with the time it was sent in ``X-Serima-Timestamp``.
+  Without a secret, nothing is sent and the notification fails. See :ref:`receiving webhook notifications <observer-admin-webhook-receiving>`.
 - **GPG-encrypted JSON (e-mail)**: emails the incident as JSON, encrypted with the **GPG public key** you paste
   (ASCII-armored), to the **E-mail address for incident notification** of your observer.
+
+.. _observer-admin-webhook-receiving:
+
+**Receiving webhook notifications.** HTTPS protects the incident only on its way to your server. The JSON is not
+encrypted: it holds the incident's contacts (names, emails, telephone numbers) and every answer of its reports, and
+any part of your infrastructure that terminates HTTPS or records requests, such as a reverse proxy, an API gateway or
+an access log, can read it. If that is not acceptable, use the **GPG-encrypted JSON** connector instead.
+
+Choose a long random **HMAC secret** (at least 32 characters) and check every request before trusting it:
+
+1. Compute the HMAC-SHA256 of the ``X-Serima-Timestamp`` value, a dot, and the raw request body, keyed with the
+   secret, and compare it with ``X-Serima-Signature`` (after ``sha256=``) in constant time.
+2. Reject the request when the timestamp is more than five minutes away from your clock, so that a captured request
+   cannot be replayed later.
+
+.. code-block:: python
+
+   import hashlib, hmac, time
+
+
+   def is_valid(secret: bytes, timestamp: str, signature: str, body: bytes) -> bool:
+       expected = hmac.new(
+           secret, timestamp.encode() + b"." + body, hashlib.sha256
+       ).hexdigest()
+       return (
+           hmac.compare_digest(f"sha256={expected}", signature)
+           and abs(time.time() - int(timestamp)) <= 300
+       )
+
+A request that times out is sent again, so the same notification can arrive twice. **Test connection** sends the
+signed body ``{"event": "ping"}``; real notifications carry an ``incident`` object instead.
 
 The **Observer connectors** list shows the **Name**, **Observer**, **Type** and **Active** state of each connector
 of your observer. The form of your observer also lists them at the bottom, with a link to each.
