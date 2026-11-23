@@ -95,6 +95,11 @@ withdraws a type from your observer, its connectors of that type are turned off.
    It is not sent by email instead: choose **E-mail and connectors** as the notification mode to keep
    receiving the emails as well.
 
+Once a webhook or GPG-encrypted JSON connector has delivered an incident, the **Access Log** of the incident
+records it with the action **TRANSMIT**: one entry for each report the incident holds, with the connector's name as
+user and your observer as entity. An RT connector only forwards the notification email, so it is not recorded, nor
+is a delivery that failed.
+
 .. _observer-admin-accounts:
 
 Observer accounts

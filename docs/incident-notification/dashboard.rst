@@ -181,6 +181,9 @@ Due to the complexity of the screen, its different parts will be presented one b
       Operators see only the actions of their own users in the log. When the regulator or an observer opens,
       reviews or downloads a report, the entry appears in the regulator's log but not in the operator's.
       Reports opened through the API appear with the action **API READ**; see :doc:`/technical/api`.
+      When a webhook or GPG-encrypted JSON connector sends the incident to an observer's system, each report it
+      contains appears with the action **TRANSMIT**, the connector's name as user and the observer as entity;
+      operators do not see these entries. See :ref:`observer-admin-connectors`.
 
    .. figure:: /_static/images/incident-notification/dashboard-07.png
       :alt: Access log sorted by date
