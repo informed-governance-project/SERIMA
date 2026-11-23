@@ -53,11 +53,10 @@ A template has:
 
 - a **Name**, which identifies it in the drop-downs of the standards. Operators never see it.
 - a **Subject** and a **Content**, which can be translated. The content is formatted in the editor itself,
-  with its toolbar: bold, italic, headings, lists, quotes and links. The **HTML preview** below it shows,
-  once saved, the content as the email sends it.
+  with its toolbar: bold, italic, headings, lists, quotes and links.
 
 .. figure:: /_static/images/administration/regulator-admin/security-objectives-01.png
-   :alt: Change Email template form with its name, subject, content, the Available placeholders button and HTML preview
+   :alt: Change Email template form with its name, subject, content, and the Available placeholders button
    :target: ../../_static/images/administration/regulator-admin/security-objectives-01.png
 
 Click **Available placeholders** to list the placeholders you can type in the subject or the content.

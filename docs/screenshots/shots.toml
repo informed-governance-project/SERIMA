@@ -1452,7 +1452,7 @@ name = "images/incident-notification/configuration-02"
 role = "regulator_admin"
 path = "/admin/incidents/email/1/change/"
 selector = "#main"
-hide = [".field-line:has(.markdown-html-preview)", "#submit-row"]
+hide = ["#submit-row"]
 annotate = [
   { selector = ".parler-language-tabs", box = true },
   { selector = ["#id_name", "#id_subject"], box = true },
