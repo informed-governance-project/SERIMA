@@ -108,7 +108,6 @@ def _build_incident_payload(incident) -> dict:
 
     return {
         "incident": {
-            "id": incident.pk,
             "incident_id": incident.incident_id,
             "company_name": incident.company_name,
             "complaint_reference": incident.complaint_reference,

@@ -45,6 +45,10 @@ class WebhookConnector(BaseConnector):
     transmits_incident_payload = True
 
     def _post_signed(self, payload: dict):
+        # An empty key yields a signature anyone can forge, and the payload would already be out by the time
+        # the receiver rejects it. The secret also reads as empty when CONNECTOR_SECRET_KEY no longer decrypts it.
+        if not self.connector.secret:
+            raise PermanentDeliveryError(str(_("No HMAC secret is set for the webhook")))
         url = self.connector.config.get("url", "")
         try:
             validate_external_https_url(url)

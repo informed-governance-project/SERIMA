@@ -99,7 +99,7 @@ class GPGJsonConnector(BaseConnector):
         payload = build_incident_payload(ctx.incident)
         subject = ctx.subject
         content = ctx.content_html
-        self._send_encrypted(f"incident_{ctx.incident.pk}.json.gpg", payload, subject, content, recipient)
+        self._send_encrypted(f"incident_{ctx.incident.incident_id}.json.gpg", payload, subject, content, recipient)
         return DeliveryResult(success=True)
 
     def test_connection(self) -> tuple[bool, str]:
