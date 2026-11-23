@@ -149,15 +149,11 @@ templates/            HTML templates (base, registration, incidents…)
 theme/                Separate git clone, gitignored from this repo — see below
 ```
 
-### Modules not on `dev`
+### Observer connectors
 
-`reporting/` and `securityobjectives/` merged into `dev` on 2026-09-18 (PR #880) and are ordinary apps now — see Project Structure above.
+`governanceplatform/connectors/` holds the observer connectors (RT, webhook, GPG-encrypted JSON), merged into `dev` on 2026-11-06 (`ab436189`). Each connector class registers itself in `registry.py`; `ObserverConnector` (`governanceplatform/models.py`) stores its type, config and Fernet-encrypted secret. `incidents/email.py` → `dispatch_observer_notifications` creates a `ConnectorDelivery` per active connector, and the Celery task `incidents/scripts/connector_delivery.py` sends it, with retries on `TransientDeliveryError`. A connector with `transmits_incident_payload = True` (webhook, GPG JSON) sends the full incident payload (`payload.py`), and each successful delivery writes `TRANSMIT` entries to the incident's `LogReportRead`, hidden from operators.
 
-`governanceplatform/connectors/` still lives only on `feat/observer-connectors`, where its commits are tagged `[Observer]`. On `dev` the directory may appear on disk holding only `__pycache__` — bytecode left by switching branches. It carries no source files there, is tracked by neither git nor `.gitignore`, and is absent from `INSTALLED_APPS`, so it does nothing on `dev`. The leftover bytecode is safe to drop at any time; it is regenerated on the branch that owns the source:
-
-```bash
-find governanceplatform/connectors -name __pycache__ -type d -exec rm -rf {} +
-```
+`reporting/` and `securityobjectives/` merged into `dev` on 2026-09-18 (PR #880); no module lives off `dev` any more.
 
 ## Frontend (theme repo)
 
@@ -224,7 +220,7 @@ poetry run pytest governanceplatform/tests/test_api.py
   - `[GOV]` — governance changes (`governanceplatform/` folder)
   - `[SO]` — security objectives changes (`securityobjectives/` folder)
   - `[RG]` — reporting changes (`reporting/` folder)
-  - `[Observer]` — observer connector changes (`governanceplatform/connectors/`) — on `feat/observer-connectors`, not merged
+  - `[Observer]` — observer connector changes (`governanceplatform/connectors/`); `[GOV][Connectors]` is also used
 - **Branch naming**: `feat/`, `fix/`, `test/`, `review/`, descriptive kebab-case
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
