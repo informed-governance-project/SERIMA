@@ -282,7 +282,7 @@ def test_gpg_json_delivery_sends_encrypted_incident_payload(populate_incident_db
     message = mail.outbox[0]
     assert message.bcc == [observer.email_for_notification]
     filename, armored, mimetype = message.attachments[0]
-    assert filename == f"incident_{incident.pk}.json.gpg"
+    assert filename == f"incident_{incident.incident_id}.json.gpg"
     assert mimetype == "application/pgp-encrypted"
     decrypted = gpg.decrypt(armored)
     assert decrypted.ok
@@ -402,3 +402,38 @@ def test_rt_delivery_logs_nothing(rt_connector, email_template, incident, incide
     deliver.apply(args=[delivery.pk])
 
     assert not LogReportRead.objects.filter(incident=incident, action=TRANSMIT_ACTION).exists()
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_webhook_without_secret_sends_nothing(webhook_connector, email_template, incident, resolvable_hosts):
+    webhook_connector.secret = None
+    webhook_connector.save()
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=webhook_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    delivery.refresh_from_db()
+    assert delivery.status == ConnectorDelivery.Status.FAILED
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_webhook_with_undecryptable_secret_sends_nothing(webhook_connector, email_template, incident, resolvable_hosts):
+    # what a rotated CONNECTOR_SECRET_KEY leaves behind
+    ObserverConnector.objects.filter(pk=webhook_connector.pk).update(_secret="not-a-fernet-token")
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=webhook_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    delivery.refresh_from_db()
+    assert delivery.status == ConnectorDelivery.Status.FAILED
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+def test_incident_payload_has_no_primary_key(incident):
+    from governanceplatform.connectors.payload import build_incident_payload
+
+    assert "id" not in build_incident_payload(incident)["incident"]
