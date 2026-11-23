@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A regulator user whose account is not attached to a regulator yet is now told so on the login page, instead of a generic "no associated entities" message (#955)
 - The access log of a security objectives declaration listed only the actions on its latest version; it now lists those on every version (#951)
 - The access logs of an incident, of a security objectives declaration and of a reporting project left the name blank on every line written by a user whose account has since been deleted; they now show the name recorded when the line was written. An operator viewing the access log of an incident or of a declaration could also see the lines of a deleted regulator or observer user, which are hidden from operators while the account exists; they are now hidden in both cases
 - Filtering the reporting dashboard by base year had no effect (#673)

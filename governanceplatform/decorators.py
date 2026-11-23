@@ -34,10 +34,12 @@ def check_user_is_correct(view_func):
         if is_user_operator(user) and user.companies.exists():
             return view_func(request, *args, **kwargs)
 
-        messages.error(
-            request,
-            _("The user account has currently no associated entities. Please contact the administrator."),
-        )
+        # An account created with Add User is attached to its regulator only once added to the regulator's Regulator users section.
+        if user_in_group(user, "RegulatorUser"):
+            message = _("Your account is not attached to a regulator yet. Please contact your regulator administrator.")
+        else:
+            message = _("The user account has currently no associated entities. Please contact the administrator.")
+        messages.error(request, message)
 
         logout(request)
         return redirect("login")
