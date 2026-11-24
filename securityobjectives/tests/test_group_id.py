@@ -2,8 +2,7 @@ import pytest
 from django.db import IntegrityError, transaction
 
 from governanceplatform.globals import CROCKFORD_ALPHABET, REFERENCE_TOKEN_LENGTH
-from governanceplatform.helpers import normalize_reference
-from securityobjectives.filters import group_id_matches
+from securityobjectives.filters import StandardAnswerFilter
 from securityobjectives.globals import REFERENCE_PREFIX
 from securityobjectives.models import StandardAnswer, StandardAnswerGroup
 
@@ -59,17 +58,26 @@ def test_a_group_id_does_not_depend_on_the_language_of_the_session():
     assert set(english.group_id.removeprefix(REFERENCE_PREFIX)) <= set(CROCKFORD_ALPHABET)
 
 
-def test_the_prefix_survives_normalisation():
-    """SO_ carries an O: normalising the whole value would read it as a zero."""
-    assert normalize_reference("so_k7m2xq4o", REFERENCE_PREFIX) == "SO_K7M2XQ40"
+def search_declarations(value: str) -> list[StandardAnswer]:
+    return list(StandardAnswerFilter(data={"search": value}, queryset=StandardAnswer.objects.all(), is_regulator=True).qs)
+
+
+@pytest.fixture
+def declaration(populate_so_db):
+    answer = StandardAnswer.objects.first()
+    answer.group.group_id = "SO_K7V2XQ10"
+    answer.group.save()
+    return answer
 
 
 @pytest.mark.django_db
-def test_a_declaration_is_found_by_a_group_id_with_a_transcription_slip(populate_so_db):
-    answer = StandardAnswer.objects.first()
-    answer.group.group_id = "SO_K7M2XQ40"
-    answer.group.save()
+def test_a_declaration_is_found_by_its_group_id_whatever_its_case(declaration):
+    assert declaration in search_declarations("so_k7v2xq10")
 
-    found = StandardAnswer.objects.filter(group_id_matches("so_k7m2xq4o"))
 
-    assert list(found) == [answer]
+@pytest.mark.django_db
+@pytest.mark.parametrize("typed", ["SO_K7V2XQ1O", "SO_K7V2XQI0", "SO_K7V2XQL0", "SO_K7U2XQ10", "S0_K7V2XQ10"])
+def test_a_group_id_typed_with_a_lookalike_character_is_not_found(declaration, typed):
+    """The search is strict (#948): a letter typed for a digit, or a zero for the O of
+    the prefix, is not read as the character it resembles."""
+    assert declaration not in search_declarations(typed)
