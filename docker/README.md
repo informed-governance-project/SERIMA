@@ -109,7 +109,9 @@ before the actual Django runtime init and application startup.
 - `POSTGRES_HOST`: defaults to `postgres`
 - `CELERY_BROKER_URL`: defaults to 'redis://redis:6379/0'
 - `CELERY_RESULT_BACKEND`: defaults to 'redis://redis:6379/1'
-- `CELERY_CONCURRENCY`: defaults to `3`
+- `CELERY_CONCURRENCY`: defaults to `3`. Only used by a single worker consuming all queues:
+  `docker-compose.example.yml` sets it per worker from the three variables below, so setting it
+  there has no effect
 - `CELERY_QUEUES`: comma-separated queues the worker consumes (`interactive`, `reports`, `celery`);
   all of them when unset. See "Splitting the workers" in `docs/technical/docker.rst`
 - `CELERY_INTERACTIVE_CONCURRENCY`, `CELERY_REPORTS_CONCURRENCY`, `CELERY_DEFAULT_CONCURRENCY`:
