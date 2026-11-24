@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - On the security objectives dashboard, the button that starts a declaration is now "New assessment" instead of "New submission", and an empty dashboard now reads "No security objectives statements have been created yet." instead of "…submitted yet." (#934)
 - The header of an incident report and of a security objectives declaration now shows the **Reference** of the incident or declaration. Operators no longer see the **Company** there, nor the contact icon, which only regulators (and, for incidents, observers) still have (#942)
 - The **HTML preview** below the content of an incident notification email and of a security objectives email template is removed: the rich-text editor added in #915 already shows the content formatted, and the preview showed it without its placeholders replaced (#915)
+- Searching an incident or a security objectives declaration by its reference now finds it only when the reference is typed with the characters it has. The search no longer reads O as 0, I or L as 1, or U as V, so a reference transcribed with one of those letters is not found; it is still case-insensitive and still matches part of a reference (#948)
 
 ### Fixed
 
