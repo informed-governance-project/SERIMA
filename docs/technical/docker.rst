@@ -185,7 +185,7 @@ Celery tasks are sent to one of three queues, according to how they behave:
 The example compose file runs one worker per queue, each in its own container with its own
 ``CELERY_QUEUES``, so that a report generation never makes a user wait for a PDF. Their concurrencies are
 read from ``CELERY_INTERACTIVE_CONCURRENCY`` (default 2), ``CELERY_REPORTS_CONCURRENCY`` (default 2) and
-``CELERY_DEFAULT_CONCURRENCY`` (default 1). ``docker/docker-compose.dokploy.yml`` is set up the same way.
+``CELERY_DEFAULT_CONCURRENCY`` (default 1).
 
 A single worker can still consume all three queues, by leaving ``CELERY_QUEUES`` unset. It saves two
 containers on a small host, but a report generation can then occupy every process of the worker, and a
