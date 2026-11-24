@@ -65,7 +65,6 @@ API_ELIGIBLE_ROLES = {
 # transcribed from a PDF without being confused for 1 or 0.
 CROCKFORD_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"
 REFERENCE_TOKEN_LENGTH = 8
-CROCKFORD_INPUT_TRANSLATION = str.maketrans({"I": "1", "L": "1", "O": "0", "U": "V"})
 
 # List pages whose display choices are kept per user across sessions (UserPreference).
 # Column names follow the table's data-sort-field so they survive columns being added
