@@ -56,7 +56,7 @@ def test_get_no_longer_produces_a_pdf(otp_client, populate_incident_db):
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident = get_operator_incident(populate_incident_db)
 
-    assert client.get(f"/incidents/download-pdf/{incident.id}").status_code == 405
+    assert client.get(f"/incidents/download-pdf/{incident.public_id}").status_code == 405
 
 
 @pytest.mark.django_db
@@ -64,7 +64,7 @@ def test_an_unknown_incident_is_not_queued(otp_client, populate_incident_db):
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
 
     with patch("incidents.views.generate_incident_pdf_task.delay") as delay:
-        response = client.post("/incidents/download-pdf/999999")
+        response = client.post(f"/incidents/download-pdf/{uuid4()}")
 
     assert response.status_code == 404
     delay.assert_not_called()
@@ -76,7 +76,7 @@ def test_a_dead_broker_reports_an_error(otp_client, populate_incident_db):
     incident = get_operator_incident(populate_incident_db)
 
     with patch("incidents.views.generate_incident_pdf_task.delay", side_effect=OperationalError("broker down")):
-        response = client.post(f"/incidents/download-pdf/{incident.id}")
+        response = client.post(f"/incidents/download-pdf/{incident.public_id}")
 
     assert response.status_code == 400
     assert "messages" in response.json()
@@ -88,7 +88,7 @@ def test_report_pdf_is_queued_with_its_workflow(otp_client, populate_incident_db
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident_workflow = create_incident_workflow(populate_incident_db)
 
-    _, args = queue_pdf(client, f"/incidents/download-incident-report-pdf/{incident_workflow.id}")
+    _, args = queue_pdf(client, f"/incidents/download-incident-report-pdf/{incident_workflow.public_id}")
 
     assert args[:2] == (incident_workflow.incident.id, incident_workflow.id)
 
@@ -98,7 +98,7 @@ def test_an_unknown_report_is_not_queued(otp_client, populate_incident_db):
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
 
     with patch("incidents.views.generate_incident_pdf_task.delay") as delay:
-        response = client.post("/incidents/download-incident-report-pdf/999999")
+        response = client.post(f"/incidents/download-incident-report-pdf/{uuid4()}")
 
     assert response.status_code == 404
     delay.assert_not_called()
@@ -111,7 +111,7 @@ def test_a_report_outside_the_user_scope_is_not_queued(otp_client, populate_inci
     incident_workflow = create_incident_workflow(populate_incident_db)
 
     with patch("incidents.views.generate_incident_pdf_task.delay") as delay:
-        response = client.post(f"/incidents/download-incident-report-pdf/{incident_workflow.id}")
+        response = client.post(f"/incidents/download-incident-report-pdf/{incident_workflow.public_id}")
 
     assert response.status_code == 403
     delay.assert_not_called()
@@ -131,7 +131,7 @@ def test_status_of_a_task_from_another_session_is_not_found(otp_client, populate
 def test_status_reports_a_finished_pdf(otp_client, populate_incident_db):
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident = get_operator_incident(populate_incident_db)
-    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
 
     with mock_result(successful=True, ready=True):
         response = client.get(f"/incidents/pdf/{task_id}/status")
@@ -143,7 +143,7 @@ def test_status_reports_a_finished_pdf(otp_client, populate_incident_db):
 def test_status_leaves_a_running_task_alone_when_the_stack_is_healthy(otp_client, populate_incident_db):
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident = get_operator_incident(populate_incident_db)
-    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
 
     with mock_result(), patch("governanceplatform.views.celery_health_check", return_value=True):
         response = client.get(f"/incidents/pdf/{task_id}/status")
@@ -155,7 +155,7 @@ def test_status_leaves_a_running_task_alone_when_the_stack_is_healthy(otp_client
 def test_status_fails_a_running_task_when_the_stack_is_down(otp_client, populate_incident_db):
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident = get_operator_incident(populate_incident_db)
-    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
 
     with mock_result(), patch("governanceplatform.views.celery_health_check", return_value=False):
         response = client.get(f"/incidents/pdf/{task_id}/status")
@@ -168,7 +168,7 @@ def test_status_fails_a_running_task_when_the_stack_is_down(otp_client, populate
 def test_status_reports_a_failed_task(otp_client, populate_incident_db):
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident = get_operator_incident(populate_incident_db)
-    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, _ = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
 
     with mock_result(ready=True):
         response = client.get(f"/incidents/pdf/{task_id}/status")
@@ -182,7 +182,7 @@ def test_task_writes_the_incident_pdf(otp_client, populate_incident_db, settings
     settings.PRIVATE_FILES_ROOT = str(tmp_path)
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident = get_operator_incident(populate_incident_db)
-    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
 
     result = run_task(task_id, args)
 
@@ -195,7 +195,7 @@ def test_task_writes_the_report_pdf(otp_client, populate_incident_db, settings, 
     settings.PRIVATE_FILES_ROOT = str(tmp_path)
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
     incident_workflow = create_incident_workflow(populate_incident_db)
-    task_id, args = queue_pdf(client, f"/incidents/download-incident-report-pdf/{incident_workflow.id}")
+    task_id, args = queue_pdf(client, f"/incidents/download-incident-report-pdf/{incident_workflow.public_id}")
 
     result = run_task(task_id, args)
 
@@ -235,7 +235,7 @@ def test_download_serves_the_pdf_once_and_logs_it(otp_client, populate_incident_
     user = get_user(populate_incident_db, "regadmin@reg1.lu")
     client = otp_client(user)
     incident = get_operator_incident(populate_incident_db)
-    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
     run_task(task_id, args)
 
     response = client.get(f"/incidents/pdf/{task_id}/download")
@@ -254,7 +254,7 @@ def test_download_is_refused_to_another_user(otp_client, populate_incident_db, s
     settings.PRIVATE_FILES_ROOT = str(tmp_path)
     incident = get_operator_incident(populate_incident_db)
     client = otp_client(get_user(populate_incident_db, "regadmin@reg1.lu"))
-    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
     run_task(task_id, args)
 
     client = otp_client(get_user(populate_incident_db, "opadmin@com1.lu"))
@@ -269,7 +269,7 @@ def test_download_is_refused_when_access_was_revoked(otp_client, populate_incide
     user = get_user(populate_incident_db, "opadmin@com1.lu")
     client = otp_client(user)
     incident = get_operator_incident(populate_incident_db)
-    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.id}")
+    task_id, args = queue_pdf(client, f"/incidents/download-pdf/{incident.public_id}")
     run_task(task_id, args)
 
     CompanyUser.objects.filter(user=user).update(approved=False)

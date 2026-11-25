@@ -82,7 +82,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
     ]
     # asectorial workflow
     incident = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
-    url = "/incidents/download-pdf/" + str(incident.id)
+    url = "/incidents/download-pdf/" + str(incident.public_id)
     assert_pdf_request_access(otp_client, users, authorized_users, url)
 
     # Add a sector to test RegUser see the incident
@@ -94,7 +94,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
         regulator_user = next((u for u in users if u.email == "reguser@reg1.lu"), None)
         ru = RegulatorUser.objects.get(user=regulator_user, regulator=regulator_user.regulators.first())
         if ru:
-            url = "/incidents/download-pdf/" + str(incident.id)
+            url = "/incidents/download-pdf/" + str(incident.public_id)
             authorized_users.append(regulator_user)
             ru.sectors.add(sector)
             assert_pdf_request_access(otp_client, users, authorized_users, url)
@@ -301,7 +301,7 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
     ]
     # operator incident
     incident = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
-    url = "/incidents/access_log/" + str(incident.id)
+    url = "/incidents/access_log/" + str(incident.public_id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)
 
     authorized_users = [
@@ -313,7 +313,7 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
     ]
     # regulator incident
     incident = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
-    url = "/incidents/access_log/" + str(incident.id)
+    url = "/incidents/access_log/" + str(incident.public_id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)
 
 
@@ -326,7 +326,7 @@ def test_incident_log_hides_deleted_regulator_user_from_operator(otp_client, pop
     log = LogReportRead.objects.create(user=regulator_user, incident=incident, action="READ", role="RegulatorUser")
     regulator_user.delete()
 
-    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+    response = otp_client(operator).get(reverse("access_log", args=[incident.public_id]))
 
     assert log not in response.context["log"]
 
@@ -340,7 +340,7 @@ def test_incident_log_shows_deleted_user_name(otp_client, populate_incident_db):
     log = LogReportRead.objects.create(user=operator_user, incident=incident, action="READ", role="OperatorUser")
     operator_user.delete()
 
-    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+    response = otp_client(operator).get(reverse("access_log", args=[incident.public_id]))
 
     assert log.user_full_name
     assert log.user_full_name in response.content.decode()
@@ -366,7 +366,7 @@ def test_incident_log_hides_connector_transmission_from_operator(otp_client, pop
     incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
     entry = _connector_transmit_entry(incident)
 
-    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+    response = otp_client(operator).get(reverse("access_log", args=[incident.public_id]))
 
     assert entry not in response.context["log"]
 
@@ -377,7 +377,7 @@ def test_incident_log_shows_connector_transmission_to_observer(otp_client, popul
     incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
     entry = _connector_transmit_entry(incident)
 
-    response = otp_client(observer).get(reverse("access_log", args=[incident.id]))
+    response = otp_client(observer).get(reverse("access_log", args=[incident.public_id]))
 
     assert entry in response.context["log"]
 
@@ -515,7 +515,7 @@ def test_regulator_edits_report_with_incident_id_but_no_workflow_id(otp_client, 
     )
 
     response = otp_client(regulator_admin).get(
-        reverse("edit_workflow"), {"incident_id": incident.id, "incident_workflow_id": incident_workflow.id}
+        reverse("edit_workflow"), {"incident_id": incident.public_id, "incident_workflow_id": incident_workflow.public_id}
     )
 
     assert response.status_code == 200

@@ -434,6 +434,15 @@ def test_incident_detail_skips_answers_detached_from_their_question(client, bear
     assert response.json()["reports"][0]["answers"] == {}
 
 
+def test_incident_and_its_reports_carry_their_public_id(client, bearer, records):
+    workflow = Workflow.objects.create(name="Early warning", label="Early warning")
+    SectorRegulationWorkflow.objects.create(sector_regulation=records["workflow"], workflow=workflow)
+    report = IncidentWorkflow.objects.create(incident=records["incident"], workflow=workflow)
+    response = client.get(reverse("api:incident-detail", kwargs={"reference": records["incident"].incident_id}), **auth(bearer))
+    assert response.json()["public_id"] == str(records["incident"].public_id)
+    assert response.json()["reports"][0]["public_id"] == str(report.public_id)
+
+
 def test_declaration_detail_is_logged_for_the_operator_company_but_not_the_list(client, api_user, bearer, records):
     CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
     bind_key(bearer, records["company"])
