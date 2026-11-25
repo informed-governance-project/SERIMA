@@ -48,7 +48,15 @@ class IncidentReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IncidentWorkflow
-        fields: tuple[str, ...] = ("report", "timestamp", "review_status", "detection_date", "starting_date", "resolution_date")
+        fields: tuple[str, ...] = (
+            "public_id",
+            "report",
+            "timestamp",
+            "review_status",
+            "detection_date",
+            "starting_date",
+            "resolution_date",
+        )
         read_only_fields = fields
 
 
@@ -74,6 +82,7 @@ class IncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = (
+            "public_id",
             "incident_id",
             "company_name",
             "incident_notification_date",
