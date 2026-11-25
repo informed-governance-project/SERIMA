@@ -3,7 +3,7 @@ ci:
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.5  # keep in sync with ruff version in pyproject.toml
+    rev: v0.17.6  # keep in sync with ruff version in pyproject.toml
     hooks:
       - id: ruff-check
         args: [--fix, --output-format=full]
@@ -36,7 +36,7 @@ repos:
 
   # ── Dependency export (keeps requirements.txt in sync with poetry.lock) ─────
   - repo: https://github.com/python-poetry/poetry-plugin-export
-    rev: 1.10.1
+    rev: 1.10.2
     hooks:
       - id: poetry-export
         args: ["-f", "requirements.txt", "-o", "requirements.txt", "--without-hashes"]
