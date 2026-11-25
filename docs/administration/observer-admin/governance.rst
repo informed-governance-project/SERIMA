@@ -73,6 +73,10 @@ the ones the platform administrator made available to your observer:
 - **GPG-encrypted JSON (e-mail)**: emails the incident as JSON, encrypted with the **GPG public key** you paste
   (ASCII-armored), to the **E-mail address for incident notification** of your observer.
 
+In the JSON, the incident and each of its reports carry a ``public_id``: a random identifier that stays the same in
+every notification about them and is unique across SERIMA platforms. Use it, rather than the incident reference, to
+match a notification with an incident or report your system already holds.
+
 .. _observer-admin-webhook-receiving:
 
 **Receiving webhook notifications.** HTTPS protects the incident only on its way to your server. The JSON is not

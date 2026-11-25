@@ -121,8 +121,9 @@ Resources
    * - ``/api/v1/me/``
      - The key owner's email, first name and last name.
    * - ``/api/v1/incidents/``
-     - Incident references, company name, notification/detection/update dates,
-       incident status, significant-impact flag and internal/complaint references.
+     - Incident public ID and references, company name, notification/detection/update
+       dates, incident status, significant-impact flag and internal/complaint
+       references, and each report with its own public ID.
    * - ``/api/v1/incidents/{reference}/``
      - One incident, using its incident reference.
    * - ``/api/v1/security-objectives/``
