@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-23 14:32+0100\n"
+"POT-Creation-Date: 2026-11-25 08:42+0100\n"
 "PO-Revision-Date: 2026-11-25 07:28+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
@@ -47,11 +47,11 @@ msgstr "Categorieën van entiteiten"
 
 #: governanceplatform/admin.py:519 governanceplatform/models.py:93
 #: governanceplatform/models.py:698 incidents/admin.py:595
-#: incidents/admin.py:664 incidents/admin.py:978 incidents/filters.py:33
+#: incidents/admin.py:664 incidents/admin.py:978 incidents/filters.py:21
 #: incidents/forms.py:843 incidents/models.py:57 incidents/models.py:334
 #: incidents/views.py:1037 reporting/admin.py:69 reporting/filters.py:31
 #: reporting/forms.py:48 reporting/forms.py:168 reporting/models.py:323
-#: reporting/models.py:498 securityobjectives/filters.py:34
+#: reporting/models.py:498 securityobjectives/filters.py:24
 #: securityobjectives/forms.py:307 securityobjectives/globals.py:47
 #: securityobjectives/tasks.py:87
 msgid "Sectors"
@@ -671,7 +671,7 @@ msgstr "Beveiligingsdoelstelling"
 msgid "Reporting"
 msgstr "Reporting"
 
-#: governanceplatform/helpers.py:141
+#: governanceplatform/helpers.py:140
 #, python-brace-format
 msgid ""
 "<strong>Modification and deletion actions are not allowed.</strong><br>- "
@@ -682,11 +682,11 @@ msgstr ""
 "strong><br>- {object_name} is ofwel in gebruik<br> - of u bent niet de maker "
 "({creator_name})"
 
-#: governanceplatform/helpers.py:659
+#: governanceplatform/helpers.py:644
 msgid "Invalid legend state."
 msgstr ""
 
-#: governanceplatform/helpers.py:668
+#: governanceplatform/helpers.py:653
 msgid "Invalid choice of columns."
 msgstr ""
 
@@ -1317,20 +1317,20 @@ msgstr "leeg wanneer de regulator geen opmerkingen heeft geformuleerd"
 msgid "Deadline of the next report"
 msgstr "Deadline voor het volgende rapport"
 
-#: incidents/filters.py:37
+#: incidents/filters.py:25
 msgid "Yes"
 msgstr ""
 
-#: incidents/filters.py:37
+#: incidents/filters.py:25
 msgid "No"
 msgstr ""
 
-#: incidents/filters.py:38 incidents/models.py:574
+#: incidents/filters.py:26 incidents/models.py:574
 msgid "Significant impact"
 msgstr "Aanzienlijke impact"
 
-#: incidents/filters.py:42 reporting/filters.py:50 reporting/filters.py:102
-#: securityobjectives/filters.py:36
+#: incidents/filters.py:30 reporting/filters.py:50 reporting/filters.py:102
+#: securityobjectives/filters.py:26
 msgid "Search"
 msgstr "Zoeken"
 
@@ -1835,7 +1835,7 @@ msgid "Email template"
 msgstr "E-mailsjabloon"
 
 #: incidents/models.py:1271 reporting/globals.py:43
-#: securityobjectives/filters.py:32 securityobjectives/forms.py:313
+#: securityobjectives/filters.py:22 securityobjectives/forms.py:313
 #: securityobjectives/globals.py:41 securityobjectives/models.py:502
 #: securityobjectives/models.py:641 securityobjectives/models.py:719
 #: securityobjectives/tasks.py:88
