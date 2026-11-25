@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-11-25
+
 ### Added
 
 - Opt-in read-only APIs for incidents, security-objective declarations, reporting projects and the current user, with expiring personal API keys stored as hashes, account-based key creation/revocation, OpenAPI YAML and Swagger UI. The API is disabled by default; once enabled, platform administrators grant it per module and role under **API access**, and it follows the key owner's current organization, sector and module permissions. An operator's key reads only the company selected when it was created. Incidents and declarations opened through the API are recorded in their Access Log with the action `API READ`, as on the web
@@ -826,6 +828,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Email notifications for incident events
 - Bootstrap 5 frontend
 
+[0.6.2]: https://github.com/informed-governance-project/SERIMA/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/informed-governance-project/SERIMA/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.18...v0.6.0
 [0.5.18]: https://github.com/informed-governance-project/SERIMA/compare/v0.5.17...v0.5.18
