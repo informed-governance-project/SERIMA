@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A security objective with no measure turned on is no longer shown as fully filled when its measures carry a justification and the planned measures are written: it is now partially filled, and the declaration cannot be submitted until at least one measure is on (#970)
+
 ## [0.6.2] - 2026-11-25
 
 ### Added
