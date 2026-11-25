@@ -523,15 +523,35 @@ def test_a_justification_on_an_unimplemented_measure_completes_the_objective(pop
     standard.actions_mandatory = False
     standard.save()
     objective = populate_so_db["so_security_objectives"][0]
-    SecurityMeasureAnswer.objects.filter(standard_answer=standard_answer).update(
-        is_implemented=False,
-        justification="Not applicable to our infrastructure.",
+    answers = SecurityMeasureAnswer.objects.filter(standard_answer=standard_answer, security_measure__security_objective=objective)
+    answers.update(is_implemented=False, justification="Not applicable to our infrastructure.")
+    answers.filter(pk=answers.order_by("-security_measure__maturity_level__level").first().pk).update(
+        is_implemented=True, justification="In place."
     )
 
     state = get_completion_objective(objective, standard_answer)
 
     assert state["is_completed"] is True
     assert state["is_partially"] is False
+
+
+@pytest.mark.django_db
+def test_justifications_without_any_measure_on_leave_the_objective_partial(populate_so_db):
+    """Justifying every measure off with planned measures written is not an answer (#970)."""
+    from securityobjectives.views import get_completion_objective
+
+    standard_answer = populate_so_db["sas"][0]
+    objective = populate_so_db["so_security_objectives"][0]
+    SecurityMeasureAnswer.objects.filter(standard_answer=standard_answer).update(
+        is_implemented=False,
+        justification="Not applicable to our infrastructure.",
+    )
+    SecurityObjectiveStatus.objects.filter(standard_answer=standard_answer, security_objective=objective).update(actions="Plan.")
+
+    state = get_completion_objective(objective, standard_answer)
+
+    assert state["is_completed"] is False
+    assert state["is_partially"] is True
 
 
 @pytest.mark.django_db
