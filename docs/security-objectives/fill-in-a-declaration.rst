@@ -158,8 +158,8 @@ and, below it, the number and name of each maturity level of the framework.
      - No measure of the objective has been answered yet.
    * - Orange triangle
      - Partially filled
-     - The objective is started but not complete: a measure turned on has no justification, or the planned
-       measures are missing.
+     - The objective is started but not complete: no measure is turned on, a measure turned on has no justification,
+       or the planned measures are missing.
    * - Green circle
      - Fully filled
      - Everything the framework requires for the objective is filled in. On a submitted declaration, the legend reads
