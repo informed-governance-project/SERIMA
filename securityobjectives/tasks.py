@@ -17,12 +17,14 @@ from openpyxl import Workbook
 from governanceplatform.globals import EXPORT
 from governanceplatform.helpers import delete_file_and_parents, sanitize_spreadsheet_cell
 from governanceplatform.models import Regulation, Sector, User
+from governanceplatform.tasks import store_async_pdf
 from securityobjectives.scripts import so_declarations_cleaning  # noqa: F401
 
 from .email import send_export_notification
 from .globals import SO_EXPORT_COLUMNS, STANDARD_ANSWER_REVIEW_STATUS
-from .helpers import get_export_sector_ids, get_exportable_standard_answers
-from .models import SecurityObjectiveExport, Standard
+from .helpers import get_export_sector_ids, get_exportable_standard_answers, get_standard_answers_with_progress
+from .models import SecurityObjectiveExport, Standard, StandardAnswer
+from .pdf_generation import get_declaration_pdf
 
 
 @shared_task
@@ -52,7 +54,7 @@ def get_export_rows(queryset) -> list[list]:
         [
             declaration.get_status_display(),
             format_export_datetime(declaration.last_update),
-            format_export_datetime(declaration.submit_date),
+            format_export_datetime(declaration.first_submit_date),
             declaration.group.group_id if declaration.group else "",
             declaration.standard.label if declaration.standard else "",
             declaration.creator_company_name,
@@ -94,7 +96,7 @@ def write_csv(rows) -> str:
     writer = csv.writer(buffer, quoting=csv.QUOTE_ALL)
     for row in rows:
         writer.writerow([sanitize_spreadsheet_cell(value) for value in row])
-    return buffer.getvalue()
+    return "\ufeff" + buffer.getvalue()
 
 
 def set_column_widths(worksheet):
@@ -218,3 +220,14 @@ def cleanup_unconfirmed_import_file(job_pk: int):
     delete_file_and_parents(job.input_errors_file, f"import input_errors_file (unconfirmed job {job_pk})")
     if job:
         job.delete()
+
+
+@shared_task(bind=True)
+def generate_declaration_pdf_task(self, standard_answer_id: int, user_id: int, language: str):
+    standard_answer = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer_id)).get()
+    user = User.objects.get(pk=user_id)
+
+    with translation.override(language):
+        pdf_report = get_declaration_pdf(standard_answer, user)
+
+    store_async_pdf(self.request.id, pdf_report)

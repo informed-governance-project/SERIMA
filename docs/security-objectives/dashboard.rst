@@ -20,7 +20,7 @@ Its parts are numbered in the screenshot below and described one by one.
 
 1. **Dashboard**: This link in the top-right corner brings you back to the dashboard from any page of the module.
 
-2. **New submission**: This red button opens the **Create a new security objectives statement** pop-up.
+2. **New assessment**: This red button opens the **Create a new security objectives statement** pop-up.
    The new declaration is then filled in as described in :doc:`fill-in-a-declaration`.
 
 3. **Search**: Finds declarations by the text you enter, looked up in the identifier, the framework, the creator, the operator, the year and, for regulators, the sectors.
@@ -31,12 +31,14 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. note::
 
-      The search, the filter and the sort order are kept until you log out, even if you leave the dashboard.
+      The filter, the sort order and the number of entries per page are saved in your account:
+      they still apply after you log out and back in, on any computer or browser.
+      The search is kept only until you log out.
       If the list looks incomplete, check whether the **Filter** button shows **(Active)**.
 
 5. **Icon guide**: The book-shaped icon labeled **AZ** displays the legend above the list.
    Its first row explains the statuses shown in the **Status** column (see the table below); its second row, the action icons.
-   Click the icon again to hide the legend.
+   Click the icon again to hide the legend. The dashboard remembers whether you left the legend open or closed.
 
    .. figure:: /_static/images/security-objectives/dashboard-03.png
       :alt: Legend with the declaration statuses and the action icons
@@ -86,7 +88,7 @@ Its parts are numbered in the screenshot below and described one by one.
         - The date and time of the last change to the declaration.
       * - 3
         - Submission date
-        - The date and time at which the declaration was submitted; empty until then.
+        - The date and time at which the first version of the declaration was submitted; empty until then. This date does not change when a revised version is submitted.
       * - 4
         - Identifier
         - The reference the platform gives the declaration, starting with ``SO_``.
@@ -101,7 +103,7 @@ Its parts are numbered in the screenshot below and described one by one.
         - The year the declaration is for.
       * - 8
         - Progress
-        - How much of the declaration has been filled in. At 100 %, an unsubmitted declaration shows a **Submit** button here instead.
+        - How much of the declaration has been filled in. At 100 %, an unsubmitted declaration with no objective still marked for revision shows a **Submit** button here instead.
       * - 9
         - Actions
         - The actions on the declaration, described in points 8 to 13.
@@ -111,7 +113,7 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. important::
 
-      Once a declaration is complete, a **Submit** button replaces its progress bar: click it to submit the declaration.
+      Once a declaration is complete, and none of its objectives is still marked for revision, a **Submit** button replaces its progress bar: click it to submit the declaration.
       The declaration screen has its own **Submit** button (see :doc:`fill-in-a-declaration`).
 
 7. **Column settings**: The white gear icon on a red background opens the **Choice of columns** pop-up.
@@ -123,8 +125,8 @@ Its parts are numbered in the screenshot below and described one by one.
 
    .. note::
 
-      Your choice of columns is saved in your web browser, not in your account.
-      On another computer or browser, or after clearing your browser data, the dashboard shows all columns again.
+      Your choice of columns is saved in your account,
+      so the dashboard shows the same columns after you log in again, on any computer or browser.
 
 Points 8 to 13 are the actions of each declaration, in the order they appear in the **Actions** column.
 
@@ -156,8 +158,14 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
 
        The **Duplicate** icon is disabled when the evaluation framework of the declaration is no longer active.
 
-11. **Download**: Downloads the declaration as a PDF document. Until the regulator sends the result of the review,
+11. **Download**: Downloads the declaration as a PDF document. The PDF is prepared in the background: a loading
+    spinner is shown meanwhile, and the file downloads by itself once it is ready. If it cannot be prepared,
+    the message **An error occurred while generating the report.** is shown instead.
+    Until the regulator sends the result of the review,
     the PDF shows the status **Under review**, without the results of the objectives or the review comments.
+    As in the declaration, the objectives are listed domain by domain, each under a line naming its domain and its
+    place in it, for example *D2 · Access control · Objective 3 of 5 in this domain*. A framework with a single
+    domain shows no such line.
 
 12. **Delete**: Deletes the declaration. Only unsubmitted declarations can be deleted; for the others, the icon is greyed out.
 
@@ -177,4 +185,5 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
     .. note::
 
        Operators see only the actions of operator users in the log. The regulator's readings and reviews
-       appear in the regulator's log only.
+       appear in the regulator's log only. Declarations opened through the API appear with the action
+       **API READ**; see :doc:`/technical/api`.

@@ -358,6 +358,72 @@
   }
  },
  {
+  "model": "governanceplatform.apimoduleaccess",
+  "pk": 1,
+  "fields": {
+   "module": "incidents",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ],
+    [
+     "OperatorAdmin"
+    ],
+    [
+     "OperatorUser"
+    ],
+    [
+     "IncidentUser"
+    ],
+    [
+     "ObserverAdmin"
+    ],
+    [
+     "ObserverUser"
+    ]
+   ]
+  }
+ },
+ {
+  "model": "governanceplatform.apimoduleaccess",
+  "pk": 2,
+  "fields": {
+   "module": "securityobjectives",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ],
+    [
+     "OperatorAdmin"
+    ],
+    [
+     "OperatorUser"
+    ]
+   ]
+  }
+ },
+ {
+  "model": "governanceplatform.apimoduleaccess",
+  "pk": 3,
+  "fields": {
+   "module": "reporting",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ]
+   ]
+  }
+ },
+ {
   "model": "governanceplatform.company",
   "pk": 46,
   "fields": {
@@ -458,10 +524,30 @@
    "country": "LU",
    "address": "3 Example Square, 3000 Example City",
    "email_for_notification": "observer-a@example.org",
-   "rt_url": null,
-   "_rt_token": null,
-   "rt_queue": null,
-   "functionalities": []
+   "functionalities": [],
+   "allowed_connector_types": [
+    "rt",
+    "webhook",
+    "gpg_json"
+   ],
+   "notification_mode": "default_and_connectors"
+  }
+ },
+ {
+  "model": "governanceplatform.observerconnector",
+  "pk": 1,
+  "fields": {
+   "observer": 2,
+   "connector_type": "rt",
+   "name": "RT",
+   "is_active": true,
+   "config": {
+    "url": "https://rt.example.org",
+    "queue": "Incidents"
+   },
+   "_secret": null,
+   "created_at": "2026-11-20T09:00:00Z",
+   "updated_at": "2026-11-20T09:00:00Z"
   }
  },
  {
@@ -5486,7 +5572,7 @@
   "fields": {
    "language_code": "en",
    "subject": "New incident creation",
-   "content": "Incident: #INCIDENT_ID#\r\n\r\nDear Entity,\r\n\r\nYou have just started the creation a new incident notification in SERIMA #INCIDENT_ID#. The first step of the incident notification will be completed when you will have filled and submitted the first incident report.\r\n\r\n* Address of the platform : #PUBLIC_URL#\r\n* Incident reference: #INCIDENT_ID#\t\r\n* Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#\t\r\n* Date the incident was detected: #INCIDENT_DETECTION_DATE#\t\r\n* Date the incident started: #INCIDENT_STARTING_DATE#\r\n* Status of the incident: #INCIDENT_STATUS#\t\r\n* Name of the report: #REPORT_NAME#\r\n* Status of that report: #REPORT_REVIEW_STATUS#\t\r\n* Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#\r\n* Deadline of the next report: #DEADLINE#\t\r\n\r\nThanks.\r\n\r\nBest regards,\r\nRegulator A\r\n\r\nThis e-mail is automatically generated. Please do not reply to it.",
+   "content": "<p>Incident: #INCIDENT_ID#</p>\n<p>Dear Entity,</p>\n<p>You have just started the creation a new incident notification in SERIMA #INCIDENT_ID#. The first step of the incident notification will be completed when you will have filled and submitted the first incident report.</p>\n<ul>\n<li>Address of the platform : #PUBLIC_URL#</li>\n<li>Incident reference: #INCIDENT_ID# </li>\n<li>Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#  </li>\n<li>Date the incident was detected: #INCIDENT_DETECTION_DATE# </li>\n<li>Date the incident started: #INCIDENT_STARTING_DATE#</li>\n<li>Status of the incident: #INCIDENT_STATUS# </li>\n<li>Name of the report: #REPORT_NAME#</li>\n<li>Status of that report: #REPORT_REVIEW_STATUS# </li>\n<li>Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#</li>\n<li>Deadline of the next report: #DEADLINE#   </li>\n</ul>\n<p>Thanks.</p>\n<p>Best regards,\nRegulator A</p>\n<p>This e-mail is automatically generated. Please do not reply to it.</p>",
    "master": 1
   }
  },
@@ -5496,7 +5582,7 @@
   "fields": {
    "language_code": "en",
    "subject": "Incident closure",
-   "content": "Incident #INCIDENT_ID#\r\n\r\nDear Entity,\r\n\r\nThe incident #INCIDENT_ID# has just been closed.\r\n\r\n* Address of the platform : #PUBLIC_URL#\r\n* Incident reference: #INCIDENT_ID#\t\r\n* Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#\t\r\n* Date the incident was detected: #INCIDENT_DETECTION_DATE#\t\r\n* Date the incident started: #INCIDENT_STARTING_DATE#\r\n* Status of the incident: #INCIDENT_STATUS#\t\r\n* Name of the report: #REPORT_NAME#\r\n* Status of that report: #REPORT_REVIEW_STATUS#\t\r\n* Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#\r\n* Deadline of the next report: #DEADLINE#\t\r\n\r\nThanks.\r\n\r\nBest regards,\r\nRegulator A\r\n\r\nThis e-mail is automatically generated. Please do not reply to it.",
+   "content": "<p>Incident #INCIDENT_ID#</p>\n<p>Dear Entity,</p>\n<p>The incident #INCIDENT_ID# has just been closed.</p>\n<ul>\n<li>Address of the platform : #PUBLIC_URL#</li>\n<li>Incident reference: #INCIDENT_ID# </li>\n<li>Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#  </li>\n<li>Date the incident was detected: #INCIDENT_DETECTION_DATE# </li>\n<li>Date the incident started: #INCIDENT_STARTING_DATE#</li>\n<li>Status of the incident: #INCIDENT_STATUS# </li>\n<li>Name of the report: #REPORT_NAME#</li>\n<li>Status of that report: #REPORT_REVIEW_STATUS# </li>\n<li>Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#</li>\n<li>Deadline of the next report: #DEADLINE#   </li>\n</ul>\n<p>Thanks.</p>\n<p>Best regards,\nRegulator A</p>\n<p>This e-mail is automatically generated. Please do not reply to it.</p>",
    "master": 2
   }
  },
@@ -5506,7 +5592,7 @@
   "fields": {
    "language_code": "en",
    "subject": "Incident Notification – Status Change",
-   "content": "Incident: #INCIDENT_ID#\r\n\r\nDear Entity,\r\n\r\nThis e-mail to inform you that the report status of incident #INCIDENT_ID# has changed.\r\n\r\n\r\n* Address of the platform : #PUBLIC_URL#\r\n* Incident reference: #INCIDENT_ID#\t\r\n* Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#\t\r\n* Date the incident was detected: #INCIDENT_DETECTION_DATE#\t\r\n* Date the incident started: #INCIDENT_STARTING_DATE#\r\n* Status of the incident: #INCIDENT_STATUS#\t\r\n* Name of the report: #REPORT_NAME#\r\n* Status of that report: #REPORT_REVIEW_STATUS#\t\r\n* Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#\r\n* Deadline of the next report: #DEADLINE#\t\r\n\r\n\r\nThanks.\r\n\r\nBest regards,\r\nRegulator A\r\n\r\nThis e-mail is automatically generated. Please do not reply to it.",
+   "content": "<p>Incident: #INCIDENT_ID#</p>\n<p>Dear Entity,</p>\n<p>This e-mail to inform you that the report status of incident #INCIDENT_ID# has changed.</p>\n<ul>\n<li>Address of the platform : #PUBLIC_URL#</li>\n<li>Incident reference: #INCIDENT_ID# </li>\n<li>Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#  </li>\n<li>Date the incident was detected: #INCIDENT_DETECTION_DATE# </li>\n<li>Date the incident started: #INCIDENT_STARTING_DATE#</li>\n<li>Status of the incident: #INCIDENT_STATUS# </li>\n<li>Name of the report: #REPORT_NAME#</li>\n<li>Status of that report: #REPORT_REVIEW_STATUS# </li>\n<li>Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#</li>\n<li>Deadline of the next report: #DEADLINE#   </li>\n</ul>\n<p>Thanks.</p>\n<p>Best regards,\nRegulator A</p>\n<p>This e-mail is automatically generated. Please do not reply to it.</p>",
    "master": 3
   }
  },
@@ -5516,7 +5602,7 @@
   "fields": {
    "language_code": "en",
    "subject": "Incident Notification - Final Report Reminder",
-   "content": "Incident: #INCIDENT_ID#\r\n\r\nDear Operator,\r\n\r\nThis is a kind reminder to submit the final report linked to the incident #INCIDENT_ID#.\r\n\r\n* Address of the platform : #PUBLIC_URL#\r\n* Incident reference: #INCIDENT_ID#\t\r\n* Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#\t\r\n* Date the incident was detected: #INCIDENT_DETECTION_DATE#\t\r\n* Date the incident started: #INCIDENT_STARTING_DATE#\r\n* Status of the incident: #INCIDENT_STATUS#\t\r\n* Name of the report: #REPORT_NAME#\r\n* Status of that report: #REPORT_REVIEW_STATUS#\t\r\n* Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#\r\n* Deadline of the next report: #DEADLINE#\t\r\n\r\nThanks.\r\n\r\nBest regards,\r\nRegulator A\r\n\r\nThis e-mail is automatically generated. Please do not reply to it.",
+   "content": "<p>Incident: #INCIDENT_ID#</p>\n<p>Dear Operator,</p>\n<p>This is a kind reminder to submit the final report linked to the incident #INCIDENT_ID#.</p>\n<ul>\n<li>Address of the platform : #PUBLIC_URL#</li>\n<li>Incident reference: #INCIDENT_ID# </li>\n<li>Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#  </li>\n<li>Date the incident was detected: #INCIDENT_DETECTION_DATE# </li>\n<li>Date the incident started: #INCIDENT_STARTING_DATE#</li>\n<li>Status of the incident: #INCIDENT_STATUS# </li>\n<li>Name of the report: #REPORT_NAME#</li>\n<li>Status of that report: #REPORT_REVIEW_STATUS# </li>\n<li>Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#</li>\n<li>Deadline of the next report: #DEADLINE#   </li>\n</ul>\n<p>Thanks.</p>\n<p>Best regards,\nRegulator A</p>\n<p>This e-mail is automatically generated. Please do not reply to it.</p>",
    "master": 5
   }
  },
@@ -5526,7 +5612,7 @@
   "fields": {
    "language_code": "en",
    "subject": "Incident Notification - Preliminary Report - Reminder #REPORT_NAME#",
-   "content": "Incident: #INCIDENT_ID#\r\n\r\nDear Operator,\r\n\r\nThis is a kind reminder to submit the preliminary report linked to the incident #INCIDENT_ID#.\r\n\r\n* Address of the platform : #PUBLIC_URL#\r\n* Incident reference: #INCIDENT_ID#\t\r\n* Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#\t\r\n* Date the incident was detected: #INCIDENT_DETECTION_DATE#\t\r\n* Date the incident started: #INCIDENT_STARTING_DATE#\r\n* Status of the incident: #INCIDENT_STATUS#\t\r\n* Name of the report: #REPORT_NAME#\r\n* Status of that report: #REPORT_REVIEW_STATUS#\t\r\n* Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#\r\n* Deadline of the next report: #DEADLINE#\t\r\n\r\nThanks.\r\n\r\nBest regards,\r\nRegulator A\r\n\r\nThis e-mail is automatically generated. Please do not reply to it.",
+   "content": "<p>Incident: #INCIDENT_ID#</p>\n<p>Dear Operator,</p>\n<p>This is a kind reminder to submit the preliminary report linked to the incident #INCIDENT_ID#.</p>\n<ul>\n<li>Address of the platform : #PUBLIC_URL#</li>\n<li>Incident reference: #INCIDENT_ID# </li>\n<li>Date the incident was notified: #INCIDENT_NOTIFICATION_DATE#  </li>\n<li>Date the incident was detected: #INCIDENT_DETECTION_DATE# </li>\n<li>Date the incident started: #INCIDENT_STARTING_DATE#</li>\n<li>Status of the incident: #INCIDENT_STATUS# </li>\n<li>Name of the report: #REPORT_NAME#</li>\n<li>Status of that report: #REPORT_REVIEW_STATUS# </li>\n<li>Notice that the regulator left a review comment: #REPORT_COMMENT_ADDED#</li>\n<li>Deadline of the next report: #DEADLINE#   </li>\n</ul>\n<p>Thanks.</p>\n<p>Best regards,\nRegulator A</p>\n<p>This e-mail is automatically generated. Please do not reply to it.</p>",
    "master": 6
   }
  },
@@ -14335,7 +14421,7 @@
   "pk": 9,
   "fields": {
    "language_code": "en",
-   "label": "D1: Governance and risk management",
+   "label": "Governance and risk management",
    "master": 9
   }
  },
@@ -14344,7 +14430,7 @@
   "pk": 10,
   "fields": {
    "language_code": "en",
-   "label": "D2: Human resources security",
+   "label": "Human resources security",
    "master": 10
   }
  },
@@ -14353,7 +14439,7 @@
   "pk": 11,
   "fields": {
    "language_code": "en",
-   "label": "D3: Security of systems and facilities",
+   "label": "Security of systems and facilities",
    "master": 11
   }
  },
@@ -14362,7 +14448,7 @@
   "pk": 12,
   "fields": {
    "language_code": "en",
-   "label": "D4: Operations management",
+   "label": "Operations management",
    "master": 12
   }
  },
@@ -14371,7 +14457,7 @@
   "pk": 13,
   "fields": {
    "language_code": "en",
-   "label": "D5: Incident management",
+   "label": "Incident management",
    "master": 13
   }
  },
@@ -14380,7 +14466,7 @@
   "pk": 14,
   "fields": {
    "language_code": "en",
-   "label": "D6: Business continuity management",
+   "label": "Business continuity management",
    "master": 14
   }
  },
@@ -14389,7 +14475,7 @@
   "pk": 15,
   "fields": {
    "language_code": "en",
-   "label": "D7: Monitoring, auditing and testing",
+   "label": "Monitoring, auditing and testing",
    "master": 15
   }
  },
@@ -14776,7 +14862,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 88,
   "fields": {
-   "unique_code": "SFA_D_SO01",
+   "unique_code": "SO01",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14787,7 +14873,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 89,
   "fields": {
-   "unique_code": "SFA_D_SO02",
+   "unique_code": "SO02",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14798,7 +14884,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 90,
   "fields": {
-   "unique_code": "SFA_D_SO03",
+   "unique_code": "SO03",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14809,7 +14895,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 91,
   "fields": {
-   "unique_code": "SFA_D_SO04",
+   "unique_code": "SO04",
    "is_archived": false,
    "domain": 9,
    "creator_name": "Regulator A",
@@ -14820,7 +14906,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 92,
   "fields": {
-   "unique_code": "SFA_D_SO05",
+   "unique_code": "SO05",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14831,7 +14917,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 93,
   "fields": {
-   "unique_code": "SFA_D_SO06",
+   "unique_code": "SO06",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14842,7 +14928,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 94,
   "fields": {
-   "unique_code": "SFA_D_SO07",
+   "unique_code": "SO07",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14853,7 +14939,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 95,
   "fields": {
-   "unique_code": "SFA_D_SO08",
+   "unique_code": "SO08",
    "is_archived": false,
    "domain": 10,
    "creator_name": "Regulator A",
@@ -14864,7 +14950,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 96,
   "fields": {
-   "unique_code": "SFA_D_SO09",
+   "unique_code": "SO09",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14875,7 +14961,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 97,
   "fields": {
-   "unique_code": "SFA_D_SO10",
+   "unique_code": "SO10",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14886,7 +14972,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 98,
   "fields": {
-   "unique_code": "SFA_D_SO11",
+   "unique_code": "SO11",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14897,7 +14983,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 99,
   "fields": {
-   "unique_code": "SFA_D_SO12",
+   "unique_code": "SO12",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14908,7 +14994,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 100,
   "fields": {
-   "unique_code": "SFA_D_SO13",
+   "unique_code": "SO13",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14919,7 +15005,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 101,
   "fields": {
-   "unique_code": "SFA_D_SO14",
+   "unique_code": "SO14",
    "is_archived": false,
    "domain": 11,
    "creator_name": "Regulator A",
@@ -14930,7 +15016,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 102,
   "fields": {
-   "unique_code": "SFA_D_SO15",
+   "unique_code": "SO15",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14941,7 +15027,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 103,
   "fields": {
-   "unique_code": "SFA_D_SO16",
+   "unique_code": "SO16",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14952,7 +15038,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 104,
   "fields": {
-   "unique_code": "SFA_D_SO17",
+   "unique_code": "SO17",
    "is_archived": false,
    "domain": 12,
    "creator_name": "Regulator A",
@@ -14963,7 +15049,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 105,
   "fields": {
-   "unique_code": "SFA_D_SO18",
+   "unique_code": "SO18",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14974,7 +15060,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 106,
   "fields": {
-   "unique_code": "SFA_D_SO19",
+   "unique_code": "SO19",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14985,7 +15071,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 107,
   "fields": {
-   "unique_code": "SFA_D_SO20",
+   "unique_code": "SO20",
    "is_archived": false,
    "domain": 13,
    "creator_name": "Regulator A",
@@ -14996,7 +15082,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 108,
   "fields": {
-   "unique_code": "SFA_D_SO21",
+   "unique_code": "SO21",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15018,7 +15104,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 110,
   "fields": {
-   "unique_code": "SFA_D_SO23",
+   "unique_code": "SO23",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15029,7 +15115,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 111,
   "fields": {
-   "unique_code": "SFA_D_SO24",
+   "unique_code": "SO24",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15040,7 +15126,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 112,
   "fields": {
-   "unique_code": "SFA_D_SO25",
+   "unique_code": "SO25",
    "is_archived": false,
    "domain": 14,
    "creator_name": "Regulator A",
@@ -15051,7 +15137,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 113,
   "fields": {
-   "unique_code": "SFA_D_SO26",
+   "unique_code": "SO26",
    "is_archived": false,
    "domain": 15,
    "creator_name": "Regulator A",
@@ -15062,7 +15148,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 114,
   "fields": {
-   "unique_code": "SFA_D_SO27",
+   "unique_code": "SO27",
    "is_archived": false,
    "domain": 15,
    "creator_name": "Regulator A",
@@ -15073,7 +15159,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 115,
   "fields": {
-   "unique_code": "SFA_D_SO28",
+   "unique_code": "SO28",
    "is_archived": false,
    "domain": 16,
    "creator_name": "Regulator A",
@@ -15084,7 +15170,7 @@
   "model": "securityobjectives.securityobjective",
   "pk": 116,
   "fields": {
-   "unique_code": "SFA_D_SO29",
+   "unique_code": "SO29",
    "is_archived": false,
    "domain": 16,
    "creator_name": "Regulator A",
@@ -15097,7 +15183,7 @@
   "fields": {
    "language_code": "en",
    "subject": "[Security Objectives] Submission Received – Confirmation",
-   "content": "Dear Entity,\r\n\r\nWe herewith confirm receipt of your security objectives self-assessment.\r\n\r\nThanks\r\n\r\nBest regards,\r\nRegulator A",
+   "content": "<p>Dear Entity,</p>\n<p>We herewith confirm receipt of your security objectives self-assessment.</p>\n<p>Thanks</p>\n<p>Best regards,\nRegulator A</p>",
    "master": 1
   }
  },
@@ -15107,7 +15193,7 @@
   "fields": {
    "language_code": "en",
    "subject": "[SO] Status Change",
-   "content": "Dear Entity,\r\n\r\nThe status of your security objective self-assessment has changed.\r\n\r\nThanks\r\n\r\nBest regards,\r\nRegulator A",
+   "content": "<p>Dear Entity,</p>\n<p>The status of your security objective self-assessment has changed.</p>\n<p>Thanks</p>\n<p>Best regards,\nRegulator A</p>",
    "master": 2
   }
  },
@@ -19448,6 +19534,15 @@
   }
  },
  {
+  "model": "securityobjectives.standardanswergroup",
+  "pk": 51,
+  "fields": {
+   "notification_date": "2026-08-31T13:09:57.078Z",
+   "company": 46,
+   "group_id": "SO_R7KD2M4Q"
+  }
+ },
+ {
   "model": "securityobjectives.standardanswer",
   "pk": 23,
   "fields": {
@@ -19803,8 +19898,8 @@
    "creator_name": "Operator Admin",
    "creator_company_name": "Operator A",
    "year_of_submission": 2026,
-   "review_comment": null,
-   "group": 48
+   "review_comment": "<p>Declaration reviewed. Please add evidence for the incident management objectives.</p>",
+   "group": 51
   }
  },
  {

@@ -5,8 +5,8 @@ from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 
 from governanceplatform.globals import CROCKFORD_ALPHABET, REFERENCE_TOKEN_LENGTH
-from governanceplatform.helpers import build_crockford_token, normalize_crockford, normalize_reference
-from incidents.filters import reference_matches
+from governanceplatform.helpers import build_crockford_token
+from incidents.filters import IncidentFilter
 from incidents.globals import REFERENCE_PREFIX
 from incidents.models import Incident
 
@@ -111,29 +111,42 @@ def test_a_reference_that_is_not_in_the_legacy_format_is_not_parsed(reference):
     assert parse_legacy_reference(reference) is None
 
 
-def test_a_transcribed_reference_is_read_back_as_crockford_intends():
-    assert normalize_crockford("k7m2xq4o") == "K7M2XQ40"
-    assert normalize_crockford("IL") == "11"
+def search_incidents(field: str, value: str) -> list[Incident]:
+    return list(IncidentFilter(data={field: value}, queryset=Incident.objects.all()).qs)
 
 
 @pytest.mark.django_db
-def test_a_reference_is_found_when_a_zero_was_transcribed_as_a_letter():
-    incident = Incident.objects.create(incident_id="K7M2XQ40")
+@pytest.mark.parametrize("field", ["incident_id", "search"])
+def test_a_reference_is_found_whatever_its_case(field):
+    incident = Incident.objects.create(incident_id="NI_K7M2XQ40")
 
-    found = Incident.objects.filter(reference_matches("k7m2xq4o"))
+    assert search_incidents(field, "ni_k7m2xq40") == [incident]
 
-    assert list(found) == [incident]
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("field", ["incident_id", "search"])
+def test_a_reference_is_found_by_part_of_it(field):
+    incident = Incident.objects.create(incident_id="NI_K7M2XQ40")
+
+    assert search_incidents(field, "K7M2") == [incident]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("typed", ["NI_K7V2XQ1O", "NI_K7V2XQI0", "NI_K7V2XQL0", "NI_K7U2XQ10", "Nl_K7V2XQ10", "N1_K7V2XQ10"])
+@pytest.mark.parametrize("field", ["incident_id", "search"])
+def test_a_reference_typed_with_a_lookalike_character_is_not_found(field, typed):
+    """The search is strict (#948): a letter typed for a digit, or a digit for the I of
+    the prefix, is not read as the character it resembles."""
+    Incident.objects.create(incident_id="NI_K7V2XQ10")
+
+    assert search_incidents(field, typed) == []
 
 
 @pytest.mark.django_db
 def test_a_legacy_reference_is_still_found_by_its_company_acronym():
-    """Normalising the search input must not turn the O of a company acronym into a
-    zero, or the legacy references stop being searchable."""
     incident = Incident.objects.create(incident_id="FOO_ENE_ELE_0012_2026")
 
-    found = Incident.objects.filter(reference_matches("FOO"))
-
-    assert list(found) == [incident]
+    assert search_incidents("incident_id", "FOO") == [incident]
 
 
 def test_renumbering_leaves_a_reference_that_is_used_once_alone():
@@ -221,22 +234,13 @@ def test_the_migration_frees_the_duplicates_already_in_the_database():
     kept = historical_incident.objects.create(incident_id="FOO_ENE_ELE_0003_2026")
     renumbered = historical_incident.objects.create(incident_id="FOO_ENE_ELE_0003_2026")
 
-    MigrationExecutor(connection).migrate([after])
+    try:
+        MigrationExecutor(connection).migrate([after])
 
-    assert historical_incident.objects.get(pk=kept.pk).incident_id == "FOO_ENE_ELE_0003_2026"
-    assert historical_incident.objects.get(pk=renumbered.pk).incident_id == "FOO_ENE_ELE_0004_2026"
-
-
-@pytest.mark.django_db
-def test_a_prefixed_reference_is_found_after_a_transcription_slip():
-    """Normalising the whole value would read the I of the prefix as a 1, and the
-    reference the operator quoted would stop matching."""
-    incident = Incident.objects.create(incident_id="NI_K7M2XQ40")
-
-    found = Incident.objects.filter(reference_matches("NI_K7M2XQ4O"))
-
-    assert list(found) == [incident]
-
-
-def test_the_prefix_survives_normalisation():
-    assert normalize_reference("ni_k7m2xq4o", REFERENCE_PREFIX) == "NI_K7M2XQ40"
+        assert historical_incident.objects.get(pk=kept.pk).incident_id == "FOO_ENE_ELE_0003_2026"
+        assert historical_incident.objects.get(pk=renumbered.pk).incident_id == "FOO_ENE_ELE_0004_2026"
+    finally:
+        # Going back to `before` also unapplied every later migration; the teardown flush
+        # needs the schema the current models describe.
+        executor = MigrationExecutor(connection)
+        executor.migrate(executor.loader.graph.leaf_nodes())

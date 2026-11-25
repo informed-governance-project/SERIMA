@@ -14,6 +14,11 @@ import logging
 import os
 import sys
 
+from django.templatetags.static import static
+
+from governanceplatform.tools import get_private_files_root
+from governanceplatform.unfold_colors import unfold_colors
+
 logger = logging.getLogger(__name__)
 
 DJANGO_CI = os.getenv("DJANGO_CI") == "True"
@@ -71,7 +76,7 @@ try:
         EMAIL_SSL_KEYFILE = None
         EMAIL_TIMEOUT = None
 
-    API_ENABLED = config.API_ENABLED
+    API_ENABLED = getattr(config, "API_ENABLED", False)
 
     COOKIEBANNER = config.COOKIEBANNER
 
@@ -128,6 +133,9 @@ except Exception:
 
 # Application definition
 INSTALLED_APPS = [
+    "unfold",
+    "unfold.contrib.import_export",
+    "unfold.contrib.forms",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -141,6 +149,7 @@ INSTALLED_APPS = [
     "incidents",
     "securityobjectives",
     "reporting",
+    "rest_framework",
     "drf_spectacular",
     "drf_spectacular_sidecar",  # required for Django collectstatic discovery
     "corsheaders",
@@ -159,6 +168,19 @@ INSTALLED_APPS = [
     "captcha",
     "colorfield",
 ]
+
+UNFOLD = {
+    "SITE_TITLE": SITE_NAME,
+    "SITE_HEADER": SITE_NAME,
+    "SITE_LOGO": lambda _request: static("images/logo.svg"),
+    "STYLES": [
+        lambda _request: static("css/admin.css"),
+    ],
+    "SCRIPTS": [lambda _request: static("js/admin_responsive_cards.js")],
+    "COLORS": unfold_colors(),
+    # The public site has no dark mode, so the admin does not offer one either.
+    "THEME": "light",
+}
 
 AUTHENTICATION_BACKENDS = [
     "governanceplatform.custom_auth_backend.CaseInsensitiveEmailBackend",
@@ -183,12 +205,14 @@ REST_FRAMEWORK = {
 }
 
 SPECTACULAR_SETTINGS = {
-    "TITLE": "NC3-LU Governance Platform",
+    "TITLE": SITE_NAME,
     "DESCRIPTION": "API for the "
     '<a href="https://github.com/informed-governance-project" rel="noopener noreferrer" target="_blank">'
     "Governance Platform</a> by NC3-LU.",
     "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": True,
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_SETTINGS": {"persistAuthorization": False},
 }
 
 GRAPH_MODELS = {
@@ -538,6 +562,47 @@ except AttributeError:
 CELERY_TASK_TRACK_STARTED = True
 CELERY_RESULT_EXTENDED = True
 
+# Tasks are queued by how they behave, so that each kind can get its own worker: a user
+# waiting on a spinner, report generation holding Kaleido and LibreOffice for minutes,
+# and everything else. A worker started without -Q consumes all three.
+# "celery" is Celery's own default name, kept so that nothing queued before an upgrade
+# is left on a queue no worker reads.
+INTERACTIVE_QUEUE = "interactive"
+REPORTS_QUEUE = "reports"
+DEFAULT_QUEUE = "celery"
+CELERY_TASK_DEFAULT_QUEUE = DEFAULT_QUEUE
+CELERY_TASK_QUEUES = {INTERACTIVE_QUEUE: {}, REPORTS_QUEUE: {}, DEFAULT_QUEUE: {}}
+CELERY_TASK_ROUTES = {
+    **{
+        task: {"queue": INTERACTIVE_QUEUE}
+        for task in [
+            "incidents.tasks.generate_incident_pdf_task",
+            "securityobjectives.tasks.generate_declaration_pdf_task",
+            "securityobjectives.tasks.generate_so_export_task",
+            "reporting.tasks.import_risk_analysis_task",
+        ]
+    },
+    # The whole generation chain, so that a report run depends on a single worker.
+    **{
+        task: {"queue": REPORTS_QUEUE}
+        for task in [
+            "reporting.tasks.generate_data",
+            "reporting.tasks.generate_docx_task",
+            "reporting.tasks.generate_pdf_task",
+            "reporting.tasks.save_file_task",
+            "reporting.tasks.zip_files_task",
+            "reporting.tasks.on_chord_error",
+            "reporting.tasks.cleanup_files",
+        ]
+    },
+}
+# Each worker process holds at most one task in reserve besides the one it runs, instead of
+# Celery's four, so a busy worker keeps few tasks away from an idle one.
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+# Redis hands an unacknowledged message out again after this delay. It must exceed the
+# longest countdown (the one-hour file cleanups) and the longest acks_late task.
+CELERY_BROKER_TRANSPORT_OPTIONS = {"visibility_timeout": 7200}
+
 try:
     CELERY_BROKER_URL = config.CELERY_BROKER_URL
     CELERY_RESULT_BACKEND = config.CELERY_RESULT_BACKEND
@@ -557,14 +622,11 @@ try:
 except AttributeError:
     KALEIDO_CONCURRENCY_PER_WORKER = 1
 
-# Paths for deliveries
+# Private files
 # Deliberately not MEDIA_ROOT: this holds generated reports and admin exports of
 # regulated-entity data, reachable only through the permission-checked download views,
 # and must never be statically served.
-try:
-    PATH_FOR_REPORTING_PDF = config.PATH_FOR_REPORTING_PDF
-except AttributeError:
-    PATH_FOR_REPORTING_PDF = f"{os.getcwd()}/tmp/"
+PRIVATE_FILES_ROOT = get_private_files_root(config, default=f"{os.getcwd()}/tmp/")
 # Email adress for FROM field and RETURN-PATH
 try:
     EMAIL_CONTACT_FROM = config.EMAIL_CONTACT_FROM
@@ -577,12 +639,14 @@ try:
 except AttributeError:
     CAPTCHA_FONT_SIZE = 30
 
-# key to store the token for connection to RT
+# Fernet key encrypting observer connector secrets at rest (e.g. RT token, webhook HMAC).
 # python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key())'
+# Falls back to the key legacy RT tokens were encrypted with: the migration copies them
+# into the connectors still encrypted, so a different key would leave them unreadable.
 try:
-    RT_SECRET_KEY = config.RT_SECRET_KEY
+    CONNECTOR_SECRET_KEY = config.CONNECTOR_SECRET_KEY
 except AttributeError:
-    RT_SECRET_KEY = HASH_KEY
+    CONNECTOR_SECRET_KEY = getattr(config, "RT_SECRET_KEY", HASH_KEY)
 
 try:
     DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT = config.DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT
@@ -606,6 +670,7 @@ except AttributeError:
         "CACHE_MIDDLEWARE_ALIAS",
         "CACHE_MIDDLEWARE_KEY_PREFIX",
         "CACHE_MIDDLEWARE_SECONDS",
+        "CONNECTOR_SECRET_KEY",
         "CSRF_COOKIE_DOMAIN",
         "CSRF_FAILURE_VIEW",
         "CSRF_TRUSTED_ORIGINS",
@@ -667,13 +732,12 @@ except AttributeError:
         "PASSWORD_HASHERS",
         "PREPEND_WWW",
         "PROJECT_ROOT",
-        "REFERRER_POLICY",
         "REST_FRAMEWORK",
         "ROOT_URLCONF",
-        "RT_SECRET_KEY",
         "SECRET_KEY",
         "SECRET_KEY_FALLBACKS",
         "SECURE_CROSS_ORIGIN_OPENER_POLICY",
+        "SECURE_REFERRER_POLICY",
         "SECURE_SSL_HOST",
         "SECURE_SSL_REDIRECT",
         "SERVER_EMAIL",
@@ -725,9 +789,9 @@ except AttributeError:
 
 # Referrer Policy
 try:
-    REFERRER_POLICY = config.REFERRER_POLICY
+    SECURE_REFERRER_POLICY = config.SECURE_REFERRER_POLICY
 except AttributeError:
-    REFERRER_POLICY = "strict-origin-when-cross-origin"
+    SECURE_REFERRER_POLICY = "same-origin"
 
 # import export celery
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 50000000000
@@ -743,7 +807,7 @@ STORAGES = {
     "django_import_export_extensions": {
         "BACKEND": "django.core.files.storage.filesystem.FileSystemStorage",
         "OPTIONS": {
-            "location": PATH_FOR_REPORTING_PDF,
+            "location": PRIVATE_FILES_ROOT,
             # Without this the storage falls back to MEDIA_URL and publishes the absolute
             # server path in the admin. Nothing routes /media/, so the link stays inert.
             "base_url": "/media/",

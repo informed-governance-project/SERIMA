@@ -9,6 +9,8 @@ SUPERUSER_PASSWORD="${SUPERUSER_PASSWORD:-}"
 MAIN_SITE="${MAIN_SITE:-}"
 MAIN_SITE_NAME="${MAIN_SITE_NAME:-}"
 CELERY_CONCURRENCY="${CELERY_CONCURRENCY:-3}"
+# Comma-separated queues this worker consumes; empty means all of them.
+CELERY_QUEUES="${CELERY_QUEUES:-}"
 
 set -euo pipefail
 
@@ -58,7 +60,7 @@ END
         exec gunicorn governanceplatform.wsgi --workers "$APP_WORKERS" --bind "$APP_BIND_ADDRESS:$APP_PORT"
         ;;
     worker)
-        exec celery -A celery_worker worker --concurrency=$CELERY_CONCURRENCY --loglevel=info
+        exec celery -A celery_worker worker ${CELERY_QUEUES:+-Q "$CELERY_QUEUES"} --concurrency=$CELERY_CONCURRENCY --loglevel=info
         ;;
     beat)
         exec celery -A celery_beat beat --loglevel=info

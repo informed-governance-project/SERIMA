@@ -14,6 +14,7 @@ By default, the Dashboard table displays 10 projects. If you have more projects,
 
 The screenshot above shows that 12 projects are displayed across two pages, so you need to switch between pages to access the last two.
 To avoid that, you can set the **Entries per page** value to 25 so that all projects are displayed on a single Dashboard page, keeping them visible and easy to track.
+The value you choose is saved in your account and still applies the next time you log in.
 
 Navigate between Dashboard pages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -35,7 +36,10 @@ This is particularly recommended when you have many projects, as it enables you 
    :alt: Search among projects
    :target: ../_static/images/reporting/managing-the-dashboard-03.png
 
-Click the **X** icon to the right of the Search field to clear the search criteria and return to the full Dashboard view.
+Click the **X** icon to the right of the Search field to clear the search.
+Clearing the search does not clear the filter: while a filter is applied, the **Filter** button shows **(Active)**,
+and **Reset** in the filter pop-up returns to the full Dashboard view.
+The search is kept only until you log out, whereas the filter is saved in your account and still applies the next time you log in.
 
 Filter projects
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,6 +55,7 @@ Sort projects
 
 On the Dashboard, you can sort the columns by clicking the up- or down-pointing arrows beside each column header. The arrow indicates whether the order is ascending or descending, allowing you to sort both the column values and the projects accordingly.
 Only one sorting criterion can be applied at a time, meaning sorting is active in just one column, either ascending or descending.
+The sort order you choose is saved in your account and still applies the next time you log in.
 
 In the screenshot below, the projects are sorted by their last modification date. The upward-pointing triangle icon in the **Modified** column shows that the most recently modified projects are displayed at the top, in descending chronological order, with older projects below.
 
@@ -78,3 +83,4 @@ To hide a column, simply remove the checkmark next to the relevant column name.
 For example, if most of your reports are related to the same sector and the same base year, displaying these columns may not be necessary.
 Hiding them can make the report list on the dashboard cleaner and easier to understand.
 Once you uncheck a checkbox, the relevant column immediately disappears from the dashboard.
+Your choice of columns is saved in your account, so the dashboard shows the same columns after you log in again, on any computer or browser.

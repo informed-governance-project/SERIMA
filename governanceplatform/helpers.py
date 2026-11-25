@@ -2,29 +2,40 @@ import logging
 import os
 import secrets
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, cast
 
 import bleach
 import redis
 from bleach.css_sanitizer import CSSSanitizer
 from celery import current_app
+from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.core.exceptions import DisallowedRedirect, ValidationError
 from django.db import connection
 from django.db.models import F, Max, Q, Value
 from django.db.models.fields import TextField
 from django.db.models.functions import Coalesce, Lower, NullIf
 from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import translation
 from django.utils.html import format_html
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext_lazy as _
-from markdown import markdown
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
-from .globals import CROCKFORD_ALPHABET, CROCKFORD_INPUT_TRANSLATION, REFERENCE_TOKEN_LENGTH
+from .globals import (
+    CROCKFORD_ALPHABET,
+    DEFAULT_PER_PAGE,
+    LIST_PREFERENCE_PAGES,
+    PER_PAGE_CHOICES,
+    REFERENCE_TOKEN_LENGTH,
+    SESSION_ONLY_LIST_PARAMS,
+)
+from .models import UserPreference
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -34,6 +45,7 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
     from django.template.response import TemplateResponse
     from django.utils.functional import Promise
+    from django_filters import FilterSet
 
     from .models import Company, Sector, User
 
@@ -334,7 +346,6 @@ def render_to_string_multi_languages(
                     content.safe_translation_getter("content", language_code=lang_code),
                     object,
                 )
-                context["content"] = markdown(text=context["content"], output_format="html")
                 context["content"] = sanitize_html(context["content"])
             return render_to_string(template_name, context)
 
@@ -376,6 +387,11 @@ def sanitize_html(
     if tags is None:
         tags = [
             "p",
+            # div, blockquote and u are what the admin's rich-text editor (Trix) writes for a
+            # paragraph, a quote and an underline.
+            "div",
+            "blockquote",
+            "u",
             "pre",
             "code",
             "h1",
@@ -400,6 +416,7 @@ def sanitize_html(
             "a",
             "abbr",
             "img",
+            "figure",
         ]
     if attributes is None:
         attributes = {
@@ -425,10 +442,10 @@ def sort_queryset_by_field(
     qs: QuerySet,
     sort_field: str,
     sort_direction: str,
-    default_sort_field: str,
+    default_key: str,
     allowed_sort_fields: dict[str, dict[str, str]],
 ) -> QuerySet:
-
+    default_sort_field = allowed_sort_fields[default_key]["field"]
     config_field = allowed_sort_fields.get(sort_field)
     if not config_field:
         return qs.order_by(f"-{default_sort_field}")
@@ -506,20 +523,6 @@ def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
     return "".join(secrets.choice(CROCKFORD_ALPHABET) for _ in range(length))
 
 
-def normalize_crockford(value: str) -> str:
-    """Map the characters Crockford excludes onto the ones they are mistaken for."""
-    return value.upper().translate(CROCKFORD_INPUT_TRANSLATION)
-
-
-def normalize_reference(value: str, prefix: str) -> str:
-    """Read the value the way Crockford intends, but leave the prefix alone: NI_ carries
-    an I and SO_ an O, and normalising those would stop the reference matching."""
-    upper = value.upper()
-    if upper.startswith(prefix):
-        return prefix + normalize_crockford(upper[len(prefix) :])
-    return normalize_crockford(upper)
-
-
 def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpResponseRedirect:
     """Send the user back where they came from, or to the `fallback` URL name.
 
@@ -540,13 +543,13 @@ def render_error_messages(request: HttpRequest) -> str:
     )
 
 
-def is_celery_worker_alive() -> bool:
+def is_queue_consumed(queue: str) -> bool:
+    """Whether a running worker reads this queue; one serving only other queues is no help."""
     try:
-        inspect = current_app.control.inspect()
-        response = inspect.ping()
-        return bool(response)
+        active_queues = current_app.control.inspect().active_queues()
     except Exception:
         return False
+    return any(consumed["name"] == queue for consumed_queues in (active_queues or {}).values() for consumed in consumed_queues)
 
 
 def is_redis_available() -> bool:
@@ -558,9 +561,9 @@ def is_redis_available() -> bool:
         return False
 
 
-def celery_health_check() -> bool:
-    """Whether a task queued now would actually be picked up by a worker."""
-    return is_celery_worker_alive() and is_redis_available()
+def celery_health_check(queue: str) -> bool:
+    """Whether a task queued now on this queue would actually be picked up by a worker."""
+    return is_queue_consumed(queue) and is_redis_available()
 
 
 def strip_control_characters(value: str) -> str:
@@ -584,3 +587,187 @@ def sanitize_spreadsheet_cell(value: object) -> object:
     if value.startswith(SPREADSHEET_FORMULA_PREFIXES):
         return f"'{value}"
     return value
+
+
+@dataclass
+class ListPreferences:
+    """A list page's state: its filters (stored ones plus the session's search and page), sort, columns and legend."""
+
+    filters: dict[str, Any]
+    # The stored sort over the page's default, so it always holds sort_field and sort_direction on a sortable page.
+    sort: dict[str, str]
+    per_page: int
+    columns: dict[str, bool]
+    legend: bool
+
+
+def default_sort_key(page: str) -> str:
+    """The sort key a sortable list page falls back to, as named in its module's ALLOWED_SORT_FIELDS."""
+    return LIST_PREFERENCE_PAGES[page]["default_sort"][0]
+
+
+def preference_key(page: str, aspect: str) -> str:
+    return f"{page}.{aspect}"
+
+
+def get_preferences(user: User, page: str) -> dict[str, Any]:
+    """Return every aspect of a list page, stored or default, in a single query."""
+    config = LIST_PREFERENCE_PAGES[page]
+    keys = {preference_key(page, aspect): aspect for aspect in config["aspects"]}
+    stored = {keys[key]: value for key, value in UserPreference.objects.filter(user=user, key__in=keys).values_list("key", "value")}
+
+    hidden_columns = config.get("hidden_columns", ())
+    columns = {column: column not in hidden_columns for column in config.get("columns", ())}
+    # Merged over the defaults so a column added after the user saved their choice still appears.
+    columns.update({column: visible for column, visible in stored.get("columns", {}).items() if column in columns})
+
+    return {
+        "filters": stored.get("filters", {}),
+        "sort": stored.get("sort", {}),
+        "columns": columns,
+        "legend": stored.get("legend", False),
+    }
+
+
+def set_preference(user: User, page: str, aspect: str, value: Any) -> None:
+    UserPreference.objects.update_or_create(user=user, key=preference_key(page, aspect), defaults={"value": value})
+
+
+def delete_preference(user: User, page: str, aspect: str) -> None:
+    UserPreference.objects.filter(user=user, key=preference_key(page, aspect)).delete()
+
+
+def clean_client_preference(page: str, aspect: str, value: Any) -> bool | dict[str, bool]:
+    """Validate a columns or legend value sent by the browser; raise ValidationError otherwise."""
+    if aspect == "legend":
+        if not isinstance(value, bool):
+            raise ValidationError(_("Invalid legend state."))
+        return value
+
+    columns = LIST_PREFERENCE_PAGES[page].get("columns", ())
+    if (
+        not isinstance(value, dict)
+        or not value
+        or any(column not in columns or not isinstance(visible, bool) for column, visible in value.items())
+    ):
+        raise ValidationError(_("Invalid choice of columns."))
+    return value
+
+
+def list_session_key(page: str) -> str:
+    return f"{page}_list_params"
+
+
+def get_list_filters(request: HttpRequest, page: str) -> dict[str, Any]:
+    """The filters a list page currently applies, for a view acting on that list without displaying it."""
+    user = cast("User", request.user)
+    return {**get_preferences(user, page)["filters"], **request.session.get(list_session_key(page), {})}
+
+
+def redirect_to_current_page(request: HttpRequest) -> HttpResponseRedirect:
+    # request.path comes from the client, and one starting with "//" would be followed to another host.
+    if url_has_allowed_host_and_scheme(request.path, allowed_hosts=None):
+        return redirect(request.path)
+    raise DisallowedRedirect(f"Unsafe redirect to {request.path!r}")
+
+
+def update_list_params(
+    request: HttpRequest,
+    page: str,
+    filterset_class: type[FilterSet],
+    allowed_sort_fields: dict[str, dict[str, str]] | None = None,
+) -> ListPreferences | HttpResponseRedirect:
+    """Apply the request's filter and sort parameters to the page's stored ones, and return the page's state.
+
+    A reset returns a redirect instead, so the reset parameter leaves the URL.
+    """
+    # Only reached from views behind login_required.
+    user = cast("User", request.user)
+    session_key = list_session_key(page)
+    session_params = request.session.get(session_key, {}).copy()
+
+    if "reset_sort" in request.GET:
+        delete_preference(user, page, "sort")
+        session_params.pop("page", None)
+        request.session[session_key] = session_params
+        return redirect_to_current_page(request)
+
+    if "reset" in request.GET:
+        delete_preference(user, page, "filters")
+        request.session.pop(session_key, None)
+        return redirect_to_current_page(request)
+
+    if request.GET.get("search") == "":
+        session_params.pop("search", None)
+        session_params.pop("page", None)
+        request.session[session_key] = session_params
+        return redirect_to_current_page(request)
+
+    preferences = get_preferences(user, page)
+    filters = dict(preferences["filters"])
+    previous_search = session_params.get("search")
+    if any(key in filterset_class.base_filters and key not in SESSION_ONLY_LIST_PARAMS for key in request.GET):
+        # A filter form submission carries the whole filter set, and a multi-select left empty sends
+        # nothing at all, so the submitted filters replace the stored ones instead of merging into them.
+        filters = {key: value for key, value in filters.items() if key == "per_page"}
+    multi_value_filters = {
+        name
+        for name, list_filter in filterset_class.base_filters.items()
+        if issubclass(list_filter.field_class, (forms.MultipleChoiceField, forms.ModelMultipleChoiceField))
+    }
+
+    for key, values in request.GET.lists():
+        if key in SESSION_ONLY_LIST_PARAMS:
+            session_params[key] = values[0]
+        elif key == "per_page":
+            if values[0].isdigit() and int(values[0]) in PER_PAGE_CHOICES:
+                filters[key] = int(values[0])
+        elif key in filterset_class.base_filters:
+            selected = [value for value in values if value != ""]
+            if not selected:
+                filters.pop(key, None)
+            else:
+                filters[key] = selected if key in multi_value_filters else selected[0]
+
+    sort = dict(preferences["sort"])
+    if allowed_sort_fields is not None:
+        if request.GET.get("sort_field") in allowed_sort_fields:
+            sort["sort_field"] = request.GET["sort_field"]
+        if request.GET.get("sort_direction") in ("asc", "desc"):
+            sort["sort_direction"] = request.GET["sort_direction"]
+
+    filters_changed = filters != preferences["filters"]
+    sort_changed = sort != preferences["sort"]
+    if filters_changed:
+        set_preference(user, page, "filters", filters)
+    if sort_changed:
+        set_preference(user, page, "sort", sort)
+    if filters_changed or sort_changed or session_params.get("search") != previous_search:
+        # The previous page number belongs to the previous result set.
+        session_params.pop("page", None)
+    request.session[session_key] = session_params
+
+    default_sort = LIST_PREFERENCE_PAGES[page].get("default_sort")
+    return ListPreferences(
+        filters={**filters, **session_params},
+        sort={"sort_field": default_sort[0], "sort_direction": default_sort[1], **sort} if default_sort else sort,
+        per_page=int(filters.get("per_page", DEFAULT_PER_PAGE)),
+        columns=preferences["columns"],
+        legend=preferences["legend"],
+    )
+
+
+def bind_applicable_filters[F: FilterSet](
+    make_filterset: Callable[[dict[str, Any]], F], params: dict[str, Any]
+) -> tuple[F, dict[str, Any]]:
+    """Bind a list's filters, leaving out the values the page rejects, and return the filters actually applied.
+
+    A stored value can be valid only elsewhere: a year declared by another company of the operator, a year of
+    another report project. It stays stored for when it applies again, but is neither applied nor reported as
+    an error here, so the list, the form and the (Active) label agree.
+    """
+    filterset = make_filterset(params)
+    if not filterset.errors:
+        return filterset, params
+    applicable = {key: value for key, value in params.items() if key not in filterset.errors}
+    return make_filterset(applicable), applicable

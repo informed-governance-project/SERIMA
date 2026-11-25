@@ -3,6 +3,7 @@ from dataclasses import KW_ONLY, dataclass
 from typing import TYPE_CHECKING
 
 from django.conf import settings
+from django.db import transaction
 from django.utils import timezone
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
@@ -21,12 +22,11 @@ from governanceplatform.email import (
 )
 from governanceplatform.helpers import render_to_string_multi_languages
 from governanceplatform.models import Observer, RegulatorUser
-from governanceplatform.rt import add_rt_correspondence, check_rt_config, create_rt_ticket
 
 from .access_control import observer_can_access_incident
 from .globals import WORKFLOW_REVIEW_STATUS
 from .helpers import is_deadline_exceeded
-from .models import Email, Incident, IncidentWorkflow, ReportTimeline, RTTicket, Workflow
+from .models import ConnectorDelivery, Email, Incident, IncidentWorkflow, ReportTimeline, Workflow
 
 logger = logging.getLogger(__name__)
 
@@ -188,15 +188,8 @@ def get_recipient_list(incident):
     return recipient_list
 
 
-def send_email(
-    email_template: Email,
-    incident: Incident,
-    *,
-    workflow: Workflow | None = None,
-    incident_workflow: IncidentWorkflow | None = None,
-    send_to_observers: bool = False,
-) -> None:
-    context = EmailContext(incident, workflow=workflow, incident_workflow=incident_workflow)
+def render_notification(email_template: Email, context: EmailContext) -> tuple[str, str]:
+    incident = context.incident
     subject = replace_email_variables(
         email_template.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
         context,
@@ -217,38 +210,55 @@ def send_email(
         content=email_template,
         object=context,
     )
+    return subject, html_content
+
+
+def dispatch_observer_notifications(email: Email, incident: Incident) -> list[str]:
+    """Create deliveries for the observers' active connectors; return the plain-email
+    recipients owed by their notification modes (default e-mail behavior)."""
+    from .scripts.connector_delivery import run as deliver_connector_notification
+
+    default_recipients = []
+    for observer in Observer.objects.prefetch_related("connectors"):
+        if not observer_can_access_incident(observer, incident):
+            continue
+
+        active_connectors = [connector for connector in observer.connectors.all() if connector.is_active]
+        for connector in active_connectors:
+            delivery = ConnectorDelivery.objects.create(incident=incident, connector=connector, email=email)
+            transaction.on_commit(lambda pk=delivery.pk: deliver_connector_notification.delay(pk))
+
+        # default e-mail: fallback when no connector is active, always in
+        # "default_and_connectors" mode, never in "connectors_only" mode
+        owes_email = observer.notification_mode == Observer.NotificationMode.DEFAULT_AND_CONNECTORS or (
+            not active_connectors and observer.notification_mode == Observer.NotificationMode.DEFAULT
+        )
+        if owes_email:
+            if observer.email_for_notification:
+                default_recipients.append(observer.email_for_notification)
+            else:
+                logger.warning("Observer %s owes an e-mail notification but has no notification address", observer.pk)
+            default_recipients.extend(get_emails_from_qs(observer.observeruser_set.all().select_related("user")))
+
+    return default_recipients
+
+
+def send_email(
+    email_template: Email,
+    incident: Incident,
+    *,
+    workflow: Workflow | None = None,
+    incident_workflow: IncidentWorkflow | None = None,
+    send_to_observers: bool = False,
+) -> None:
+    context = EmailContext(incident, workflow=workflow, incident_workflow=incident_workflow)
+    subject, html_content = render_notification(email_template, context)
     recipient_list = get_recipient_list(incident)
 
     if send_to_observers:
-        observer_emails = []
-        observers = Observer.objects.all()
-        for observer in observers:
-            if observer_can_access_incident(observer, incident):
-                if check_rt_config(observer):
-                    create_or_update_rt_ticket(observer, subject, html_content, incident)
-                else:
-                    # Observer's mail
-                    observer_emails.append(observer.email_for_notification)
-                    # Observer users' email
-                    observer_user_qs = observer.observeruser_set.all().select_related("user")
-                    observer_emails.extend(get_emails_from_qs(observer_user_qs))
-
-        recipient_list.extend(observer_emails)
+        recipient_list.extend(dispatch_observer_notifications(email_template, incident))
 
     # Remove duplicates
     recipient_list = list(dict.fromkeys(recipient_list))
 
     send_html_email(subject, html_content, recipient_list)
-
-
-def create_or_update_rt_ticket(recipient, subject, content, incident):
-    """Open an RT ticket for this incident, or reply on the one already opened for it."""
-    ticket = RTTicket.objects.filter(incident=incident, observer=recipient).first()
-
-    if ticket is not None:
-        add_rt_correspondence(recipient, ticket.ticket_id, content)
-        return
-
-    ticket_id = create_rt_ticket(recipient, subject, content)
-    if ticket_id is not None:
-        RTTicket.objects.create(incident=incident, observer=recipient, ticket_id=ticket_id)

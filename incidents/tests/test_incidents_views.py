@@ -1,3 +1,6 @@
+from unittest.mock import patch
+from uuid import uuid4
+
 import pytest
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
@@ -16,7 +19,8 @@ from incidents.access_control import (
     can_create_incident_report,
     can_edit_incident_report,
 )
-from incidents.models import Incident, IncidentWorkflow, ReportTimeline, SectorRegulation, SectorRegulationWorkflow
+from incidents.globals import CONNECTOR_LOG_ROLE, TRANSMIT_ACTION
+from incidents.models import Incident, IncidentWorkflow, LogReportRead, ReportTimeline, SectorRegulation, SectorRegulationWorkflow
 
 
 @pytest.mark.django_db
@@ -28,7 +32,8 @@ def test_incident_user_access_without_2FA(client, populate_incident_db):
 
     for user in users:
         client.force_login(user)
-        url_list = list_url_freetext_filter("incidents", "admin")
+        # The API authenticates by bearer key only, never by session, so its routes are covered by test_api.py
+        url_list = [url for url in list_url_freetext_filter("incidents", "admin") if not url.startswith("api/")]
         for url in url_list:
             response = client.get("/" + url)
             assert response.status_code in (
@@ -78,7 +83,7 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
     # asectorial workflow
     incident = next((u for u in incidents if u.incident_id == "XXXX-SSS-SSS-0001-2005"), None)
     url = "/incidents/download-pdf/" + str(incident.id)
-    test_get_with_otp(otp_client, users, authorized_users, [], url)
+    assert_pdf_request_access(otp_client, users, authorized_users, url)
 
     # Add a sector to test RegUser see the incident
     sectors = populate_incident_db["sectors"]
@@ -92,7 +97,21 @@ def test_pdf_download_of_operator_incident(otp_client, populate_incident_db):
             url = "/incidents/download-pdf/" + str(incident.id)
             authorized_users.append(regulator_user)
             ru.sectors.add(sector)
-            test_get_with_otp(otp_client, users, authorized_users, [], url)
+            assert_pdf_request_access(otp_client, users, authorized_users, url)
+
+
+def assert_pdf_request_access(otp_client, users, authorized_users, url):
+    for user in users:
+        client = otp_client(user)
+        with patch("incidents.views.generate_incident_pdf_task.delay") as delay:
+            delay.return_value.id = str(uuid4())
+            response = client.post(url)
+        if user in authorized_users:
+            assert response.status_code == 200, user.email
+            delay.assert_called_once()
+        else:
+            assert response.status_code in (302, 403), user.email
+            delay.assert_not_called()
 
 
 @pytest.mark.django_db
@@ -296,6 +315,71 @@ def test_access_to_incident_log(otp_client, populate_incident_db):
     incident = next((u for u in incidents if u.incident_id == "RRR-SSS-SSS-0001-2005"), None)
     url = "/incidents/access_log/" + str(incident.id)
     test_get_with_otp(otp_client, users, authorized_users, [], url)
+
+
+@pytest.mark.django_db
+def test_incident_log_hides_deleted_regulator_user_from_operator(otp_client, populate_incident_db):
+    users = populate_incident_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    regulator_user = next(u for u in users if u.email == "reguser@reg1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    log = LogReportRead.objects.create(user=regulator_user, incident=incident, action="READ", role="RegulatorUser")
+    regulator_user.delete()
+
+    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+
+    assert log not in response.context["log"]
+
+
+@pytest.mark.django_db
+def test_incident_log_shows_deleted_user_name(otp_client, populate_incident_db):
+    users = populate_incident_db["users"]
+    operator = next(u for u in users if u.email == "opadmin@com1.lu")
+    operator_user = next(u for u in users if u.email == "opuser@com1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    log = LogReportRead.objects.create(user=operator_user, incident=incident, action="READ", role="OperatorUser")
+    operator_user.delete()
+
+    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+
+    assert log.user_full_name
+    assert log.user_full_name in response.content.decode()
+
+
+def _connector_transmit_entry(incident):
+    return LogReportRead.objects.bulk_create(
+        [
+            LogReportRead(
+                incident=incident,
+                action=TRANSMIT_ACTION,
+                role=CONNECTOR_LOG_ROLE,
+                user_full_name="CERT webhook",
+                entity_name="CERT1",
+            )
+        ]
+    )[0]
+
+
+@pytest.mark.django_db
+def test_incident_log_hides_connector_transmission_from_operator(otp_client, populate_incident_db):
+    operator = next(u for u in populate_incident_db["users"] if u.email == "opadmin@com1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    entry = _connector_transmit_entry(incident)
+
+    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+
+    assert entry not in response.context["log"]
+
+
+@pytest.mark.django_db
+def test_incident_log_shows_connector_transmission_to_observer(otp_client, populate_incident_db):
+    observer = next(u for u in populate_incident_db["users"] if u.email == "obsadm@cert1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    entry = _connector_transmit_entry(incident)
+
+    response = otp_client(observer).get(reverse("access_log", args=[incident.id]))
+
+    assert entry in response.context["log"]
 
 
 @pytest.mark.django_db

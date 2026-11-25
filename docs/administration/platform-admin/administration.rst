@@ -20,14 +20,14 @@ Click **Log entries**. The list shows the most recent entries first, in four col
 - **Activity**: **Addition**, **Modification**, **Deletion**, **Login**, **Logout** or **Export**.
 
 .. figure:: /_static/images/administration/platform-admin/administration-01.png
-   :alt: Log entries list with the Filter panel and the column headers outlined
+   :alt: Log entries list with the Filters button and the column headers outlined
    :target: ../../_static/images/administration/platform-admin/administration-01.png
 
 To narrow the list down:
 
 - Enter a word in the search field: it looks up the name of the object concerned and the description of the change.
 - Click a year, then a month and a day, above the list, to see the entries of that period only.
-- Use the **Filter** panel on the right, **By Users** or **By Activity**. Click **Show counts** to see how many entries each choice holds.
+- Click **Filters** above the list and choose in **By Users** or **By Activity**. Click **Show counts** to see how many entries each choice holds.
 
 Click a column header to sort the list by that column; click it again to reverse the order.
 

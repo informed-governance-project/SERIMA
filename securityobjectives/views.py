@@ -1,8 +1,9 @@
 import copy
 import json
 import logging
-import os
 from collections import defaultdict
+from functools import partial
+from typing import TYPE_CHECKING
 
 import openpyxl
 from celery.exceptions import CeleryError
@@ -10,6 +11,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import (
     BooleanField,
     Case,
@@ -25,9 +27,8 @@ from django.db.models import (
 )
 from django.db.models.functions import Cast
 from django.forms.models import model_to_dict
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import FileResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.text import format_lazy
@@ -36,18 +37,22 @@ from django.utils.translation import override
 from django.views.decorators.http import require_http_methods
 from django_otp.decorators import otp_required
 from kombu.exceptions import OperationalError
-from weasyprint import CSS, HTML
-from weasyprint.text.fonts import FontConfiguration
 
+from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
+from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
+    bind_applicable_filters,
     celery_health_check,
+    default_sort_key,
     get_active_company_from_session,
+    get_preferences,
     get_sectors_grouped,
     is_user_operator,
     is_user_regulator,
     render_error_messages,
     safe_redirect_to_referer,
     sort_queryset_by_field,
+    update_list_params,
     user_in_group,
 )
 from governanceplatform.models import Company, Regulation, Sector, User
@@ -66,12 +71,14 @@ from .forms import (
 )
 from .globals import ALLOWED_SORT_FIELDS, OPERATOR_STATUS, STANDARD_ANSWER_REVIEW_STATUS
 from .helpers import (
+    build_objective_navigation,
     can_export_security_objectives,
     can_see_review_comments,
     filter_by_company_sectors,
     get_exportable_standard_answers,
     get_scoped_standard_answers,
     get_standard_answers_with_progress,
+    objectives_in_domain_order,
     security_objective_exists,
     set_declaration_column_widths,
 )
@@ -87,12 +94,12 @@ from .models import (
     StandardAnswer,
     StandardAnswerGroup,
 )
-from .tasks import generate_so_export_task
+from .tasks import generate_declaration_pdf_task, generate_so_export_task
 
-# Increasing weasyprint log level
-for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.ERROR)
+if TYPE_CHECKING:
+    from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -101,33 +108,11 @@ def get_security_objectives(request):
     user = request.user
     standard_answer_queryset = StandardAnswer.objects.none()
     template = "operator/so_dashboard.html"
-    search_value = request.GET.get("search", None)
-
-    if "reset_sort" in request.GET:
-        request.session.pop("so_sort_params", None)
-        return redirect("securityobjectives")
-
-    if "reset" in request.GET or search_value == "":
-        request.session.pop("so_filter_params", None)
-        return redirect("securityobjectives")
-
-    # Save filter params in user's session
-    current_filter_params = request.session.get("so_filter_params", {}).copy()
-    current_sort_params = request.session.get("so_sort_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        if key in ["sort_field", "sort_direction"]:
-            continue
-        current_filter_params[key] = values if key == "sectors" else values[0]
-
-    for key, value in request.GET.items():
-        if key in ("sort_field", "sort_direction"):
-            current_sort_params[key] = value
-
-    so_filter_params = current_filter_params
-    so_sort_params = current_sort_params
-    request.session["so_filter_params"] = so_filter_params
-    request.session["so_sort_params"] = so_sort_params
+    list_preferences = update_list_params(request, "securityobjectives", StandardAnswerFilter, ALLOWED_SORT_FIELDS)
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    so_filter_params = list_preferences.filters
+    so_sort_params = list_preferences.sort
 
     if is_user_regulator(user):
         regulator = user.regulators.first()
@@ -146,30 +131,30 @@ def get_security_objectives(request):
         company = get_active_company_from_session(request)
         standard_answer_queryset = StandardAnswer.objects.filter(submitter_company=company)
 
-    latest_so_id = standard_answer_queryset.filter(group__id=OuterRef("group__id")).order_by("-last_update").values("id")[:1]
+    latest_so_id = standard_answer_queryset.filter(group__id=OuterRef("group__id")).order_by("-creation_date").values("id")[:1]
 
     standard_answer_queryset = standard_answer_queryset.filter(id__in=Subquery(latest_so_id))
 
     standard_answer_queryset = get_standard_answers_with_progress(standard_answer_queryset)
 
     # Apply sorting
-    sort_field = so_sort_params.get("sort_field", "last_update")
-    sort_direction = so_sort_params.get("sort_direction", "desc")
+    sort_field = so_sort_params["sort_field"]
+    sort_direction = so_sort_params["sort_direction"]
     standard_answer_queryset = sort_queryset_by_field(
         standard_answer_queryset,
         sort_field,
         sort_direction,
-        "last_update",
+        default_sort_key("securityobjectives"),
         ALLOWED_SORT_FIELDS,
     )
 
-    security_objective_filter = StandardAnswerFilter(
-        so_filter_params, queryset=standard_answer_queryset, is_regulator=is_user_regulator(user)
+    security_objective_filter, so_filter_params = bind_applicable_filters(
+        partial(StandardAnswerFilter, queryset=standard_answer_queryset, is_regulator=is_user_regulator(user)), so_filter_params
     )
 
     # Filter
     so_answer_list = security_objective_filter.qs
-    per_page = so_filter_params.get("per_page", 10)
+    per_page = list_preferences.per_page
     page_number = so_filter_params.get("page")
     paginator = Paginator(so_answer_list, per_page)
     page_obj = paginator.get_page(page_number)
@@ -181,8 +166,12 @@ def get_security_objectives(request):
         "filter": security_objective_filter,
         "sort_field": sort_field,
         "sort_direction": sort_direction,
+        "default_sort_field": default_sort_key("securityobjectives"),
+        "per_page_choices": PER_PAGE_CHOICES,
         "is_filtered": bool(is_filtered),
         "can_export_security_objectives": can_export_security_objectives(user),
+        "visible_columns": list_preferences.columns,
+        "show_legend": list_preferences.legend,
     }
 
     return render(request, template, context=context)
@@ -254,12 +243,20 @@ def declaration(request):
         return redirect("securityobjectives")
 
     if is_update and standard_answer.status != "UNDE":
-        standard_answer = duplicate_standard_answer(standard_answer)
+        with transaction.atomic():
+            standard_answer.lock_versions()
+            # Only the latest version is offered for update; a copy of an older one would
+            # hide the newer version from both dashboards.
+            if standard_answer.get_newer_versions().exists():
+                messages.error(request, _("A newer version of this declaration already exists."))
+                return redirect("securityobjectives")
+            standard_answer = duplicate_standard_answer(standard_answer)
         return redirect(f"{reverse('so_declaration')}?id={standard_answer.id}")
 
     standard = standard_answer.standard
+    newer_version = standard_answer.get_newer_submitted_version()
 
-    security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
+    security_objectives_queryset = objectives_in_domain_order(standard)
 
     levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
 
@@ -267,6 +264,10 @@ def declaration(request):
         data = json.loads(request.body.decode("utf-8"))
         id_object = data.pop("id", None)
         field_name = next(iter(data))
+        # The page may have been opened before the operator submitted the newer version,
+        # so the browser reloads to show it.
+        if newer_version:
+            return JsonResponse({"success": False, "error": "A newer version was submitted"}, status=409)
         if field_name in ["review_comment", "status"] and not is_user_regulator(user):
             return JsonResponse(
                 {
@@ -420,6 +421,7 @@ def declaration(request):
         .order_by("-creation_date")
         .first()
     )
+    show_previous_review_comments = previous_standard_answer is not None and can_see_review_comments(user, previous_standard_answer)
     previous_answers_by_measure = (
         {sma.security_measure_id: sma for sma in SecurityMeasureAnswer.objects.filter(standard_answer=previous_standard_answer)}
         if previous_standard_answer is not None
@@ -446,8 +448,10 @@ def declaration(request):
             )
             initial = model_to_dict(so_status, fields=["status", "actions"])
             initial["is_regulator"] = is_user_regulator(user)
-            initial["is_readonly"] = (is_user_operator(user) and standard_answer.status != "UNDE") or (
-                is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"]
+            initial["is_readonly"] = (
+                newer_version is not None
+                or (is_user_operator(user) and standard_answer.status != "UNDE")
+                or (is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"])
             )
 
             security_objective.status = so_status
@@ -479,8 +483,10 @@ def declaration(request):
 
             initial["is_regulator"] = is_user_regulator(user)
             initial["has_review_comment"] = bool(standard_answer.review_comment)
-            initial["is_readonly"] = (is_user_operator(user) and standard_answer.status != "UNDE") or (
-                is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"]
+            initial["is_readonly"] = (
+                newer_version is not None
+                or (is_user_operator(user) and standard_answer.status != "UNDE")
+                or (is_user_regulator(user) and standard_answer.status in ["PASSM", "FAILM"])
             )
 
             previous_sma = previous_answers_by_measure.get(measure.id)
@@ -493,7 +499,7 @@ def declaration(request):
                 measure.previous_answer = {
                     "is_implemented": previous_sma.is_implemented if previous_sma else False,
                     "justification": (previous_sma.justification if previous_sma else "") or "",
-                    "review_comment": (previous_sma.review_comment if previous_sma else "") or "",
+                    "review_comment": (previous_sma.review_comment if previous_sma and show_previous_review_comments else "") or "",
                 }
 
             security_objective = measure.security_objective
@@ -516,7 +522,9 @@ def declaration(request):
     context = {
         "last_maturity_level": levels["last_level"],
         "security_objectives": security_objectives,
+        "navigation": build_objective_navigation(list(security_objectives), standard_answer, is_user_regulator(user)),
         "standard_answer": standard_answer,
+        "newer_version": newer_version,
         "column_config": column_config,
         "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
         "score_display": standard.get_score_display_config(),
@@ -529,6 +537,7 @@ def declaration(request):
             else ""
         ),
         "can_export_security_objectives": can_export_security_objectives(user),
+        "show_legend": get_preferences(user, "so_declaration")["legend"],
     }
 
     return render(request, "security_objectives/declaration.html", context=context)
@@ -540,7 +549,7 @@ def copy_declaration(request, group_id: int):
     user = request.user
 
     # get the last standard from the group
-    original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-last_update").first()
+    original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-creation_date").first()
     if not original_standard_answer:
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
@@ -627,6 +636,7 @@ def copy_declaration(request, group_id: int):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
+@transaction.atomic
 def submit_declaration(request, standard_answer_id: int):
     user = request.user
     standard_answer_queryset = StandardAnswer.objects.filter(pk=standard_answer_id)
@@ -637,6 +647,9 @@ def submit_declaration(request, standard_answer_id: int):
         return redirect("securityobjectives")
 
     standard_answer = standard_answer.first()
+    standard_answer.lock_versions()
+    # Read again under the lock, so a second click on Submit finds the version submitted.
+    standard_answer.refresh_from_db(fields=["status"])
     if not has_change_permission(request, standard_answer, "submit"):
         return redirect("securityobjectives")
     standard_answer.status = "DELIV"
@@ -669,6 +682,7 @@ def delete_declaration(request, standard_answer_id: int):
 
 @login_required
 @otp_required
+@transaction.atomic
 def review_comment_declaration(request, standard_answer_id: int):
     user = request.user
     is_only_review_comment = request.GET.get("only_review_comment", "false") == "true"
@@ -681,14 +695,24 @@ def review_comment_declaration(request, standard_answer_id: int):
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
 
+    if request.method == "POST":
+        # Waits for a submission of a newer version in progress, so the check below sees it.
+        standard_answer.lock_versions()
+    newer_version = standard_answer.get_newer_submitted_version()
     initial = model_to_dict(standard_answer, fields=["review_comment", "status"])
     if is_user_operator(user):
         create_entry_log(user, standard_answer, "READ", request)
         initial["is_readonly"] = is_user_operator(user)
     else:
-        initial["is_readonly"] = not is_user_regulator(user) or standard_answer.status in ["PASSM", "FAILM"]
+        initial["is_readonly"] = newer_version is not None or not is_user_regulator(user) or standard_answer.status in ["PASSM", "FAILM"]
         if standard_answer.status == "DELIV":
             initial["status"] = get_standard_answer_status(standard_answer)
+
+    if request.method == "POST" and newer_version:
+        messages.error(request, _("A newer version of this declaration was submitted. Review that version instead."))
+        if is_only_review_comment:
+            return JsonResponse({"success": False, "error": "A newer version was submitted"}, status=409)
+        return redirect("securityobjectives")
 
     if request.method == "POST":
         form = ReviewForm(
@@ -778,9 +802,11 @@ def access_log(request, standard_answer_id: int):
         messages.error(request, _("Declaration not found"))
         return redirect("securityobjectives")
 
-    log = LogStandardAnswer.objects.filter(standard_answer=standard_answer).order_by("-timestamp")
+    log = LogStandardAnswer.objects.filter(standard_answer__group=standard_answer.group).order_by("-timestamp")
     if is_user_operator(user) or user_in_group(user, "IncidentUser"):
         log = log.exclude(user__regulatoruser__isnull=False)
+        # A deleted user leaves user=NULL, so the role recorded at logging time is all that is left to filter on.
+        log = log.exclude(user__isnull=True, role__in=["RegulatorAdmin", "RegulatorUser"])
 
     context = {"log": log}
     return render(request, "modals/so_access_log.html", context=context)
@@ -797,100 +823,52 @@ def get_review_status_label(standard_answer: StandardAnswer, user: User) -> str:
 
 @login_required
 @otp_required
+@require_http_methods(["POST"])
 def download_declaration_pdf(request, standard_answer_id: int):
-    user = request.user
-    standard_answer_queryset = StandardAnswer.objects.filter(pk=standard_answer_id)
-    standard_answer = get_standard_answers_with_progress(standard_answer_queryset)
+    standard_answer = StandardAnswer.objects.filter(pk=standard_answer_id).first()
+    if standard_answer is None:
+        return pdf_error_response(request, _("Declaration not found"), 404)
 
-    if not standard_answer:
+    # has_change_permission adds its own error message.
+    if not has_change_permission(request, standard_answer, "download"):
+        return JsonResponse({"messages": render_error_messages(request)}, status=403)
+
+    return queue_pdf_task(
+        request,
+        "security_objective",
+        generate_declaration_pdf_task,
+        (standard_answer.id, request.user.id, translation.get_language()),
+        {
+            "standard_answer_id": standard_answer.id,
+            "filename": f"Security_objective_declaration_{timezone.now().date()}.pdf",
+        },
+    )
+
+
+@login_required
+@otp_required
+@require_http_methods(["GET"])
+def declaration_pdf_download(request, task_id: UUID):
+    task_key = str(task_id)
+    pending_pdf = get_pdf_task(request, "security_objective", task_key)
+    forget_pdf_task(request, task_key)
+
+    standard_answer = StandardAnswer.objects.filter(pk=pending_pdf["standard_answer_id"]).first()
+    if standard_answer is None:
+        discard_pdf(task_key)
         messages.error(request, _("Declaration not found"))
-        rendered_messages = render_error_messages(request)
-        return JsonResponse({"messages": rendered_messages}, status=400)
-    try:
-        standard_answer = standard_answer.first()
-        if not has_change_permission(request, standard_answer, "download"):
-            return redirect("securityobjectives")
-        standard = standard_answer.standard
-        show_review_comments = can_see_review_comments(user, standard_answer)
-
-        levels = MaturityLevel.objects.filter(standard=standard).aggregate(first_level=Min("level"), last_level=Max("level"))
-        security_objectives_queryset = standard.security_objectives_set.all().order_by("position")
-        security_objectives = defaultdict(lambda: defaultdict(list))
-
-        for so_in_standard in security_objectives_queryset:
-            security_objective = so_in_standard.security_objective
-            security_objective.declaration_status = standard_answer.status
-            security_measures = security_objective.securitymeasure_set.all().order_by("position")
-            try:
-                so_status = SecurityObjectiveStatus.objects.get(
-                    standard_answer=standard_answer,
-                    security_objective=security_objective,
-                )
-                security_objective.status = so_status
-            except SecurityObjectiveStatus.DoesNotExist:
-                security_objective.status = None
-
-            for measure in security_measures:
-                try:
-                    sm_answer = SecurityMeasureAnswer.objects.get(
-                        standard_answer=standard_answer,
-                        security_measure=measure,
-                    )
-                    measure.is_implemented = sm_answer.is_implemented
-                    measure.justification = sm_answer.justification
-                    measure.review_comment = sm_answer.review_comment if show_review_comments else None
-                except SecurityMeasureAnswer.DoesNotExist:
-                    measure.is_implemented = False
-
-                security_objective = measure.security_objective
-                maturity_level = measure.maturity_level
-                security_objectives[security_objective][maturity_level].append(measure)
-
-        security_objectives = {so: dict(levels) for so, levels in security_objectives.items()}
-        static_theme_dir = settings.STATIC_THEME_DIR
-        font_config = FontConfiguration()
-
-        column_config = standard.get_column_config()
-        column_config["review_comment"]["visible"] = column_config["review_comment"]["visible"] and show_review_comments
-        set_declaration_column_widths(column_config)
-
-        output_from_parsed_template = render_to_string(
-            "report/security_objectives/template.html",
-            {
-                "last_maturity_level": levels["last_level"],
-                "standard_answer": standard_answer,
-                "review_status": get_review_status_label(standard_answer, user),
-                "show_objective_status": is_user_regulator(user) or standard_answer.is_review_sent,
-                "security_objectives": security_objectives,
-                "column_config": column_config,
-                "visible_column_count": sum(1 for column in column_config.values() if column["visible"]),
-                "score_display": standard.get_score_display_config(),
-                "actions_config": standard.get_actions_config(),
-            },
-            request=request,
-        )
-
-        htmldoc = HTML(string=output_from_parsed_template, base_url=static_theme_dir)
-
-        stylesheets = [
-            CSS(
-                os.path.join(static_theme_dir, "css/custom.css"),
-                font_config=font_config,
-            ),
-            CSS(
-                os.path.join(static_theme_dir, "css/report.css"),
-                font_config=font_config,
-            ),
-        ]
-
-        pdf_report = htmldoc.write_pdf(stylesheets=stylesheets, font_config=font_config)
-        response = HttpResponse(pdf_report, content_type="application/pdf")
-        response["Content-Disposition"] = f"attachment;filename=Security_objective_declaration_{timezone.now().date()}.pdf"
-        create_entry_log(user, standard_answer, "DOWNLOAD", request)
-        return response
-    except Exception:
-        messages.warning(request, _("An error occurred while generating the report."))
         return redirect("securityobjectives")
+
+    # Access can be revoked between the request and the download, so it is checked again
+    # rather than trusted from the moment the file was produced.
+    if not has_change_permission(request, standard_answer, "download"):
+        discard_pdf(task_key)
+        return redirect("securityobjectives")
+
+    response = serve_pdf(task_key, pending_pdf["filename"])
+    create_entry_log(request.user, standard_answer, "DOWNLOAD", request)
+
+    return response
 
 
 @login_required
@@ -1074,7 +1052,10 @@ def has_change_permission(request, standard_answer, action):
                 return (is_user_regulator_sector and standard_answer.status != "UNDE") or (is_standard_answer_in_user_company)
             case "submit":
                 return (
-                    is_standard_answer_in_user_company and standard_answer.status == "UNDE" and standard_answer.answered_percentage == 100
+                    is_standard_answer_in_user_company
+                    and standard_answer.status == "UNDE"
+                    and standard_answer.answered_percentage == 100
+                    and not standard_answer.has_failed_objectives
                 )
             case "copy":
                 return is_standard_answer_in_user_company and standard_answer.standard is not None and standard_answer.standard.active
@@ -1338,7 +1319,7 @@ def security_objectives_export_status(request, export_id: int):
 
     # A queued job whose worker or broker is gone would never change status, leaving the
     # browser polling for it forever.
-    if export.task_status == "RUNNING" and not celery_health_check():
+    if export.task_status == "RUNNING" and not celery_health_check(settings.INTERACTIVE_QUEUE):
         export.task_status = "FAIL"
         export.save()
 
@@ -1399,8 +1380,7 @@ def get_standard_answer_status(standard_answer):
 def declaration_is_ready_to(standard_answer):
     try:
         declaration = get_standard_answers_with_progress(StandardAnswer.objects.filter(pk=standard_answer.pk)).first()
-        has_failed_so = declaration.securityobjectivestatus_set.filter(status="FAIL").exists()
-        submit = declaration.answered_percentage == 100 and not has_failed_so
+        submit = declaration.answered_percentage == 100 and not declaration.has_failed_objectives
         send = declaration.reviewed_percentage == 100
     except Exception:
         submit = False
@@ -1411,6 +1391,10 @@ def declaration_is_ready_to(standard_answer):
 
 # duplicate a standard answer to keep the versioning
 def duplicate_standard_answer(original):
+    # A review in progress is the regulator's draft: copying its verdicts and comments
+    # would show them to the operator on the new version before the review is sent (#931).
+    drop_review = original.is_review_in_progress
+
     # Copy object
     new_obj = copy.copy(original)
     new_obj.pk = None
@@ -1418,6 +1402,8 @@ def duplicate_standard_answer(original):
     new_obj.status = "UNDE"
     new_obj.submit_date = None
     new_obj.last_update = timezone.now()
+    if drop_review:
+        new_obj.review_comment = None
     new_obj.save()
 
     # Copy SecurityMeasureAmswer
@@ -1426,6 +1412,8 @@ def duplicate_standard_answer(original):
         new_sma = copy.copy(sma)
         new_sma.pk = None
         new_sma.standard_answer = new_obj
+        if drop_review:
+            new_sma.review_comment = ""
         new_sma.save()
     new_obj.save()
 
@@ -1435,6 +1423,8 @@ def duplicate_standard_answer(original):
         new_sos = copy.copy(sos)
         new_sos.pk = None
         new_sos.standard_answer = new_obj
+        if drop_review:
+            new_sos.status = "NOT_REVIEWED"
         new_sos.save()
     new_obj.save()
     return new_obj

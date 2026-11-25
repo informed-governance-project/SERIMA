@@ -22,7 +22,7 @@ from health_check.views import HealthCheckView
 from two_factor.urls import urlpatterns as tf_urls
 from two_factor.views import LoginView
 
-from governanceplatform import views
+from governanceplatform import api_keys, views
 from governanceplatform.admin import admin_site
 from governanceplatform.forms import CustomPasswordResetForm
 from governanceplatform.settings import REGULATOR_CONTACT, SITE_NAME
@@ -31,6 +31,10 @@ handler404 = "governanceplatform.views.custom_404_view"
 handler500 = "governanceplatform.views.custom_500_view"
 
 urlpatterns = [
+    path("api/", include("governanceplatform.api.urls")),
+    path("account/api-keys/", api_keys.manage_api_keys, name="api_keys"),
+    path("account/api-keys/create/", api_keys.create_api_key, name="create_api_key"),
+    path("account/api-keys/<uuid:key_id>/revoke/", api_keys.revoke_api_key, name="revoke_api_key"),
     # Root
     path("", views.index, name="index"),
     # Admin
@@ -73,6 +77,11 @@ urlpatterns = [
         "account/edit/",
         views.edit_account,
         name="edit_account",
+    ),
+    path(
+        "account/preferences/<slug:page>/<slug:aspect>/",
+        views.save_list_preference,
+        name="save_list_preference",
     ),
     # Incident notification
     path("incidents/", include("incidents.urls"), name="incidents"),

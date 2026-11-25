@@ -1,7 +1,6 @@
 import logging
 import os
 from collections import OrderedDict
-from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -15,16 +14,13 @@ from governanceplatform.utils.weasyprint_fetcher import RestrictedURLFetcher
 from .globals import REGIONAL_AREA
 from .models import Answer, Incident, IncidentWorkflow
 
-if TYPE_CHECKING:
-    from django.http import HttpRequest
-
 # Increasing weasyprint log level
 for logger_name in ["weasyprint", "fontTools", "fontTools.subset"]:
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.ERROR)
 
 
-def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow, request: HttpRequest):
+def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow | None) -> bytes:
     # TO DO : improve for more than 2 level ?
     sectors: dict[str, list[str]] = {}
     # boolean to see if it's report or incident
@@ -106,7 +102,6 @@ def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow, requ
             "report_name": report_name,
             "report_list": report_list,
         },
-        request=request,
     )
 
     htmldoc = HTML(
@@ -123,13 +118,16 @@ def get_pdf_report(incident: Incident, incident_workflow: IncidentWorkflow, requ
     return htmldoc.write_pdf(stylesheets=stylesheets, pdf_variant="pdf/ua-1", font_config=font_config)
 
 
-def populate_questions_answers(answer: Answer, preliminary_questions_answers: dict):
-    incident_workflow_timestamp = answer.incident_workflow.timestamp
+def get_question_option_at_submission(answer: Answer):
+    """The question as it stood when the report was submitted, from its history if edited since."""
     question_option = answer.question_options
+    if answer.incident_workflow.timestamp < question_option.updated_at and question_option.historic.all():
+        return question_option.historic.filter(timestamp__gte=answer.incident_workflow.timestamp).first()
+    return question_option
 
-    if answer.incident_workflow.timestamp < answer.question_options.updated_at and answer.question_options.historic.all():
-        old_question_option = answer.question_options.historic.filter(timestamp__gte=incident_workflow_timestamp).first()
-        question_option = old_question_option
+
+def populate_questions_answers(answer: Answer, preliminary_questions_answers: dict):
+    question_option = get_question_option_at_submission(answer)
 
     category_label = question_option.category_option
     question_label = question_option

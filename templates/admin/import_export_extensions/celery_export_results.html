@@ -1,29 +1,36 @@
-{% extends "admin/import_export_extensions/celery_export_results.html" %}
-{% load i18n %}
-{% load admin_urls %}
-{% load static %}
-
+{% extends "admin/import_export/base.html" %}
+{% load i18n static unfold %}
+{% comment %}
+  django-import-export-extensions' export results page, in Unfold's markup. The file is stored
+  outside MEDIA_ROOT (settings.PRIVATE_FILES_ROOT) and never served statically: the link
+  goes through CustomExportJobAdmin.download_and_delete_view, which deletes it once sent, and
+  export_job_redirect.js then leaves the stale page.
+{% endcomment %}
 {% block extrahead %}
   {{ block.super }}
   <script src="{% static 'admin/js/export_job_redirect.js' %}" defer></script>
 {% endblock %}
-
-{% block export_results %}
-  {% if export_job.export_status == 'EXPORT_ERROR' %}
-    <h2>{% trans "There are some errors during data exporting:" %}</h2>
-    <div class="error">
-      {{ export_job.error_message }}
-      {% if debug %}
-        <div class="traceback">{{ export_job.traceback|linebreaks }}</div>
-      {% endif %}
-    </div>
-  {% endif %}
-  {% if export_job.export_status == 'EXPORTED' %}
-    <h2>{% trans "You can download exported data with following link" %}</h2>
-    <a href="{% url 'admin:exportjob_download_and_delete' export_job.pk %}"
-       id="data_file"
-       data-redirect-url="{% url 'admin:index' %}">
-      {% trans "Download export data" %}
-    </a>
+{% block content %}
+  {% if export_job.export_status == "EXPORT_ERROR" %}
+    {% capture as error silent %}
+      {% translate "There are some errors during data exporting:" %} {{ export_job.error_message }}
+    {% endcapture %}
+    {% include "unfold/helpers/messages/error.html" with error=error %}
+    {% if debug %}
+      <pre class="overflow-auto rounded-default bg-base-50 p-3 text-xs">{{ export_job.traceback }}</pre>
+    {% endif %}
+  {% elif export_job.export_status == "EXPORTED" %}
+    {% capture as message silent %}
+      <div class="flex flex-row items-center gap-3">
+        <p class="grow">{% translate "You can download exported data with following link" %}</p>
+        <a href="{% url 'admin:exportjob_download_and_delete' export_job.pk %}"
+           id="data_file"
+           data-redirect-url="{% url 'admin:index' %}"
+           class="font-medium inline-flex items-center justify-center whitespace-nowrap rounded-default px-3 py-2 cursor-pointer border border-transparent bg-primary-600 text-white hover:bg-primary-600/80">
+          {% translate "Download export data" %}
+        </a>
+      </div>
+    {% endcapture %}
+    {% include "unfold/helpers/messages/success.html" with message=message %}
   {% endif %}
 {% endblock %}

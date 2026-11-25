@@ -541,9 +541,25 @@ class StandardAnswer(models.Model):
     def is_review_in_progress(self) -> bool:
         return self.status in ("DELIV", "PASS", "FAIL")
 
-    @property
-    def has_failed_objectives(self) -> bool:
-        return SecurityObjectiveStatus.objects.filter(standard_answer=self, status="FAIL").exists()
+    def get_newer_versions(self) -> QuerySet[StandardAnswer]:
+        """The versions of the declaration created after this one.
+
+        Creation order, not last_update, decides which version is newer: a regulator
+        reviewing an older version updates that one.
+        """
+        return StandardAnswer.objects.filter(group=self.group, creation_date__gt=self.creation_date)
+
+    def get_newer_submitted_version(self) -> StandardAnswer | None:
+        """The latest version of the declaration submitted after this one, which replaces it."""
+        return self.get_newer_versions().exclude(status="UNDE").order_by("-creation_date").first()
+
+    def lock_versions(self) -> None:
+        """Hold the declaration's versions until the current transaction ends.
+
+        A version is submitted, updated or has its review sent only after checking the other
+        versions, so two of these requests on one declaration must not interleave (#931).
+        """
+        StandardAnswerGroup.objects.select_for_update().get(pk=self.group_id)
 
     # The sectors are those the regulator assigned to the company, read live, so a change in
     # the backend reaches every declaration of the company (#911).
@@ -712,4 +728,4 @@ class SecurityObjectiveExport(models.Model):
         return self.filename
 
     def get_file_path(self) -> str:
-        return os.path.join(settings.PATH_FOR_REPORTING_PDF, SO_EXPORT_DIRECTORY, str(self.file_uuid))
+        return os.path.join(settings.PRIVATE_FILES_ROOT, SO_EXPORT_DIRECTORY, str(self.file_uuid))

@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from django.contrib.auth.models import AnonymousUser, Group
+from django.core.exceptions import DisallowedRedirect
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 
@@ -224,6 +225,23 @@ def test_sanitize_html_removes_scripts_and_unsafe_styles():
     assert sanitized == '<p style="color: red;">Safe</p>alert(1)'
 
 
+def test_sanitize_html_keeps_what_the_rich_text_editor_writes():
+    """Keep the paragraphs, quotes and underlines of the admin's rich-text editor (Trix)."""
+    html = "<div>First</div><div>Second <u>line</u></div><blockquote>Quote</blockquote>"
+
+    assert helpers.sanitize_html(html) == html
+
+
+def test_render_to_string_multi_languages_sends_the_content_as_html(monkeypatch):
+    """The content is HTML: sent sanitised, with no Markdown conversion of what it says."""
+    monkeypatch.setattr(helpers, "render_to_string", lambda template, context: context["content"])
+    content = SimpleNamespace(safe_translation_getter=lambda field, language_code: "<div>Use **bold**</div><script>x</script>")
+
+    result = helpers.render_to_string_multi_languages("email.html", {}, lambda text, obj: text, content=content, object=object())
+
+    assert "<div>Use **bold**</div>x" in result
+
+
 @pytest.fixture
 def referer_request():
     """Build a request carrying the given Referer header, as a browser would send it."""
@@ -297,3 +315,37 @@ def test_sanitize_spreadsheet_cell_strips_characters_openpyxl_rejects(control_ch
 
 def test_sanitize_spreadsheet_cell_neutralizes_formula_hidden_behind_control_character():
     assert helpers.sanitize_spreadsheet_cell("\x0b=HYPERLINK()") == "'=HYPERLINK()"
+
+
+SORT_FIELDS = {
+    "joined": {"field": "date_joined", "type": "datetime"},
+    "email": {"field": "email", "type": "string"},
+}
+
+
+@pytest.mark.django_db
+def test_an_unknown_sort_field_falls_back_to_the_default_key_field():
+    qs = helpers.sort_queryset_by_field(User.objects.all(), "password", "asc", "joined", SORT_FIELDS)
+
+    assert qs.query.order_by == ("-date_joined",)
+
+
+@pytest.mark.django_db
+def test_the_default_key_field_breaks_ties_on_another_sort():
+    qs = helpers.sort_queryset_by_field(User.objects.all(), "email", "asc", "joined", SORT_FIELDS)
+
+    assert qs.query.order_by[-1] == "-date_joined"
+
+
+def test_redirect_to_current_page_stays_on_the_page():
+    request = RequestFactory().get("/incidents/", {"reset": ""})
+
+    assert helpers.redirect_to_current_page(request).url == "/incidents/"
+
+
+def test_redirect_to_current_page_refuses_a_path_read_as_another_host():
+    request = RequestFactory().get("/incidents/")
+    request.path = "//evil.example/incidents/"
+
+    with pytest.raises(DisallowedRedirect):
+        helpers.redirect_to_current_page(request)

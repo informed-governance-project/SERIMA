@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 
@@ -19,6 +20,8 @@ def extra_content_for_all_templates(request):
         "is_staff": user.is_staff,
         "is_only_admin": False,
         "regulator_name": REGULATOR_CONTACT["name"],
+        # the menu links to key management only for users the API would serve
+        "api_enabled": settings.API_ENABLED and user.is_authenticated and bool(user.get_api_modules()),
     }
     extra_data["is_regulator"] = is_user_regulator(user)
     extra_data["is_observer"] = is_observer_user(user)

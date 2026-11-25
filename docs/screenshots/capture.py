@@ -16,6 +16,7 @@ import hmac
 import json
 import os
 import struct
+import subprocess
 import sys
 import time
 import tomllib
@@ -30,9 +31,19 @@ from playwright.sync_api import BrowserContext, Page, sync_playwright
 HERE = Path(__file__).resolve().parent
 DEFAULT_SPEC = HERE / "shots.toml"
 DEFAULT_OUT = HERE.parent / "_static"
+MANAGE_PY = HERE.parent.parent / "manage.py"
 
 ANONYMOUS = "anonymous"
 
+
+# Runs before the page's own scripts on every document the shot loads. Alpine $persist
+# stores each sidebar group under admin-nav-<app label> as JSON; a missing key means open.
+NAV_STATE_JS = """
+for (const key of Object.keys(localStorage)) {
+  if (key.startsWith("admin-nav-")) localStorage.removeItem(key);
+}
+for (const app of %s) localStorage.setItem(`admin-nav-${app}`, "false");
+"""
 
 ANNOTATION_JS = """
 (payload) => {
@@ -87,13 +98,19 @@ ANNOTATION_JS = """
     }
 
     if (item.box) {
+      // The outline sits 4px outside the element, which would push its stroke off
+      // the canvas for an element flush with the page edge, such as the sidebar.
+      const pageWidth = document.documentElement.scrollWidth;
+      const left = Math.max(0, box.left - 4);
+      const top = Math.max(0, box.top - 4);
+      const right = Math.min(pageWidth, box.right + 4);
       const outline = document.createElement('div');
       outline.style.cssText =
-        `width:${rect.width + 8}px;height:${rect.height + 8}px;border:3px solid ${color};` +
+        `width:${right - left}px;height:${box.bottom + 4 - top}px;border:3px solid ${color};` +
         // A white rule either side of the stroke keeps the callout legible on
         // whatever it lands on — brand-red buttons included, and in greyscale.
         'border-radius:6px;box-sizing:border-box;box-shadow:0 0 0 1px #fff, inset 0 0 0 1px #fff';
-      place(outline, box.left - 4, box.top - 4);
+      place(outline, left, top);
     }
 
     if (!item.arrow) continue;
@@ -423,6 +440,10 @@ def capture(
         # Not a page of the platform: the email the previous shot made it send.
         page.set_content(latest_email_html(), wait_until="networkidle")
     else:
+        # The admin sidebar remembers folded groups in localStorage (Alpine $persist), which
+        # the role's shared context carries over from the previous shot. Each shot starts
+        # from its own nav_closed instead, so a batch run matches an --only run.
+        page.add_init_script(NAV_STATE_JS % json.dumps(shot.get("nav_closed", [])))
         page.goto(f"{base_url}{shot['path']}", wait_until="networkidle")
         dismiss_cookie_banner(page)
 
@@ -447,6 +468,16 @@ def capture(
         page.screenshot(path=target, full_page=shot.get("full_page", False))
 
     return target
+
+
+def reset_preferences() -> None:
+    """Forget the list choices of the screenshot accounts.
+
+    They are saved on the account, not in the browser, so a fresh context alone no longer
+    gives the next shot the defaults. This runs against the local database, like
+    `manage.py screenshot_fixture --create` that set the accounts up.
+    """
+    subprocess.run([sys.executable, str(MANAGE_PY), "screenshot_fixture", "--reset-preferences"], check=True)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -483,6 +514,8 @@ def main(argv: list[str] | None = None) -> int:
     defaults = spec.get("defaults", {})
     viewport = spec.get("viewport", {"width": 1440, "height": 900})
     args.out.mkdir(parents=True, exist_ok=True)
+    # An interrupted run can leave choices behind.
+    reset_preferences()
 
     with sync_playwright() as playwright:
         launch: dict[str, Any] = {"headless": not args.headed}
@@ -519,6 +552,7 @@ def main(argv: list[str] | None = None) -> int:
                     page.close()
                     if throwaway:
                         context.close()
+                        reset_preferences()
                 print(f"captured {target.relative_to(Path.cwd())}" if target.is_relative_to(Path.cwd()) else f"captured {target}")
         finally:
             for context in contexts.values():

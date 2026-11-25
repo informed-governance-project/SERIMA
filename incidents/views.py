@@ -1,6 +1,8 @@
 import csv
 import logging
 from datetime import date
+from functools import partial
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 import pytz
@@ -15,7 +17,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import CharField, F, OuterRef, Q, Subquery, Value
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -28,9 +30,13 @@ from django_otp.decorators import otp_required
 from formtools.wizard.views import SessionWizardView
 from openpyxl import Workbook
 
+from governanceplatform.async_pdf import discard_pdf, forget_pdf_task, get_pdf_task, pdf_error_response, queue_pdf_task, serve_pdf
 from governanceplatform.decorators import check_user_is_correct, regulator_role_required
+from governanceplatform.globals import PER_PAGE_CHOICES
 from governanceplatform.helpers import (
     annotate_translated_field_from_related_models,
+    bind_applicable_filters,
+    default_sort_key,
     get_active_company_from_session,
     is_observer_user,
     is_user_operator,
@@ -40,6 +46,7 @@ from governanceplatform.helpers import (
     sanitize_spreadsheet_cell,
     sort_queryset_by_field,
     translated_queryset,
+    update_list_params,
     user_in_group,
 )
 from governanceplatform.models import (
@@ -66,6 +73,7 @@ from .filters import IncidentFilter
 from .forms import ContactForm, ExportIncidentsForm, IncidentStatusForm, RegulatorIncidentWorkflowCommentForm, get_forms_list
 from .globals import (
     ALLOWED_SORT_FIELDS,
+    CONNECTOR_LOG_ROLE,
     REGIONAL_AREA,
     REPORT_STATUS_MAP,
     WORKFLOW_REVIEW_STATUS,
@@ -89,7 +97,11 @@ from .models import (
     SectorRegulationWorkflow,
     Workflow,
 )
-from .pdf_generation import get_pdf_report
+from .tasks import generate_incident_pdf_task
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
 
 logger = logging.getLogger(__name__)
 
@@ -102,33 +114,12 @@ def get_incidents(request):
     user = request.user
     incidents = Incident.objects.filter(sector_regulation__isnull=False)
     html_view = "operator/incidents.html"
-    search_value = request.GET.get("search", None)
-
-    if "reset_sort" in request.GET:
-        request.session.pop("incidents_sort_params", None)
-        return redirect("incidents")
-
-    if "reset" in request.GET or search_value == "":
-        request.session.pop("incidents_filter_params", None)
-        return redirect("incidents")
-
-    # Save filter params in user's session
-    current_params = request.session.get("incidents_filter_params", {}).copy()
-    current_sort_params = request.session.get("incidents_sort_params", {}).copy()
-
-    for key, values in request.GET.lists():
-        if key in ["sort_field", "sort_direction"]:
-            continue
-        current_params[key] = values if key == "affected_sectors" else values[0]
-
-    for key, value in request.GET.items():
-        if key in ("sort_field", "sort_direction"):
-            current_sort_params[key] = value
-
-    incidents_filter_params = current_params
-    incidents_sort_params = current_sort_params
-    request.session["incidents_filter_params"] = incidents_filter_params
-    request.session["incidents_sort_params"] = incidents_sort_params
+    preference_page = "regulator_incidents" if request.path == reverse("regulator_incidents") else "incidents"
+    list_preferences = update_list_params(request, preference_page, IncidentFilter, ALLOWED_SORT_FIELDS)
+    if isinstance(list_preferences, HttpResponseRedirect):
+        return list_preferences
+    incidents_filter_params = list_preferences.filters
+    incidents_sort_params = list_preferences.sort
 
     if is_user_regulator(user):
         html_view = "regulator/incidents.html"
@@ -163,8 +154,8 @@ def get_incidents(request):
         incidents = incidents.filter(contact_user=user)
 
     # Apply sorting
-    sort_field = incidents_sort_params.get("sort_field", "last_update")
-    sort_direction = incidents_sort_params.get("sort_direction", "desc")
+    sort_field = incidents_sort_params["sort_field"]
+    sort_direction = incidents_sort_params["sort_direction"]
 
     if sort_field == "company_name":
         annotated_name = ALLOWED_SORT_FIELDS.get(sort_field)["field"]
@@ -213,17 +204,17 @@ def get_incidents(request):
         incidents,
         sort_field,
         sort_direction,
-        "incident_last_update",
+        default_sort_key(preference_page),
         ALLOWED_SORT_FIELDS,
     )
 
-    f = IncidentFilter(incidents_filter_params, queryset=incidents)
+    f, incidents_filter_params = bind_applicable_filters(partial(IncidentFilter, queryset=incidents), incidents_filter_params)
     incident_list = f.qs.prefetch_related(
         "sector_regulation__workflows__sectorregulationworkflow_set",
         "incidentworkflow_set__workflow__sectorregulationworkflow_set",
     )
 
-    per_page = incidents_filter_params.get("per_page", 10)
+    per_page = list_preferences.per_page
     page_number = incidents_filter_params.get("page")
     paginator = Paginator(incident_list, per_page)
     page_obj = paginator.get_page(page_number)
@@ -300,10 +291,15 @@ def get_incidents(request):
             "filter": f,
             "sort_field": sort_field,
             "sort_direction": sort_direction,
+            "default_sort_field": default_sort_key(preference_page),
+            "per_page_choices": PER_PAGE_CHOICES,
             "incidents": page_obj,
             "is_filtered": bool(is_filtered),
             "is_regulator_incidents": request.session.get("is_regulator_incidents", False),
             "can_export_incidents": can_export_incidents(user),
+            "preference_page": preference_page,
+            "visible_columns": list_preferences.columns,
+            "show_legend": list_preferences.legend,
         },
     )
 
@@ -566,7 +562,12 @@ def access_log(request, incident_id: int):
 
     log = LogReportRead.objects.filter(incident=incident).order_by("-timestamp")
     if is_user_operator(user) or user_in_group(user, "IncidentUser"):
-        log = log.exclude(user__regulatoruser__isnull=False).exclude(user__observers__isnull=False)
+        log = (
+            log.exclude(user__regulatoruser__isnull=False)
+            .exclude(user__observers__isnull=False)
+            # A deleted user leaves user=NULL, so the role recorded at logging time is all that is left to filter on.
+            .exclude(user__isnull=True, role__in=["RegulatorAdmin", "RegulatorUser", "ObserverAdmin", "ObserverUser", CONNECTOR_LOG_ROLE])
+        )
     if is_regulator_incident:
         log = log.filter(user__regulatoruser__regulator=user.regulators.first())
     context = {
@@ -579,87 +580,74 @@ def access_log(request, incident_id: int):
 @login_required
 @otp_required
 @check_user_is_correct
+@require_http_methods(["POST"])
 def download_incident_pdf(request, incident_id: int):
-    user = request.user
-    company_id = request.session.get("company_in_use")
+    incident = Incident.objects.filter(pk=incident_id).first()
+    if incident is None:
+        return pdf_error_response(request, _("Incident not found"), 404)
 
-    try:
-        incident = Incident.objects.get(pk=incident_id)
-    except Incident.DoesNotExist:
-        messages.error(request, _("Incident not found"))
-        return redirect("incidents")
-
-    if not can_access_incident(user, incident, company_id):
-        messages.error(request, _("Forbidden"))
-        return redirect("incidents")
-
-    try:
-        pdf_report = get_pdf_report(incident, None, request)
-        create_entry_log(user, incident, None, "DOWNLOAD", request)
-    except Exception:
-        logger.error(
-            "Error generating incident PDF report",
-            extra={
-                "incident_id": incident.id,
-                "user_id": user.id,
-                "company_id": company_id,
-            },
-            exc_info=True,
-        )
-        messages.error(request, _("An error occurred while generating the report."))
-        return redirect("incidents")
-
-    response = HttpResponse(pdf_report, content_type="application/pdf")
+    if not can_access_incident(request.user, incident, request.session.get("company_in_use")):
+        return pdf_error_response(request, _("Forbidden"), 403)
 
     latest_workflow = incident.get_latest_incident_workflow()
     timestamp = latest_workflow.timestamp if latest_workflow else incident.incident_notification_date
     filename = f"Incident_{incident.incident_id}_{timestamp:%Y-%m-%d}.pdf"
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
 
-    return response
+    return queue_incident_pdf(request, incident, None, filename)
 
 
 @login_required
 @otp_required
 @check_user_is_correct
+@require_http_methods(["POST"])
 def download_incident_report_pdf(request, incident_workflow_id: int):
+    incident_workflow = IncidentWorkflow.objects.select_related("incident", "workflow").filter(pk=incident_workflow_id).first()
+    if incident_workflow is None:
+        return pdf_error_response(request, _("No incident report could be found."), 404)
+
+    incident = incident_workflow.incident
+    if not can_access_incident(request.user, incident, request.session.get("company_in_use")):
+        return pdf_error_response(request, _("Forbidden"), 403)
+
+    filename = f"{incident.incident_id}_{incident_workflow.workflow.name}_{incident_workflow.timestamp:%Y-%m-%d}.pdf"
+
+    return queue_incident_pdf(request, incident, incident_workflow, filename)
+
+
+def queue_incident_pdf(request, incident: Incident, incident_workflow: IncidentWorkflow | None, filename: str) -> JsonResponse:
+    incident_workflow_id = incident_workflow.id if incident_workflow else None
+
+    return queue_pdf_task(
+        request,
+        "incident",
+        generate_incident_pdf_task,
+        (incident.id, incident_workflow_id, translation.get_language()),
+        {"incident_id": incident.id, "incident_workflow_id": incident_workflow_id, "filename": filename},
+    )
+
+
+@login_required
+@otp_required
+@check_user_is_correct
+@require_http_methods(["GET"])
+def incident_pdf_download(request, task_id: UUID):
+    task_key = str(task_id)
+    pending_pdf = get_pdf_task(request, "incident", task_key)
+    forget_pdf_task(request, task_key)
+
     user = request.user
-    company_id = request.session.get("company_in_use")
+    incident = Incident.objects.filter(pk=pending_pdf["incident_id"]).first()
+    incident_workflow = IncidentWorkflow.objects.filter(pk=pending_pdf["incident_workflow_id"]).first()
 
-    try:
-        incident_workflow = IncidentWorkflow.objects.get(pk=incident_workflow_id)
-        incident = incident_workflow.incident
-    except IncidentWorkflow.DoesNotExist:
-        messages.error(request, _("No incident report could be found."))
-        return redirect("incidents")
-
-    if not can_access_incident(user, incident, company_id):
+    # Access can be revoked between the request and the download, so it is checked again
+    # rather than trusted from the moment the file was produced.
+    if incident is None or not can_access_incident(user, incident, request.session.get("company_in_use")):
+        discard_pdf(task_key)
         messages.error(request, _("Forbidden"))
         return redirect("incidents")
-    try:
-        pdf_report = get_pdf_report(incident, incident_workflow, request)
-        create_entry_log(user, incident, incident_workflow, "DOWNLOAD", request)
-    except Exception:
-        logger.error(
-            "Error generating incident PDF report",
-            extra={
-                "incident_id": incident.id,
-                "incident_workflow_id": incident_workflow.id,
-                "user_id": user.id,
-                "company_id": company_id,
-            },
-            exc_info=True,
-        )
-        messages.error(request, _("An error occurred while generating the report."))
-        return redirect("incidents")
 
-    response = HttpResponse(pdf_report, content_type="application/pdf")
-
-    timestamp = incident_workflow.timestamp
-    report_name = incident_workflow.workflow.name
-    filename = f"{incident.incident_id}_{report_name}_{timestamp:%Y-%m-%d}.pdf"
-
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response = serve_pdf(task_key, pending_pdf["filename"])
+    create_entry_log(user, incident, incident_workflow, "DOWNLOAD", request)
 
     return response
 

@@ -13,11 +13,10 @@ from django.http import Http404, JsonResponse
 from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
-from markdown import markdown
 from parler.models import TranslatableModel
+from unfold.admin import ModelAdmin, TabularInline
 
 from governanceplatform.admin import (
     CustomTranslatableAdmin,
@@ -28,7 +27,6 @@ from governanceplatform.globals import ACTION_FLAG_CHOICES
 from governanceplatform.helpers import (
     can_change_or_delete_obj,
     generate_display_methods,
-    sanitize_html,
     set_creator,
     translated_queryset,
     user_in_group,
@@ -123,7 +121,7 @@ class ActionFlagFilter(SimpleListFilter):
 
 # add a view to see the logs
 @admin.register(LogEntry, site=admin_site)
-class LogEntryAdmin(admin.ModelAdmin):
+class LogEntryAdmin(ModelAdmin):
     # to have a date-based drilldown navigation in the admin page
     date_hierarchy = "action_time"
 
@@ -221,7 +219,7 @@ class QuestionCategoryAdmin(PermissionMixin, CustomTranslatableAdmin):
         return False
 
 
-class QuestionOptionsInline(PermissionMixin, admin.TabularInline):
+class QuestionOptionsInline(PermissionMixin, TabularInline):
     model = QuestionOptions
     form = QuestionOptionsInlineForm
     verbose_name = _("Question")
@@ -425,7 +423,7 @@ for name, method in generate_display_methods(
 
 
 @admin.register(QuestionOptions, site=admin_site)
-class QuestionOptionsAdmin(admin.ModelAdmin):
+class QuestionOptionsAdmin(ModelAdmin):
     list_display = ["position", "question", "is_mandatory", "is_conditional", "category_option"]
     list_display_links = ["position", "question"]
     ordering = ["position"]
@@ -442,9 +440,10 @@ class QuestionOptionsAdmin(admin.ModelAdmin):
 
 
 @admin.register(ConditionalQuestionOption, site=admin_site)
-class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
+class ConditionalQuestionOptionAdmin(PermissionMixin, ModelAdmin):
     form = ConditionalQuestionOptionForm
     list_display = ["get_workflow", "question_options", "predefined_answer", "next_question_options", "creator"]
+    list_display_links = ["question_options"]
     list_filter = ["question_options__report", "question_options__category_option__question_category"]
     search_fields = [
         "question_options__question__translations__label",
@@ -582,7 +581,7 @@ class ConditionalQuestionOptionAdmin(PermissionMixin, admin.ModelAdmin):
 
 
 @admin.register(QuestionCategoryOptions, site=admin_site)
-class QuestionCategoryOptionsAdmin(PermissionMixin, admin.ModelAdmin):
+class QuestionCategoryOptionsAdmin(PermissionMixin, ModelAdmin):
     list_display = ["question_category", "position"]
     list_display_links = ["position", "question_category"]
     fields = ["question_category", "position"]
@@ -634,6 +633,7 @@ class ImpactAdmin(PermissionMixin, CustomTranslatableAdmin):
         "get_subsector_name",
         "headline_display",
     ]
+    list_display_links = ["headline_display"]
     translated_fields = ["headline"]
     search_fields = [
         "translations__label",
@@ -794,7 +794,6 @@ class EmailAdmin(EmailPlaceholdersMixin, CustomTranslatableAdmin):
 
     search_fields = ["translations__subject", "translations__content", "name"]
     list_filter = [EmailRegulatorListFilter, EmailTypeListFilter]
-    readonly_fields = ("html_preview",)
 
     fieldsets = (
         (
@@ -806,31 +805,10 @@ class EmailAdmin(EmailPlaceholdersMixin, CustomTranslatableAdmin):
         (
             _("Content"),
             {
-                "fields": ("content", "html_preview"),
+                "fields": ("content",),
             },
         ),
     )
-
-    @admin.display(description=_("HTML preview"))
-    def html_preview(self, obj):
-        if not obj or not obj.content:
-            return _("No preview yet")
-        html_content = markdown(
-            text=obj.content,
-            extensions=["extra", "sane_lists", "legacy_attrs", "nl2br"],
-            output_format="html",
-        )
-        html_content = sanitize_html(html_content)
-        return mark_safe(
-            f"""
-            <div class="markdown-html-preview">
-                {html_content}
-            </div>
-            """
-        )
-
-    class Media:
-        css = {"all": ("admin/css/markdown_preview.css",)}
 
     def save_model(self, request, obj, form, change):
         set_creator(request, obj, change)
@@ -933,7 +911,7 @@ for name, method in generate_display_methods(["label", "description"]).items():
     setattr(WorkflowAdmin, name, method)
 
 
-class SectorRegulationInline(admin.TabularInline):
+class SectorRegulationInline(TabularInline):
     model = SectorRegulation.workflows.through
     verbose_name = _("Incident report")
     verbose_name_plural = _("Incident reports")
@@ -1134,6 +1112,7 @@ class SectorRegulationWorkflowEmailAdmin(CustomTranslatableAdmin):
         "trigger_event",
         "delay_in_hours",
     ]
+    list_display_links = ["headline_display"]
     translated_fields = ["headline"]
     search_fields = [
         "sector_regulation_workflow__sector_regulation__regulation__translations__label",

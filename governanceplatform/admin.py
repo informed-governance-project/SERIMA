@@ -14,7 +14,7 @@ from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.urls import path, reverse
-from django.utils import timezone, translation
+from django.utils import translation
 from django.utils.html import format_html
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
@@ -26,12 +26,22 @@ from import_export_extensions.admin.model_admins.export_job_admin import ExportJ
 from import_export_extensions.admin.model_admins.import_job_admin import ImportJobAdmin
 from import_export_extensions.models import ExportJob, ImportJob
 from parler.admin import TranslatableAdmin, TranslatableTabularInline
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
+from unfold.sites import UnfoldAdminSite
+from unfold.widgets import UnfoldAdminPasswordWidget, UnfoldBooleanSwitchWidget
 
 from governanceplatform.settings import PARLER_DEFAULT_LANGUAGE_CODE
 
 from .decorators import check_user_is_correct
 from .email import send_html_email
-from .forms import CustomObserverAdminForm, CustomTranslatableAdminForm, FunctionalityAdminForm
+from .forms import (
+    APIModuleAccessAdminForm,
+    CustomTranslatableAdminForm,
+    FunctionalityAdminForm,
+    ObserverAdminForm,
+    ObserverConnectorAdminForm,
+    UserAdminForm,
+)
 from .formset import CompanyUserInlineFormset
 from .helpers import (
     delete_file_and_parents,
@@ -46,12 +56,14 @@ from .helpers import (
 )
 from .mixins import ShowReminderForTranslationsMixin
 from .models import (  # OperatorType,; Service,
+    APIModuleAccess,
     ApplicationConfig,
     Company,
     CompanyUser,
     EntityCategory,
     Functionality,
     Observer,
+    ObserverConnector,
     ObserverRegulation,
     ObserverUser,
     Regulation,
@@ -62,7 +74,6 @@ from .models import (  # OperatorType,; Service,
     User,
 )
 from .permissions import set_platform_admin_permissions
-from .rt import check_rt_config, create_rt_ticket
 from .settings import SITE_NAME
 
 
@@ -76,7 +87,7 @@ def get_group_id(name=""):
     return group_id
 
 
-class CustomAdminSite(admin.AdminSite):
+class CustomAdminSite(UnfoldAdminSite):
     site_header = SITE_NAME + " " + _("Settings")
     site_title = SITE_NAME
 
@@ -120,7 +131,7 @@ admin_site = CustomAdminSite()
 
 
 @admin.register(ImportJob, site=admin_site)
-class CustomImportJobAdmin(ImportJobAdmin):
+class CustomImportJobAdmin(ModelAdmin, ImportJobAdmin):
     def import_job_progress_view(self, request, job_id, **kwargs):
         try:
             response = super().import_job_progress_view(request, job_id, **kwargs)
@@ -141,7 +152,7 @@ class CustomImportJobAdmin(ImportJobAdmin):
 
 
 @admin.register(ExportJob, site=admin_site)
-class CustomExportJobAdmin(ExportJobAdmin):
+class CustomExportJobAdmin(ModelAdmin, ExportJobAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
@@ -193,7 +204,7 @@ class CustomExportJobAdmin(ExportJobAdmin):
         return response
 
 
-class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmin):
+class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, ModelAdmin, TranslatableAdmin):
     form = CustomTranslatableAdminForm
 
     translated_fields: list[str] = []
@@ -242,7 +253,7 @@ class CustomTranslatableAdmin(ShowReminderForTranslationsMixin, TranslatableAdmi
         return qs.annotate(**final_annotations)
 
 
-class CustomTranslatableTabularInline(TranslatableTabularInline):
+class CustomTranslatableTabularInline(TabularInline, TranslatableTabularInline):
     form = CustomTranslatableAdminForm
 
 
@@ -255,7 +266,7 @@ class SettingsDummy(Model):
 
 
 @admin.register(SettingsDummy, site=admin_site)
-class SettingsAdmin(admin.ModelAdmin):
+class SettingsAdmin(ModelAdmin):
     change_list_template = "admin/settings_list.html"
 
     def changelist_view(self, request, extra_context=None):
@@ -273,7 +284,7 @@ class SettingsAdmin(admin.ModelAdmin):
 
 
 @admin.register(Site, site=admin_site)
-class SiteAdmin(admin.ModelAdmin):
+class SiteAdmin(ModelAdmin):
     pass
 
 
@@ -326,7 +337,7 @@ for name, method in generate_display_methods(["label"]).items():
     setattr(EntityCategoryAdmin, name, method)
 
 
-class CompanyUserInline(admin.TabularInline):
+class CompanyUserInline(TabularInline):
     model = CompanyUser
     verbose_name = _("Contact for company")
     verbose_name_plural = _("Contacts for company")
@@ -432,7 +443,9 @@ class CompanyUserInline(admin.TabularInline):
         return super().has_delete_permission(request, obj)
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request)
+        # A deactivated account is gone from its company, as from its regulator or observer:
+        # its row would hold a user the User drop-down no longer offers, which fails validation.
+        queryset = super().get_queryset(request).filter(user__is_active=True)
         user = request.user
         # Operator Admin
         if user_in_group(user, "OperatorAdmin"):
@@ -452,7 +465,7 @@ class CompanyUserMultipleInline(CompanyUserInline):
 
 
 @admin.register(Company, site=admin_site)
-class CompanyAdmin(admin.ModelAdmin):
+class CompanyAdmin(ModelAdmin):
     list_display = [
         "identifier",
         "name",
@@ -461,6 +474,7 @@ class CompanyAdmin(admin.ModelAdmin):
         "email",
         "phone_number",
     ]
+    list_display_links = ["identifier", "name"]
     filter_horizontal = ["entity_categories", "sectors"]
     search_fields = [
         "name",
@@ -648,18 +662,20 @@ class CompanyAdmin(admin.ModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class userRegulatorInline(admin.TabularInline):
+class userRegulatorInline(StackedInline):
+    """The accounts of a regulator, in its form."""
+
     model = RegulatorUser
     extra = 0
     min_num = 1
-    max_num = 1
+    collapsible = True
 
     filter_horizontal = [
         "sectors",
     ]
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = super().get_queryset(request).filter(user__is_active=True).select_related("user").prefetch_related("sectors")
         user = request.user
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
@@ -674,15 +690,6 @@ class userRegulatorInline(admin.TabularInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "regulator":
-            user = request.user
-            # Platform Admin
-            if user_in_group(user, "PlatformAdmin"):
-                kwargs["queryset"] = Regulator.objects.all()
-            # Regulator Admin
-            if user_in_group(user, "RegulatorAdmin"):
-                kwargs["queryset"] = user.regulators.all()
-
         if db_field.name == "user":
             RegulatorAdminGroupId = get_group_id(name="RegulatorAdmin")
             RegulatorUserGroupId = get_group_id(name="RegulatorUser")
@@ -691,6 +698,7 @@ class userRegulatorInline(admin.TabularInline):
             current_id = None
             if request.resolver_match.kwargs.get("object_id"):
                 current_id = request.resolver_match.kwargs["object_id"]
+            # Active accounts only: saving a RegulatorUser reactivates its account (signals.py).
             if user_in_group(user, "PlatformAdmin"):
                 kwargs["queryset"] = User.objects.filter(
                     Q(groups=None)
@@ -701,7 +709,8 @@ class userRegulatorInline(admin.TabularInline):
                     | Q(
                         groups__in=[RegulatorAdminGroupId],
                         regulators=current_id,
-                    )
+                    ),
+                    is_active=True,
                 )
             # Regulator Admin
             if user_in_group(user, "RegulatorAdmin"):
@@ -713,26 +722,11 @@ class userRegulatorInline(admin.TabularInline):
                     | Q(
                         groups__in=[RegulatorAdminGroupId, RegulatorUserGroupId],
                         regulators=user.regulators.first(),
-                    )
+                    ),
+                    is_active=True,
                 )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    # Revoke the permissions of the logged user
-    def has_add_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_add_permission(request, obj)
-
-    def has_change_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_change_permission(request, obj)
-
-    def has_delete_permission(self, request, obj=None):
-        if obj == request.user:
-            return False
-        return super().has_delete_permission(request, obj)
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -763,10 +757,6 @@ class userRegulatorInline(admin.TabularInline):
         # Django appends readonly fields after the editable ones, which splits the export flags apart.
         order = ["user", "regulator", "is_regulator_administrator", "can_export_incidents", "can_export_security_objectives", "sectors"]
         return sorted(super().get_fields(request, obj), key=order.index)
-
-
-class userRegulatorMultipleInline(userRegulatorInline):
-    max_num = None
 
 
 # reset the 2FA we delete the TOTP devices
@@ -901,7 +891,8 @@ class UserPermissionsGroupListFilter(SimpleListFilter):
 
 
 @admin.register(User, site=admin_site)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(ModelAdmin):
+    form = UserAdminForm
     list_display = [
         "is_active",
         "first_name",
@@ -970,8 +961,10 @@ class UserAdmin(admin.ModelAdmin):
 
         if not obj and user_in_group(request.user, "OperatorAdmin"):
 
-            class DynamicForm(forms.ModelForm):
-                is_administrator = forms.BooleanField(required=False, label=_("Create this user as an administrator"))
+            class DynamicForm(UserAdminForm):
+                is_administrator = forms.BooleanField(
+                    required=False, label=_("Create this user as an administrator"), widget=UnfoldBooleanSwitchWidget
+                )
 
                 class Meta:
                     model = self.model
@@ -1179,7 +1172,7 @@ class UserAdmin(admin.ModelAdmin):
 
         return super().render_change_form(request, context, add=add, change=change, form_url=form_url, obj=obj)
 
-    def action_button(self, url_name, obj, label, message, css_class="button"):
+    def action_button(self, url_name, obj, label, message, css_class="admin-button admin-button--secondary"):
         """
         One account action button. It posts to its own endpoint rather than to the enclosing admin
         form, and carries the text the confirmation dialog shows before letting the post through.
@@ -1234,14 +1227,14 @@ class UserAdmin(admin.ModelAdmin):
                     obj,
                     _("Approve"),
                     _("Approving %(user)s will associate the account with your company, including their notified incidents."),
-                    css_class="button approve-button",
+                    css_class="admin-button admin-button--status-ok",
                 ),
                 self.action_button(
                     "reject_company_link",
                     obj,
                     _("Reject"),
                     _("Rejecting %(user)s will remove the suggested link with your company."),
-                    css_class="button reject-button",
+                    css_class="admin-button admin-button--status-ko",
                 ),
             )
 
@@ -1378,10 +1371,12 @@ class UserAdmin(admin.ModelAdmin):
                 extra_fields.remove("get_permissions_groups")
 
             # A tuple inside "fields" is one row, which puts each action beside the field it changes.
+            # An action with no button for this account (a link awaiting approval, your own account)
+            # is left out.
             for field, action in (("get_2FA_activation", "reset_2FA_action"), ("get_is_administrator", "administrator_action")):
                 if action in extra_fields:
                     extra_fields.remove(action)
-                    if field in extra_fields:
+                    if field in extra_fields and getattr(self, action)(obj):
                         extra_fields[extra_fields.index(field)] = (field, action)
 
             fieldsets = list(fieldsets) + [
@@ -1392,36 +1387,6 @@ class UserAdmin(admin.ModelAdmin):
             ]
 
         return fieldsets
-
-    def get_inline_instances(self, request, obj=None):
-        inline_instances = super().get_inline_instances(request, obj)
-        user = request.user
-
-        # Exclude all inlines for the logged-in user
-        if obj and obj == user:
-            return []
-
-        # PlatformAdmin inlines
-        if user_in_group(user, "PlatformAdmin"):
-            inline_instances = []
-
-        # RegulatorAdmin inlines
-        if user_in_group(user, "RegulatorAdmin"):
-            if obj and is_user_regulator(obj):
-                inline_instances = [userRegulatorInline(self.model, self.admin_site)]
-            if obj and is_user_operator(obj):
-                inline_instances = []
-
-        # RegulatorUser inlines
-        if user_in_group(user, "RegulatorUser"):
-            if obj and user_in_group(obj, "OperatorAdmin"):
-                inline_instances = []
-
-        # OperatorAdmin inlines
-        if user_in_group(user, "OperatorAdmin"):
-            inline_instances = []
-
-        return inline_instances
 
     def get_list_display(self, request):
         list_display = super().get_list_display(request)
@@ -1656,6 +1621,7 @@ class UserAdmin(admin.ModelAdmin):
 class FunctionalityAdmin(CustomTranslatableAdmin):
     form = FunctionalityAdminForm
     list_display = ["type", "name_display", "get_roles"]
+    list_display_links = ["type", "name_display"]
     fields = (
         "type",
         "name",
@@ -1676,6 +1642,29 @@ class FunctionalityAdmin(CustomTranslatableAdmin):
 
 for name, method in generate_display_methods(["name"]).items():
     setattr(FunctionalityAdmin, name, method)
+
+
+@admin.register(APIModuleAccess, site=admin_site)
+class APIModuleAccessAdmin(ModelAdmin):
+    form = APIModuleAccessAdminForm
+    list_display = ["module", "get_roles"]
+    fields = ("roles",)
+    filter_horizontal = ["roles"]
+    ordering = ["module"]
+
+    # The migration creates one row per API module; admins only choose its roles.
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("roles")
+
+    @admin.display(description=_("Roles"))
+    def get_roles(self, obj):
+        return ", ".join(role.name for role in obj.roles.all())
 
 
 @admin.register(Regulator, site=admin_site)
@@ -1710,7 +1699,7 @@ class RegulatorAdmin(CustomTranslatableAdmin):
 
         return readonly_fields
 
-    inlines = (userRegulatorMultipleInline,)
+    inlines = (userRegulatorInline,)
 
     def has_change_permission(self, request, obj=None):
         user = request.user
@@ -1729,13 +1718,17 @@ for name, method in generate_display_methods(["name", "full_name", "description"
     setattr(RegulatorAdmin, name, method)
 
 
-class ObserverRegulationInline(admin.TabularInline):
+class ObserverRegulationInline(StackedInline):
     model = ObserverRegulation
     verbose_name = _("Observer regulation")
     filter_horizontal = ("sectors",)
     verbose_name_plural = _("Observer regulations")
     extra = 0
     min_num = 0
+    collapsible = True
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("regulation").prefetch_related("regulation__translations", "sectors")
 
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         if db_field.name == "sectors":
@@ -1745,7 +1738,7 @@ class ObserverRegulationInline(admin.TabularInline):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-class ObserverUserInline(admin.TabularInline):
+class ObserverUserInline(TabularInline):
     model = ObserverUser
     verbose_name = _("Observer user")
     verbose_name_plural = _("Observer users")
@@ -1753,7 +1746,7 @@ class ObserverUserInline(admin.TabularInline):
     min_num = 0
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = super().get_queryset(request).filter(user__is_active=True)
         user = request.user
         # Platform Admin
         if user_in_group(user, "PlatformAdmin"):
@@ -1768,6 +1761,7 @@ class ObserverUserInline(admin.TabularInline):
             current_id = None
             if "object_id" in request.resolver_match.kwargs:
                 current_id = request.resolver_match.kwargs["object_id"]
+            # Active accounts only: saving an ObserverUser reactivates its account (signals.py).
             if user_in_group(user, "PlatformAdmin"):
                 kwargs["queryset"] = User.objects.filter(
                     Q(groups=None)
@@ -1778,7 +1772,8 @@ class ObserverUserInline(admin.TabularInline):
                     | Q(
                         groups__in=[ObserverAdminGroupID],
                         observers=current_id,
-                    )
+                    ),
+                    is_active=True,
                 )
             # Observer Admin
             if user_in_group(user, "ObserverAdmin"):
@@ -1790,7 +1785,8 @@ class ObserverUserInline(admin.TabularInline):
                     | Q(
                         groups__in=[ObserverAdminGroupID, ObserverUserGroupID],
                         observers=user.observers.first(),
-                    )
+                    ),
+                    is_active=True,
                 )
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
@@ -1818,9 +1814,35 @@ class ObserverUserInline(admin.TabularInline):
         return readonly_fields
 
 
+class ObserverConnectorInline(TabularInline):
+    model = ObserverConnector
+    fields = ("name", "connector_type", "is_active")
+    readonly_fields = ("name", "connector_type", "is_active")
+    show_change_link = True
+    extra = 0
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        user = request.user
+        # observers only see connectors of the types PlatformAdmin allowed them
+        if user_in_group(user, "ObserverAdmin"):
+            observer = user.observers.first()
+            allowed = observer.allowed_connector_types or [] if observer else []
+            return queryset.filter(connector_type__in=allowed)
+        return queryset
+
+
 @admin.register(Observer, site=admin_site)
 class ObserverAdmin(CustomTranslatableAdmin):
-    form = CustomObserverAdminForm
+    form = ObserverAdminForm
+
+    class Media:
+        css = {"all": ("admin/css/observer_admin.css",)}
+
     list_display = [
         "name_display",
         "full_name_display",
@@ -1836,37 +1858,23 @@ class ObserverAdmin(CustomTranslatableAdmin):
     inlines = (
         ObserverUserInline,
         ObserverRegulationInline,
+        ObserverConnectorInline,
     )
 
     def get_fieldsets(self, request, obj=None):
-        base_fieldsets = [
-            (
-                None,
-                {
-                    "fields": [
-                        "name",
-                        "full_name",
-                        "description",
-                        "country",
-                        "address",
-                        "email_for_notification",
-                    ],
-                },
-            ),
+        fields = [
+            "name",
+            "full_name",
+            "description",
+            "country",
+            "address",
+            "email_for_notification",
+            "notification_mode",
         ]
-
-        if is_observer_user(request.user):
-            base_fieldsets.append(
-                (
-                    "RT Configuration",
-                    {
-                        "classes": ["collapse"],
-                        "fields": ["rt_url", "rt_token", "rt_queue", "rt_test_button"],
-                    },
-                )
-            )
-
-        return base_fieldsets
+        # the allowed-connectors filter is PlatformAdmin-only and hidden from observers
+        if user_in_group(request.user, "PlatformAdmin"):
+            fields.append("allowed_connector_types")
+        return [(None, {"fields": fields})]
 
     def has_change_permission(self, request, obj=None):
         user = request.user
@@ -1885,90 +1893,145 @@ class ObserverAdmin(CustomTranslatableAdmin):
 
         return queryset
 
-    def get_readonly_fields(self, request, obj=None):
-        readonly_fields = super().get_readonly_fields(request, obj)
-        user = request.user
-        if obj and obj.pk and is_observer_user(user):
-            readonly_fields += ("rt_test_button",)
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        # switch off connectors whose type is no longer allowed for this observer
+        obj.deactivate_disallowed_connectors()
 
-        return readonly_fields
+
+@admin.register(ObserverConnector, site=admin_site)
+class ObserverConnectorAdmin(ModelAdmin):
+    form = ObserverConnectorAdminForm
+    list_display = ["name", "observer", "connector_type", "is_active"]
+    list_filter = ["connector_type", "is_active"]
+
+    def get_fields(self, request, obj=None):
+        fields = ["connector_type", "name", "is_active"]
+        if obj is None:
+            return fields
+
+        impl = obj.get_impl()
+        fields += [f"config__{field_name}" for field_name in impl.config_form().fields]
+        if impl.requires_secret:
+            fields.append("secret")
+        fields.append("test_button")
+        return fields
+
+    def save_model(self, request, obj, form, change):
+        if not change and user_in_group(request.user, "ObserverAdmin"):
+            obj.observer = request.user.observers.first()
+        super().save_model(request, obj, form, change)
+
+    def response_add(self, request, obj, post_url_continue=None):
+        # two-step flow: the type-specific configuration fields only exist on the
+        # change view, so land there right after the connector is created
+        messages.info(request, _("Now complete the connector configuration below."))
+        return redirect(reverse("admin:governanceplatform_observerconnector_change", args=[obj.pk]))
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is not None:
+            impl = obj.get_impl()
+            # per-type fields must be declared on the form class for modelform_factory
+            attrs = {f"config__{field_name}": field for field_name, field in impl.config_form().fields.items()}
+            if impl.requires_secret:
+                attrs["secret"] = forms.CharField(
+                    widget=UnfoldAdminPasswordWidget,
+                    required=False,
+                    label=impl.secret_label,
+                )
+            kwargs["form"] = type(self.form)("DynamicObserverConnectorAdminForm", (self.form,), attrs)
+        form = super().get_form(request, obj, **kwargs)
+        # observers may only pick connector types PlatformAdmin allowed for their observer
+        if user_in_group(request.user, "ObserverAdmin") and "connector_type" in form.base_fields:
+            observer = request.user.observers.first()
+            allowed = set(observer.allowed_connector_types or []) if observer else set()
+            field = form.base_fields["connector_type"]
+            field.choices = [choice for choice in field.choices if choice[0] == "" or choice[0] in allowed]
+        return form
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is None:
+            return ()
+        return ("connector_type", "test_button")
+
+    def has_change_permission(self, request, obj=None):
+        user = request.user
+        if user_in_group(user, "ObserverAdmin") and obj and obj.observer != user.observers.first():
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        user = request.user
+        if user_in_group(user, "ObserverAdmin") and obj and obj.observer != user.observers.first():
+            return False
+        return super().has_delete_permission(request, obj)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        user = request.user
+        if user_in_group(user, "ObserverAdmin"):
+            observer = user.observers.first()
+            allowed = observer.allowed_connector_types or [] if observer else []
+            # hide connectors of types no longer allowed for this observer
+            return queryset.filter(observer__user=user, connector_type__in=allowed)
+
+        return queryset
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "observer" and user_in_group(request.user, "ObserverAdmin"):
+            kwargs["queryset"] = Observer.objects.filter(user=request.user)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     @admin.display(description="")
-    def rt_test_button(self, obj):
+    def test_button(self, obj):
         if not obj or not obj.pk:
             return ""
-        url = reverse("admin:observer-test-rt-connection", args=[obj.pk])
+        url = reverse("admin:observerconnector-test-connection", args=[obj.pk])
         return format_html(
             """
-            <button type="button" class="button rt-test-btn" data-url="{}">{}</button>
-            <span id="rt-test-result"></span>
-            <p id="rt-test-help" class="help">{}</p>
+            <button type="button" class="admin-button admin-button--primary connector-test-btn" data-url="{}">{}</button>
+            <span id="connector-test-result"></span>
+            <p id="connector-test-help" class="help">{}</p>
             """,
             url,
-            _("Test RT Connection"),
-            _("Before testing the connection, make sure to save the RT configuration."),
+            _("Test connection"),
+            _("Before testing the connection, make sure to save the configuration."),
         )
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [
             path(
-                "<int:observer_id>/test-rt-connection/",
-                self.admin_site.admin_view(self.test_rt_connection_view),
-                name="observer-test-rt-connection",
+                "<int:connector_id>/test-connection/",
+                self.admin_site.admin_view(self.test_connection_view),
+                name="observerconnector-test-connection",
             ),
         ]
         return custom_urls + urls
 
-    def test_rt_connection_view(self, request, observer_id):
+    def test_connection_view(self, request, connector_id):
         try:
-            observer = Observer.objects.get(pk=observer_id)
-        except Observer.DoesNotExist:
-            return JsonResponse({"success": False, "message": _("Observer not found.")}, status=404)
+            connector = ObserverConnector.objects.get(pk=connector_id)
+        except ObserverConnector.DoesNotExist:
+            return JsonResponse({"success": False, "message": _("Connector not found.")}, status=404)
 
-        if not self.has_change_permission(request, observer):
+        if not self.has_change_permission(request, connector):
             raise Http404()
 
         if request.method != "POST":
             return JsonResponse({"success": False, "message": _("Method not allowed.")}, status=405)
 
-        try:
-            observer = Observer.objects.get(pk=observer_id)
-        except Observer.DoesNotExist:
-            return JsonResponse({"success": False, "message": _("Observer not found.")}, status=404)
-
         user = request.user
 
-        if not (user_in_group(user, "ObserverAdmin") and observer == user.observers.first()):
+        if not (user_in_group(user, "ObserverAdmin") and connector.observer == user.observers.first()):
             return JsonResponse({"success": False, "message": _("Permission denied.")}, status=403)
 
-        ok = check_rt_config(observer)
-        if ok:
-            subject = f"[TEST] SERIMA - RT connection ({timezone.now().strftime('%Y-%m-%d %H:%M %Z')})"
-            content = format_html(
-                """
-                <p>This is an automated test ticket generated by SERIMA to verify the RT API connection.</p>
-                <p><strong>This ticket can be safely deleted.</strong></p>
-                <hr>
-                <p>Observer: {} </p>
-                <p>Queue: {}</p>
-                <p>Generated at: {}</p>
-                <p>Generated by: {}</p>
-                """,
-                observer.name,
-                observer.rt_queue,
-                timezone.now().strftime("%Y-%m-%d %H:%M %Z"),
-                user.get_full_name(),
-            )
-            # Not recorded as an RTTicket: that row requires an incident, and this one has none.
-            create_rt_ticket(observer, subject, content)
-            return JsonResponse({"success": True, "message": _("RT connection successful.")})
-
-        return JsonResponse({"success": False, "message": _("RT connection failed. Check URL, queue and token.")})
+        ok, message = connector.get_impl().test_connection()
+        return JsonResponse({"success": ok, "message": message})
 
     class Media:
-        js = ("admin/js/rt_test_button.js",)
-        css = {"all": ("admin/css/rt_test_button.css",)}
+        js = ("admin/js/connector_test_button.js",)
+        css = {"all": ("admin/css/connector_test_button.css",)}
 
 
 for name, method in generate_display_methods(["name", "full_name", "description"]).items():
@@ -1994,7 +2057,7 @@ for name, method in generate_display_methods(["label"]).items():
 
 
 @admin.register(ScriptLogEntry, site=admin_site)
-class ScriptLogEntryAdmin(admin.ModelAdmin):
+class ScriptLogEntryAdmin(ModelAdmin):
     list_display = ["action_time", "action", "object_repr", "additional_info"]
     readonly_fields = [
         "action_time",

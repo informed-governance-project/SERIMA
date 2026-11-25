@@ -17,6 +17,8 @@ Including another URLconf
 
 from django.urls import path
 
+from governanceplatform.views import async_pdf_status
+
 from .views import (
     access_log,
     create_workflow,
@@ -28,6 +30,7 @@ from .views import (
     export_incidents,
     get_form_list,
     get_incidents,
+    incident_pdf_download,
     review_workflow,
 )
 
@@ -60,6 +63,17 @@ urlpatterns = [
         "download-incident-report-pdf/<int:incident_workflow_id>",
         download_incident_report_pdf,
         name="download_incident_report_pdf",
+    ),
+    path(
+        "pdf/<uuid:task_id>/status",
+        async_pdf_status,
+        {"kind": "incident"},
+        name="incident_pdf_status",
+    ),
+    path(
+        "pdf/<uuid:task_id>/download",
+        incident_pdf_download,
+        name="incident_pdf_download",
     ),
     path(
         "delete/<int:incident_id>",

@@ -11,8 +11,8 @@ The first platform administrator is created during the installation (see :doc:`f
 A platform administrator works only in the administration console. After logging in, you land on its home page,
 **Site administration**; the homepage and the modules of the platform are not available to you,
 and opening them takes you back to the console.
-The header shows your account and its role, and the links at the top right let you manage your **Account security** (two-factor authentication), change your password,
-log out and choose the language of the console.
+At the top right you choose the language of the console, and the menu under your name lets you manage your
+**Account security** (two-factor authentication), change your password and log out.
 
 .. figure:: /_static/images/administration/platform-admin/index-01.png
    :alt: Site administration page of a platform administrator with its Administration, Governance and Sites sections and the Recent actions panel outlined

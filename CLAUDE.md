@@ -34,9 +34,9 @@ NIS2 incident notification and governance platform for NC3-LU. Django monolith w
 | Colour fields | django-colorfield | >=0.14.0,<0.15 |
 | Frontend | Bootstrap 5 + bootstrap-icons | ^5.3.8 / ^1.13.1 |
 | JS build | Node.js + npm | 24.x / 11.x |
-| Lint & format | ruff | ^0.17.2 |
-| Type checking | mypy | <3.0.0 |
-| Testing | pytest-django | ^4.11.1 |
+| Lint & format | ruff | ^0.17.5 |
+| Type checking | mypy | ^2.4.1 |
+| Testing | pytest-django | ^4.14.0 |
 
 Kaleido renders Plotly charts to static images for the generated reports. Kaleido 1.x does not bundle a browser: it drives a Chrome that must be installed separately, with `plotly_get_chrome -y` (run as the user the Celery worker runs as; the Docker image does it at build time), plus Chrome's system libraries. It is the heaviest runtime dependency, and the reason `KALEIDO_CONCURRENCY_PER_WORKER` exists to cap how many renders a Celery worker runs at once.
 
@@ -67,7 +67,7 @@ In CI and dev, `governanceplatform/config_dev.py` is used as fallback.
 
 Also set `PARLER_LANGUAGES` and `PARLER_DEFAULT_LANGUAGE_CODE` for translation config.
 
-**Optional values.** `settings.py` catches `AttributeError` for each of these and applies a default, so an older `config.py` still boots: `PATH_FOR_REPORTING_PDF` (where generated reports and admin import/export files are written), `SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY` (1825), `KALEIDO_CONCURRENCY_PER_WORKER` (1), `INCIDENT_RETENTION_TIME_IN_DAY` (1825), `TERMS_ACCEPTANCE_TIME_IN_DAYS` (365).
+**Optional values.** `settings.py` catches `AttributeError` for each of these and applies a default, so an older `config.py` still boots: `PRIVATE_FILES_ROOT` (where generated reports, admin import/export files and background-task working files are written; its former name `PATH_FOR_REPORTING_PDF` is still read, with a deprecation warning, by `tools.get_private_files_root`), `SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY` (1825), `KALEIDO_CONCURRENCY_PER_WORKER` (1), `INCIDENT_RETENTION_TIME_IN_DAY` (1825), `TERMS_ACCEPTANCE_TIME_IN_DAYS` (365).
 
 ## Testing
 
@@ -149,15 +149,11 @@ templates/            HTML templates (base, registration, incidents…)
 theme/                Separate git clone, gitignored from this repo — see below
 ```
 
-### Modules not on `dev`
+### Observer connectors
 
-`reporting/` and `securityobjectives/` merged into `dev` on 2026-09-18 (PR #880) and are ordinary apps now — see Project Structure above.
+`governanceplatform/connectors/` holds the observer connectors (RT, webhook, GPG-encrypted JSON), merged into `dev` on 2026-11-06 (`ab436189`). Each connector class registers itself in `registry.py`; `ObserverConnector` (`governanceplatform/models.py`) stores its type, config and Fernet-encrypted secret. `incidents/email.py` → `dispatch_observer_notifications` creates a `ConnectorDelivery` per active connector, and the Celery task `incidents/scripts/connector_delivery.py` sends it, with retries on `TransientDeliveryError`. A connector with `transmits_incident_payload = True` (webhook, GPG JSON) sends the full incident payload (`payload.py`), and each successful delivery writes `TRANSMIT` entries to the incident's `LogReportRead`, hidden from operators.
 
-`governanceplatform/connectors/` still lives only on `feat/observer-connectors`, where its commits are tagged `[Observer]`. On `dev` the directory may appear on disk holding only `__pycache__` — bytecode left by switching branches. It carries no source files there, is tracked by neither git nor `.gitignore`, and is absent from `INSTALLED_APPS`, so it does nothing on `dev`. The leftover bytecode is safe to drop at any time; it is regenerated on the branch that owns the source:
-
-```bash
-find governanceplatform/connectors -name __pycache__ -type d -exec rm -rf {} +
-```
+`reporting/` and `securityobjectives/` merged into `dev` on 2026-09-18 (PR #880); no module lives off `dev` any more.
 
 ## Frontend (theme repo)
 
@@ -192,13 +188,30 @@ python manage.py compilemessages
 
 ## API
 
-**There is no API.** DRF and drf-spectacular are installed and configured in `settings.py`, but `rest_framework` is imported nowhere else: there are no serializers, no viewsets, no routers, and no API paths in any `urls.py`. `API_ENABLED` is copied from `config.py` into settings and then consumed nowhere.
+The opt-in read-only API lives in `governanceplatform/api/` and uses DRF and drf-spectacular.
+`API_ENABLED` defaults to False. When enabled, `/api/v1/` exposes the key owner, incidents,
+latest security-objective declarations and reporting projects; `/api/openapi.yaml` and
+`/api/docs/` serve public documentation. See `docs/technical/api.rst` for fields and scope.
+
+`API_ENABLED` is only the master switch. Per module, `APIModuleAccess` (admin: **API access**) lists
+the roles allowed to read it through the API, chosen from `API_ELIGIBLE_ROLES` in
+`governanceplatform/globals.py`. `User.get_api_modules()` returns the granted modules the user also
+reaches on the web (incidents, plus `get_module_permissions()`), so the API never widens web access.
+Each viewset declares its `module`; `ReadOnlyAPIUser` checks it against `get_api_modules()`.
+
+Authentication accepts personal bearer keys only. `APIKey` stores SHA-256 digests of
+256-bit random secrets, expiry and revocation. Users manage their own keys through
+`/account/api-keys/` after login/OTP and password confirmation. Never expose stored digests
+or full keys outside the one-time creation response. API requests enforce account/terms,
+module and organization/sector permissions themselves, without browser interstitials.
+No API endpoint may write application records. Project API references are opaque UUIDs;
+incidents and declarations use their existing references. Review comments are not serialized,
+and operator declaration statuses must continue hiding in-progress regulator verdicts.
 
 ```bash
-make openapi   # writes docs/_static/openapi.yml
+poetry run python manage.py spectacular --file /tmp/openapi.yaml --validate
+poetry run pytest governanceplatform/tests/test_api.py
 ```
-
-The generated schema is therefore empty (`paths: {}`), and so is the committed `docs/_static/openapi.yml`. Setting `API_ENABLED = True` does not change this — the flag is inert. Building an API here means adding serializers, views, and URL routes from scratch; there is no existing endpoint to mirror.
 
 ## Conventions
 
@@ -207,7 +220,7 @@ The generated schema is therefore empty (`paths: {}`), and so is the committed `
   - `[GOV]` — governance changes (`governanceplatform/` folder)
   - `[SO]` — security objectives changes (`securityobjectives/` folder)
   - `[RG]` — reporting changes (`reporting/` folder)
-  - `[Observer]` — observer connector changes (`governanceplatform/connectors/`) — on `feat/observer-connectors`, not merged
+  - `[Observer]` — observer connector changes (`governanceplatform/connectors/`); `[GOV][Connectors]` is also used
 - **Branch naming**: `feat/`, `fix/`, `test/`, `review/`, descriptive kebab-case
 - **Main branch**: `main`
 - **Target branch for PRs**: `dev` — open all pull requests against `dev`, not `main`. `main` is updated only via releases.
@@ -284,7 +297,7 @@ Templates use Bootstrap 5. When adding or modifying UI components:
 |------------|---------|
 | Add a translatable model | `governanceplatform/models.py` — mirror existing `TranslatableModel` pattern |
 | Add an admin view | the `admin.py` of the app concerned |
-| Add an API endpoint | No API exists yet — see the API section before starting |
+| Add an API endpoint | `governanceplatform/api/` — keep it read-only and scope every queryset |
 | Add a test | Mirror the files in `<app>/tests/` |
 | Update config defaults | `governanceplatform/config_dev.py` |
 | Change middleware order | `governanceplatform/settings.py` → `MIDDLEWARE` list |

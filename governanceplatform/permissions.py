@@ -5,6 +5,7 @@ GROUP_PERMISSIONS = {
         "site": ["change"],
         "logentry": ["view"],
         "functionality": ["add", "change", "delete"],
+        "apimoduleaccess": ["change"],
         "user": ["add", "change", "delete"],
         "regulatoruser": ["add", "change", "delete"],
         "regulator": ["add", "change", "delete"],
@@ -83,6 +84,7 @@ GROUP_PERMISSIONS = {
         "user": ["add", "change", "delete"],
         "observeruser": ["add", "change", "delete"],
         "observer": ["change"],
+        "observerconnector": ["add", "change", "delete"],
     },
     "ObserverUser": {},
     "OperatorAdmin": {

@@ -19,13 +19,16 @@ What you can do in it depends on your role:
    is not shown to them. What each role can do is summarised in :doc:`/getting-started/roles-and-permissions`.
 
 Click **Settings** in the header of the platform to open the console on its home page, **Site administration**,
-and **Return to user interface** at the top right to go back to the platform. The other links at the top right
-manage your **Account security** (two-factor authentication) and your password, log you out and choose the language
-of the console. A platform administrator has no user interface: the console opens directly after logging in.
+and **Return to user interface** at the top right to go back to the platform. Next to it you choose the language
+of the console, and the menu under your name holds **Account security** (two-factor authentication),
+**Password change** and **Log out**. A platform administrator has no user interface: the console opens directly after logging in.
 
 The home page lists the sections of the console you can use. Each item of a section shows **View** when you can only
 read it, and **Add** and **Change** when you can edit it. The lists and forms work the same way everywhere,
 as described in :doc:`platform-admin/governance`.
+
+The sidebar on the left lists the same sections. Click the name of a section to fold or unfold its items: the console
+remembers your choice, and always shows the section of the page you are on.
 
 .. toctree::
    :maxdepth: 2

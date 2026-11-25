@@ -566,6 +566,26 @@ def test_import_sector_regulation_rejects_unknown_format_version(
         )
 
 
+@pytest.mark.django_db
+def test_import_sector_regulation_converts_the_markdown_emails_of_a_version_1_file(
+    populate_db,
+    tmp_path,
+):
+    target = _create_target(populate_db)
+    data = _configuration_data()
+    data["format_version"] = 1
+    data["emails"][0]["translations"][0]["content"] = "Dear **operator**"
+
+    call_command(
+        "import_sector_regulation",
+        _write_configuration(tmp_path, data),
+        target.pk,
+    )
+
+    target.refresh_from_db()
+    assert target.opening_email.safe_translation_getter("content", language_code="en") == "<p>Dear <strong>operator</strong></p>"
+
+
 def test_import_sector_regulation_reports_missing_input(tmp_path):
     with pytest.raises(CommandError, match="does not exist"):
         call_command(

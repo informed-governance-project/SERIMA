@@ -19,7 +19,7 @@ The dashboard works as described in :doc:`dashboard`, with the differences numbe
    :alt: Regulator's dashboard with its differences from the operator's dashboard numbered
    :target: ../_static/images/security-objectives/review-a-declaration-01.png
 
-1. **Import**: Replaces **New submission**. It adds a declaration from an Excel file (see `Import a declaration`_).
+1. **Import**: Replaces **New assessment**. It adds a declaration from an Excel file (see `Import a declaration`_).
    An **Export** link follows it when you have the right to export (see `Export the list of declarations`_).
 
 2. **Company**: Replaces the **Creator** column: the operator that submitted the declaration.
@@ -76,11 +76,12 @@ Open a declaration
 ~~~~~~~~~~~~~~~~~~
 
 Click the **Review** icon (pencil) of the declaration. It opens on the declaration screen described in
-:ref:`declaration-screen`, where the operator's answers are read-only. The profile icon beside **Company** gives you
+:ref:`declaration-screen`, where the operator's answers are read-only, on the first objective you have not reviewed yet. Its header also shows the **Company** the declaration is for, between
+its **Reference** and its **Evaluation Framework**, and the profile icon beside them gives you
 the name, email and phone number of the person who created the declaration. The parts specific to your review are numbered below.
 
 .. figure:: /_static/images/security-objectives/review-a-declaration-03.png
-   :alt: Declaration under review with the review comment icon, the objective result, Send, Close, the objective selector and the Icon Guide numbered
+   :alt: Declaration under review with the review comment icon, the objective result, Send, Close, the objective selector, the table of contents and the Icon Guide numbered
    :target: ../_static/images/security-objectives/review-a-declaration-03.png
 
 1. **Review comment**: Opens the **Review** pop-up, to write your comment on the whole declaration (see `Comment on the declaration`_).
@@ -92,9 +93,22 @@ the name, email and phone number of the person who created the declaration. The 
 
 4. **Close**: Brings you back to the dashboard.
 
-5. **Objective selector**: One button per objective, showing your result for it. Click a button to open that objective.
+5. **Objective selector**: One button per objective, grouped by domain, showing your result for it. Click a button
+   to open that objective. When the selector is too narrow for every button, the other domains show their code and
+   one symbol for the whole domain:
 
-6. **Icon Guide**: Shows the legend of the selector and of the maturity levels.
+   - an orange triangle while at least one of its objectives is not reviewed, even if another one already
+     requires a revision;
+   - a red square once all its objectives are reviewed and at least one requires a revision;
+   - a green circle when all its objectives passed.
+
+   Point at a domain to see its name and how many of its objectives are in each state. Click it to open its first
+   objective not reviewed.
+
+6. **Table of contents**: Opens a panel with the number of objectives in each state, and every domain with its
+   objectives, your result for each, and how many of them you have reviewed. Click an objective to open it.
+
+7. **Icon Guide**: Shows the legend of the selector and of the maturity levels.
 
    .. figure:: /_static/images/security-objectives/review-a-declaration-04.png
       :alt: Legend of the objective selector with Not reviewed, Review passed and Revision required, and the maturity levels
@@ -219,6 +233,14 @@ The new version starts from your review of the previous one:
 .. figure:: /_static/images/security-objectives/review-a-declaration-09.png
    :alt: Objective of a new version with the changed measures and planned measures outlined in orange and a View previous version button outlined
    :target: ../_static/images/security-objectives/review-a-declaration-09.png
+
+If the operator updated a version you had not sent the result of yet, your unsent review stays on that version:
+the new version starts with every objective **Not reviewed** and none of your comments.
+
+Once the operator submits the new version, the dashboard shows it in place of the one you were reviewing, which
+can no longer be changed: a banner at the top of that version gives the date of the new submission and a link to it,
+and its results, comments and **Send** button are no longer available. If you had it open, the page reloads with the
+banner as soon as you change something. Your unsent review is not carried over, so review the new version.
 
 Review and send the new version as described above. The declaration can go back and forth until you accept it.
 

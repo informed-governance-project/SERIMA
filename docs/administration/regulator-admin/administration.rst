@@ -20,11 +20,11 @@ Click **Log entries**. The list shows the most recent entries first, in four col
 and **Activity** (**Addition**, **Modification**, **Deletion**, **Login**, **Logout** or **Export**).
 
 .. figure:: /_static/images/administration/regulator-admin/administration-01.png
-   :alt: Log entries list with the Filter panel and the column headers outlined
+   :alt: Log entries list with the Filters button and the column headers outlined
    :target: ../../_static/images/administration/regulator-admin/administration-01.png
 
-To narrow the list down, use the search field, the dates above the list, or the **Filter** panel, **By Users**
-or **By Activity**, as described in :doc:`/administration/platform-admin/administration`.
+To narrow the list down, use the search field, the dates above the list, or **By Users**
+or **By Activity** under **Filters**, as described in :doc:`/administration/platform-admin/administration`.
 Click a column header to sort the list by that column; click it again to reverse the order.
 
 Click the date in the **Action time** column to open the **View log entry** page. Besides the columns of the list,

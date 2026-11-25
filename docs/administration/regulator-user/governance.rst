@@ -45,26 +45,27 @@ Operator accounts
 The **Contacts for company** section at the bottom of the form of an operator lists its accounts, one row each.
 
 .. figure:: /_static/images/administration/regulator-user/governance-03.png
-   :alt: Contacts for company section with the row of an operator administrator, the plus icon beside the User drop-down and the Add another Contact for company link outlined
+   :alt: Contacts for company section with the row of an operator administrator, the Add another User entry of the menu beside its User drop-down and the Add another Contact for company link outlined
    :target: ../../_static/images/administration/regulator-user/governance-03.png
 
 Each row has:
 
 - **User**: the account. The drop-down lists the active accounts that belong to no regulator and no observer:
   the operator administrators and users of every operator, and the incident users.
-- **Is administrator**: ticked for an operator administrator, unticked for an operator user.
+- **Is administrator**: a switch, on for an operator administrator, off for an operator user.
   Changing it switches the role of the account and logs it out.
 - **Approved**: whether the account is linked to the operator. The platform sets it when you save,
   and it is read-only once the operator has an administrator (see `Incident user accounts`_).
-- **Delete?**: removes the account from the operator.
+- the bin icon at the right of the row: removes the account from the operator (see `Remove an account`_).
 
 Add an account
 """"""""""""""
 
 1. Click **Add another Contact for company**.
-2. Select the account in the **User** drop-down, or click the plus icon beside it to create the account in a pop-up,
+2. Select the account in the **User** drop-down, or open the menu (⋮) beside it and click **Add another User**
+   to create the account in a pop-up,
    with its **First name**, **Last name**, **Email address** and **Phone number**.
-3. Tick **Is administrator** to make it an operator administrator.
+3. Turn on **Is administrator** to make it an operator administrator.
 4. Click **Save**.
 
 A new account has no password yet. Its owner chooses one with **Password forgotten?** on the login page
@@ -90,7 +91,8 @@ When the operator has no administrator yet, the account is linked as soon as you
 Remove an account
 """""""""""""""""
 
-Tick **Delete?** on the row of the account and click **Save**. The account is logged out and loses access
+Click the bin icon at the right of the row of the account: the row is covered with **This item will be deleted.**,
+and **Click to cancel** keeps it. Then click **Save**. The account is logged out and loses access
 to the operator. An account left without any operator is deactivated.
 
 .. _regulator-user-users:
@@ -100,13 +102,13 @@ Users
 
 The **Users** list shows your own account, the other regulator users of your regulator, and the accounts of the
 operators and the incident users. To narrow it down, choose an operator in **By Operators** or a role in **By Roles**
-in the **Filter** panel, or search for a name.
+under **Filters**, above the list, or search for a name.
 
 The list shows the contact details of each account, its **Companies** (operators), its **Roles**,
 whether the email address is verified and two-factor authentication is activated, and when the account was created.
 
 .. figure:: /_static/images/administration/regulator-user/governance-04.png
-   :alt: Users list of a regulator user with the column headers and the Filter panel outlined
+   :alt: Users list of a regulator user with the column headers and the Filters button outlined
    :target: ../../_static/images/administration/regulator-user/governance-04.png
 
 Create an account
@@ -120,7 +122,8 @@ Change an account
 """""""""""""""""
 
 Click a name to open the account. For an operator or incident user account, you can change its contact details
-and untick **Active** to deactivate it: its owner can no longer log in. Its **Roles**, **Date joined**,
+and turn off **Active** to deactivate it: its owner can no longer log in, and it leaves the users of its operators.
+Its **Roles**, **Date joined**,
 **Email verified** and **2FA Activated** are read-only, and its operators are changed in the form of the operator.
 
 .. figure:: /_static/images/administration/regulator-user/governance-05.png
@@ -132,11 +135,11 @@ the regulator administrator manages them (see :ref:`regulator-accounts`).
 
 .. note::
 
-   You cannot delete an account. Untick **Active** instead.
+   You cannot delete an account. Turn off **Active** instead.
 
 Reset two-factor authentication
 """""""""""""""""""""""""""""""
 
 You can reset the two-factor authentication of the operator and incident user accounts, with the **Reset 2FA token**
 button or the **Reset 2FA** action, as described in :ref:`platform-users`. You cannot reset it for regulator accounts,
-nor for your own: use **Account security** at the top of the console.
+nor for your own: use **Account security** in the menu under your name, at the top right of the console.
