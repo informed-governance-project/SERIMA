@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta
 
 import pytz
@@ -505,6 +506,9 @@ class Incident(models.Model):
         default=generate_incident_reference,
         verbose_name=_("Incident Reference"),
     )
+    # Identifies the object in URLs and to other systems; the sequential primary key
+    # would disclose how many objects the platform holds.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     incident_timezone = models.CharField(
         max_length=50,
         choices=[(tz, tz) for tz in pytz.all_timezones],
@@ -848,6 +852,7 @@ class ReportTimeline(models.Model):
 # link between incident and workflow
 class IncidentWorkflow(models.Model):
     incident = models.ForeignKey(Incident, on_delete=models.CASCADE, verbose_name=_("Incident"))
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     workflow = models.ForeignKey(
         Workflow,
         on_delete=models.SET_NULL,
