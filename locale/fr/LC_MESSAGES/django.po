@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-23 14:32+0100\n"
-"PO-Revision-Date: 2026-11-11 09:13+0000\n"
+"PO-Revision-Date: 2026-11-25 07:28+0000\n"
 "Last-Translator: Edgar Dugourd <Edd@ilr.lu>\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -248,19 +248,19 @@ msgstr "Utilisateurs d'un observateur"
 
 #: governanceplatform/admin.py:1928
 msgid "Now complete the connector configuration below."
-msgstr ""
+msgstr "Procédez maintenant à la configuration du connecteur ci-dessous."
 
 #: governanceplatform/admin.py:1997
 msgid "Test connection"
-msgstr ""
+msgstr "Tester la connexion"
 
 #: governanceplatform/admin.py:1998
 msgid "Before testing the connection, make sure to save the configuration."
-msgstr ""
+msgstr "Avant de tester la connexion, veillez à enregistrer la configuration."
 
 #: governanceplatform/admin.py:2016
 msgid "Connector not found."
-msgstr ""
+msgstr "Connecteur introuvable."
 
 #: governanceplatform/admin.py:2022
 msgid "Method not allowed."
@@ -283,19 +283,20 @@ msgstr "Nom"
 
 #: governanceplatform/api_keys.py:32
 msgid "Expires in (days)"
-msgstr ""
+msgstr "Expiration dans (jours)"
 
 #: governanceplatform/api_keys.py:33
 msgid "Confirm your password"
-msgstr ""
+msgstr "Confirmez votre mot de passe"
 
 #: governanceplatform/api_keys.py:43
 msgid "Incorrect password."
-msgstr ""
+msgstr "Mot de passe incorrect."
 
 #: governanceplatform/api_keys.py:48
 msgid "Select one of your approved companies before creating a key."
 msgstr ""
+"Sélectionnez l'une de vos entreprises approuvées avant de créer une clé."
 
 #: governanceplatform/apps.py:7
 msgid "Governance"
@@ -393,49 +394,51 @@ msgstr "Paramètres du thème sombre/lumineux"
 
 #: governanceplatform/connectors/base.py:38 governanceplatform/models.py:331
 msgid "Secret"
-msgstr ""
+msgstr "Clé"
 
 #: governanceplatform/connectors/gpg_json.py:39
 msgid "Provide exactly one valid ASCII-armored GPG public key"
-msgstr ""
+msgstr "Fournir exactement une clé publique GPG valide au format ASCII-armored"
 
 #: governanceplatform/connectors/gpg_json.py:43
 msgid "The GPG public key is expired"
-msgstr ""
+msgstr "La clé publique GPG a expiré"
 
 #: governanceplatform/connectors/gpg_json.py:52
 msgid "Invalid GPG public key"
-msgstr ""
+msgstr "Clé publique GPG invalide"
 
 #: governanceplatform/connectors/gpg_json.py:55
 #, python-format
 msgid "GPG encryption failed: %s"
-msgstr ""
+msgstr "Échec du chiffrement GPG : %s"
 
 #: governanceplatform/connectors/gpg_json.py:61
 msgid "GPG public key"
-msgstr ""
+msgstr "Clé publique GPG"
 
 #: governanceplatform/connectors/gpg_json.py:63
 msgid "ASCII-armored public key used to encrypt the incident JSON payload."
 msgstr ""
+"Clé publique encodée en ASCII utilisée pour chiffrer le JSON de l'incident."
 
 #: governanceplatform/connectors/gpg_json.py:75
 msgid "GPG-encrypted JSON (e-mail)"
-msgstr ""
+msgstr "Fichier JSON chiffré avec GPG (e-mail)"
 
 #: governanceplatform/connectors/gpg_json.py:84
 msgid "The observer has no valid notification e-mail address"
 msgstr ""
+"L'observateur ne dispose pas d'une adresse e-mail de notification valide."
 
 #: governanceplatform/connectors/gpg_json.py:95
 msgid "Email sending failed"
-msgstr ""
+msgstr "Échec de l'envoi de l'e-mail"
 
 #: governanceplatform/connectors/gpg_json.py:132
 #, python-format
 msgid "Encrypted test payload sent to %s"
-msgstr ""
+msgstr "Données de test chiffrées envoyées à %s"
 
 #: governanceplatform/connectors/rt.py:30
 #: governanceplatform/connectors/webhook.py:32
@@ -448,82 +451,82 @@ msgstr "File d'attente"
 
 #: governanceplatform/connectors/rt.py:41
 msgid "RT (Request Tracker)"
-msgstr ""
+msgstr "RT (Request Tracker)"
 
 #: governanceplatform/connectors/rt.py:61
 msgid "The RT URL is not allowed"
-msgstr ""
+msgstr "L'URL RT n'est pas autorisée"
 
 #: governanceplatform/connectors/rt.py:84
 msgid "Error connecting to RT API"
-msgstr ""
+msgstr "Erreur de connexion à l'API RT"
 
 #: governanceplatform/connectors/rt.py:94
 msgid "RT token unauthorized (401)"
-msgstr ""
+msgstr "Jeton RT non autorisé (401)"
 
 #: governanceplatform/connectors/rt.py:96
 msgid "RT queue not found (404)"
-msgstr ""
+msgstr "File d'attente RT introuvable (404)"
 
 #: governanceplatform/connectors/rt.py:98
 #, python-format
 msgid "RT server error (%s)"
-msgstr ""
+msgstr "Erreur du serveur RT (%s)"
 
 #: governanceplatform/connectors/rt.py:102
 #, python-format
 msgid "RT API error (%s)"
-msgstr ""
+msgstr "Erreur de l'API RT (%s)"
 
 #: governanceplatform/connectors/rt.py:122
 msgid "RT configuration is incomplete"
-msgstr ""
+msgstr "La configuration RT est incomplète"
 
 #: governanceplatform/connectors/rt.py:146
 #, python-format
 msgid "Connection successful — test ticket #%s created"
-msgstr ""
+msgstr "Connexion établie — ticket de test #%s créé"
 
 #: governanceplatform/connectors/rt.py:147
 #: governanceplatform/connectors/webhook.py:99
 msgid "Connection successful"
-msgstr ""
+msgstr "Connexion établie"
 
 #: governanceplatform/connectors/webhook.py:41
 msgid "Webhook (HTTPS API)"
-msgstr ""
+msgstr "Webhook (HTTPS API)"
 
 #: governanceplatform/connectors/webhook.py:44
 msgid "HMAC secret"
-msgstr ""
+msgstr "Clé secrète HMAC"
 
 #: governanceplatform/connectors/webhook.py:51
 msgid "No HMAC secret is set for the webhook"
-msgstr ""
+msgstr "Aucune clé HMAC n'est définie pour le webhook"
 
 #: governanceplatform/connectors/webhook.py:56
 msgid "The webhook URL is not allowed"
-msgstr ""
+msgstr "L'URL n'est pas autorisée"
 
 #: governanceplatform/connectors/webhook.py:75
 msgid "Error connecting to the webhook endpoint"
-msgstr ""
+msgstr "Erreur lors de la connexion à la destination webhook"
 
 #: governanceplatform/connectors/webhook.py:86
 #, python-format
 msgid "Webhook server error (%s)"
-msgstr ""
+msgstr "Erreur du serveur Webhook (%s)"
 
 #: governanceplatform/connectors/webhook.py:87
 #: governanceplatform/connectors/webhook.py:101
 #, python-format
 msgid "The webhook endpoint returned an error (%s)"
-msgstr ""
+msgstr "Le point de terminaison du webhook a renvoyé une erreur (%s)"
 
 #: governanceplatform/connectors/webhook.py:91
 msgid "Webhook configuration is incomplete"
-msgstr ""
+msgstr "La configuration du webhook est incomplète"
 
 #: governanceplatform/context_processors.py:56
 #: governanceplatform/context_processors.py:59 governanceplatform/globals.py:51
@@ -540,6 +543,8 @@ msgid ""
 "Your account is not attached to a regulator yet. Please contact your "
 "regulator administrator."
 msgstr ""
+"Votre compte n'est pas encore associé à un régulateur. Veuillez contacter "
+"votre administrateur."
 
 #: governanceplatform/decorators.py:41
 msgid ""
@@ -620,17 +625,19 @@ msgstr ""
 
 #: governanceplatform/forms.py:348 governanceplatform/models.py:288
 msgid "Available connectors"
-msgstr ""
+msgstr "Connecteurs disponibles"
 
 #: governanceplatform/forms.py:349
 msgid "Connector types this observer is allowed to use."
-msgstr ""
+msgstr "Types de connecteurs que cet observateur est autorisé à utiliser."
 
 #: governanceplatform/forms.py:381
 msgid ""
 "A secret is already set. To remove it, clear the field and save. To update "
 "it, enter a new one."
 msgstr ""
+"Une clé a déjà été définie. Pour la supprimer, effacez le champ et "
+"enregistrez. Pour la mettre à jour, saisissez-en une nouvelle."
 
 #: governanceplatform/forms.py:427
 #, python-format
@@ -689,11 +696,11 @@ msgstr ""
 
 #: governanceplatform/helpers.py:659
 msgid "Invalid legend state."
-msgstr ""
+msgstr "État de la légende non valide."
 
 #: governanceplatform/helpers.py:668
 msgid "Invalid choice of columns."
-msgstr ""
+msgstr "Choix de colonnes non valide."
 
 #: governanceplatform/managers.py:15
 msgid "User must have an email address"
@@ -780,11 +787,11 @@ msgstr "Fonctionnalités"
 
 #: governanceplatform/models.py:145
 msgid "Module"
-msgstr ""
+msgstr "Module"
 
 #: governanceplatform/models.py:152 governanceplatform/models.py:153
 msgid "API access"
-msgstr ""
+msgstr "Accès à l'API"
 
 #: governanceplatform/models.py:179 governanceplatform/models.py:238
 #: governanceplatform/models.py:273
@@ -833,19 +840,19 @@ msgstr "Régulateur"
 
 #: governanceplatform/models.py:291
 msgid "Default (e-mail when no active connector)"
-msgstr ""
+msgstr "Par défaut (e-mail en l'absence de connecteur actif)"
 
 #: governanceplatform/models.py:292
 msgid "E-mail and connectors"
-msgstr ""
+msgstr "Courriel et connecteurs"
 
 #: governanceplatform/models.py:293
 msgid "Connectors only (never e-mail)"
-msgstr ""
+msgstr "Uniquement via connecteur (jamais par e-mail)"
 
 #: governanceplatform/models.py:299
 msgid "Notification mode"
-msgstr ""
+msgstr "Mode de notification"
 
 #: governanceplatform/models.py:312 governanceplatform/models.py:418
 msgid "Observers"
@@ -863,15 +870,15 @@ msgstr "Configuration"
 
 #: governanceplatform/models.py:371
 msgid "Unknown connector type"
-msgstr ""
+msgstr "Type de connecteur inconnu"
 
 #: governanceplatform/models.py:381
 msgid "Observer connector"
-msgstr ""
+msgstr "Connecteur d'observateur"
 
 #: governanceplatform/models.py:382
 msgid "Observer connectors"
-msgstr ""
+msgstr "Connecteurs d'observateur"
 
 #: governanceplatform/models.py:395
 msgid "An account with this email address already exists."
@@ -956,8 +963,8 @@ msgstr "Utilisateurs du régulateur"
 #, python-format
 msgid "%(count)d sector"
 msgid_plural "%(count)d sectors"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%(count)d secteur"
+msgstr[1] "%(count)d secteurs"
 
 #: governanceplatform/models.py:642 governanceplatform/models.py:670
 #: incidents/models.py:39 incidents/models.py:91 incidents/models.py:133
@@ -996,18 +1003,18 @@ msgstr "Règles relatives aux incidents"
 
 #: governanceplatform/models.py:735
 msgid "All sectors"
-msgstr ""
+msgstr "Tous les secteurs"
 
 #: governanceplatform/models.py:738
 #, python-format
 msgid "%(count)d rule"
 msgid_plural "%(count)d rules"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Règle « %(count)d »"
+msgstr[1] "Règles« %(count)d »"
 
 #: governanceplatform/models.py:738
 msgid "All incidents"
-msgstr ""
+msgstr "Tous les incidents"
 
 #: governanceplatform/models.py:745 incidents/models.py:858
 #: incidents/models.py:967 incidents/models.py:1023 incidents/models.py:1044
@@ -1043,15 +1050,15 @@ msgstr "Sessions utilisateur"
 
 #: governanceplatform/models.py:798
 msgid "The expiry must be in the future."
-msgstr ""
+msgstr "La date d'expiration doit se situer dans le futur."
 
 #: governanceplatform/models.py:840
 msgid "User preference"
-msgstr ""
+msgstr "Préférences utilisateur"
 
 #: governanceplatform/models.py:841
 msgid "User preferences"
-msgstr ""
+msgstr "Préférences utilisateur"
 
 #: governanceplatform/validators.py:29
 msgid "Your new password must differ from your current password."
@@ -1176,11 +1183,11 @@ msgstr "Captcha invalide"
 
 #: governanceplatform/views.py:365
 msgid "Invalid request."
-msgstr ""
+msgstr "Demande non valide."
 
 #: governanceplatform/views.py:368
 msgid "Invalid preference."
-msgstr ""
+msgstr "Préférence non valide."
 
 #: incidents/admin.py:225 incidents/forms.py:1353 incidents/models.py:176
 #: incidents/models.py:184 incidents/models.py:1053
@@ -1328,11 +1335,11 @@ msgstr "Date limite de remise du prochain rapport"
 
 #: incidents/filters.py:37
 msgid "Yes"
-msgstr ""
+msgstr "Oui"
 
 #: incidents/filters.py:37
 msgid "No"
-msgstr ""
+msgstr "Non"
 
 #: incidents/filters.py:38 incidents/models.py:574
 msgid "Significant impact"
@@ -1827,11 +1834,11 @@ msgstr "Date de suppression"
 
 #: incidents/models.py:1258
 msgid "Pending"
-msgstr ""
+msgstr "En attente"
 
 #: incidents/models.py:1259
 msgid "Sent"
-msgstr ""
+msgstr "Envoyé"
 
 #: incidents/models.py:1260 reporting/globals.py:47
 msgid "Failed"
@@ -1839,7 +1846,7 @@ msgstr "Échoué"
 
 #: incidents/models.py:1267
 msgid "Connector"
-msgstr ""
+msgstr "Connecteur"
 
 #: incidents/models.py:1269 securityobjectives/models.py:246
 msgid "Email template"
@@ -1855,11 +1862,11 @@ msgstr "Statut"
 
 #: incidents/models.py:1278
 msgid "Connector delivery"
-msgstr ""
+msgstr "Mise à disposition du connecteur"
 
 #: incidents/models.py:1279
 msgid "Connector deliveries"
-msgstr ""
+msgstr "Mise à disposition des connecteurs"
 
 #: incidents/pdf_generation.py:140
 msgid "Details"
@@ -2605,12 +2612,16 @@ msgstr "Requête non valide"
 #: reporting/views.py:945
 msgid "The risk analysis import could not be started. Please try again later."
 msgstr ""
+"L'import de l'analyse des risques n'a pas pu être lancée. Veuillez réessayer "
+"plus tard."
 
 #: reporting/views.py:1062
 msgid ""
 "The risk analysis import has stopped progressing. Check the imported data "
 "later before importing it again."
 msgstr ""
+"L'import de l'analyse des risques s'est interrompu. Vérifiez les données "
+"importées avant de relancer l'import."
 
 #: reporting/views.py:1067
 msgid "Risk analysis successfully imported"
@@ -2701,7 +2712,7 @@ msgstr "Paramètres d'affichage du score"
 
 #: securityobjectives/admin.py:790
 msgid "Export selected standards"
-msgstr ""
+msgstr "Exporter les standards sélectionnés"
 
 #: securityobjectives/admin.py:842 securityobjectives/admin.py:845
 #, python-brace-format
@@ -2850,7 +2861,7 @@ msgstr "Entièrement rempli"
 #: securityobjectives/helpers.py:263
 #, python-format
 msgid "%(code)s, %(label)s, %(done)s of %(total)s filled"
-msgstr ""
+msgstr "%(code)s, %(label)s, %(done)s of %(total)s remplis"
 
 #: securityobjectives/helpers.py:268
 msgid "Review passed"
@@ -2860,11 +2871,11 @@ msgstr "Revue réussie"
 #: securityobjectives/helpers.py:273
 #, python-format
 msgid "%(code)s, %(label)s, %(done)s of %(total)s reviewed"
-msgstr ""
+msgstr "%(code)s, %(label)s, %(done)s of %(total)s revus"
 
 #: securityobjectives/helpers.py:300
 msgid "No domain"
-msgstr ""
+msgstr "Aucun domaine"
 
 #: securityobjectives/models.py:31 securityobjectives/models.py:415
 msgid "Level"
@@ -3048,7 +3059,7 @@ msgstr "Déclaration introuvable"
 
 #: securityobjectives/views.py:251
 msgid "A newer version of this declaration already exists."
-msgstr ""
+msgstr "Il existe déjà une version plus récente de cette déclaration."
 
 #: securityobjectives/views.py:535
 #, python-brace-format
@@ -3072,6 +3083,8 @@ msgid ""
 "A newer version of this declaration was submitted. Review that version "
 "instead."
 msgstr ""
+"Une version plus récente de cette déclaration a été soumise. Veuillez revoir "
+"cette version ultérieure."
 
 #: securityobjectives/views.py:739
 msgid "The security objectives review has been sent."

@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-23 14:32+0100\n"
-"PO-Revision-Date: 2026-11-23 13:29+0000\n"
+"PO-Revision-Date: 2026-11-25 07:28+0000\n"
 "Last-Translator: Christophe Vermeulen <Christophe.Vermeulen@ibpt.be>\n"
 "Language-Team: \n"
 "Language: nl\n"
@@ -630,7 +630,7 @@ msgstr ""
 #: governanceplatform/forms.py:427
 #, python-format
 msgid "These roles cannot access this functionality: %(roles)s"
-msgstr "Deze rollen hebben geen toegang tot deze functionaliteit: %(rollen)"
+msgstr "Deze rollen hebben geen toegang tot deze functionaliteit: %(roles)s"
 
 #: governanceplatform/formset.py:25
 msgid "There must be at least one administrator user."
@@ -2837,7 +2837,7 @@ msgstr "Volledig ingevuld"
 #: securityobjectives/helpers.py:263
 #, python-format
 msgid "%(code)s, %(label)s, %(done)s of %(total)s filled"
-msgstr "%(codes), %(labels), %(dones) van %(totalen) ingevuld"
+msgstr "%(code)s, %(label)s, %(done)s van %(total)s ingevuld"
 
 #: securityobjectives/helpers.py:268
 msgid "Review passed"
@@ -2847,7 +2847,7 @@ msgstr "Na onderzoek aanvaard"
 #: securityobjectives/helpers.py:273
 #, python-format
 msgid "%(code)s, %(label)s, %(done)s of %(total)s reviewed"
-msgstr "%(codes), %(labels), %(dones) van %(totalen) beoordeeld"
+msgstr "%(code)s, %(label)s, %(done)s van %(total)s beoordeeld"
 
 #: securityobjectives/helpers.py:300
 msgid "No domain"
