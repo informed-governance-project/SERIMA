@@ -1337,6 +1337,14 @@ msgstr "leer, da die Aufsichtsbehörde keine Stellungnahme abgegeben hat"
 msgid "Deadline of the next report"
 msgstr "Frist für den nächsten Bericht"
 
+#: incidents/email.py:115
+msgid "Cross-border"
+msgstr "Grenzüberschreitend"
+
+#: incidents/email.py:154
+msgid "empty unless the incident is reported as cross-border"
+msgstr "leer, sofern der Vorfall nicht als grenzüberschreitend gemeldet ist"
+
 #: incidents/filters.py:25
 msgid "Yes"
 msgstr "Ja"

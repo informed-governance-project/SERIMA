@@ -95,6 +95,11 @@ Each one is replaced by its value when the email is sent.
      - "New comment added" when the regulator left a review comment on that report, otherwise nothing.
    * - ``#DEADLINE#``
      - The deadline of the next report to submit. Empty when there is none.
+   * - ``#CROSS_BORDER#``
+     - "[Cross-border]" when the incident is reported as cross-border, otherwise nothing. An incident is
+       reported as cross-border when the latest report answering a designated question gives the positive
+       answer; that question is designated in the configuration of the platform and not in this interface,
+       so until it is designated the placeholder always renders nothing.
 
 Languages
 """""""""
