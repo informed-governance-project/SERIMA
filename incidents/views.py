@@ -38,6 +38,7 @@ from governanceplatform.helpers import (
     bind_applicable_filters,
     default_sort_key,
     get_active_company_from_session,
+    get_by_public_id,
     is_observer_user,
     is_user_operator,
     is_user_regulator,
@@ -334,7 +335,7 @@ def create_workflow(request):
         messages.error(request, _("Missing data, incident report not created."))
         return redirect("incidents")
 
-    incident = Incident.objects.filter(pk=incident_id).first()
+    incident = get_by_public_id(Incident, incident_id)
     workflow = Workflow.objects.filter(id=workflow_id).first()
 
     if not workflow:
@@ -360,7 +361,7 @@ def create_workflow(request):
         messages.error(request, _("Forbidden"))
         return redirect("incidents")
     form_list = get_forms_list(incident=incident)
-    request.incident = incident_id
+    request.incident = incident.id
     request.workflow = workflow
     request.incident_workflow = None
     return WorkflowWizardView.as_view(
@@ -378,9 +379,8 @@ def review_workflow(request):
         messages.error(request, _("No incident report could be found."))
         return redirect("incidents")
     user = request.user
-    try:
-        incident_workflow = IncidentWorkflow.objects.get(pk=incident_workflow_id)
-    except IncidentWorkflow.DoesNotExist:
+    incident_workflow = get_by_public_id(IncidentWorkflow, incident_workflow_id)
+    if incident_workflow is None:
         messages.error(request, _("No incident report could be found."))
         return redirect("incidents")
 
@@ -423,7 +423,7 @@ def edit_workflow(request):
         messages.error(request, _("No incident report could be found."))
         return redirect("incidents")
     if workflow_id and incident_id:
-        incident = Incident.objects.filter(pk=incident_id).first()
+        incident = get_by_public_id(Incident, incident_id)
         workflow = Workflow.objects.filter(id=workflow_id).first()
         if not workflow:
             messages.error(request, _("Workflow not found"))
@@ -440,9 +440,8 @@ def edit_workflow(request):
                 return redirect("incidents")
     # for the moment we only pass the incident workflow for regulator
     elif incident_workflow_id and is_user_regulator(user):
-        try:
-            incident_workflow = IncidentWorkflow.objects.get(pk=incident_workflow_id)
-        except IncidentWorkflow.DoesNotExist:
+        incident_workflow = get_by_public_id(IncidentWorkflow, incident_workflow_id)
+        if incident_workflow is None:
             messages.error(request, _("No incident report could be found."))
             return redirect("incidents")
     else:
@@ -499,13 +498,13 @@ def edit_workflow(request):
 @regulator_role_required
 @check_user_is_correct
 @require_http_methods(["POST"])
-def edit_incident(request, incident_id: int):
+def edit_incident(request, incident_id: UUID):
     """Returns the list of incident as regulator."""
 
     company_id = request.session.get("company_in_use")
 
     try:
-        incident = Incident.objects.get(pk=incident_id)
+        incident = Incident.objects.get(public_id=incident_id)
     except Incident.DoesNotExist:
         messages.error(request, _("Incident not found"))
         return redirect("incidents")
@@ -517,7 +516,7 @@ def edit_incident(request, incident_id: int):
 
     if incident_form.is_valid():
         incident = incident_form.save(commit=False)
-        response = {"id": incident.pk}
+        response = {"id": incident.public_id}
         incident_status = incident_form.cleaned_data.get("incident_status")
         old, new = incident_form.get_field_change("is_significative_impact")
 
@@ -543,11 +542,11 @@ def edit_incident(request, incident_id: int):
 @login_required
 @otp_required
 @check_user_is_correct
-def access_log(request, incident_id: int):
+def access_log(request, incident_id: UUID):
     user = request.user
     company_id = request.session.get("company_in_use")
     try:
-        incident = Incident.objects.get(pk=incident_id)
+        incident = Incident.objects.get(public_id=incident_id)
     except Incident.DoesNotExist:
         messages.error(request, _("Incident not found"))
         return JsonResponse({"error": "Incident not found"}, status=404)
@@ -581,8 +580,8 @@ def access_log(request, incident_id: int):
 @otp_required
 @check_user_is_correct
 @require_http_methods(["POST"])
-def download_incident_pdf(request, incident_id: int):
-    incident = Incident.objects.filter(pk=incident_id).first()
+def download_incident_pdf(request, incident_id: UUID):
+    incident = Incident.objects.filter(public_id=incident_id).first()
     if incident is None:
         return pdf_error_response(request, _("Incident not found"), 404)
 
@@ -600,8 +599,8 @@ def download_incident_pdf(request, incident_id: int):
 @otp_required
 @check_user_is_correct
 @require_http_methods(["POST"])
-def download_incident_report_pdf(request, incident_workflow_id: int):
-    incident_workflow = IncidentWorkflow.objects.select_related("incident", "workflow").filter(pk=incident_workflow_id).first()
+def download_incident_report_pdf(request, incident_workflow_id: UUID):
+    incident_workflow = IncidentWorkflow.objects.select_related("incident", "workflow").filter(public_id=incident_workflow_id).first()
     if incident_workflow is None:
         return pdf_error_response(request, _("No incident report could be found."), 404)
 
@@ -656,12 +655,12 @@ def incident_pdf_download(request, task_id: UUID):
 @otp_required
 @check_user_is_correct
 @require_http_methods(["POST"])
-def delete_incident(request, incident_id: int):
+def delete_incident(request, incident_id: UUID):
     user = request.user
     company_id = request.session.get("company_in_use")
 
     try:
-        incident = Incident.objects.get(pk=incident_id)
+        incident = Incident.objects.get(public_id=incident_id)
     except Incident.DoesNotExist:
         messages.error(request, _("Incident not found"))
         return redirect("incidents")
@@ -1213,7 +1212,7 @@ class FormWizardView(SessionWizardView):
 
         query_params = urlencode(
             {
-                "incident_id": incident.id,
+                "incident_id": incident.public_id,
                 "workflow_id": sr_workflow.workflow.id,
             }
         )
@@ -1352,10 +1351,9 @@ class WorkflowWizardView(SessionWizardView):
         if incident_workflow_id:
             company_id = request.session.get("company_in_use")
             user = request.user
-            incident_workflow = IncidentWorkflow.objects.get(pk=incident_workflow_id)
-            incident = incident_workflow.incident
+            incident_workflow = get_by_public_id(IncidentWorkflow, incident_workflow_id)
 
-            if incident_workflow and can_access_incident(user, incident, company_id):
+            if incident_workflow and can_access_incident(user, incident_workflow.incident, company_id):
                 create_entry_log(user, incident_workflow.incident, incident_workflow, "READ", request)
 
         return super().get(self, request, *args, **kwargs)

@@ -45,22 +45,22 @@ urlpatterns = [
     path("edit_workflow", edit_workflow, name="edit_workflow"),
     path("review_workflow", review_workflow, name="review_workflow"),
     path(
-        "incident/<int:incident_id>",
+        "incident/<uuid:incident_id>",
         edit_incident,
         name="regulator_incident_edit",
     ),
     path(
-        "access_log/<int:incident_id>",
+        "access_log/<uuid:incident_id>",
         access_log,
         name="access_log",
     ),
     path(
-        "download-pdf/<int:incident_id>",
+        "download-pdf/<uuid:incident_id>",
         download_incident_pdf,
         name="download_incident_pdf",
     ),
     path(
-        "download-incident-report-pdf/<int:incident_workflow_id>",
+        "download-incident-report-pdf/<uuid:incident_workflow_id>",
         download_incident_report_pdf,
         name="download_incident_report_pdf",
     ),
@@ -76,7 +76,7 @@ urlpatterns = [
         name="incident_pdf_download",
     ),
     path(
-        "delete/<int:incident_id>",
+        "delete/<uuid:incident_id>",
         delete_incident,
         name="delete_incident",
     ),
