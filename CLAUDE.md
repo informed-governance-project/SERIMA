@@ -63,11 +63,9 @@ make update       # install deps + collectstatic + compilemessages + migrate + u
 Config is loaded from `governanceplatform/config.py` (not in repo).
 In CI and dev, `governanceplatform/config_dev.py` is used as fallback.
 
-**Required config values**: `SECRET_KEY`, `HASH_KEY`, `DEBUG`, `DATABASES`, `ALLOWED_HOSTS`, `PUBLIC_URL`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SENDER`, `REGULATOR_CONTACT`, `SITE_NAME`, `CELERY_BROKER_URL`, `API_ENABLED`, `COOKIEBANNER`, `MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER`.
+**Required config values** (the app exits or fails to import without them): `SECRET_KEY`, `HASH_KEY`, `DEBUG`, `LOGGING`, `LOG_DIRECTORY`, `DATABASES`, `ALLOWED_HOSTS`, `PUBLIC_URL`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SENDER`, `REGULATOR_CONTACT`, `SITE_NAME`, `COOKIEBANNER`, `MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER`, `SESSION_COOKIE_AGE`, `LANGUAGE_CODE`, `TIME_ZONE`, `LANGUAGES`, `PARLER_LANGUAGES`, `PARLER_DEFAULT_LANGUAGE_CODE`.
 
-Also set `PARLER_LANGUAGES` and `PARLER_DEFAULT_LANGUAGE_CODE` for translation config.
-
-**Optional values.** `settings.py` catches `AttributeError` for each of these and applies a default, so an older `config.py` still boots: `PRIVATE_FILES_ROOT` (where generated reports, admin import/export files and background-task working files are written; its former name `PATH_FOR_REPORTING_PDF` is still read, with a deprecation warning, by `tools.get_private_files_root`), `SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY` (1825), `KALEIDO_CONCURRENCY_PER_WORKER` (1), `INCIDENT_RETENTION_TIME_IN_DAY` (1825), `TERMS_ACCEPTANCE_TIME_IN_DAYS` (365).
+**Optional values.** `settings.py` catches `AttributeError` for each of these and applies a default, so an older `config.py` still boots: `PRIVATE_FILES_ROOT` (where generated reports, admin import/export files and background-task working files are written; its former name `PATH_FOR_REPORTING_PDF` is still read, with a deprecation warning, by `tools.get_private_files_root`), `SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY` (1825), `KALEIDO_CONCURRENCY_PER_WORKER` (1), `INCIDENT_RETENTION_TIME_IN_DAY` (1825), `TERMS_ACCEPTANCE_TIME_IN_DAYS` (365), `LOG_RETENTION_TIME_IN_DAY` (365), `CELERY_BROKER_URL` / `CELERY_RESULT_BACKEND` (`redis://localhost:6379/0` and `/1`), `API_ENABLED` (False).
 
 ## Testing
 
