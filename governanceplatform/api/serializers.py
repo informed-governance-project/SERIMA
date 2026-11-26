@@ -111,6 +111,8 @@ class SecurityMeasureAnswerSerializer(serializers.ModelSerializer):
 
 
 class DeclarationSerializer(serializers.ModelSerializer):
+    # The group's, like the reference: the API shows the latest version under one stable identity.
+    public_id = serializers.UUIDField(source="group.public_id", read_only=True)
     reference = serializers.CharField(source="group.group_id", read_only=True)
     standard = serializers.StringRelatedField()
     company = serializers.StringRelatedField(source="submitter_company")
@@ -123,6 +125,7 @@ class DeclarationSerializer(serializers.ModelSerializer):
     class Meta:
         model = StandardAnswer
         fields: tuple[str, ...] = (
+            "public_id",
             "reference",
             "standard",
             "company",
