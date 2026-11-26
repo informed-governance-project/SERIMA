@@ -151,6 +151,9 @@ def sitemap(request):
 
                 modules[_("Reporting")] = reporting_pages
 
+            if type_module == "selfregistration":
+                modules[_("Self-registration")] = [{"name": _("Administration"), "url": reverse("selfregistration")}]
+
     context = {"modules": modules}
     return render(request, "home/sitemap.html", context)
 

@@ -11,6 +11,23 @@ the operators. For a regulator administrator, it lists:
 The lists, forms, language tabs and the icons beside the drop-downs work as described in
 :doc:`/administration/platform-admin/governance`.
 
+When the platform administrator enables **Self-registration** for your role and regulator, its menu link
+opens the administration section. You can create form templates and versions, and edit draft versions,
+their pages and question placements. Questions and choices may be edited while no published or archived
+form uses them.
+Related form versions, pages, questions and choices display their translated labels.
+
+Create reusable **Template pages** for your regulator, then open a **Template version** in draft.
+In **Pages**, select a category and set its position for this version. Use the **Questions** table
+under each page to add questions, set their order and choose which answers are required, eligible for
+autofill, or visible to observers or the public. Save the version to keep the pages and questions together.
+The same category can be selected in several versions. Each version has its own page order and question placements.
+Use the inline delete controls to remove pages or question placements from a draft. Catalog definitions stay available.
+The **Pages in template** and **Question orders** lists are managed from the version form.
+During initial configuration, regulator administrators may delete their own templates, versions, reusable pages,
+questions, and answer choices, including those used in published versions. The confirmation lists the dependent
+records that will be removed. Editing the questionnaire on a published or archived version remains disabled.
+
 .. _regulator-own:
 
 Your regulator

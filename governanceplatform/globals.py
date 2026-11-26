@@ -34,6 +34,7 @@ ACTION_FLAG_CHOICES = {
 FUNCTIONALITIES = {
     "securityobjectives": _("Security Objective"),
     "reporting": _("Reporting"),
+    "selfregistration": _("Self-registration"),
 }
 
 # Roles a platform admin may enable on each functionality. A role left out here can
@@ -41,6 +42,7 @@ FUNCTIONALITIES = {
 FUNCTIONALITY_ELIGIBLE_ROLES = {
     "securityobjectives": ["RegulatorAdmin", "RegulatorUser", "OperatorAdmin", "OperatorUser"],
     "reporting": ["RegulatorAdmin", "RegulatorUser"],
+    "selfregistration": ["RegulatorAdmin"],
 }
 
 # Modules the read-only API serves, one per viewset `module`. Listed explicitly rather than derived from

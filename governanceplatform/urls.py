@@ -26,6 +26,7 @@ from governanceplatform import api_keys, views
 from governanceplatform.admin import admin_site
 from governanceplatform.forms import CustomPasswordResetForm
 from governanceplatform.settings import REGULATOR_CONTACT, SITE_NAME
+from selfregistration import views as selfregistration_views
 
 handler404 = "governanceplatform.views.custom_404_view"
 handler500 = "governanceplatform.views.custom_500_view"
@@ -87,6 +88,7 @@ urlpatterns = [
     path("incidents/", include("incidents.urls"), name="incidents"),
     # Report Wizard
     path("reporting/", include("reporting.urls"), name="reporting"),
+    path("selfregistration/", selfregistration_views.index, name="selfregistration"),
     # Security objectives
     path(
         "securityobjectives/",

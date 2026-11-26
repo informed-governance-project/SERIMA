@@ -249,7 +249,10 @@ def test_restrict_views_blocks_every_role_not_eligible(otp_client, populate_db, 
     """A role row the admin form would refuse must still not open the module, so
     RestrictViewsMiddleware has to stay in step with FUNCTIONALITY_ELIGIBLE_ROLES."""
     user = get_user_with_role(role)
-    Functionality.objects.get(type=functionality_type).roles.add(Group.objects.get(name=role))
+    functionality, _ = Functionality.objects.get_or_create(type=functionality_type)
+    functionality.roles.add(Group.objects.get(name=role))
+    if functionality_type == "selfregistration":
+        functionality.regulator_set.add(*user.regulators.all())
     client = otp_client(user)
 
     assert client.get(reverse(functionality_type)).status_code == 404

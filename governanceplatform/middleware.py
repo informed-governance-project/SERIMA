@@ -116,6 +116,7 @@ class RestrictViewsMiddleware:
                     or request.path.startswith("/incidents/")
                     or request.path.startswith("/securityobjectives/")
                     or request.path.startswith("/reporting/")
+                    or request.path.startswith("/selfregistration/")
                 ):
                     return redirect("admin:index")
 

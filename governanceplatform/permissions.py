@@ -73,6 +73,14 @@ GROUP_PERMISSIONS = {
         "securitymeasure": ["add", "change", "delete", "view"],
         "securityobjectivestatus": ["add", "change", "delete"],
         "logstandardanswer": ["view"],
+        # Self-registration
+        "proceduretemplate": ["view", "add", "change", "delete"],
+        "proceduretemplateversion": ["view", "add", "change", "delete"],
+        "proceduretemplatepage": ["view", "add", "change", "delete"],
+        "pageintemplate": ["view", "add", "change", "delete"],
+        "proceduretemplatequestion": ["view", "add", "change", "delete"],
+        "proceduretemplatechoice": ["view", "add", "change", "delete"],
+        "proceduretemplatequestionplacement": ["view", "add", "change", "delete"],
     },
     "RegulatorUser": {
         "user": ["add", "view"],

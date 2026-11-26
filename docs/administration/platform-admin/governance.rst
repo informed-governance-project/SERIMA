@@ -127,7 +127,7 @@ Observers receive incidents per regulation (see `Observer regulations`_).
 Functionalities
 ~~~~~~~~~~~~~~~
 
-The **Functionalities** list holds the optional modules of the platform: **Security Objective** and **Reporting**.
+The **Functionalities** list holds the optional modules of the platform, including **Self-registration**.
 It shows the **Type** of each functionality, its **Name** and the **Roles** that may use it.
 
 .. figure:: /_static/images/administration/platform-admin/governance-05.png
@@ -154,11 +154,16 @@ Access is checked in two steps, in this order:
 
    - Security objectives: RegulatorAdmin, RegulatorUser, OperatorAdmin, OperatorUser.
    - Reporting: RegulatorAdmin, RegulatorUser.
+   - Self-registration: RegulatorAdmin.
 
    Any other role is refused when you save, with the message *These roles cannot access this functionality*.
 
 2. **By regulator.** Regulator accounts also need the functionality chosen on their regulator
    (see `Create a regulator`_). Operators have no such setting: their role is enough.
+
+To enable Self-registration, add a functionality of type **Self-registration**, select
+**RegulatorAdmin** in **Roles**, and assign the functionality to the regulators that need it.
+The module menu opens the Self-registration administration section.
 
 If a role is not chosen, the regulator setting is not checked: the module stays hidden from the menu
 and its pages return a "not found" error. A new functionality has no role chosen, so nobody can use it

@@ -11,9 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Optional Self-registration administration for regulator administrators, controlled by role and regulator in **Functionalities**. Administrators can configure draft forms, pages, questions, and answer choices.
+- Reusable Self-registration template pages and questionnaire editing on each draft template version, with page order and question options configured per version.
+- Self-registration questionnaires show questions directly under their page. New pages and their questions can be saved together.
+- Pages can be removed from draft Self-registration questionnaires without deleting the reusable pages or questions.
+- Regulator administrators can delete Self-registration configuration for their own regulator. Page assignments and question placements are managed on the template version screen.
+
 - Opt-in read-only APIs for incidents, security-objective declarations, reporting projects and the current user, with expiring personal API keys stored as hashes, account-based key creation/revocation, OpenAPI YAML and Swagger UI. The API is disabled by default; once enabled, platform administrators grant it per module and role under **API access**, and it follows the key owner's current organization, sector and module permissions. An operator's key reads only the company selected when it was created. Incidents and declarations opened through the API are recorded in their Access Log with the action `API READ`, as on the web.
 
 ### Changed
+
+- Self-registration administration displays translated labels for related forms, versions, pages, questions, and choices. Forms use the regulator and regulation names.
+- Self-registration configuration lists use shorter labels for templates, template versions, questions, question orders, and answer choices.
 
 - The `PATH_FOR_REPORTING_PDF` setting of `config.py` is renamed `PRIVATE_FILES_ROOT`, as the folder now holds the private files of every module: generated reports, admin import and export files, security objectives exports and incident PDFs. Rename the key in `config.py` when upgrading. Until then the former name is still read, so nothing moves, but a deprecation warning is logged every time the application starts; it will stop being read in a later release
 - Two sectors or sub-sectors can no longer share an acronym, as a workflow export and import matches sectors by it (#897). The upgrade renames each duplicated acronym but the earliest: it gets a "1" at the end, or in place of its last letter when it already has four characters, and a higher digit if that acronym is also taken. Every renamed acronym is printed during the migration as `sector <id>: <old> -> <new>`, so administrators can adapt it by hand
