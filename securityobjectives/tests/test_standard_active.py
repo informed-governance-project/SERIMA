@@ -177,7 +177,7 @@ def test_report_project_editing_keeps_a_deactivated_framework(reporting_client, 
     standard.active = False
     standard.save()
 
-    content = reporting_client.get(reverse("edit_report_project", args=[project.pk])).content.decode()
+    content = reporting_client.get(reverse("edit_report_project", args=[project.public_id])).content.decode()
 
     assert str(standard) in content
 

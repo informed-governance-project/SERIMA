@@ -88,6 +88,36 @@ def test_a_declaration_is_copied_by_its_group_public_id(otp_client, populate_so_
     assert client.get(f"/securityobjectives/copy/{declaration.group.pk}").status_code == 404
 
 
+def operator_client(otp_client, populate_so_db, declaration: StandardAnswer):
+    client = otp_client(get_user(populate_so_db, "opadmin@com1.lu"))
+    session = client.session
+    session["company_in_use"] = declaration.submitter_company_id
+    session.save()
+    return client
+
+
+@pytest.mark.django_db
+def test_a_declaration_is_deleted_by_its_public_id(otp_client, populate_so_db):
+    declaration = populate_so_db["sas"][0]
+    StandardAnswer.objects.filter(pk=declaration.pk).update(status="UNDE")
+
+    response = operator_client(otp_client, populate_so_db, declaration).post(reverse("delete_so_declaration", args=[declaration.public_id]))
+
+    assert response.status_code == 302
+    assert not StandardAnswer.objects.filter(pk=declaration.pk).exists()
+
+
+@pytest.mark.django_db
+def test_a_declaration_delete_with_the_primary_key_deletes_nothing(otp_client, populate_so_db):
+    declaration = populate_so_db["sas"][0]
+    StandardAnswer.objects.filter(pk=declaration.pk).update(status="UNDE")
+
+    response = operator_client(otp_client, populate_so_db, declaration).post(f"/securityobjectives/delete/{declaration.pk}")
+
+    assert response.status_code == 404
+    assert StandardAnswer.objects.filter(pk=declaration.pk).exists()
+
+
 @pytest.mark.django_db
 @pytest.mark.parametrize("email", ["opadmin@com1.lu", "regadmin@reg1.lu"])
 def test_the_dashboard_never_shows_a_sequential_id(otp_client, populate_so_db, email):

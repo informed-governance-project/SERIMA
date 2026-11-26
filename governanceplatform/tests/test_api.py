@@ -230,8 +230,8 @@ def test_regulator_sectors_and_module_switch(client, api_user, bearer, records):
     records["incident"].affected_sectors.add(records["sector"])
     response = client.get(reverse("api:project-list"), **auth(bearer))
     assert response.json()["count"] == 1
-    assert response.json()["results"][0]["reference"] == str(records["project"].api_id)
-    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].api_id}), **auth(bearer)).status_code == 200
+    assert response.json()["results"][0]["public_id"] == str(records["project"].public_id)
+    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].public_id}), **auth(bearer)).status_code == 200
     assert client.get(reverse("api:incident-list"), **auth(bearer)).json()["count"] == 1
     assert client.get(reverse("api:declaration-list"), **auth(bearer)).json()["count"] == 1
     records["regulator"].functionalities.remove(module)
@@ -378,13 +378,13 @@ def test_regulator_isolation_and_all_modules_reject_writes(client, api_user, bea
     other_regulator = Regulator.objects.create(name="Other regulator")
     RegulatorUser.objects.create(user=other, regulator=other_regulator, is_regulator_administrator=True)
     hidden = Project.objects.create(author=other, standard=records["standard"], years=[2026], reference_year=2026)
-    assert client.get(reverse("api:project-detail", kwargs={"reference": hidden.api_id}), **auth(bearer)).status_code == 404
+    assert client.get(reverse("api:project-detail", kwargs={"reference": hidden.public_id}), **auth(bearer)).status_code == 404
     records["declaration"].status = "UNDE"
     records["declaration"].save()
     assert client.get(reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id}), **auth(bearer)).status_code == 404
     for module in ["declaration", "project"]:
         list_url = reverse(f"api:{module}-list")
-        reference = records["project"].api_id if module == "project" else records["group"].group_id
+        reference = records["project"].public_id if module == "project" else records["group"].group_id
         detail_url = reverse(f"api:{module}-detail", kwargs={"reference": reference})
         for method in ["post", "put", "patch", "delete"]:
             assert getattr(client, method)(list_url, {}, **auth(bearer)).status_code == 405
@@ -485,7 +485,7 @@ def test_project_reads_are_not_logged_like_on_the_web(client, api_user, bearer, 
     RegulatorUser.objects.create(user=api_user, regulator=records["regulator"], is_regulator_administrator=True)
     enable_module(api_user, "reporting", records["regulator"])
     assert client.get(reverse("api:project-list"), **auth(bearer)).status_code == 200
-    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].api_id}), **auth(bearer)).status_code == 200
+    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].public_id}), **auth(bearer)).status_code == 200
     assert not LogReporting.objects.exists()
 
 

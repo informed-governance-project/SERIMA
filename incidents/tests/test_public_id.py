@@ -6,7 +6,7 @@ from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.urls import reverse
 
-from incidents.models import Incident, IncidentWorkflow, ReportTimeline
+from incidents.models import Incident, IncidentWorkflow, ReportTimeline, SectorRegulationWorkflow, Workflow
 
 
 def get_incident(populate_incident_db, reference: str) -> Incident:
@@ -15,6 +15,73 @@ def get_incident(populate_incident_db, reference: str) -> Incident:
 
 def get_user(populate_incident_db, email: str):
     return next(u for u in populate_incident_db["users"] if u.email == email)
+
+
+def operator_client(otp_client, populate_incident_db, incident: Incident):
+    client = otp_client(get_user(populate_incident_db, "opadmin@com1.lu"))
+    session = client.session
+    session["company_in_use"] = incident.company_id
+    session.save()
+    return client
+
+
+def first_report(incident: Incident) -> Workflow:
+    return SectorRegulationWorkflow.objects.filter(sector_regulation=incident.sector_regulation).order_by("position").first().workflow
+
+
+@pytest.mark.django_db
+def test_a_report_is_started_by_the_incident_public_id(otp_client, populate_incident_db):
+    incident = get_incident(populate_incident_db, "XXXX-SSS-SSS-0001-2005")
+    client = operator_client(otp_client, populate_incident_db, incident)
+
+    response = client.get(reverse("create_workflow"), {"incident_id": incident.public_id, "workflow_id": first_report(incident).pk})
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_a_report_start_does_not_accept_the_incident_primary_key(otp_client, populate_incident_db):
+    incident = get_incident(populate_incident_db, "XXXX-SSS-SSS-0001-2005")
+    client = operator_client(otp_client, populate_incident_db, incident)
+
+    response = client.get(reverse("create_workflow"), {"incident_id": incident.pk, "workflow_id": first_report(incident).pk})
+
+    assert response.status_code == 302
+    assert response.url == reverse("incidents")
+
+
+@pytest.mark.django_db
+def test_a_report_is_edited_by_the_incident_public_id(otp_client, populate_incident_db):
+    incident = get_incident(populate_incident_db, "XXXX-SSS-SSS-0001-2005")
+    report = first_report(incident)
+    IncidentWorkflow.objects.create(incident=incident, workflow=report, report_timeline=ReportTimeline.objects.create())
+    client = operator_client(otp_client, populate_incident_db, incident)
+
+    response = client.get(reverse("edit_workflow"), {"incident_id": incident.public_id, "workflow_id": report.pk})
+
+    assert response.status_code == 200
+
+
+@pytest.mark.django_db
+def test_an_incident_is_deleted_by_its_public_id(otp_client, populate_incident_db):
+    incident = get_incident(populate_incident_db, "XXXX-SSS-SSS-0001-2005")
+    client = operator_client(otp_client, populate_incident_db, incident)
+
+    response = client.post(reverse("delete_incident", args=[incident.public_id]))
+
+    assert response.status_code == 302
+    assert not Incident.objects.filter(pk=incident.pk).exists()
+
+
+@pytest.mark.django_db
+def test_an_incident_delete_with_the_primary_key_deletes_nothing(otp_client, populate_incident_db):
+    incident = get_incident(populate_incident_db, "XXXX-SSS-SSS-0001-2005")
+    client = operator_client(otp_client, populate_incident_db, incident)
+
+    response = client.post(f"/incidents/delete/{incident.pk}")
+
+    assert response.status_code == 404
+    assert Incident.objects.filter(pk=incident.pk).exists()
 
 
 @pytest.mark.django_db
