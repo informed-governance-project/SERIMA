@@ -104,7 +104,7 @@ SEQUENTIAL_ID_PATTERNS = [
     r"(?:incident|impact)_status_\d+(?![0-9a-fA-F-])",
     r"is_significative_impact_\d+(?![0-9a-fA-F-])",
     r'data-incident-id="\d+"',
-    r'"id": \d+',
+    r"(?:\"|&quot;)id(?:\"|&quot;): \d+",
 ]
 
 

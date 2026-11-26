@@ -94,7 +94,7 @@ def test_can_access_so(otp_client, populate_so_db):
     # standard answer
     sa = sas[0]
 
-    url = "/securityobjectives/declaration?id=" + str(sa.pk)
+    url = "/securityobjectives/declaration?id=" + str(sa.public_id)
     test_get_with_otp(otp_client, users, authorized_users, unaccess_module_users, url)
 
 
@@ -119,7 +119,7 @@ def test_pdf_download_so(otp_client, populate_so_db):
     ]
     # only one Standard answers in the DB
     sa = next((u for u in sas), None)
-    url = "/securityobjectives/download/" + str(sa.id)
+    url = "/securityobjectives/download/" + str(sa.public_id)
     for user in users:
         client = otp_client(user)
         with patch("securityobjectives.views.generate_declaration_pdf_task.delay") as delay:
@@ -145,7 +145,7 @@ def test_cannot_update_security_objective_from_another_standard(
     foreign_objective = security_measure_from_another_standard.security_objective
 
     response = client.post(
-        f"{reverse('so_declaration')}?id={standard_answer.pk}",
+        f"{reverse('so_declaration')}?id={standard_answer.public_id}",
         data=json.dumps({"id": foreign_objective.pk, "status": "PASS"}),
         content_type="application/json",
     )
@@ -173,7 +173,7 @@ def test_cannot_update_security_measure_from_another_standard(
     session.save()
 
     response = client.post(
-        f"{reverse('so_declaration')}?id={standard_answer.pk}",
+        f"{reverse('so_declaration')}?id={standard_answer.public_id}",
         data=json.dumps({"id": security_measure_from_another_standard.pk, "is_implemented": True}),
         content_type="application/json",
     )
@@ -193,7 +193,7 @@ def _declaration_as_operator(otp_client, populate_so_db):
     session = client.session
     session["company_in_use"] = standard_answer.submitter_company_id
     session.save()
-    return client, f"{reverse('so_declaration')}?id={standard_answer.pk}"
+    return client, f"{reverse('so_declaration')}?id={standard_answer.public_id}"
 
 
 @pytest.mark.django_db
@@ -344,7 +344,7 @@ def test_hiding_the_review_comment_column_hides_it_from_the_regulator(otp_client
     regulator = next(user for user in populate_so_db["users"] if user.email == "regadmin@reg1.lu")
     client = otp_client(regulator)
 
-    content = client.get(f"{reverse('so_declaration')}?id={standard_answer.pk}").content.decode()
+    content = client.get(f"{reverse('so_declaration')}?id={standard_answer.public_id}").content.decode()
 
     assert "Regulator remarks" not in content
 
@@ -704,7 +704,7 @@ def test_so_log_hides_deleted_regulator_user_from_operator(otp_client, populate_
     log = LogStandardAnswer.objects.create(user=regulator_user, standard_answer=standard_answer, action="READ", role="RegulatorUser")
     regulator_user.delete()
 
-    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.id]))
+    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.public_id]))
 
     assert log not in response.context["log"]
 
@@ -718,7 +718,7 @@ def test_so_log_shows_deleted_user_name(otp_client, populate_so_db):
     log = LogStandardAnswer.objects.create(user=operator_user, standard_answer=standard_answer, action="READ", role="OperatorUser")
     operator_user.delete()
 
-    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.id]))
+    response = otp_client(operator).get(reverse("so_access_log", args=[standard_answer.public_id]))
 
     assert log.user_full_name
     assert log.user_full_name in response.content.decode()
@@ -801,7 +801,7 @@ def test_operator_declaration_shows_objective_verdicts_only_once_sent(otp_client
     SecurityObjectiveStatus.objects.filter(standard_answer=declaration).update(status=stored_status[:4])
     operator = next(u for u in populate_so_db["users"] if u.email == "opadmin@com1.lu")
 
-    response = otp_client(operator).get(reverse("so_declaration"), {"id": declaration.pk})
+    response = otp_client(operator).get(reverse("so_declaration"), {"id": declaration.public_id})
 
     html = response.content.decode()
     assert ("border-passed" in html or "border-failed" in html) is verdict_shown
@@ -824,7 +824,7 @@ def test_an_objective_to_revise_blocks_the_submission(otp_client, populate_so_db
     """A new version keeps the verdicts of the review it copies, FAIL included, until the operator revises it."""
     client, declaration = _filled_out_declaration(otp_client, populate_so_db, objective_status)
 
-    client.post(reverse("submit_so_declaration", args=[declaration.pk]))
+    client.post(reverse("submit_so_declaration", args=[declaration.public_id]))
 
     declaration.refresh_from_db()
     assert (declaration.status == "DELIV") is submitted
@@ -837,7 +837,7 @@ def test_the_dashboard_offers_to_submit_only_what_can_be_submitted(otp_client, p
 
     content = client.get(reverse("securityobjectives")).content.decode()
 
-    assert (reverse("submit_so_declaration", args=[declaration.pk]) in content) is offered
+    assert (reverse("submit_so_declaration", args=[declaration.public_id]) in content) is offered
 
 
 MEASURE_COMMENT = "Measure comment from the regulator"
@@ -865,7 +865,7 @@ def _operator(populate_so_db):
 def test_operator_reads_the_review_comment_only_once_sent(otp_client, populate_so_db, stored_status, allowed):
     declaration = _reviewed_declaration(populate_so_db, stored_status)
 
-    response = otp_client(_operator(populate_so_db)).get(reverse("review_comment_so_declaration", args=[declaration.pk]))
+    response = otp_client(_operator(populate_so_db)).get(reverse("review_comment_so_declaration", args=[declaration.public_id]))
 
     assert (response.status_code == 200) is allowed
     assert (DECLARATION_COMMENT in response.content.decode()) is allowed
@@ -895,7 +895,7 @@ def test_regulator_version_history_holds_the_draft_review_comment(populate_so_db
 def test_operator_declaration_shows_measure_comments_only_once_sent(otp_client, populate_so_db, stored_status, shown):
     declaration = _reviewed_declaration(populate_so_db, stored_status)
 
-    response = otp_client(_operator(populate_so_db)).get(reverse("so_declaration"), {"id": declaration.pk})
+    response = otp_client(_operator(populate_so_db)).get(reverse("so_declaration"), {"id": declaration.public_id})
 
     assert (MEASURE_COMMENT in response.content.decode()) is shown
 
@@ -905,13 +905,13 @@ def test_regulator_declaration_shows_draft_measure_comments(otp_client, populate
     declaration = _reviewed_declaration(populate_so_db, "PASS")
     regulator = next(u for u in populate_so_db["users"] if u.email == "regadmin@reg1.lu")
 
-    response = otp_client(regulator).get(reverse("so_declaration"), {"id": declaration.pk})
+    response = otp_client(regulator).get(reverse("so_declaration"), {"id": declaration.public_id})
 
     assert MEASURE_COMMENT in response.content.decode()
 
 
 def _new_version(client, declaration):
-    client.get(reverse("so_declaration"), {"id": declaration.pk, "update": "true"})
+    client.get(reverse("so_declaration"), {"id": declaration.public_id, "update": "true"})
     return StandardAnswer.objects.filter(group=declaration.group).exclude(pk=declaration.pk).get()
 
 
@@ -953,7 +953,7 @@ def test_the_previous_answer_holds_the_review_comment_only_once_sent(otp_client,
     new_version = _new_version(client, declaration)
     SecurityMeasureAnswer.objects.filter(standard_answer=new_version).update(is_implemented=True, review_comment="")
 
-    content = client.get(reverse("so_declaration"), {"id": new_version.pk}).content.decode()
+    content = client.get(reverse("so_declaration"), {"id": new_version.public_id}).content.decode()
 
     assert "so-previous-answer-row" in content
     assert (MEASURE_COMMENT in content) is shown
@@ -971,7 +971,7 @@ def _superseded_declaration(otp_client, populate_so_db):
 def _post_objective_status(client, declaration, status):
     objective_id = SecurityObjectiveStatus.objects.filter(standard_answer=declaration).first().security_objective_id
     return client.post(
-        f"{reverse('so_declaration')}?id={declaration.pk}",
+        f"{reverse('so_declaration')}?id={declaration.public_id}",
         data=json.dumps({"id": objective_id, "status": status}),
         content_type="application/json",
     )
@@ -1005,7 +1005,7 @@ def test_regulator_cannot_send_the_review_of_a_superseded_version(otp_client, po
     SecurityObjectiveStatus.objects.filter(standard_answer=old_version).update(status="PASS")
 
     otp_client(_regulator(populate_so_db)).post(
-        reverse("review_comment_so_declaration", args=[old_version.pk]), {"review_comment": "Verdict"}
+        reverse("review_comment_so_declaration", args=[old_version.public_id]), {"review_comment": "Verdict"}
     )
 
     old_version.refresh_from_db()
@@ -1018,7 +1018,7 @@ def test_regulator_cannot_comment_a_superseded_version(otp_client, populate_so_d
     old_version, _new = _superseded_declaration(otp_client, populate_so_db)
 
     response = otp_client(_regulator(populate_so_db)).post(
-        f"{reverse('review_comment_so_declaration', args=[old_version.pk])}?only_review_comment=true",
+        f"{reverse('review_comment_so_declaration', args=[old_version.public_id])}?only_review_comment=true",
         {"review_comment": "Draft comment"},
     )
 
@@ -1031,9 +1031,9 @@ def test_regulator_cannot_comment_a_superseded_version(otp_client, populate_so_d
 def test_regulator_is_sent_to_the_newer_version(otp_client, populate_so_db):
     old_version, new_version = _superseded_declaration(otp_client, populate_so_db)
 
-    content = otp_client(_regulator(populate_so_db)).get(reverse("so_declaration"), {"id": old_version.pk}).content.decode()
+    content = otp_client(_regulator(populate_so_db)).get(reverse("so_declaration"), {"id": old_version.public_id}).content.decode()
 
-    assert f"{reverse('so_declaration')}?id={new_version.pk}" in content
+    assert f"{reverse('so_declaration')}?id={new_version.public_id}" in content
     assert 'id="so_send_button"' not in content
 
 
@@ -1096,7 +1096,7 @@ def test_operator_cannot_update_a_version_that_has_a_newer_one(otp_client, popul
     new_version = _new_version(client, old_version)
     StandardAnswer.objects.filter(pk=new_version.pk).update(status=newer_status)
 
-    client.get(reverse("so_declaration"), {"id": old_version.pk, "update": "true"})
+    client.get(reverse("so_declaration"), {"id": old_version.public_id, "update": "true"})
 
     assert StandardAnswer.objects.filter(group=old_version.group).count() == 2
 
@@ -1119,7 +1119,7 @@ def test_a_superseded_version_keeps_its_planned_measures(otp_client, populate_so
     objective_status = SecurityObjectiveStatus.objects.filter(standard_answer=old_version).first()
 
     response = client.post(
-        f"{reverse('so_declaration')}?id={old_version.pk}",
+        f"{reverse('so_declaration')}?id={old_version.public_id}",
         data=json.dumps({"id": objective_status.security_objective_id, "actions": "Planned later"}),
         content_type="application/json",
     )
@@ -1146,7 +1146,7 @@ def test_the_version_list_starts_with_the_newer_version_after_the_older_one_was_
 
     versions = json.loads(get_all_versions({"is_regulator": True}, new_version))
 
-    assert [version["id"] for version in versions] == [new_version.pk, old_version.pk]
+    assert [version["public_id"] for version in versions] == [str(new_version.public_id), str(old_version.public_id)]
 
 
 @pytest.mark.django_db
@@ -1157,7 +1157,7 @@ def test_duplicate_copies_the_newer_version_after_the_older_one_was_updated(otp_
     StandardAnswer.objects.filter(pk=old_version.pk).update(last_update=timezone.now() + dt.timedelta(hours=1))
     client, _url = _declaration_as_operator(otp_client, populate_so_db)
 
-    client.post(reverse("copy_so_declaration", args=[old_version.group_id]), {"year": timezone.now().year})
+    client.post(reverse("copy_so_declaration", args=[old_version.group.public_id]), {"year": timezone.now().year})
 
     duplicate = StandardAnswer.objects.exclude(group=old_version.group).get()
     assert SecurityMeasureAnswer.objects.filter(standard_answer=duplicate, is_implemented=True).exists()
@@ -1172,7 +1172,7 @@ def test_submitting_waits_for_other_requests_on_the_declaration(otp_client, popu
     client, declaration = _filled_out_declaration(otp_client, populate_so_db, "PASS")
 
     with CaptureQueriesContext(connection) as queries:
-        client.post(reverse("submit_so_declaration", args=[declaration.pk]))
+        client.post(reverse("submit_so_declaration", args=[declaration.public_id]))
 
     declaration.refresh_from_db()
     assert declaration.status == "DELIV"
@@ -1186,7 +1186,7 @@ def test_sending_the_review_waits_for_other_requests_on_the_declaration(otp_clie
 
     with CaptureQueriesContext(connection) as queries:
         otp_client(_regulator(populate_so_db)).post(
-            reverse("review_comment_so_declaration", args=[declaration.pk]), {"review_comment": "Verdict"}
+            reverse("review_comment_so_declaration", args=[declaration.public_id]), {"review_comment": "Verdict"}
         )
 
     declaration.refresh_from_db()
@@ -1235,7 +1235,7 @@ def test_dashboard_pdf_button_uses_the_async_download(otp_client, populate_so_db
 
     html = otp_client(user).get(reverse("securityobjectives")).content.decode()
 
-    pdf_url = reverse("download_so_declaration_pdf", args=[declaration.pk])
+    pdf_url = reverse("download_so_declaration_pdf", args=[declaration.public_id])
     assert re.search(rf'<a class="[^"]*\bjs-async-pdf\b[^"]*"\s+href="{re.escape(pdf_url)}"', html)
 
 
@@ -1290,7 +1290,7 @@ def _regulator(populate_so_db):
 
 
 def _navigation(otp_client, user, declaration):
-    response = otp_client(user).get(reverse("so_declaration"), {"id": declaration.pk})
+    response = otp_client(user).get(reverse("so_declaration"), {"id": declaration.public_id})
     return response, response.context["navigation"]
 
 

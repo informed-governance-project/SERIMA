@@ -102,7 +102,7 @@ def _send_review(otp_client, declaration, verdict):
     _with(declaration, status=verdict)
     regulator = User.objects.get(email="regadmin@reg1.lu")
     return otp_client(regulator).post(
-        reverse("review_comment_so_declaration", args=[declaration.pk]),
+        reverse("review_comment_so_declaration", args=[declaration.public_id]),
         {"review_comment": REVIEW_COMMENT},
     )
 

@@ -190,6 +190,14 @@ def test_incident_user_sees_only_own_incidents(client, bearer, records):
     )
 
 
+def test_a_declaration_keeps_its_public_id_across_versions(client, api_user, bearer, records):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    bind_key(bearer, records["company"])
+    enable_module(api_user, "securityobjectives")
+    url = reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id})
+    assert client.get(url, **auth(bearer)).json()["public_id"] == str(records["group"].public_id)
+
+
 def test_operator_scope_approval_and_live_permissions(client, api_user, bearer, records):
     link = CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
     bind_key(bearer, records["company"])

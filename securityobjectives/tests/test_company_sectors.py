@@ -73,7 +73,7 @@ def test_an_operator_creates_a_declaration_without_choosing_a_sector(operator_cl
 def test_an_operator_duplicates_a_declaration_without_choosing_a_sector(operator_client, declaration):
     before = StandardAnswer.objects.count()
 
-    operator_client.post(reverse("copy_so_declaration", args=[declaration.group.pk]), data={"year": 2026})
+    operator_client.post(reverse("copy_so_declaration", args=[declaration.group.public_id]), data={"year": 2026})
 
     assert StandardAnswer.objects.count() == before + 1
 
@@ -144,7 +144,7 @@ def test_reporting_finds_an_accepted_declaration_through_the_company_sector(decl
 
 
 def declaration_page(client, declaration):
-    return client.get(f"{reverse('so_declaration')}?id={declaration.id}").content.decode()
+    return client.get(f"{reverse('so_declaration')}?id={declaration.public_id}").content.decode()
 
 
 @pytest.mark.django_db()

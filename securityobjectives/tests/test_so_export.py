@@ -166,7 +166,7 @@ def test_export_view_dispatches_the_task(otp_client, populate_so_db):
         response = client.post(reverse("export_security_objectives"), filters)
 
     assert response.status_code == 200
-    export = SecurityObjectiveExport.objects.get(id=response.json()["export_id"])
+    export = SecurityObjectiveExport.objects.get(file_uuid=response.json()["export_uuid"])
     assert export.user == regulator_admin
     assert export.task_status == "RUNNING"
     delay.assert_called_once()
@@ -201,7 +201,7 @@ def test_status_fails_a_running_job_when_the_stack_is_down(otp_client, populate_
     client = otp_client(regulator_admin)
 
     with patch("securityobjectives.views.celery_health_check", return_value=False):
-        response = client.get(reverse("security_objectives_export_status", args=[export.id]))
+        response = client.get(reverse("security_objectives_export_status", args=[export.file_uuid]))
 
     assert response.json()["status"] == "FAIL"
     export.refresh_from_db()
@@ -220,7 +220,7 @@ def test_status_leaves_a_running_job_alone_when_the_stack_is_healthy(otp_client,
     client = otp_client(regulator_admin)
 
     with patch("securityobjectives.views.celery_health_check", return_value=True):
-        response = client.get(reverse("security_objectives_export_status", args=[export.id]))
+        response = client.get(reverse("security_objectives_export_status", args=[export.file_uuid]))
 
     assert response.json()["status"] == "RUNNING"
 
