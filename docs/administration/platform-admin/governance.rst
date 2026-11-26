@@ -2,7 +2,7 @@ Governance
 ----------
 
 The **Governance** section of the console is where you set up the organisations that use the platform
-and their first accounts. For a platform administrator, it lists **Django Settings**, **Entity categories**,
+and their first accounts. For a platform administrator, it lists **API access**, **Django Settings**, **Entity categories**,
 **Functionalities**, **Observers**, **Regulations**, **Regulators** and **Users**.
 This page describes them in the order of the set-up (see :doc:`index`).
 
@@ -85,6 +85,9 @@ Two switches on each card grant export rights:
   (see :doc:`/security-objectives/review-a-declaration`).
 
 Every export is recorded in the :doc:`log entries <administration>`.
+
+These switches control only the spreadsheet export. They do not restrict the read-only API, which is granted per role
+(see :doc:`/technical/api`).
 
 To remove an administrator from the regulator, click the bin icon at the right of its card: the card is covered
 with **This item will be deleted.**, and **Click to cancel** keeps it. Then click **Save**.
@@ -187,6 +190,23 @@ Removing a role from the functionality hides the module again for every account 
 
    To close a module, remove its roles; do not delete the functionality.
 
+.. _platform-api-access:
+
+API access
+~~~~~~~~~~
+
+**API access** sets who may use the read-only API, which must also be enabled in the configuration
+(see :doc:`/technical/api`). It lists the three modules the API can read: **Incident notification**, **Security objectives** and **Reporting**, with the **Roles**
+allowed to read each one through the API. Modules cannot be added or deleted.
+
+Click a module, move the roles that may read it through the API from **Available Roles** to **Chosen Roles**,
+and click **Save**. Only the roles that can use the module on the web are offered. No role is chosen on a new
+platform, so nobody can use the API until you choose some.
+
+The API never gives more than the web: an account reads a module through the API only if its role is chosen here
+and it can use the module on the web, which for security objectives and reporting also depends on the
+functionality (see `Functionalities`_). Accounts whose role has no module here have no **API keys** page.
+
 .. _platform-entity-categories:
 
 Entity categories
@@ -221,10 +241,13 @@ Create an observer
 1. Click **Add observer** and fill in the **Name** and, optionally, the **Full name** and **Description**,
    then the **Country** and **Address**.
 2. In **E-mail address for incident notification**, enter the shared address of the observer:
-   it receives the emails the platform sends about the incidents the observer receives, unless the observer
-   administrator connects the observer to an RT ticketing system, which then receives them as tickets
-   (see :ref:`observer-admin-rt`).
-3. Add the first observer administrator in the **Observer users** section, as for a regulator
+   it receives the emails the platform sends about the incidents the observer receives. The observer administrator
+   chooses whether they are sent by email, through connectors to the observer's own systems, or both
+   (see :ref:`observer-admin-notification-mode`).
+3. In **Available connectors**, tick the connector types the observer may use: **RT (Request Tracker)**,
+   **Webhook (HTTPS API)** and **GPG-encrypted JSON (e-mail)** (see :ref:`observer-admin-connectors`).
+   None is ticked by default. Unticking a type later turns off the observer's connectors of that type.
+4. Add the first observer administrator in the **Observer users** section, as for a regulator
    (see `Regulator administrators`_): click **Add another Observer user**, then select the account or create it
    with **Add another User** in the menu (⋮) beside it. Turn on **Can export incidents** to let it export the incidents the observer receives (see :ref:`incident-export`).
 
@@ -232,7 +255,7 @@ Create an observer
       :alt: Change Observer form with its contact fields and the Observer users section outlined
       :target: ../../_static/images/administration/platform-admin/governance-08.png
 
-4. Add its observer regulations, as described below, and click **Save**.
+5. Add its observer regulations, as described below, and click **Save**.
 
 The observer administrator then creates the other accounts of the observer (see :ref:`observer-admin-users`).
 Removing an administrator from the **Observer users** section deactivates the account.

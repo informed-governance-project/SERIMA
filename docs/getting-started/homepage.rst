@@ -45,6 +45,11 @@ On the homepage, you will find the following main functionalities (as numbered i
         :alt: Change password form with the old password, new password and confirmation fields and the password rules
         :target: ../_static/images/getting-started/homepage-04.png
 
+   - **API keys**: Shown only when the platform's read-only API is enabled and your role may use it
+     (see :ref:`platform-api-access`). There you create the personal keys that let your own scripts or tools read
+     the data you can see on the web, and revoke them. A new key is displayed only once, when it is created:
+     copy it straight away. See :doc:`/technical/api`.
+
    - **Log out**: Use this link to log out of the application. In case you are not active, the system will log you out for security reasons.
 
 4. **Contact**: Click the envelope icon to open the Contact form, through which you can send a message to the platform's support team.

@@ -129,7 +129,12 @@ Put the variables in a ``.env`` file next to ``docker-compose.yml`` rather than 
      - Redis databases; default to ``redis://redis:6379/0`` and ``/1``.
    * - ``CELERY_CONCURRENCY``
      - No
-     - Tasks a worker runs in parallel (default 3).
+     - Tasks a worker runs in parallel (default 3). Only for a single worker consuming every queue:
+       ``docker/docker-compose.example.yml`` sets it per worker from the three variables below.
+   * - ``CELERY_INTERACTIVE_CONCURRENCY`` / ``CELERY_REPORTS_CONCURRENCY`` / ``CELERY_DEFAULT_CONCURRENCY``
+     - No
+     - Tasks each of ``docker/docker-compose.example.yml``'s three workers runs in parallel (default 2, 2 and 1). See
+       `Splitting the workers`_.
    * - ``CELERY_QUEUES``
      - No
      - Comma-separated queues the worker consumes; all of them when unset. See `Splitting the workers`_.
@@ -180,7 +185,7 @@ Celery tasks are sent to one of three queues, according to how they behave:
 The example compose file runs one worker per queue, each in its own container with its own
 ``CELERY_QUEUES``, so that a report generation never makes a user wait for a PDF. Their concurrencies are
 read from ``CELERY_INTERACTIVE_CONCURRENCY`` (default 2), ``CELERY_REPORTS_CONCURRENCY`` (default 2) and
-``CELERY_DEFAULT_CONCURRENCY`` (default 1). ``docker/docker-compose.dokploy.yml`` is set up the same way.
+``CELERY_DEFAULT_CONCURRENCY`` (default 1).
 
 A single worker can still consume all three queues, by leaving ``CELERY_QUEUES`` unset. It saves two
 containers on a small host, but a report generation can then occupy every process of the worker, and a

@@ -23,6 +23,11 @@ The reporting module needs two more pieces of software, both listed in :doc:`ins
 
 The official Docker image includes both.
 
+Observer connectors (see :ref:`observer-admin-connectors`) need:
+
+- GnuPG (the ``gnupg`` package), for the GPG-encrypted JSON connector, which the Docker image includes;
+- outgoing HTTPS from the Celery worker to the RT instances and webhook endpoints the observers configure.
+
 Instead of installing all of this by hand, you can run the official Docker images: see :doc:`docker`.
 
 

@@ -181,6 +181,9 @@ Due to the complexity of the screen, its different parts will be presented one b
       Operators see only the actions of their own users in the log. When the regulator or an observer opens,
       reviews or downloads a report, the entry appears in the regulator's log but not in the operator's.
       Reports opened through the API appear with the action **API READ**; see :doc:`/technical/api`.
+      When a webhook or GPG-encrypted JSON connector sends the incident to an observer's system, each report it
+      contains appears with the action **TRANSMIT**, the connector's name as user and the observer as entity;
+      operators do not see these entries. See :ref:`observer-admin-connectors`.
 
    .. figure:: /_static/images/incident-notification/dashboard-07.png
       :alt: Access log sorted by date
@@ -189,3 +192,6 @@ Due to the complexity of the screen, its different parts will be presented one b
 10. **Download PDF report**: Click the **PDF** icon in the **Actions** column to download the whole incident, with all its reports, as a PDF document.
     To download a single report instead, use the PDF icon of its version in the **Version control** pop-up;
     regulators and observers also have a small PDF icon beside the report in the **Report** column.
+    The PDF is prepared in the background: a loading spinner is shown meanwhile, and the file downloads by itself
+    once it is ready. If it cannot be prepared, the message **An error occurred while generating the report.**
+    is shown instead.

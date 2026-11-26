@@ -2,6 +2,7 @@ import logging
 
 import requests
 from celery import shared_task
+from django.db import transaction
 
 from governanceplatform.connectors import (
     NotificationContext,
@@ -9,7 +10,8 @@ from governanceplatform.connectors import (
     TransientDeliveryError,
 )
 from incidents.email import EmailContext, render_notification
-from incidents.models import ConnectorDelivery
+from incidents.globals import CONNECTOR_LOG_ROLE, TRANSMIT_ACTION
+from incidents.models import ConnectorDelivery, LogReportRead
 
 logger = logging.getLogger(__name__)
 
@@ -43,8 +45,9 @@ def run(self, delivery_id):
         previous_external_ref=previous_delivery.external_ref if previous_delivery else "",
     )
 
+    impl = delivery.connector.get_impl()
     try:
-        result = delivery.connector.get_impl().send(ctx)
+        result = impl.send(ctx)
     except PermanentDeliveryError as e:
         logger.error("Connector delivery %s failed permanently: %s", delivery.pk, e)
         delivery.status = ConnectorDelivery.Status.FAILED
@@ -64,4 +67,25 @@ def run(self, delivery_id):
     delivery.status = ConnectorDelivery.Status.SENT
     delivery.external_ref = result.external_ref or delivery.external_ref
     delivery.last_error = ""
-    delivery.save()
+    with transaction.atomic():
+        delivery.save()
+        if impl.transmits_incident_payload:
+            log_transmission(delivery)
+
+
+def log_transmission(delivery: ConnectorDelivery) -> None:
+    # One entry per report the payload carries, as the API logs a read of the incident.
+    # bulk_create skips LogReportRead.save(), which needs a user and would bump incident_last_update.
+    connector = delivery.connector
+    LogReportRead.objects.bulk_create(
+        LogReportRead(
+            user=None,
+            user_full_name=connector.name,
+            role=CONNECTOR_LOG_ROLE,
+            entity_name=connector.observer.name,
+            incident=delivery.incident,
+            incident_report=report,
+            action=TRANSMIT_ACTION,
+        )
+        for report in delivery.incident.get_latest_incident_workflows()
+    )

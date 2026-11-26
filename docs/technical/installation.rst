@@ -18,7 +18,7 @@ On Ubuntu 26.04 LTS, the same packages as the official Docker image:
 .. code-block:: bash
 
     $ sudo apt install \
-        git curl gettext postfix postgresql redis-server \
+        git curl gettext gnupg postfix postgresql redis-server \
         python3.14 python3-venv \
         nodejs npm \
         libreoffice-writer python3-uno \
@@ -32,6 +32,7 @@ What each group is for:
 
 - ``git``, ``curl``, ``gettext``, ``postfix``, ``postgresql``, ``redis-server``: getting the code,
   compiling the translations, sending emails, the database and the broker of the background workers;
+- ``gnupg``: encrypting the payloads that the GPG-encrypted JSON observer connector sends;
 - ``python3.14``, ``python3-venv``: the interpreter, and the ``venv`` module the Poetry installer needs;
 - ``nodejs``, ``npm``: the front-end assets. Check that they are version 24 and 11 (``node --version``,
   ``npm --version``); install them from NodeSource if your distribution provides older ones;
@@ -121,11 +122,14 @@ Start from ``governanceplatform/config_dev.py`` and set at least:
 - ``PUBLIC_URL``, ``ALLOWED_HOSTS`` and, behind a reverse proxy, ``CSRF_TRUSTED_ORIGINS``;
 - ``SITE_NAME`` and ``REGULATOR_CONTACT``;
 - ``DATABASES``;
-- ``EMAIL_HOST``, ``EMAIL_PORT``, ``EMAIL_SENDER``, and ``EMAIL_FOR_CONTACT`` / ``EMAIL_CONTACT_FROM`` for the contact form;
-- ``CELERY_BROKER_URL`` and ``CELERY_RESULT_BACKEND`` — the Redis server;
+- ``EMAIL_HOST``, ``EMAIL_PORT`` and ``EMAIL_SENDER``;
 - ``COOKIEBANNER``;
 - ``MAX_PRELIMINARY_NOTIFICATION_PER_DAY_PER_USER``;
-- ``LANGUAGES``, ``PARLER_LANGUAGES`` and ``PARLER_DEFAULT_LANGUAGE_CODE``.
+- ``SESSION_COOKIE_AGE`` — after how many seconds of inactivity users are logged out;
+- ``LOGGING`` and ``LOG_DIRECTORY``;
+- ``LANGUAGE_CODE``, ``TIME_ZONE``, ``LANGUAGES``, ``PARLER_LANGUAGES`` and ``PARLER_DEFAULT_LANGUAGE_CODE``.
+
+The application does not start when one of them is missing.
 
 ``API_ENABLED`` defaults to ``False``. Set it to ``True`` to enable the read-only API,
 API key management and OpenAPI documentation; see :doc:`api`.
@@ -138,14 +142,18 @@ These settings are optional; the application applies a default when they are mis
 - ``KALEIDO_CONCURRENCY_PER_WORKER`` — how many charts a Celery worker renders at once (default 1);
 - ``INCIDENT_RETENTION_TIME_IN_DAY`` and ``SECURITY_OBJECTIVE_RETENTION_TIME_IN_DAY`` — how long incidents
   and security objectives declarations are kept (default 1825 days, five years);
-- ``LOG_RETENTION_TIME_IN_DAY`` — how long log entries are kept;
+- ``CELERY_BROKER_URL`` and ``CELERY_RESULT_BACKEND`` — the Redis server
+  (default ``redis://localhost:6379/0`` and ``redis://localhost:6379/1``);
+- ``EMAIL_FOR_CONTACT`` and ``EMAIL_CONTACT_FROM`` — the recipient and sender of the contact form;
+- ``LOG_RETENTION_TIME_IN_DAY`` — how long log entries are kept (default 365);
 - ``DAY_BEFORE_DELETING_INC_USER_WITHOUT_INCIDENT`` — after how many days without logging in an incident user
   account that never reported an incident is deleted (default 90);
 - ``TERMS_ACCEPTANCE_TIME_IN_DAYS`` — after how many days users must accept the terms of service again (default 365);
-- ``SESSION_COOKIE_AGE`` — after how many seconds of inactivity users are logged out;
 - ``SECURE_REFERRER_POLICY`` — the ``Referrer-Policy`` header sent with every page
   (default ``same-origin``);
-- ``RT_SECRET_KEY`` — the key encrypting observers' RT tokens (defaults to ``HASH_KEY``).
+- ``CONNECTOR_SECRET_KEY`` — the Fernet key encrypting the tokens and secrets of observer connectors. It was
+  formerly called ``RT_SECRET_KEY``, which is still read when ``CONNECTOR_SECRET_KEY`` is not set; without either,
+  ``HASH_KEY`` is used. Changing it makes every stored connector secret unreadable.
 
 When ``DEBUG`` is ``True``, emails are not sent but written to the ``sent_emails`` folder at the root of the project.
 
@@ -240,7 +248,7 @@ it ends. To avoid it, run one worker per queue (``interactive``, ``reports`` and
 
 ``-n`` gives each worker its own name, which Celery needs when several run on the same host.
 
-Celery beat triggers these tasks (times in the server's time zone):
+Celery beat triggers these tasks (times in the ``TIME_ZONE`` of ``config.py``):
 
 .. list-table::
    :header-rows: 1

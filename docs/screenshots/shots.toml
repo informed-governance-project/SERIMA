@@ -333,6 +333,25 @@ steps = [
 ]
 annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
 
+[[shots]]
+name = "images/getting-started/homepage-07"
+# Needs API_ENABLED on the instance. The key listed is the one
+# screenshot_fixture --create issues to this account. As for the password page,
+# opening it logs the account out (ForceReloginMiddleware), so the shot signs in
+# again on the login page it lands on.
+role = "regulator_user"
+path = "/account/api-keys/"
+credentials_from = "regulator_user"
+fresh = true
+viewport = { width = 1440, height = 560 }
+steps = [
+  { action = "click", selector = "#with-account" },
+  { action = "fill", selector = "#id_auth-username", value = "${username}" },
+  { action = "fill", selector = "#id_auth-password", value = "${password}" },
+  { action = "click", selector = "button.btn-primary.submit_login" },
+  { action = "wait_for", selector = "#api_keys_heading" },
+]
+
 # --- Incident dashboard (docs/incident-notification/dashboard.rst) ----------
 #
 # The operator's dashboard. Row callouts target the fixture incident NI_ZDTBC16Y
@@ -342,9 +361,11 @@ annotate = [{ selector = "ul[aria-labelledby='module_selector']", box = true }]
 # down and out of the cropped viewports. Run these shots before any shot that
 # notifies an incident.
 #
-# Filter and sort choices are kept in the Django session, and column choices
-# and the legend in localStorage — both shared by every shot of a role. Shots
-# that change any of them run `fresh`, so the next shot sees the defaults.
+# Column, legend, filter and sort choices are saved on the account (#673), so
+# they are shared by every shot of a role, even across browser contexts. Shots
+# that change any of them run `fresh`: capture.py clears the accounts' choices
+# after each one (screenshot_fixture --reset-preferences), so the next shot sees
+# the defaults. Column checkboxes are named after the column, not numbered.
 #
 # Tooltip shots crop with a short viewport rather than an element `selector`:
 # the tooltip is drawn outside the element it belongs to and would be cut off.
@@ -409,10 +430,10 @@ hide = ["#incidents-table tbody", "footer"]
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-3" },
-  { action = "click", selector = "#column-4" },
-  { action = "click", selector = "#column-5" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-detection_date" },
+  { action = "click", selector = "#column-starting_date" },
+  { action = "click", selector = "#column-resolution_date" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
 ]
@@ -703,8 +724,8 @@ viewport = { width = 1440, height = 430 }
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-last_update" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
 ]
@@ -734,8 +755,8 @@ viewport = { width = 1440, height = 420 }
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-last_update" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
 ]
@@ -750,8 +771,8 @@ selector = "#incidents-table"
 steps = [
   { action = "click", selector = "button[data-bs-target='#IncidentshideColumns']" },
   { action = "wait_for", selector = "#IncidentshideColumns.show" },
-  { action = "click", selector = "#column-1" },
-  { action = "click", selector = "#column-8" },
+  { action = "click", selector = "#column-last_update" },
+  { action = "click", selector = "#column-reference" },
   { action = "click", selector = "#IncidentshideColumns .btn-close" },
   { action = "wait_ms", value = 500 },
   # There is no hover step. Focusing the link inside the report's tooltip
@@ -805,9 +826,8 @@ selector = "#main"
 name = "images/administration/platform-admin/administration-01"
 role = "platform_admin"
 path = "/admin/admin/logentry/"
+nav_closed = ["governanceplatform", "sites"]
 steps = [
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-sites .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -830,6 +850,10 @@ selector = "#main"
 name = "images/administration/platform-admin/governance-01"
 role = "platform_admin"
 path = "/admin/governanceplatform/regulator/"
+nav_closed = ["admin", "sites"]
+steps = [
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -874,6 +898,10 @@ hide = ["#submit-row"]
 name = "images/administration/platform-admin/governance-05"
 role = "platform_admin"
 path = "/admin/governanceplatform/functionality/"
+nav_closed = ["admin", "sites"]
+steps = [
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -891,6 +919,10 @@ hide = ["#submit-row"]
 name = "images/administration/platform-admin/governance-07"
 role = "platform_admin"
 path = "/admin/governanceplatform/entitycategory/"
+nav_closed = ["admin", "sites"]
+steps = [
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -902,8 +934,11 @@ role = "platform_admin"
 # Observer 2 is Observer A, the fixture's only observer.
 path = "/admin/governanceplatform/observer/2/change/"
 selector = "#main"
-hide = ["#observerregulation_set-group", "#submit-row"]
-annotate = [{ selector = "#observeruser_set-group", box = true }]
+hide = ["#observerregulation_set-group", "#connectors-group", "#submit-row"]
+annotate = [
+  { selector = "#content .field-allowed_connector_types", box = true },
+  { selector = "#observeruser_set-group", box = true },
+]
 
 [[shots]]
 name = "images/administration/platform-admin/governance-09"
@@ -926,9 +961,8 @@ role = "platform_admin"
 path = "/admin/governanceplatform/user/"
 # Wide enough for the columns after Roles, which the prose lists, to fit.
 viewport = { width = 1920, height = 900 }
+nav_closed = ["admin", "sites"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-sites .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -957,6 +991,28 @@ viewport = { width = 1440, height = 700 }
 # which would fill the capture; the prose describes the settings themselves.
 hide = ["#content table.table tbody tr:first-child"]
 
+[[shots]]
+name = "images/administration/platform-admin/governance-13"
+role = "platform_admin"
+path = "/admin/governanceplatform/apimoduleaccess/"
+nav_closed = ["admin", "sites"]
+steps = [
+  { action = "hover", selector = "#result_list thead" },
+]
+annotate = [
+  { selector = "#nav-sidebar li.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/platform-admin/governance-14"
+role = "platform_admin"
+# API access 1 is incident notification, granted to every eligible role in the fixture.
+path = "/admin/governanceplatform/apimoduleaccess/1/change/"
+viewport = { width = 1440, height = 700 }
+selector = "#main"
+hide = ["#submit-row"]
+
 # --- Regulator admin (docs/administration/regulator-admin/) -------------------
 #
 # The Django admin under /admin/, as the administrator of Regulator A.
@@ -982,11 +1038,8 @@ annotate = [
 name = "images/administration/regulator-admin/administration-01"
 role = "regulator_admin"
 path = "/admin/admin/logentry/"
+nav_closed = ["governanceplatform", "incidents", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1038,11 +1091,8 @@ role = "regulator_admin"
 path = "/admin/governanceplatform/user/"
 # Wide enough for the Account actions column, which the prose describes.
 viewport = { width = 1920, height = 900 }
+nav_closed = ["admin", "incidents", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1067,6 +1117,10 @@ annotate = [
 name = "images/administration/regulator-admin/governance-05"
 role = "regulator_admin"
 path = "/admin/governanceplatform/sector/"
+nav_closed = ["admin", "incidents", "reporting", "securityobjectives"]
+steps = [
+  { action = "hover", selector = "#result_list thead" },
+]
 annotate = [
   { selector = "#nav-sidebar li.current-model", box = true },
   { selector = "#result_list thead", box = true },
@@ -1275,7 +1329,7 @@ annotate = [{ selector = ".pending-link-prompt", box = true }]
 # The Django admin under /admin/, as the observer administrator of Observer A,
 # the only account of that observer in the fixture: no shot shows the Reset 2FA
 # token button, which is never offered on your own account. Change forms are
-# only opened, never saved, and the RT connection is never tested.
+# only opened, never saved, and no connector connection is ever tested.
 
 [[shots]]
 name = "images/administration/observer-admin/index-01"
@@ -1302,22 +1356,12 @@ role = "observer_admin"
 # Observer 2 is Observer A.
 path = "/admin/governanceplatform/observer/2/change/"
 selector = "#main"
-# The RT configuration and the accounts have shots of their own below.
-hide = ["#content fieldset.collapse", "#observeruser_set-group", "#submit-row"]
+# The connectors and the accounts are documented in sections of their own.
+hide = ["#connectors-group", "#observeruser_set-group", "#submit-row"]
 annotate = [
   { selector = "#content .parler-language-tabs", box = true },
   { selector = "#content .field-email_for_notification", box = true },
-]
-
-[[shots]]
-name = "images/administration/observer-admin/governance-03"
-role = "observer_admin"
-path = "/admin/governanceplatform/observer/2/change/"
-# Unfolds the collapsed RT Configuration fieldset; nothing is saved or tested.
-steps = [{ action = "click", selector = "#content fieldset.collapse summary" }]
-selector = "#content fieldset.collapse"
-annotate = [
-  { selector = "#content .rt-test-btn", box = true },
+  { selector = "#content .field-notification_mode", box = true },
 ]
 
 [[shots]]
@@ -1361,6 +1405,36 @@ annotate = [
   { selector = "#user_form > div > fieldset.module:has(.readonly)", box = true },
 ]
 
+[[shots]]
+name = "images/administration/observer-admin/governance-08"
+role = "observer_admin"
+path = "/admin/governanceplatform/observerconnector/"
+annotate = [
+  { selector = "#nav-sidebar li.current-model", box = true },
+  { selector = "#result_list thead", box = true },
+]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-09"
+role = "observer_admin"
+path = "/admin/governanceplatform/observerconnector/add/"
+selector = "#main"
+hide = ["#submit-row"]
+annotate = [{ selector = "#content .field-connector_type", box = true }]
+
+[[shots]]
+name = "images/administration/observer-admin/governance-10"
+role = "observer_admin"
+# Connector 1 is the RT connector of Observer A; screenshot_fixture --create sets its
+# token, which the form masks. The connection is never tested.
+path = "/admin/governanceplatform/observerconnector/1/change/"
+selector = "#main"
+hide = ["#submit-row"]
+annotate = [
+  { selector = "#content .field-secret", box = true },
+  { selector = "#content .connector-test-btn", box = true },
+]
+
 # --- Incident notification configuration (docs/administration/regulator-admin/incident-notification.rst) ---
 #
 # The Django admin under /admin/, as the regulator administrator. Changelists
@@ -1374,11 +1448,8 @@ annotate = [
 name = "images/incident-notification/configuration-01"
 role = "regulator_admin"
 path = "/admin/incidents/email/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1391,7 +1462,7 @@ name = "images/incident-notification/configuration-02"
 role = "regulator_admin"
 path = "/admin/incidents/email/1/change/"
 selector = "#main"
-hide = [".field-line:has(.markdown-html-preview)", "#submit-row"]
+hide = ["#submit-row"]
 annotate = [
   { selector = ".parler-language-tabs", box = true },
   { selector = ["#id_name", "#id_subject"], box = true },
@@ -1403,11 +1474,8 @@ annotate = [
 name = "images/incident-notification/configuration-03"
 role = "regulator_admin"
 path = "/admin/incidents/question/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1428,11 +1496,8 @@ annotate = [{ selector = "#predefinedanswer_set-group", box = true }]
 name = "images/incident-notification/configuration-05"
 role = "regulator_admin"
 path = "/admin/incidents/question/1/change/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "click", selector = "#id_question_type" }
 ]
 annotate = [{ selector = "#id_question_type", box = true }]
@@ -1441,11 +1506,8 @@ annotate = [{ selector = "#id_question_type", box = true }]
 name = "images/incident-notification/configuration-06"
 role = "regulator_admin"
 path = "/admin/incidents/workflow/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1460,11 +1522,8 @@ role = "regulator_admin"
 path = "/admin/incidents/workflow/11/change/"
 # Tall enough to reach the Notification Email section below General.
 viewport = { width = 1440, height = 1100 }
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#main" }
 ]
 annotate = [{ selector = "#nav-sidebar li.current-model", box = true }]
@@ -1483,11 +1542,8 @@ hide = [
 name = "images/incident-notification/configuration-09"
 role = "regulator_admin"
 path = "/admin/incidents/conditionalquestionoption/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1517,11 +1573,8 @@ hide = ["#submit-row"]
 name = "images/incident-notification/configuration-11"
 role = "regulator_admin"
 path = "/admin/incidents/impact/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1541,11 +1594,8 @@ hide = ["#submit-row"]
 name = "images/incident-notification/configuration-13"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1618,11 +1668,8 @@ path = "/admin/incidents/sectorregulation/1/change/"
 # Tall enough to reach the Save as new button. A full-page capture would cut
 # the sticky sidebar short.
 viewport = { width = 1920, height = 1420 }
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#main" },
 ]
 annotate = [
@@ -1634,11 +1681,8 @@ annotate = [
 name = "images/incident-notification/configuration-18"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulation/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "click", selector = "#result_list > tbody:nth-of-type(3) input.action-select" },
   { action = "click", selector = "select[name=action]" },
 ]
@@ -1648,11 +1692,8 @@ annotate = [{ selector = "select[name=action]", box = true }]
 name = "images/incident-notification/configuration-19"
 role = "regulator_admin"
 path = "/admin/incidents/sectorregulationworkflowemail/"
+nav_closed = ["admin", "governanceplatform", "reporting", "securityobjectives"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-securityobjectives .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1690,11 +1731,8 @@ path = "/admin/securityobjectives/standard/"
 # without a tall capture. The console remembers folded sections in the browser, so
 # the shot has a browser of its own, which the later shots of the role do not share.
 fresh = true
+nav_closed = ["admin", "governanceplatform", "incidents", "reporting"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1740,11 +1778,8 @@ path = "/admin/securityobjectives/maturitylevel/"
 # The other sections of the sidebar folded, as in security-objectives-02, in a
 # browser of its own so the folding does not carry over to the later shots.
 fresh = true
+nav_closed = ["admin", "governanceplatform", "incidents", "reporting"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1759,11 +1794,8 @@ path = "/admin/securityobjectives/domain/"
 # The other sections of the sidebar folded, as in security-objectives-02, in a
 # browser of its own so the folding does not carry over to the later shots.
 fresh = true
+nav_closed = ["admin", "governanceplatform", "incidents", "reporting"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1778,11 +1810,8 @@ path = "/admin/securityobjectives/securityobjective/"
 # The other sections of the sidebar folded, as in security-objectives-02, in a
 # browser of its own so the folding does not carry over to the later shots.
 fresh = true
+nav_closed = ["admin", "governanceplatform", "incidents", "reporting"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [
@@ -1806,11 +1835,8 @@ viewport = { width = 1920, height = 900 }
 # The other sections of the sidebar folded, as in security-objectives-02, in a
 # browser of its own so the folding does not carry over to the later shots.
 fresh = true
+nav_closed = ["admin", "governanceplatform", "incidents", "reporting"]
 steps = [
-  { action = "click", selector = ".app-admin .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-governanceplatform .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-incidents .admin-nav-group-toggle" },
-  { action = "click", selector = ".app-reporting .admin-nav-group-toggle" },
   { action = "hover", selector = "#result_list thead" },
 ]
 annotate = [{ selector = "#result_list thead", box = true }]

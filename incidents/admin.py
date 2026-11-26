@@ -13,7 +13,6 @@ from django.http import Http404, JsonResponse
 from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
 from django.utils.translation import get_language
 from django.utils.translation import gettext_lazy as _
 from parler.models import TranslatableModel
@@ -28,7 +27,6 @@ from governanceplatform.globals import ACTION_FLAG_CHOICES
 from governanceplatform.helpers import (
     can_change_or_delete_obj,
     generate_display_methods,
-    sanitize_html,
     set_creator,
     translated_queryset,
     user_in_group,
@@ -796,7 +794,6 @@ class EmailAdmin(EmailPlaceholdersMixin, CustomTranslatableAdmin):
 
     search_fields = ["translations__subject", "translations__content", "name"]
     list_filter = [EmailRegulatorListFilter, EmailTypeListFilter]
-    readonly_fields = ("html_preview",)
 
     fieldsets = (
         (
@@ -808,26 +805,10 @@ class EmailAdmin(EmailPlaceholdersMixin, CustomTranslatableAdmin):
         (
             _("Content"),
             {
-                "fields": ("content", "html_preview"),
+                "fields": ("content",),
             },
         ),
     )
-
-    @admin.display(description=_("HTML preview"))
-    def html_preview(self, obj):
-        if not obj or not obj.content:
-            return _("No preview yet")
-        html_content = sanitize_html(obj.content)
-        return mark_safe(
-            f"""
-            <div class="markdown-html-preview">
-                {html_content}
-            </div>
-            """
-        )
-
-    class Media:
-        css = {"all": ("admin/css/markdown_preview.css",)}
 
     def save_model(self, request, obj, form, change):
         set_creator(request, obj, change)

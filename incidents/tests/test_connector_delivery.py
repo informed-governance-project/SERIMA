@@ -10,10 +10,12 @@ from django.utils.translation import activate
 
 from governanceplatform.models import Observer, ObserverConnector
 from incidents.email import dispatch_observer_notifications
-from incidents.models import ConnectorDelivery
+from incidents.globals import TRANSMIT_ACTION
+from incidents.models import ConnectorDelivery, IncidentWorkflow, LogReportRead
 from incidents.scripts.connector_delivery import run as deliver
 
 RT_URL = "https://rt.example.com"
+WEBHOOK_URL = "https://hooks.example.com/serima"
 
 
 @pytest.fixture
@@ -53,6 +55,26 @@ def rt_connector(populate_incident_db):
     connector.secret = "rt-token"
     connector.save()
     return connector
+
+
+@pytest.fixture
+def webhook_connector(populate_incident_db):
+    observer = populate_incident_db["observers"][0]
+    connector = ObserverConnector.objects.create(
+        observer=observer,
+        connector_type="webhook",
+        name="CERT webhook",
+        config={"url": WEBHOOK_URL},
+    )
+    connector.secret = "hmac-secret"
+    connector.save()
+    return connector
+
+
+@pytest.fixture
+def incident_reports(incident):
+    workflows = incident.sector_regulation.workflows.all()
+    return [IncidentWorkflow.objects.create(incident=incident, workflow=workflow) for workflow in workflows]
 
 
 @pytest.fixture
@@ -260,7 +282,7 @@ def test_gpg_json_delivery_sends_encrypted_incident_payload(populate_incident_db
     message = mail.outbox[0]
     assert message.bcc == [observer.email_for_notification]
     filename, armored, mimetype = message.attachments[0]
-    assert filename == f"incident_{incident.pk}.json.gpg"
+    assert filename == f"incident_{incident.incident_id}.json.gpg"
     assert mimetype == "application/pgp-encrypted"
     decrypted = gpg.decrypt(armored)
     assert decrypted.ok
@@ -323,3 +345,95 @@ def test_incident_payload_keeps_answer_format_per_question_type(incident):
     assert questions[single]["answer"] == single_choice
     assert questions[multi]["answer"] == multi_choices
     assert questions[multi]["details"] == "More details"
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_webhook_delivery_logs_one_transmit_entry_per_latest_report(
+    webhook_connector, email_template, incident, incident_reports, resolvable_hosts
+):
+    # a newer version of the first report replaces the older one in the payload
+    newer_version = IncidentWorkflow.objects.create(incident=incident, workflow=incident_reports[0].workflow)
+    responses.add(responses.POST, WEBHOOK_URL, status=200)
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=webhook_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    entries = LogReportRead.objects.filter(incident=incident, action=TRANSMIT_ACTION)
+    assert {entry.incident_report for entry in entries} == {newer_version, *incident_reports[1:]}
+    assert all(entry.user is None for entry in entries)
+    assert all(entry.user_full_name == "CERT webhook" for entry in entries)
+    assert all(entry.entity_name == webhook_connector.observer.name for entry in entries)
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_webhook_transmission_does_not_change_incident_last_update(
+    webhook_connector, email_template, incident, incident_reports, resolvable_hosts
+):
+    last_update = incident.incident_last_update
+    responses.add(responses.POST, WEBHOOK_URL, status=200)
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=webhook_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    incident.refresh_from_db()
+    assert incident.incident_last_update == last_update
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_failed_webhook_delivery_logs_nothing(webhook_connector, email_template, incident, incident_reports, resolvable_hosts):
+    responses.add(responses.POST, WEBHOOK_URL, status=403)
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=webhook_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    assert not LogReportRead.objects.filter(incident=incident, action=TRANSMIT_ACTION).exists()
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_rt_delivery_logs_nothing(rt_connector, email_template, incident, incident_reports, resolvable_hosts):
+    # RT forwards the notification email, not the incident payload
+    responses.add(responses.POST, f"{RT_URL}/REST/2.0/ticket", json={"id": 42}, status=201)
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=rt_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    assert not LogReportRead.objects.filter(incident=incident, action=TRANSMIT_ACTION).exists()
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_webhook_without_secret_sends_nothing(webhook_connector, email_template, incident, resolvable_hosts):
+    webhook_connector.secret = None
+    webhook_connector.save()
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=webhook_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    delivery.refresh_from_db()
+    assert delivery.status == ConnectorDelivery.Status.FAILED
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_webhook_with_undecryptable_secret_sends_nothing(webhook_connector, email_template, incident, resolvable_hosts):
+    # what a rotated CONNECTOR_SECRET_KEY leaves behind
+    ObserverConnector.objects.filter(pk=webhook_connector.pk).update(_secret="not-a-fernet-token")
+    delivery = ConnectorDelivery.objects.create(incident=incident, connector=webhook_connector, email=email_template)
+
+    deliver.apply(args=[delivery.pk])
+
+    delivery.refresh_from_db()
+    assert delivery.status == ConnectorDelivery.Status.FAILED
+    assert len(responses.calls) == 0
+
+
+@pytest.mark.django_db
+def test_incident_payload_has_no_primary_key(incident):
+    from governanceplatform.connectors.payload import build_incident_payload
+
+    assert "id" not in build_incident_payload(incident)["incident"]

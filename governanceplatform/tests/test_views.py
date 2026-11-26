@@ -167,3 +167,49 @@ def test_superuser_restricted_access(otp_client, populate_db):
             assert response.status_code == 404
         user.is_superuser = False
         user.save()
+
+
+def _user_without_entity(group_name):
+    from django.contrib.auth.models import Group
+    from django.utils.timezone import now
+
+    from governanceplatform.models import User
+
+    user = User.objects.create(email=f"{group_name.lower()}@example.com", accepted_terms=True, accepted_terms_date=now())
+    user.groups.add(Group.objects.get_or_create(name=group_name)[0])
+    return user
+
+
+@pytest.mark.django_db
+def test_regulator_user_without_regulator_is_told_why_login_fails(otp_client):
+    client = otp_client(_user_without_entity("RegulatorUser"))
+
+    response = client.get(reverse("index"), follow=True)
+
+    assert response.redirect_chain[-1][0].startswith(reverse("login"))
+    assert "Your account is not attached to a regulator yet." in [str(m) for m in response.context["messages"]][0]
+
+
+@pytest.mark.django_db
+def test_operator_without_entity_keeps_generic_message(otp_client):
+    client = otp_client(_user_without_entity("OperatorUser"))
+
+    response = client.get(reverse("index"), follow=True)
+
+    assert "no associated entities" in [str(m) for m in response.context["messages"]][0]
+
+
+@pytest.mark.django_db
+def test_regulator_user_linked_without_sector_can_log_in(otp_client, populate_db):
+    from governanceplatform.models import RegulatorUser
+
+    user = _user_without_entity("RegulatorUser")
+    RegulatorUser.objects.create(user=user, regulator=populate_db["regulators"][0])
+    client = otp_client(user)
+
+    response = client.get(reverse("index"))
+    incidents = client.get(reverse("incidents"))
+
+    assert response.status_code == 200
+    assert incidents.status_code == 200
+    assert user.get_sectors().count() == 0

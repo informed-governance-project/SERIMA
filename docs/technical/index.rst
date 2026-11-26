@@ -12,6 +12,7 @@ and the theme, which lives in its own Git repository.
 - **Installing a new instance:** check the :doc:`prerequisites`, then follow either :doc:`docker`
   (recommended) or the manual :doc:`installation`.
 - **Upgrading an instance:** :doc:`update`.
+- **Copying an incident notification workflow**, within an instance or to another one: :doc:`workflow-export-import`.
 - **Understanding how SERIMA is built:** :doc:`architecture` and :doc:`modules`.
 - **Reviewing its security:** :doc:`security`.
 - **Working on the code:** :doc:`development`.
@@ -23,6 +24,7 @@ and the theme, which lives in its own Git repository.
    installation
    docker
    update
+   workflow-export-import
    architecture
    modules
    security

@@ -158,7 +158,10 @@ Points 8 to 13 are the actions of each declaration, in the order they appear in 
 
        The **Duplicate** icon is disabled when the evaluation framework of the declaration is no longer active.
 
-11. **Download**: Downloads the declaration as a PDF document. Until the regulator sends the result of the review,
+11. **Download**: Downloads the declaration as a PDF document. The PDF is prepared in the background: a loading
+    spinner is shown meanwhile, and the file downloads by itself once it is ready. If it cannot be prepared,
+    the message **An error occurred while generating the report.** is shown instead.
+    Until the regulator sends the result of the review,
     the PDF shows the status **Under review**, without the results of the objectives or the review comments.
     As in the declaration, the objectives are listed domain by domain, each under a line naming its domain and its
     place in it, for example *D2 · Access control · Objective 3 of 5 in this domain*. A framework with a single

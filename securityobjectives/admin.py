@@ -32,7 +32,6 @@ from governanceplatform.forms import CustomTranslatableAdminForm
 from governanceplatform.helpers import (
     generate_display_methods,
     is_user_regulator,
-    sanitize_html,
 )
 from governanceplatform.mixins import (
     EmailPlaceholdersMixin,
@@ -1313,7 +1312,6 @@ class SOEmailAdmin(
         "creator__translations__name",
     ]
     translated_fields = ["subject", "content"]
-    readonly_fields = ("html_preview",)
     fieldsets = (
         (
             None,
@@ -1324,7 +1322,7 @@ class SOEmailAdmin(
         (
             _("Content"),
             {
-                "fields": ("content", "html_preview"),
+                "fields": ("content",),
             },
         ),
     )
@@ -1332,22 +1330,6 @@ class SOEmailAdmin(
     email_placeholders = SO_EMAIL_PLACEHOLDERS
     should_escape_html = False
     list_filter = ["name", "translations__subject", "creator"]
-
-    @admin.display(description=_("HTML preview"))
-    def html_preview(self, obj):
-        if not obj or not obj.content:
-            return _("No preview yet")
-        html_content = sanitize_html(obj.content)
-        return mark_safe(
-            f"""
-            <div class="markdown-html-preview">
-                {html_content}
-            </div>
-            """
-        )
-
-    class Media:
-        css = {"all": ("admin/css/markdown_preview.css",)}
 
 
 for name, method in generate_display_methods(["subject", "content"]).items():

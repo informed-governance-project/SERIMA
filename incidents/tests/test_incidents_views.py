@@ -19,6 +19,7 @@ from incidents.access_control import (
     can_create_incident_report,
     can_edit_incident_report,
 )
+from incidents.globals import CONNECTOR_LOG_ROLE, TRANSMIT_ACTION
 from incidents.models import Incident, IncidentWorkflow, LogReportRead, ReportTimeline, SectorRegulation, SectorRegulationWorkflow
 
 
@@ -343,6 +344,42 @@ def test_incident_log_shows_deleted_user_name(otp_client, populate_incident_db):
 
     assert log.user_full_name
     assert log.user_full_name in response.content.decode()
+
+
+def _connector_transmit_entry(incident):
+    return LogReportRead.objects.bulk_create(
+        [
+            LogReportRead(
+                incident=incident,
+                action=TRANSMIT_ACTION,
+                role=CONNECTOR_LOG_ROLE,
+                user_full_name="CERT webhook",
+                entity_name="CERT1",
+            )
+        ]
+    )[0]
+
+
+@pytest.mark.django_db
+def test_incident_log_hides_connector_transmission_from_operator(otp_client, populate_incident_db):
+    operator = next(u for u in populate_incident_db["users"] if u.email == "opadmin@com1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    entry = _connector_transmit_entry(incident)
+
+    response = otp_client(operator).get(reverse("access_log", args=[incident.id]))
+
+    assert entry not in response.context["log"]
+
+
+@pytest.mark.django_db
+def test_incident_log_shows_connector_transmission_to_observer(otp_client, populate_incident_db):
+    observer = next(u for u in populate_incident_db["users"] if u.email == "obsadm@cert1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    entry = _connector_transmit_entry(incident)
+
+    response = otp_client(observer).get(reverse("access_log", args=[incident.id]))
+
+    assert entry in response.context["log"]
 
 
 @pytest.mark.django_db

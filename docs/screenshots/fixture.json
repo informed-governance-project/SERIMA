@@ -358,6 +358,72 @@
   }
  },
  {
+  "model": "governanceplatform.apimoduleaccess",
+  "pk": 1,
+  "fields": {
+   "module": "incidents",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ],
+    [
+     "OperatorAdmin"
+    ],
+    [
+     "OperatorUser"
+    ],
+    [
+     "IncidentUser"
+    ],
+    [
+     "ObserverAdmin"
+    ],
+    [
+     "ObserverUser"
+    ]
+   ]
+  }
+ },
+ {
+  "model": "governanceplatform.apimoduleaccess",
+  "pk": 2,
+  "fields": {
+   "module": "securityobjectives",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ],
+    [
+     "OperatorAdmin"
+    ],
+    [
+     "OperatorUser"
+    ]
+   ]
+  }
+ },
+ {
+  "model": "governanceplatform.apimoduleaccess",
+  "pk": 3,
+  "fields": {
+   "module": "reporting",
+   "roles": [
+    [
+     "RegulatorAdmin"
+    ],
+    [
+     "RegulatorUser"
+    ]
+   ]
+  }
+ },
+ {
   "model": "governanceplatform.company",
   "pk": 46,
   "fields": {
@@ -458,10 +524,30 @@
    "country": "LU",
    "address": "3 Example Square, 3000 Example City",
    "email_for_notification": "observer-a@example.org",
-   "rt_url": null,
-   "_rt_token": null,
-   "rt_queue": null,
-   "functionalities": []
+   "functionalities": [],
+   "allowed_connector_types": [
+    "rt",
+    "webhook",
+    "gpg_json"
+   ],
+   "notification_mode": "default_and_connectors"
+  }
+ },
+ {
+  "model": "governanceplatform.observerconnector",
+  "pk": 1,
+  "fields": {
+   "observer": 2,
+   "connector_type": "rt",
+   "name": "RT",
+   "is_active": true,
+   "config": {
+    "url": "https://rt.example.org",
+    "queue": "Incidents"
+   },
+   "_secret": null,
+   "created_at": "2026-11-20T09:00:00Z",
+   "updated_at": "2026-11-20T09:00:00Z"
   }
  },
  {

@@ -118,6 +118,7 @@ Each `[[shots]]` entry needs `name` (the `_static` filename, without `.png`) and
 | `role` | which credentials to log in with beforehand; omit for anonymous pages |
 | `credentials_from` | a role whose credentials `fill` steps can type as `${username}` / `${password}` |
 | `fresh` | use a new browser context for this shot alone, and close it afterwards |
+| `nav_closed` | admin sidebar groups to show folded, by app label (`"admin"`, `"governanceplatform"`…); the rest start open, whatever earlier shots left |
 | `steps` | `click` / `fill` / `select` / `hover` / `press` / `totp` / `delete_totp` / `captcha` / `wait_for` / `wait_ms` actions run after navigation |
 | `email` | `true` to capture the last email the instance sent instead of a page; `path` is then not needed |
 | `selector` | capture just this element instead of the viewport |

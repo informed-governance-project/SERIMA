@@ -29,7 +29,6 @@ from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 
 from .globals import (
     CROCKFORD_ALPHABET,
-    CROCKFORD_INPUT_TRANSLATION,
     DEFAULT_PER_PAGE,
     LIST_PREFERENCE_PAGES,
     PER_PAGE_CHOICES,
@@ -522,20 +521,6 @@ def delete_file_and_parents(file_field, label: str) -> None:
 
 def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
     return "".join(secrets.choice(CROCKFORD_ALPHABET) for _ in range(length))
-
-
-def normalize_crockford(value: str) -> str:
-    """Map the characters Crockford excludes onto the ones they are mistaken for."""
-    return value.upper().translate(CROCKFORD_INPUT_TRANSLATION)
-
-
-def normalize_reference(value: str, prefix: str) -> str:
-    """Read the value the way Crockford intends, but leave the prefix alone: NI_ carries
-    an I and SO_ an O, and normalising those would stop the reference matching."""
-    upper = value.upper()
-    if upper.startswith(prefix):
-        return prefix + normalize_crockford(upper[len(prefix) :])
-    return normalize_crockford(upper)
 
 
 def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpResponseRedirect:

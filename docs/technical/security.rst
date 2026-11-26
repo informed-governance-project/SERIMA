@@ -62,6 +62,6 @@ Data
 
 - **Retention**: incidents, security objectives declarations, logs and unused incident user accounts
   are deleted automatically after the periods set in the configuration (see :doc:`installation`).
-- **Secrets**: the RT tokens of observers are stored encrypted with ``RT_SECRET_KEY``.
+- **Secrets**: the tokens and secrets of observer connectors are stored encrypted with ``CONNECTOR_SECRET_KEY``.
 - **Access**: every user only sees the data of their own organisation, and regulator users
   only the sectors assigned to them.

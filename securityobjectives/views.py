@@ -1189,6 +1189,10 @@ def get_completion_objective(security_objective, standard_answer):
     all_completed = completed_count == total_count
     any_partially = partially_count > 0
 
+    if not queryset.filter(is_implemented=True).exists():
+        all_completed = False
+        any_partially = True
+
     if all_completed and not any_partially:
         first_checked = SecurityMeasureAnswer.objects.filter(
             security_measure__security_objective=security_objective,

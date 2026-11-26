@@ -36,6 +36,9 @@ class BaseConnector:
     config_form: type[forms.Form]
     requires_secret: bool = False
     secret_label = _("Secret")
+    # True when send() hands the full incident payload to the observer's system: each delivery is then
+    # recorded in the incident's access log, whereas forwarding the notification email is not
+    transmits_incident_payload: bool = False
 
     def __init__(self, connector):
         self.connector = connector
