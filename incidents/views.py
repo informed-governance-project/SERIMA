@@ -1,4 +1,5 @@
 import csv
+import html
 import logging
 from datetime import date
 from functools import partial
@@ -22,6 +23,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.dateparse import parse_datetime
+from django.utils.html import strip_tags
 from django.utils.translation import get_language, override
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_http_methods
@@ -1221,6 +1223,11 @@ class FormWizardView(SessionWizardView):
         return redirect(url)
 
 
+def comment_text(comment: str | None) -> str:
+    # Summernote leaves markup such as "<p><br></p>" behind when its text is deleted, so compare the visible text only
+    return html.unescape(strip_tags(comment or "")).strip()
+
+
 class WorkflowWizardView(SessionWizardView):
     """Wizard to manage the different workflows."""
 
@@ -1542,16 +1549,16 @@ class WorkflowWizardView(SessionWizardView):
             incident_workflow = (
                 IncidentWorkflow.objects.all().filter(incident=self.incident, workflow=self.workflow).order_by("-timestamp").first()
             )
+            previous_comment = incident_workflow.comment
             incident_workflow.comment = data.get("comment", None)
             review_status = data.get("review_status", None)
             status_changed_email = None
-            if incident_workflow.review_status != review_status:
+            if review_status is not None and incident_workflow.review_status != review_status:
                 if (
                     incident_workflow.incident.sector_regulation.report_status_changed_email
                     and not incident_workflow.incident.incident_status == "CLOSE"
                 ):
                     status_changed_email = incident_workflow.incident.sector_regulation.report_status_changed_email
-            if review_status is not None:
                 incident_workflow.review_status = review_status
                 with override(PARLER_DEFAULT_LANGUAGE_CODE):
                     status_label = dict(WORKFLOW_REVIEW_STATUS).get(review_status, "")
@@ -1563,13 +1570,14 @@ class WorkflowWizardView(SessionWizardView):
                         self.request,
                     )
             incident_workflow.save()
-            create_entry_log(
-                user,
-                incident_workflow.incident,
-                incident_workflow,
-                "COMMENT",
-                self.request,
-            )
+            if comment_text(incident_workflow.comment) != comment_text(previous_comment):
+                create_entry_log(
+                    user,
+                    incident_workflow.incident,
+                    incident_workflow,
+                    "COMMENT",
+                    self.request,
+                )
 
             if status_changed_email is not None:
                 send_email(
