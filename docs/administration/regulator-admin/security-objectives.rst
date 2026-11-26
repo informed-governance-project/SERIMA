@@ -80,7 +80,7 @@ Each one is replaced by its value when the email is sent.
        The comment itself is never included, so it stays in the platform.
 
 As for incident emails, one email is sent in all languages: the content in the default language of the platform comes first,
-followed by each translation that differs from it.
+followed by each translation of the template that differs from it, with the placeholder values in its own language.
 
 The emails are sent to the users of the operator, to your regulator's address for incident notification,
 to your regulator administrators, and to the regulator users in charge of the sectors of the operator.

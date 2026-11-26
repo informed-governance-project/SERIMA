@@ -100,7 +100,9 @@ Languages
 """""""""
 
 One email is sent in all languages: the content in the default language of the platform comes first,
-followed by each translation that differs from it. The subject is sent in the default language.
+followed by each translation of the template that differs from it. Each version gives the placeholder values,
+such as the statuses and the report name, in its own language. The subject is sent in the default language,
+with its placeholder values in that language too.
 
 .. note::
 
