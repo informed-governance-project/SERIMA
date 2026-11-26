@@ -18,10 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The addresses of an incident and of an incident report (download of the PDF, review, edition, access log, deletion) now name it by a random identifier instead of its sequential number in the database, which showed how many incidents the platform holds. Existing incidents and reports get their identifier when the platform is updated. Links to an incident saved before the update, such as bookmarks, no longer work; the incident is still found from the list (#936)
 - The addresses of a security objectives declaration (opening, copy, submission, review comment, download of the PDF, access log, deletion) and of a security objectives export now name it by a random identifier instead of its sequential number in the database. Existing declarations get their identifier when the platform is updated. Links to a declaration saved before the update no longer work; the declaration is still found from the list (#936)
+- The addresses of a reporting project (dashboard, edition, copy, deletion, report generation and download, access log), of a company in a project and of a recommendation in a report now name it by a random identifier instead of its sequential number in the database. A project keeps the identifier the API already gave it. Links to a project saved before the update no longer work; the project is still found from the list (#936)
+- The reporting projects API now names a project's identifier `public_id` instead of `reference`, like the incidents and security objectives APIs. Its value does not change, and `/api/v1/reporting/projects/{reference}/` still takes it; clients that read `reference` from a project must read `public_id` (#936)
 
 ### Fixed
 
 - A security objective with no measure turned on is no longer shown as fully filled when its measures carry a justification and the planned measures are written: it is now partially filled, and the declaration cannot be submitted until at least one measure is on (#970)
+- Copying a reporting project no longer fails with an error: the copy gets its own public ID
+- The status and the cancellation of a report generation, and the order of a report's recommendations, are now limited to the regulator users who may open the project or the report, as the other reporting actions already were
 
 ## [0.6.2] - 2026-11-25
 
