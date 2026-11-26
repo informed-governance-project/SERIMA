@@ -196,7 +196,7 @@ class DeclarationViewSet(ReadOnlyViewSet):
 class ProjectViewSet(ReadOnlyViewSet):
     serializer_class = ProjectSerializer
     module = "reporting"
-    lookup_field = "api_id"
+    lookup_field = "public_id"
     lookup_url_kwarg = "reference"
     lookup_value_regex = "[0-9a-fA-F-]{36}"
 

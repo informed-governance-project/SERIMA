@@ -147,10 +147,9 @@ class DeclarationDetailSerializer(DeclarationSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    reference = serializers.UUIDField(source="api_id", read_only=True)
     standard = serializers.StringRelatedField()
 
     class Meta:
         model = Project
-        fields = ("reference", "name", "standard", "created_at", "updated_at", "years", "reference_year", "task_status")
+        fields = ("public_id", "name", "standard", "created_at", "updated_at", "years", "reference_year", "task_status")
         read_only_fields = fields
