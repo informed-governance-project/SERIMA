@@ -519,3 +519,82 @@ def test_regulator_edits_report_with_incident_id_but_no_workflow_id(otp_client, 
     )
 
     assert response.status_code == 200
+
+
+def submit_regulator_review(otp_client, populate_incident_db, review_data, existing_comment=None, existing_review_status="DELIV"):
+    """Walk a regulator through the review of an operator report and submit the last step with review_data"""
+    users = populate_incident_db["users"]
+    regulator_admin = next(u for u in users if u.email == "regadmin@reg1.lu")
+    incident = next(i for i in populate_incident_db["incidents"] if i.incident_id == "XXXX-SSS-SSS-0001-2005")
+    incident_workflow = IncidentWorkflow.objects.create(
+        incident=incident,
+        workflow=populate_incident_db["incidents_reports"][0],
+        report_timeline=ReportTimeline.objects.create(),
+        comment=existing_comment,
+        review_status=existing_review_status,
+    )
+    client = otp_client(regulator_admin)
+    url = f"{reverse('edit_workflow')}?incident_workflow_id={incident_workflow.public_id}"
+    response = client.get(url)
+    steps = response.context["wizard"]["steps"]
+    for step in range(steps.count - 1):
+        client.post(url, {"workflow_wizard_view-current_step": str(step)})
+    last = str(steps.count - 1)
+    response = client.post(url, {"workflow_wizard_view-current_step": last, **{f"{last}-{k}": v for k, v in review_data.items()}})
+    assert response.status_code == 302
+    return LogReportRead.objects.filter(incident_report=incident_workflow, user=regulator_admin)
+
+
+@pytest.mark.django_db
+def test_regulator_review_without_comment_logs_no_comment(otp_client, populate_incident_db):
+    log = submit_regulator_review(otp_client, populate_incident_db, {"review_status": "PASS", "comment": ""})
+
+    assert not log.filter(action="COMMENT").exists()
+
+
+@pytest.mark.django_db
+def test_regulator_review_with_comment_logs_comment(otp_client, populate_incident_db):
+    log = submit_regulator_review(otp_client, populate_incident_db, {"review_status": "PASS", "comment": "<p>Missing impact</p>"})
+
+    assert log.filter(action="COMMENT").exists()
+
+
+@pytest.mark.django_db
+def test_regulator_review_with_emptied_editor_logs_no_comment(otp_client, populate_incident_db):
+    """Text typed then deleted leaves markup behind in the editor, which is not a comment"""
+    log = submit_regulator_review(otp_client, populate_incident_db, {"review_status": "PASS", "comment": "<p><br></p>"})
+
+    assert not log.filter(action="COMMENT").exists()
+
+
+@pytest.mark.django_db
+def test_regulator_review_keeping_existing_comment_logs_no_comment(otp_client, populate_incident_db):
+    comment = "<p>Missing impact</p>"
+    log = submit_regulator_review(otp_client, populate_incident_db, {"review_status": "FAIL", "comment": comment}, existing_comment=comment)
+
+    assert not log.filter(action="COMMENT").exists()
+
+
+@pytest.mark.django_db
+def test_regulator_review_deleting_comment_logs_comment(otp_client, populate_incident_db):
+    log = submit_regulator_review(
+        otp_client, populate_incident_db, {"review_status": "PASS", "comment": ""}, existing_comment="<p>Missing impact</p>"
+    )
+
+    assert log.filter(action="COMMENT").exists()
+
+
+@pytest.mark.django_db
+def test_regulator_review_changing_status_logs_review_status(otp_client, populate_incident_db):
+    log = submit_regulator_review(otp_client, populate_incident_db, {"review_status": "PASS", "comment": ""})
+
+    assert list(log.filter(action__startswith="REVIEW STATUS").values_list("action", flat=True)) == ["REVIEW STATUS: Passed"]
+
+
+@pytest.mark.django_db
+def test_regulator_review_keeping_status_logs_no_review_status(otp_client, populate_incident_db):
+    log = submit_regulator_review(
+        otp_client, populate_incident_db, {"review_status": "PASS", "comment": "<p>Missing impact</p>"}, existing_review_status="PASS"
+    )
+
+    assert not log.filter(action__startswith="REVIEW STATUS").exists()
