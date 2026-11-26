@@ -477,10 +477,14 @@ class StandardAnswerGroup(models.Model):
         default=generate_standard_answer_group_id,
         verbose_name=_("Group ID"),
     )
+    # Identifies the object in URLs and to other systems; the sequential primary key
+    # would disclose how many objects the platform holds.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
 
 
 # The answers of the operator
 class StandardAnswer(models.Model):
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     standard = models.ForeignKey(
         Standard,
         verbose_name=_("Standard"),
