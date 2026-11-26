@@ -12,10 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The incidents API and the JSON sent by the webhook and GPG-encrypted JSON observer connectors now give the `public_id` of each incident and of each of its reports: a random identifier that, unlike the incident reference, is unique across SERIMA instances and names each report version, so a receiving system can match a notification with what it already holds. The API still looks incidents up by their reference (#936)
+- The security objectives API now gives the `public_id` of each declaration, which stays the same from one version of the declaration to the next, like its reference. The API still looks declarations up by their reference (#936)
 
 ### Changed
 
 - The addresses of an incident and of an incident report (download of the PDF, review, edition, access log, deletion) now name it by a random identifier instead of its sequential number in the database, which showed how many incidents the platform holds. Existing incidents and reports get their identifier when the platform is updated. Links to an incident saved before the update, such as bookmarks, no longer work; the incident is still found from the list (#936)
+- The addresses of a security objectives declaration (opening, copy, submission, review comment, download of the PDF, access log, deletion) and of a security objectives export now name it by a random identifier instead of its sequential number in the database. Existing declarations get their identifier when the platform is updated. Links to a declaration saved before the update no longer work; the declaration is still found from the list (#936)
 
 ### Fixed
 
