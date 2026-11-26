@@ -357,6 +357,9 @@ def render_to_string_multi_languages(
     for lang_code, lang_name in settings.LANGUAGES:
         if lang_code == default_lang:
             rendered = baseline
+        elif content is not None and not content.has_translation(lang_code):
+            # Placeholder values are translated per pass, so an untranslated template no longer renders equal to the baseline.
+            continue
         else:
             rendered = render(lang_code)
             if rendered == baseline:

@@ -25,10 +25,10 @@ if TYPE_CHECKING:
 
 def send_email(email, standard_answer):
     if email is not None:
-        subject = replace_email_variables(
-            email.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
-            standard_answer,
-        )
+        default_lang = settings.PARLER_DEFAULT_LANGUAGE_CODE
+        # The placeholder values follow the active language, which is the requester's unless overridden.
+        with translation.override(default_lang):
+            subject = replace_email_variables(email.safe_translation_getter("subject", language_code=default_lang), standard_answer)
         html_content = render_to_string_multi_languages(
             "emails/notification.html",
             {

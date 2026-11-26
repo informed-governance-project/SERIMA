@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.db import transaction
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.utils.text import format_lazy
 from django.utils.translation import gettext_lazy as _
 
@@ -81,7 +81,10 @@ def _report_in_context(context: EmailContext) -> Workflow | None:
 
 def _resolve_report_name(context: EmailContext) -> str:
     workflow = _report_in_context(context)
-    return str(workflow) if workflow is not None else ""
+    if workflow is None:
+        return ""
+    # Not str(workflow): parler reads the language the instance was loaded in, the requester's, not the email's.
+    return workflow.safe_translation_getter("label", language_code=translation.get_language(), any_language=True) or ""
 
 
 def _resolve_review_status(context: EmailContext) -> str | Promise:
@@ -190,10 +193,10 @@ def get_recipient_list(incident):
 
 def render_notification(email_template: Email, context: EmailContext) -> tuple[str, str]:
     incident = context.incident
-    subject = replace_email_variables(
-        email_template.safe_translation_getter("subject", language_code=settings.LANGUAGE_CODE),
-        context,
-    )
+    default_lang = settings.PARLER_DEFAULT_LANGUAGE_CODE
+    # The placeholder values follow the active language, which is the requester's unless overridden.
+    with translation.override(default_lang):
+        subject = replace_email_variables(email_template.safe_translation_getter("subject", language_code=default_lang), context)
     html_content = render_to_string_multi_languages(
         "emails/notification.html",
         {
