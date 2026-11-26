@@ -667,12 +667,24 @@ class Incident(models.Model):
         return self.incidentworkflow_set.all().order_by("workflow__sectorregulationworkflow__position", "-timestamp").distinct()
 
     def get_latest_incident_workflows(self, timestamp_order="-timestamp"):
-        return (
+        latest_per_workflow = (
             IncidentWorkflow.objects.filter(
                 incident=self,
             )
             .order_by("workflow", timestamp_order)
             .distinct("workflow")
+            .values("pk")
+        )
+        # A subquery rather than a join, so reports of an orphaned incident, or of a workflow
+        # since removed from the sector regulation, are kept and sorted last instead of dropped.
+        workflow_position = SectorRegulationWorkflow.objects.filter(
+            sector_regulation_id=self.sector_regulation_id,
+            workflow=models.OuterRef("workflow"),
+        ).values("position")[:1]
+        return (
+            IncidentWorkflow.objects.filter(pk__in=latest_per_workflow)
+            .annotate(workflow_position=models.Subquery(workflow_position))
+            .order_by(models.F("workflow_position").asc(nulls_last=True), "workflow")
         )
 
     def get_latest_incident_workflow(self):
