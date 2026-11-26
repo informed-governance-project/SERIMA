@@ -31,14 +31,14 @@ def get_all_versions(context, standard):
 
     queryset = (
         StandardAnswer.objects.filter(submit_date__isnull=False, group=standard.group)
-        .only("id", "submit_date", "status", "review_comment")
+        .only("public_id", "submit_date", "status", "review_comment")
         .order_by("-creation_date")
     )
 
     if is_regulator:
         queryset = queryset.exclude(status="UNDE")
 
-    data = list(queryset.values("id", "submit_date", "status", "review_comment"))
+    data = list(queryset.values("public_id", "submit_date", "status", "review_comment"))
 
     if not data:
         return None

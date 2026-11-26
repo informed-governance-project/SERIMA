@@ -1,6 +1,7 @@
 import copy
 import json
 import logging
+import uuid
 from collections import defaultdict
 from functools import partial
 from typing import TYPE_CHECKING
@@ -45,6 +46,7 @@ from governanceplatform.helpers import (
     celery_health_check,
     default_sort_key,
     get_active_company_from_session,
+    get_by_public_id,
     get_preferences,
     get_sectors_grouped,
     is_user_operator,
@@ -209,7 +211,7 @@ def create_so_declaration(request):
                 )
                 new_standard_answer.save()
                 create_entry_log(user, new_standard_answer, "CREATE", request)
-                return redirect(f"{reverse('so_declaration')}?id={new_standard_answer.id}")
+                return redirect(f"{reverse('so_declaration')}?id={new_standard_answer.public_id}")
             except Standard.DoesNotExist:
                 messages.error(request, _("Standard does not exist"))
 
@@ -229,12 +231,7 @@ def declaration(request):
     if not standard_id:
         return redirect("securityobjectives")
 
-    try:
-        standard_answer = StandardAnswer.objects.get(pk=standard_id)
-    except StandardAnswer.DoesNotExist:
-        messages.error(request, _("Declaration not found"))
-        return redirect("securityobjectives")
-
+    standard_answer = get_by_public_id(StandardAnswer, standard_id)
     if not standard_answer:
         messages.error(request, _("Declaration not found"))
         return redirect("securityobjectives")
@@ -251,7 +248,7 @@ def declaration(request):
                 messages.error(request, _("A newer version of this declaration already exists."))
                 return redirect("securityobjectives")
             standard_answer = duplicate_standard_answer(standard_answer)
-        return redirect(f"{reverse('so_declaration')}?id={standard_answer.id}")
+        return redirect(f"{reverse('so_declaration')}?id={standard_answer.public_id}")
 
     standard = standard_answer.standard
     newer_version = standard_answer.get_newer_submitted_version()
@@ -545,11 +542,11 @@ def declaration(request):
 
 @login_required
 @otp_required
-def copy_declaration(request, group_id: int):
+def copy_declaration(request, group_id: UUID):
     user = request.user
 
     # get the last standard from the group
-    original_standard_answer = StandardAnswer.objects.filter(group__pk=group_id).order_by("-creation_date").first()
+    original_standard_answer = StandardAnswer.objects.filter(group__public_id=group_id).order_by("-creation_date").first()
     if not original_standard_answer:
         messages.error(request, _("Declaration not found"))
         return JsonResponse({"error": "Declaration not found"}, status=404)
@@ -637,9 +634,9 @@ def copy_declaration(request, group_id: int):
 @otp_required
 @require_http_methods(["POST"])
 @transaction.atomic
-def submit_declaration(request, standard_answer_id: int):
+def submit_declaration(request, standard_answer_id: UUID):
     user = request.user
-    standard_answer_queryset = StandardAnswer.objects.filter(pk=standard_answer_id)
+    standard_answer_queryset = StandardAnswer.objects.filter(public_id=standard_answer_id)
     standard_answer = get_standard_answers_with_progress(standard_answer_queryset)
 
     if not standard_answer:
@@ -665,9 +662,9 @@ def submit_declaration(request, standard_answer_id: int):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
-def delete_declaration(request, standard_answer_id: int):
+def delete_declaration(request, standard_answer_id: UUID):
     try:
-        standard_answer = StandardAnswer.objects.get(pk=standard_answer_id)
+        standard_answer = StandardAnswer.objects.get(public_id=standard_answer_id)
         if not has_change_permission(request, standard_answer, "delete"):
             return redirect("securityobjectives")
         group = standard_answer.group
@@ -683,12 +680,12 @@ def delete_declaration(request, standard_answer_id: int):
 @login_required
 @otp_required
 @transaction.atomic
-def review_comment_declaration(request, standard_answer_id: int):
+def review_comment_declaration(request, standard_answer_id: UUID):
     user = request.user
     is_only_review_comment = request.GET.get("only_review_comment", "false") == "true"
     is_from_versions = request.GET.get("from", "false") == "versions"
     try:
-        standard_answer = StandardAnswer.objects.get(pk=standard_answer_id)
+        standard_answer = StandardAnswer.objects.get(public_id=standard_answer_id)
         if not has_change_permission(request, standard_answer, "review_comment"):
             return JsonResponse({"error": "Forbidden"}, status=403)
     except StandardAnswer.DoesNotExist:
@@ -792,10 +789,10 @@ def review_comment_declaration(request, standard_answer_id: int):
 
 @login_required
 @otp_required
-def access_log(request, standard_answer_id: int):
+def access_log(request, standard_answer_id: UUID):
     user = request.user
     try:
-        standard_answer = StandardAnswer.objects.get(pk=standard_answer_id)
+        standard_answer = StandardAnswer.objects.get(public_id=standard_answer_id)
         if not has_change_permission(request, standard_answer, "log"):
             return redirect("securityobjectives")
     except StandardAnswer.DoesNotExist:
@@ -824,8 +821,8 @@ def get_review_status_label(standard_answer: StandardAnswer, user: User) -> str:
 @login_required
 @otp_required
 @require_http_methods(["POST"])
-def download_declaration_pdf(request, standard_answer_id: int):
-    standard_answer = StandardAnswer.objects.filter(pk=standard_answer_id).first()
+def download_declaration_pdf(request, standard_answer_id: UUID):
+    standard_answer = StandardAnswer.objects.filter(public_id=standard_answer_id).first()
     if standard_answer is None:
         return pdf_error_response(request, _("Declaration not found"), 404)
 
@@ -1293,7 +1290,7 @@ def export_security_objectives(request):
 
             SecurityObjectiveExport.objects.filter(id=export.id).update(task_id=task.id)
 
-            return JsonResponse({"export_id": export.id})
+            return JsonResponse({"export_uuid": export.file_uuid})
 
         for errors in form.errors.values():
             for error in errors:
@@ -1318,8 +1315,8 @@ def export_security_objectives(request):
 @login_required
 @otp_required
 @require_http_methods(["GET"])
-def security_objectives_export_status(request, export_id: int):
-    export = get_object_or_404(SecurityObjectiveExport, id=export_id, user=request.user)
+def security_objectives_export_status(request, file_uuid: UUID):
+    export = get_object_or_404(SecurityObjectiveExport, file_uuid=file_uuid, user=request.user)
 
     # A queued job whose worker or broker is gone would never change status, leaving the
     # browser polling for it forever.
@@ -1403,6 +1400,7 @@ def duplicate_standard_answer(original):
     new_obj = copy.copy(original)
     new_obj.pk = None
     new_obj.id = None
+    new_obj.public_id = uuid.uuid4()
     new_obj.status = "UNDE"
     new_obj.submit_date = None
     new_obj.last_update = timezone.now()

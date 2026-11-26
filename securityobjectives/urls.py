@@ -45,31 +45,31 @@ urlpatterns = [
     path("declaration", declaration, name="so_declaration"),
     # Copy SO declaration
     path(
-        "copy/<int:group_id>",
+        "copy/<uuid:group_id>",
         copy_declaration,
         name="copy_so_declaration",
     ),
     # Submit SO declaration
     path(
-        "submit/<int:standard_answer_id>",
+        "submit/<uuid:standard_answer_id>",
         submit_declaration,
         name="submit_so_declaration",
     ),
     # Delete SO declaration
     path(
-        "delete/<int:standard_answer_id>",
+        "delete/<uuid:standard_answer_id>",
         delete_declaration,
         name="delete_so_declaration",
     ),
     # Add review comment SO declaration
     path(
-        "review_comment/<int:standard_answer_id>",
+        "review_comment/<uuid:standard_answer_id>",
         review_comment_declaration,
         name="review_comment_so_declaration",
     ),
     # Download PDF SO declaration pdf
     path(
-        "download/<int:standard_answer_id>",
+        "download/<uuid:standard_answer_id>",
         download_declaration_pdf,
         name="download_so_declaration_pdf",
     ),
@@ -89,7 +89,7 @@ urlpatterns = [
     # Export SO declarations
     path("export", export_security_objectives, name="export_security_objectives"),
     path(
-        "export/<int:export_id>/status",
+        "export/<uuid:file_uuid>/status",
         security_objectives_export_status,
         name="security_objectives_export_status",
     ),
@@ -100,7 +100,7 @@ urlpatterns = [
     ),
     # Logs SO declaction
     path(
-        "access_log/<int:standard_answer_id>",
+        "access_log/<uuid:standard_answer_id>",
         access_log,
         name="so_access_log",
     ),
