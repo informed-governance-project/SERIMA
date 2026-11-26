@@ -25,7 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A security objective with no measure turned on is no longer shown as fully filled when its measures carry a justification and the planned measures are written: it is now partially filled, and the declaration cannot be submitted until at least one measure is on (#970)
 - Copying a reporting project no longer fails with an error: the copy gets its own public ID
+- The PDF of a whole incident lists its reports in the order of the workflow, instead of the order in which the reports were created in the administration. The JSON sent by the webhook and GPG-encrypted JSON observer connectors gives the reports in the same order (#950)
 - The status and the cancellation of a report generation, and the order of a report's recommendations, are now limited to the regulator users who may open the project or the report, as the other reporting actions already were
+- Downloading the PDF of an incident with a long free-text answer no longer fails with a server error: the PDF took longer to build than the server allows. Long words and links in answers now wrap within the column instead of being split at any character
+- In the PDF of a security objectives declaration, a long word or link with no spaces in a measure, evidence, justification or review comment now wraps within its column, instead of stretching the table past the page and cutting off the rest of the declaration
 
 ## [0.6.2] - 2026-11-25
 
