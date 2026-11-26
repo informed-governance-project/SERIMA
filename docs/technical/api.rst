@@ -134,10 +134,10 @@ Resources
      - Latest visible declaration for the declaration group reference, adding its
        measure answers (measure, justification and implementation flag).
    * - ``/api/v1/reporting/projects/``
-     - Reporting project reference, name, standard, dates, years, reference year
+     - Reporting project public ID, name, standard, dates, years, reference year
        and generation status.
    * - ``/api/v1/reporting/projects/{reference}/``
-     - One project, using its opaque UUID reference.
+     - One project, using its public ID.
 
 The API does not provide file generation/downloads, administrative settings,
 review comments, user directories or historical declaration versions.
