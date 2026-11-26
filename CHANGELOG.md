@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The access log of an incident no longer shows a **COMMENT** entry when a regulator saves the review of a report without writing a comment or without changing the existing one, nor a **REVIEW STATUS** entry when the status of the report stays the same (#916)
 - A security objective with no measure turned on is no longer shown as fully filled when its measures carry a justification and the planned measures are written: it is now partially filled, and the declaration cannot be submitted until at least one measure is on (#970)
 - Copying a reporting project no longer fails with an error: the copy gets its own public ID
 - The PDF of a whole incident lists its reports in the order of the workflow, instead of the order in which the reports were created in the administration. The JSON sent by the webhook and GPG-encrypted JSON observer connectors gives the reports in the same order (#950)
