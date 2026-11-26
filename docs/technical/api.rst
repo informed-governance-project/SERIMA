@@ -127,8 +127,9 @@ Resources
    * - ``/api/v1/incidents/{reference}/``
      - One incident, using its incident reference.
    * - ``/api/v1/security-objectives/``
-     - Latest visible declarations, with the dashboard data only: reference,
-       standard, company, submission year, dates and status.
+     - Latest visible declarations, with the dashboard data only: public ID and
+       reference, standard, company, submission year, dates and status. Both stay the
+       same from one version of a declaration to the next.
    * - ``/api/v1/security-objectives/{reference}/``
      - Latest visible declaration for the declaration group reference, adding its
        measure answers (measure, justification and implementation flag).
