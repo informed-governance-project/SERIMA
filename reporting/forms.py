@@ -91,7 +91,7 @@ class ObservationRecommendationOrderForm(forms.ModelForm):
 
         self.fields["order"].widget.attrs = {
             "class": "reporting-input-field",
-            "data-recommendation-id": self.instance.pk,
+            "data-recommendation-id": self.instance.public_id,
         }
 
     class Meta:
@@ -256,7 +256,7 @@ class CompanyProjectDashboard(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        company_project_id = self.instance.pk if self.instance else None
+        company_project_id = self.instance.public_id if self.instance else None
 
         if self.instance and not self.instance.has_security_objectives or not self.instance.has_risk_assessment:
             self.fields["is_selected"].widget.attrs["disabled"] = True

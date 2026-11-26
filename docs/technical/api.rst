@@ -121,21 +121,23 @@ Resources
    * - ``/api/v1/me/``
      - The key owner's email, first name and last name.
    * - ``/api/v1/incidents/``
-     - Incident references, company name, notification/detection/update dates,
-       incident status, significant-impact flag and internal/complaint references.
+     - Incident public ID and references, company name, notification/detection/update
+       dates, incident status, significant-impact flag and internal/complaint
+       references, and each report with its own public ID.
    * - ``/api/v1/incidents/{reference}/``
      - One incident, using its incident reference.
    * - ``/api/v1/security-objectives/``
-     - Latest visible declarations, with the dashboard data only: reference,
-       standard, company, submission year, dates and status.
+     - Latest visible declarations, with the dashboard data only: public ID and
+       reference, standard, company, submission year, dates and status. Both stay the
+       same from one version of a declaration to the next.
    * - ``/api/v1/security-objectives/{reference}/``
      - Latest visible declaration for the declaration group reference, adding its
        measure answers (measure, justification and implementation flag).
    * - ``/api/v1/reporting/projects/``
-     - Reporting project reference, name, standard, dates, years, reference year
+     - Reporting project public ID, name, standard, dates, years, reference year
        and generation status.
    * - ``/api/v1/reporting/projects/{reference}/``
-     - One project, using its opaque UUID reference.
+     - One project, using its public ID.
 
 The API does not provide file generation/downloads, administrative settings,
 review comments, user directories or historical declaration versions.

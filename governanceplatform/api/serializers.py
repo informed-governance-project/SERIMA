@@ -48,7 +48,15 @@ class IncidentReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IncidentWorkflow
-        fields: tuple[str, ...] = ("report", "timestamp", "review_status", "detection_date", "starting_date", "resolution_date")
+        fields: tuple[str, ...] = (
+            "public_id",
+            "report",
+            "timestamp",
+            "review_status",
+            "detection_date",
+            "starting_date",
+            "resolution_date",
+        )
         read_only_fields = fields
 
 
@@ -74,6 +82,7 @@ class IncidentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Incident
         fields = (
+            "public_id",
             "incident_id",
             "company_name",
             "incident_notification_date",
@@ -102,6 +111,8 @@ class SecurityMeasureAnswerSerializer(serializers.ModelSerializer):
 
 
 class DeclarationSerializer(serializers.ModelSerializer):
+    # The group's, like the reference: the API shows the latest version under one stable identity.
+    public_id = serializers.UUIDField(source="group.public_id", read_only=True)
     reference = serializers.CharField(source="group.group_id", read_only=True)
     standard = serializers.StringRelatedField()
     company = serializers.StringRelatedField(source="submitter_company")
@@ -114,6 +125,7 @@ class DeclarationSerializer(serializers.ModelSerializer):
     class Meta:
         model = StandardAnswer
         fields: tuple[str, ...] = (
+            "public_id",
             "reference",
             "standard",
             "company",
@@ -135,10 +147,9 @@ class DeclarationDetailSerializer(DeclarationSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    reference = serializers.UUIDField(source="api_id", read_only=True)
     standard = serializers.StringRelatedField()
 
     class Meta:
         model = Project
-        fields = ("reference", "name", "standard", "created_at", "updated_at", "years", "reference_year", "task_status")
+        fields = ("public_id", "name", "standard", "created_at", "updated_at", "years", "reference_year", "task_status")
         read_only_fields = fields

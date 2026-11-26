@@ -352,6 +352,7 @@ class Observation(models.Model):
 
 
 class ObservationRecommendationThrough(models.Model):
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     observation = models.ForeignKey("Observation", on_delete=models.CASCADE)
     observation_recommendation = models.ForeignKey("ObservationRecommendation", on_delete=models.CASCADE)
     order = models.PositiveIntegerField(default=0)
@@ -459,7 +460,7 @@ class Template(models.Model):
 
 
 class Project(models.Model):
-    api_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     task_id = models.UUIDField(blank=True, null=True)
     task_status = models.CharField(
         max_length=10,
@@ -536,6 +537,7 @@ class Project(models.Model):
 
 
 class CompanyProject(models.Model):
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     company = models.ForeignKey(
         "governanceplatform.Company",
         on_delete=models.CASCADE,

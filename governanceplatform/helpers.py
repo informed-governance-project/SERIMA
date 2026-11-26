@@ -4,6 +4,7 @@ import secrets
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
 import bleach
 import redis
@@ -41,7 +42,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from django.contrib.auth.models import AnonymousUser
-    from django.db.models import QuerySet
+    from django.db.models import Model, QuerySet
     from django.http import HttpRequest
     from django.template.response import TemplateResponse
     from django.utils.functional import Promise
@@ -521,6 +522,15 @@ def delete_file_and_parents(file_field, label: str) -> None:
 
 def build_crockford_token(length: int = REFERENCE_TOKEN_LENGTH) -> str:
     return "".join(secrets.choice(CROCKFORD_ALPHABET) for _ in range(length))
+
+
+def get_by_public_id[M: Model](model: type[M], value: str | None) -> M | None:
+    """Return the object a query-string public_id names, or None when it is missing, malformed or unknown."""
+    try:
+        public_id = UUID(value)
+    except TypeError, ValueError:
+        return None
+    return model._default_manager.filter(public_id=public_id).first()
 
 
 def safe_redirect_to_referer(request: HttpRequest, fallback: str) -> HttpResponseRedirect:

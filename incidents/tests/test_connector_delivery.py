@@ -433,6 +433,19 @@ def test_webhook_with_undecryptable_secret_sends_nothing(webhook_connector, emai
 
 
 @pytest.mark.django_db
+def test_incident_payload_names_the_incident_and_each_report_by_public_id(incident):
+    from governanceplatform.connectors.payload import build_incident_payload
+    from incidents.models import IncidentWorkflow
+
+    report = IncidentWorkflow.objects.create(incident=incident, workflow=incident.sector_regulation.workflows.first())
+
+    payload = build_incident_payload(incident)["incident"]
+
+    assert payload["public_id"] == str(incident.public_id)
+    assert [entry["public_id"] for entry in payload["reports"]] == [str(report.public_id)]
+
+
+@pytest.mark.django_db
 def test_incident_payload_has_no_primary_key(incident):
     from governanceplatform.connectors.payload import build_incident_payload
 

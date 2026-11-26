@@ -44,7 +44,7 @@ def get_incident_workflow_by_workflow(incident, workflow):
     if not queryset:
         return None
 
-    data = list(queryset.values("id", "timestamp", "review_status", "comment"))
+    data = list(queryset.values("public_id", "timestamp", "review_status", "comment"))
 
     for item in data:
         review_status = REPORT_STATUS_MAP.get(item["review_status"], REPORT_STATUS_MAP["UNDE"])

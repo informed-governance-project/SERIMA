@@ -1204,8 +1204,8 @@ class IncidentStatusForm(forms.ModelForm):
 
         self.fields["is_significative_impact"].widget.attrs = {
             "class": "large-checkbox incident-input-field is_significative_impact_checkbox",
-            "data-incident-id": self.instance.pk,
-            "id": f"is_significative_impact_{self.instance.pk}",
+            "data-incident-id": self.instance.public_id,
+            "id": f"is_significative_impact_{self.instance.public_id}",
         }
 
         if self.instance.incident_status == "CLOSE":
