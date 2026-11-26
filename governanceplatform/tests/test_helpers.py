@@ -235,11 +235,32 @@ def test_sanitize_html_keeps_what_the_rich_text_editor_writes():
 def test_render_to_string_multi_languages_sends_the_content_as_html(monkeypatch):
     """The content is HTML: sent sanitised, with no Markdown conversion of what it says."""
     monkeypatch.setattr(helpers, "render_to_string", lambda template, context: context["content"])
-    content = SimpleNamespace(safe_translation_getter=lambda field, language_code: "<div>Use **bold**</div><script>x</script>")
+    content = SimpleNamespace(
+        safe_translation_getter=lambda field, language_code: "<div>Use **bold**</div><script>x</script>",
+        has_translation=lambda language_code: True,
+    )
 
     result = helpers.render_to_string_multi_languages("email.html", {}, lambda text, obj: text, content=content, object=object())
 
     assert "<div>Use **bold**</div>x" in result
+
+
+@override_settings(PARLER_DEFAULT_LANGUAGE_CODE="en", LANGUAGES=[("en", "English"), ("fr", "French"), ("de", "German")])
+def test_render_to_string_multi_languages_skips_a_language_the_template_is_not_translated_into(monkeypatch):
+    """A placeholder translated per pass must not repeat an untranslated template once per language (#947)."""
+    monkeypatch.setattr(helpers, "render_to_string", lambda template, context: context["content"])
+    content = SimpleNamespace(
+        safe_translation_getter=lambda field, language_code: {"en": "Status: #S#", "fr": "Statut : #S#"}[language_code],
+        has_translation=lambda language_code: language_code in ("en", "fr"),
+    )
+
+    result = helpers.render_to_string_multi_languages(
+        "email.html", {}, lambda text, obj: text.replace("#S#", helpers.translation.get_language()), content=content, object=object()
+    )
+
+    assert "Status: en" in result
+    assert "Statut : fr" in result
+    assert "(de)" not in result
 
 
 @pytest.fixture

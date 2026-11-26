@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.utils.translation import override
 
 from governanceplatform.models import User
-from incidents.email import INCIDENT_EMAIL_PLACEHOLDERS, EmailContext, replace_email_variables
+from incidents.email import INCIDENT_EMAIL_PLACEHOLDERS, EmailContext, render_notification, replace_email_variables
 from incidents.models import Email, IncidentWorkflow, ReportTimeline, Workflow
 
 
@@ -134,6 +134,63 @@ def test_report_name_is_empty_when_no_report_exists(incident):
 def test_report_name_comes_from_the_latest_report(incident, add_report):
     add_report(incident, workflow_id=1)
     assert replace_email_variables("#REPORT_NAME#", EmailContext(incident)) == str(Workflow.objects.get(id=1))
+
+
+@pytest.fixture
+def report_named_in_french_and_german(incident, add_report):
+    report = add_report(incident, workflow_id=1)
+    workflow = report.workflow
+    for language, label in (("fr", "Rapport en français"), ("de", "Vorfallbericht")):
+        workflow.set_current_language(language)
+        workflow.label = label
+        workflow.save()
+    return report
+
+
+@pytest.mark.django_db
+def test_report_name_follows_the_email_language_not_the_one_it_was_loaded_in(incident, report_named_in_french_and_german):
+    """The view loads the report in the requester's language; each email pass must still name it in its own (#947)."""
+    with override("de"):
+        submission = IncidentWorkflow.objects.get(pk=report_named_in_french_and_german.pk)
+        submission.workflow.label  # loads the translation as the view does
+    with override("fr"):
+        rendered = replace_email_variables("#REPORT_NAME#", EmailContext(incident, incident_workflow=submission))
+    assert rendered == "Rapport en français"
+
+
+@pytest.mark.django_db
+def test_subject_is_rendered_in_the_default_language_whatever_the_requester_language(incident, add_report, settings):
+    """The subject template is in the default language, so its placeholder values must be too (#947)."""
+    report = add_report(incident)
+    report.review_status = "PASS"
+    report.save()
+    email = Email(name="status change")
+    email.set_current_language(settings.PARLER_DEFAULT_LANGUAGE_CODE)
+    email.subject = "Status Change: #REPORT_REVIEW_STATUS#"
+    email.content = "Status: #REPORT_REVIEW_STATUS#"
+    email.save()
+
+    with override("de"):
+        if str(_("Passed")) == "Passed":
+            pytest.skip("German catalogue is not compiled; run manage.py compilemessages")
+        subject, _body = render_notification(email, EmailContext(incident, incident_workflow=report))
+
+    assert subject == "Status Change: Passed"
+
+
+@pytest.mark.django_db
+def test_body_shows_only_the_languages_the_template_is_translated_into(incident, add_report, settings):
+    """A per-language placeholder value must not repeat an untranslated template once per language (#947)."""
+    add_report(incident)
+    email = Email(name="status change")
+    email.set_current_language(settings.PARLER_DEFAULT_LANGUAGE_CODE)
+    email.subject = "Status"
+    email.content = "Status: #REPORT_REVIEW_STATUS#"
+    email.save()
+
+    _subject, body = render_notification(email, EmailContext(incident))
+
+    assert body.count("<h3>") == 1
 
 
 @pytest.mark.django_db
