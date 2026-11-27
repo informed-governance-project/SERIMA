@@ -38,11 +38,11 @@ explained in the **Icon guide**. Hover the mouse over a report to see its toolti
      - Submit the report as soon as possible.
    * - Under review
      - The report is currently under review.
-     - You submitted the report in time, and the regulator has not reviewed it yet.
+     - You first submitted the report in time, and the regulator has not reviewed it yet.
      - Nothing, unless you have new information: you can then submit a new version.
    * - Late submission
      - The report is currently under review.
-     - You submitted the report after its deadline, and the regulator has not reviewed it yet.
+     - You first submitted the report after its deadline, and the regulator has not reviewed it yet.
      - Nothing, unless you have new information: you can then submit a new version.
    * - Revision required
      - The report has failed the review.
@@ -115,6 +115,10 @@ After submitting
 
 Once submitted, the report is listed in the **Report** column with the status **Under review**,
 or **Late submission** if it was submitted after its deadline. If the regulator has set one up, a confirmation email is sent.
+
+Whether a report is on time or late depends on its first submission. A new version submitted after the deadline,
+for example a revision asked for by the regulator, is **Under review** if the first version was on time,
+and a report first submitted late stays **Late submission**.
 
 .. figure:: /_static/images/incident-notification/workflow-operator-04.png
    :alt: Incident list with a report under review outlined
