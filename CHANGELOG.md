@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A new version of an incident report submitted after its deadline is no longer shown as **Late submission** when the report was first submitted on time: a report is on time or late according to its first submission, and its later versions, including a revision asked for by the regulator, keep that status. A report first submitted late stays **Late submission** in its later versions (#946)
 - When a report of an incident is reviewed or viewed, the **Impacts** step now shows the impacts selected in that report instead of those of the latest report, and is marked in orange, with a **View previous version** button, when they differ from the impacts of the previous report (#914)
 - In the emails of incidents and security objectives declarations, each language version of the content now gives the placeholder values in its own language: the report name no longer stays in the language of the user who triggered the email, and the subject, sent in the default language, no longer mixes in values in that user's language. A template is shown only in the languages it is translated into, even when it contains a status or a report name (#947)
 - The access log of an incident no longer shows a **COMMENT** entry when a regulator saves the review of a report without writing a comment or without changing the existing one, nor a **REVIEW STATUS** entry when the status of the report stays the same (#916)
