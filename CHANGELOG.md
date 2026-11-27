@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional Self-registration administration for regulator administrators, controlled by role and regulator in **Functionalities**. Administrators can configure draft forms, pages, questions, and answer choices.
 - Reusable Self-registration template pages and questionnaire editing on each draft template version, with page order and question options configured per version.
 - Self-registration questionnaires show questions directly under their page. New pages and their questions can be saved together.
+- Draft Self-registration pages can interleave individual questions and repeatable question groups. Each group has its own questions and occurrence limits.
+- Draft Self-registration versions can configure conditional display rules for questions and groups based on a predefined answer on the same page.
+- Regulator administrators can delete draft Self-registration conditional rules from the rules list.
+- Self-registration admin lists support multiple selection and the standard bulk deletion action.
+- Self-registration templates use timestamped editions and have publish and archive actions. Question choices are edited on the question form, and regulator administrators can save catalogue questions as new, including their translations and choices.
 - Pages can be removed from draft Self-registration questionnaires without deleting the reusable pages or questions.
 - Regulator administrators can delete Self-registration configuration for their own regulator. Page assignments and question placements are managed on the template version screen.
 

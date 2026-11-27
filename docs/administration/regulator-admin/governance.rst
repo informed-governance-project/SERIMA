@@ -12,21 +12,41 @@ The lists, forms, language tabs and the icons beside the drop-downs work as desc
 :doc:`/administration/platform-admin/governance`.
 
 When the platform administrator enables **Self-registration** for your role and regulator, its menu link
-opens the administration section. You can create form templates and versions, and edit draft versions,
-their pages and question placements. Questions and choices may be edited while no published or archived
-form uses them.
-Related form versions, pages, questions and choices display their translated labels.
+opens the administration section. Each **Template** has its own regulatory scope and questionnaire. Choose the
+regulator and regulation when creating it. The **Creation date** and **Last update** are set automatically, and
+**Last update** identifies the edition. Enter the initial delay in days and, when applicable, a periodic update interval.
+Select a draft in the template list and use **Publish procedure**. Use **Archive procedure** on the published
+template before publishing another one for the same regulator and regulation.
 
-Create reusable **Template pages** for your regulator, then open a **Template version** in draft.
-In **Pages**, select a category and set its position for this version. Use the **Questions** table
-under each page to add questions, set their order and choose which answers are required, eligible for
-autofill, or visible to observers or the public. Save the version to keep the pages and questions together.
-The same category can be selected in several versions. Each version has its own page order and question placements.
+Create reusable **Template pages** for your regulator, then open a draft **Template**.
+In **Pages**, select a category and set its position for this template. In **Page contents**, choose either a question
+or a group on each row and use **Position** to order them together. For individual questions, set whether responses
+are required, eligible for autofill, or visible to observers or the public.
+
+Add **Answer choices** on the question form. Only administrators of the owning regulator can change a question
+and its choices, and questions used in published or archived forms are locked for editing. Use **Save as new**
+to copy any question in the catalogue to a regulator you administer. This copies the saved translations and choices.
+
+Create a group in **Question groups** and set its minimum and maximum occurrences. A minimum of zero makes the group
+optional. Save the group and continue editing to add and order its questions. Then select the group in **Page contents**.
+Each group can be placed once. After saving the template, use **Edit group** on its row to open the group's question settings.
+
+To configure conditional display, tick **Conditional display** on the question or group to reveal and save the
+template. Use **Add a conditional question to this procedure**, then select the conditional item, the trigger question
+and its answer choice. Only drafts with conditional items are available. The trigger list is restricted to the same
+page as the selected conditional item. The trigger must be an unconditional single- or
+multiple-choice question, including variants with comments. A trigger inside a repeatable group can reveal another
+question in that same group. As in Incident Notification, each trigger answer can reveal one item.
+In **Conditional questions**, use **Delete rule** on a draft rule and confirm the deletion. To show its target
+unconditionally, also clear **Conditional display** on the target after removing any other rules that target it.
+The same category can be selected in several templates. Each template has its own page order and question placements.
 Use the inline delete controls to remove pages or question placements from a draft. Catalog definitions stay available.
-The **Pages in template** and **Question orders** lists are managed from the version form.
-During initial configuration, regulator administrators may delete their own templates, versions, reusable pages,
-questions, and answer choices, including those used in published versions. The confirmation lists the dependent
+The **Pages in template** and **Question orders** lists are managed from the template form.
+During initial configuration, regulator administrators may delete their own templates, reusable pages and
+questions. The confirmation lists the dependent
 records that will be removed. Editing the questionnaire on a published or archived version remains disabled.
+Use the checkboxes on any Self-registration list to select records, then choose **Delete selected** in the action
+menu. The confirmation page shows the related records and applies the same deletion permissions as the individual form.
 
 .. _regulator-own:
 
