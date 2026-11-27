@@ -446,6 +446,7 @@ class SectorRegulationWorkflow(models.Model):
                     IncidentWorkflow.objects.filter(
                         incident=incident,
                         workflow=prev_workflow.workflow,
+                        timestamp__lte=actual_time,
                     )
                     .order_by("-timestamp")
                     .first()
@@ -951,25 +952,30 @@ class IncidentWorkflow(models.Model):
             return next.workflow
         return False
 
-    # define is a submission is late or not
-    def is_late(self):
+    def is_late(self, submitted_at: datetime | None = None) -> bool:
         report = SectorRegulationWorkflow.objects.filter(
             workflow=self.workflow,
             sector_regulation=self.incident.sector_regulation,
         ).first()
         delay_in_hours = report.delay_in_hours_before_deadline
 
-        dt = report.how_late_is_the_report(self.incident)
+        dt = report.how_late_is_the_report(self.incident, submitted_at)
 
         if dt and dt.total_seconds() / 60 / 60 >= delay_in_hours:
             return True
         return False
 
     def save(self, *args, **kwargs):
-        if self.is_late() and self.review_status == WORKFLOW_REVIEW_STATUS[0][0]:
-            self.review_status = WORKFLOW_REVIEW_STATUS[5][0]
-        elif not self.is_late() and self.review_status == WORKFLOW_REVIEW_STATUS[0][0]:
-            self.review_status = WORKFLOW_REVIEW_STATUS[1][0]
+        if self.review_status == WORKFLOW_REVIEW_STATUS[0][0]:
+            # A new version updates the report, so it is on time or late as the report's first submission was (#946).
+            first_submission = (
+                IncidentWorkflow.objects.filter(incident=self.incident, workflow=self.workflow)
+                .exclude(pk=self.pk)
+                .order_by("timestamp")
+                .first()
+            )
+            submitted_at = first_submission.timestamp if first_submission else self.timestamp
+            self.review_status = WORKFLOW_REVIEW_STATUS[5][0] if self.is_late(submitted_at) else WORKFLOW_REVIEW_STATUS[1][0]
         super().save(*args, **kwargs)
 
 
