@@ -85,3 +85,80 @@ def test_latest_incident_workflows_kept_when_sector_regulation_removed(incident_
     reports = incident.get_latest_incident_workflows()
 
     assert {report.workflow for report in reports} == set(workflows_by_position)
+
+
+@pytest.fixture
+def report_due_two_hours_after_notification(populate_incident_db):
+    """The first report of an incident notified now, due two hours after the notification date."""
+    incident = populate_incident_db["incidents"][0]
+    report = SectorRegulationWorkflow.objects.filter(sector_regulation=incident.sector_regulation).order_by("position").first()
+    report.trigger_event_before_deadline = "NOTIF_DATE"
+    report.delay_in_hours_before_deadline = 2
+    report.save()
+    notified_at = timezone.now()
+    incident.incident_notification_date = notified_at
+    incident.save()
+    return incident, report.workflow, notified_at
+
+
+def submit(incident, workflow, at):
+    return IncidentWorkflow.objects.create(incident=incident, workflow=workflow, timestamp=at)
+
+
+@pytest.mark.django_db
+def test_report_updated_after_deadline_stays_under_review_when_first_submitted_on_time(report_due_two_hours_after_notification):
+    incident, workflow, notified_at = report_due_two_hours_after_notification
+    submit(incident, workflow, notified_at + dt.timedelta(hours=1))
+
+    update = submit(incident, workflow, notified_at + dt.timedelta(hours=5))
+
+    assert update.review_status == "DELIV"
+
+
+@pytest.mark.django_db
+def test_report_updated_stays_late_when_first_submitted_late(report_due_two_hours_after_notification):
+    incident, workflow, notified_at = report_due_two_hours_after_notification
+    submit(incident, workflow, notified_at + dt.timedelta(hours=3))
+
+    update = submit(incident, workflow, notified_at + dt.timedelta(hours=5))
+
+    assert update.review_status == "LATE"
+
+
+@pytest.mark.django_db
+def test_report_revised_after_deadline_stays_under_review_when_first_submitted_on_time(report_due_two_hours_after_notification):
+    incident, workflow, notified_at = report_due_two_hours_after_notification
+    first = submit(incident, workflow, notified_at + dt.timedelta(hours=1))
+    first.review_status = "FAIL"
+    first.save()
+
+    revision = submit(incident, workflow, notified_at + dt.timedelta(hours=5))
+
+    assert revision.review_status == "DELIV"
+
+
+@pytest.mark.django_db
+def test_report_first_submitted_after_deadline_is_late(report_due_two_hours_after_notification):
+    incident, workflow, notified_at = report_due_two_hours_after_notification
+
+    first = submit(incident, workflow, notified_at + dt.timedelta(hours=3))
+
+    assert first.review_status == "LATE"
+
+
+@pytest.mark.django_db
+def test_late_report_stays_late_after_previous_report_is_resubmitted(populate_incident_db):
+    """A report due after the previous one keeps the deadline that applied when it was first submitted."""
+    incident = populate_incident_db["incidents"][0]
+    previous_report, report = SectorRegulationWorkflow.objects.filter(sector_regulation=incident.sector_regulation).order_by("position")
+    report.trigger_event_before_deadline = "PREV_WORK"
+    report.delay_in_hours_before_deadline = 2
+    report.save()
+    start = timezone.now()
+    submit(incident, previous_report.workflow, start)
+    submit(incident, report.workflow, start + dt.timedelta(hours=3))
+    submit(incident, previous_report.workflow, start + dt.timedelta(hours=4))
+
+    update = submit(incident, report.workflow, start + dt.timedelta(hours=5))
+
+    assert update.review_status == "LATE"
