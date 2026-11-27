@@ -1168,22 +1168,6 @@ class FormWizardView(SessionWizardView):
                     is_regulator_incidents = self.request.session.get("is_regulator_incidents", False)
 
                     self.is_regulator_incident = True if regulator and is_regulator_incidents else False
-                    # check if the detection date is over
-                    if sector_regulation.is_detection_date_needed:
-                        sr_workflow = (
-                            SectorRegulationWorkflow.objects.all()
-                            .filter(
-                                sector_regulation=sector_regulation,
-                            )
-                            .order_by("position")
-                            .first()
-                        )
-                        # TO DO get the correct detection date
-                        if sr_workflow.trigger_event_before_deadline == "DETECT_DATE":
-                            dt = timezone.now() - incident.incident_detection_date
-                            if round(dt.total_seconds() / 60 / 60, 0) > sr_workflow.delay_in_hours_before_deadline:
-                                sr_workflow.review_status = "OUT"
-                                sr_workflow.save()
 
                     sec = sector_regulation.sectors.values_list("id", flat=True)
                     selected_sectors = Sector.objects.filter(id__in=sectors_id).values_list("id", flat=True)
