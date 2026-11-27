@@ -1,5 +1,6 @@
+{% load custom_filters %}
 {% with id=widget.attrs.id %}
-<div {% if id %} id="{{ id }}" {% endif %} class="accordion accordion-flush" id="impactsAccordion">
+<div {% if id %} id="{{ id }}" {% endif %} class="accordion accordion-flush {{ widget.attrs.class|default:'' }}" id="impactsAccordion"{% with previous_choices=widget.attrs|get_item:"data-previous-choices" %}{% if previous_choices %} data-previous-choices="{{ previous_choices }}"{% endif %}{% endwith %}>
   {% for group, options, index in widget.optgroups %}
     {% if group %}
     <div class="accordion-item">

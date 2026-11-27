@@ -1289,7 +1289,7 @@ class WorkflowWizardView(SessionWizardView):
                 and is_user_regulator(user)
                 and not self.is_regulator_incident
             ):
-                kwargs.update({"incident": self.incident})
+                kwargs.update({"incident": self.incident, "incident_workflow": self.incident_workflow})
             elif position == len(self.form_list) - 1 and is_user_regulator(user) and not self.is_regulator_incident:
                 kwargs.update({"instance": self.incident_workflow})
             # Operator case
@@ -1298,7 +1298,7 @@ class WorkflowWizardView(SessionWizardView):
                 and self.workflow.is_impact_needed
                 and (not is_user_regulator(user) or self.is_regulator_incident)
             ):
-                kwargs.update({"incident": self.incident})
+                kwargs.update({"incident": self.incident, "incident_workflow": self.incident_workflow})
             else:
                 # regulator pass directly the incident_workflow
                 kwargs.update(
