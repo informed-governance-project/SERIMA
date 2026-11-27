@@ -113,7 +113,7 @@ def test_copy_is_refused_on_a_deactivated_framework(operator_client, standard, d
     before = StandardAnswer.objects.count()
 
     response = operator_client.post(
-        reverse("copy_so_declaration", args=[declaration.group.pk]),
+        reverse("copy_so_declaration", args=[declaration.group.public_id]),
         data={"year": 2026},
     )
 
@@ -127,7 +127,7 @@ def test_copy_succeeds_while_the_framework_is_active(operator_client, declaratio
     before = StandardAnswer.objects.count()
 
     operator_client.post(
-        reverse("copy_so_declaration", args=[declaration.group.pk]),
+        reverse("copy_so_declaration", args=[declaration.group.public_id]),
         data={"year": 2026},
     )
 
@@ -143,7 +143,7 @@ def test_a_new_version_is_still_created_on_a_deactivated_framework(operator_clie
     standard.save()
     before = StandardAnswer.objects.count()
 
-    operator_client.get(f"{reverse('so_declaration')}?id={declaration.pk}&update=true")
+    operator_client.get(f"{reverse('so_declaration')}?id={declaration.public_id}&update=true")
 
     assert StandardAnswer.objects.count() == before + 1
 
@@ -177,7 +177,7 @@ def test_report_project_editing_keeps_a_deactivated_framework(reporting_client, 
     standard.active = False
     standard.save()
 
-    content = reporting_client.get(reverse("edit_report_project", args=[project.pk])).content.decode()
+    content = reporting_client.get(reverse("edit_report_project", args=[project.public_id])).content.decode()
 
     assert str(standard) in content
 

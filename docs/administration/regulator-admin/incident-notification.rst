@@ -100,7 +100,9 @@ Languages
 """""""""
 
 One email is sent in all languages: the content in the default language of the platform comes first,
-followed by each translation that differs from it. The subject is sent in the default language.
+followed by each translation of the template that differs from it. Each version gives the placeholder values,
+such as the statuses and the report name, in its own language. The subject is sent in the default language,
+with its placeholder values in that language too.
 
 .. note::
 
@@ -366,6 +368,8 @@ Create a workflow
 In the example above, the preliminary report is due 24 hours after the incident was detected,
 and the final report 360 hours (15 days) after it. A report not submitted by its deadline shows as
 **Submission overdue** on the dashboard, and **Late submission** once submitted (see :ref:`report-statuses`).
+Lateness is set by the first submission of a report: a later version, even one submitted after the deadline,
+is **Late submission** only if the first version was.
 
 Change a workflow in use
 """"""""""""""""""""""""

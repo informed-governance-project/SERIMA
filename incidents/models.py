@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta
 
 import pytz
@@ -445,6 +446,7 @@ class SectorRegulationWorkflow(models.Model):
                     IncidentWorkflow.objects.filter(
                         incident=incident,
                         workflow=prev_workflow.workflow,
+                        timestamp__lte=actual_time,
                     )
                     .order_by("-timestamp")
                     .first()
@@ -505,6 +507,9 @@ class Incident(models.Model):
         default=generate_incident_reference,
         verbose_name=_("Incident Reference"),
     )
+    # Identifies the object in URLs and to other systems; the sequential primary key
+    # would disclose how many objects the platform holds.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     incident_timezone = models.CharField(
         max_length=50,
         choices=[(tz, tz) for tz in pytz.all_timezones],
@@ -663,12 +668,24 @@ class Incident(models.Model):
         return self.incidentworkflow_set.all().order_by("workflow__sectorregulationworkflow__position", "-timestamp").distinct()
 
     def get_latest_incident_workflows(self, timestamp_order="-timestamp"):
-        return (
+        latest_per_workflow = (
             IncidentWorkflow.objects.filter(
                 incident=self,
             )
             .order_by("workflow", timestamp_order)
             .distinct("workflow")
+            .values("pk")
+        )
+        # A subquery rather than a join, so reports of an orphaned incident, or of a workflow
+        # since removed from the sector regulation, are kept and sorted last instead of dropped.
+        workflow_position = SectorRegulationWorkflow.objects.filter(
+            sector_regulation_id=self.sector_regulation_id,
+            workflow=models.OuterRef("workflow"),
+        ).values("position")[:1]
+        return (
+            IncidentWorkflow.objects.filter(pk__in=latest_per_workflow)
+            .annotate(workflow_position=models.Subquery(workflow_position))
+            .order_by(models.F("workflow_position").asc(nulls_last=True), "workflow")
         )
 
     def get_latest_incident_workflow(self):
@@ -848,6 +865,7 @@ class ReportTimeline(models.Model):
 # link between incident and workflow
 class IncidentWorkflow(models.Model):
     incident = models.ForeignKey(Incident, on_delete=models.CASCADE, verbose_name=_("Incident"))
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False, verbose_name=_("Public ID"))
     workflow = models.ForeignKey(
         Workflow,
         on_delete=models.SET_NULL,
@@ -934,25 +952,30 @@ class IncidentWorkflow(models.Model):
             return next.workflow
         return False
 
-    # define is a submission is late or not
-    def is_late(self):
+    def is_late(self, submitted_at: datetime | None = None) -> bool:
         report = SectorRegulationWorkflow.objects.filter(
             workflow=self.workflow,
             sector_regulation=self.incident.sector_regulation,
         ).first()
         delay_in_hours = report.delay_in_hours_before_deadline
 
-        dt = report.how_late_is_the_report(self.incident)
+        dt = report.how_late_is_the_report(self.incident, submitted_at)
 
         if dt and dt.total_seconds() / 60 / 60 >= delay_in_hours:
             return True
         return False
 
     def save(self, *args, **kwargs):
-        if self.is_late() and self.review_status == WORKFLOW_REVIEW_STATUS[0][0]:
-            self.review_status = WORKFLOW_REVIEW_STATUS[5][0]
-        elif not self.is_late() and self.review_status == WORKFLOW_REVIEW_STATUS[0][0]:
-            self.review_status = WORKFLOW_REVIEW_STATUS[1][0]
+        if self.review_status == WORKFLOW_REVIEW_STATUS[0][0]:
+            # A new version updates the report, so it is on time or late as the report's first submission was (#946).
+            first_submission = (
+                IncidentWorkflow.objects.filter(incident=self.incident, workflow=self.workflow)
+                .exclude(pk=self.pk)
+                .order_by("timestamp")
+                .first()
+            )
+            submitted_at = first_submission.timestamp if first_submission else self.timestamp
+            self.review_status = WORKFLOW_REVIEW_STATUS[5][0] if self.is_late(submitted_at) else WORKFLOW_REVIEW_STATUS[1][0]
         super().save(*args, **kwargs)
 
 

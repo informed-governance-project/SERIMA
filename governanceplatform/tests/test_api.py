@@ -190,6 +190,14 @@ def test_incident_user_sees_only_own_incidents(client, bearer, records):
     )
 
 
+def test_a_declaration_keeps_its_public_id_across_versions(client, api_user, bearer, records):
+    CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
+    bind_key(bearer, records["company"])
+    enable_module(api_user, "securityobjectives")
+    url = reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id})
+    assert client.get(url, **auth(bearer)).json()["public_id"] == str(records["group"].public_id)
+
+
 def test_operator_scope_approval_and_live_permissions(client, api_user, bearer, records):
     link = CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
     bind_key(bearer, records["company"])
@@ -222,8 +230,8 @@ def test_regulator_sectors_and_module_switch(client, api_user, bearer, records):
     records["incident"].affected_sectors.add(records["sector"])
     response = client.get(reverse("api:project-list"), **auth(bearer))
     assert response.json()["count"] == 1
-    assert response.json()["results"][0]["reference"] == str(records["project"].api_id)
-    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].api_id}), **auth(bearer)).status_code == 200
+    assert response.json()["results"][0]["public_id"] == str(records["project"].public_id)
+    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].public_id}), **auth(bearer)).status_code == 200
     assert client.get(reverse("api:incident-list"), **auth(bearer)).json()["count"] == 1
     assert client.get(reverse("api:declaration-list"), **auth(bearer)).json()["count"] == 1
     records["regulator"].functionalities.remove(module)
@@ -370,13 +378,13 @@ def test_regulator_isolation_and_all_modules_reject_writes(client, api_user, bea
     other_regulator = Regulator.objects.create(name="Other regulator")
     RegulatorUser.objects.create(user=other, regulator=other_regulator, is_regulator_administrator=True)
     hidden = Project.objects.create(author=other, standard=records["standard"], years=[2026], reference_year=2026)
-    assert client.get(reverse("api:project-detail", kwargs={"reference": hidden.api_id}), **auth(bearer)).status_code == 404
+    assert client.get(reverse("api:project-detail", kwargs={"reference": hidden.public_id}), **auth(bearer)).status_code == 404
     records["declaration"].status = "UNDE"
     records["declaration"].save()
     assert client.get(reverse("api:declaration-detail", kwargs={"reference": records["group"].group_id}), **auth(bearer)).status_code == 404
     for module in ["declaration", "project"]:
         list_url = reverse(f"api:{module}-list")
-        reference = records["project"].api_id if module == "project" else records["group"].group_id
+        reference = records["project"].public_id if module == "project" else records["group"].group_id
         detail_url = reverse(f"api:{module}-detail", kwargs={"reference": reference})
         for method in ["post", "put", "patch", "delete"]:
             assert getattr(client, method)(list_url, {}, **auth(bearer)).status_code == 405
@@ -434,6 +442,15 @@ def test_incident_detail_skips_answers_detached_from_their_question(client, bear
     assert response.json()["reports"][0]["answers"] == {}
 
 
+def test_incident_and_its_reports_carry_their_public_id(client, bearer, records):
+    workflow = Workflow.objects.create(name="Early warning", label="Early warning")
+    SectorRegulationWorkflow.objects.create(sector_regulation=records["workflow"], workflow=workflow)
+    report = IncidentWorkflow.objects.create(incident=records["incident"], workflow=workflow)
+    response = client.get(reverse("api:incident-detail", kwargs={"reference": records["incident"].incident_id}), **auth(bearer))
+    assert response.json()["public_id"] == str(records["incident"].public_id)
+    assert response.json()["reports"][0]["public_id"] == str(report.public_id)
+
+
 def test_declaration_detail_is_logged_for_the_operator_company_but_not_the_list(client, api_user, bearer, records):
     CompanyUser.objects.create(user=api_user, company=records["company"], approved=True)
     bind_key(bearer, records["company"])
@@ -468,7 +485,7 @@ def test_project_reads_are_not_logged_like_on_the_web(client, api_user, bearer, 
     RegulatorUser.objects.create(user=api_user, regulator=records["regulator"], is_regulator_administrator=True)
     enable_module(api_user, "reporting", records["regulator"])
     assert client.get(reverse("api:project-list"), **auth(bearer)).status_code == 200
-    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].api_id}), **auth(bearer)).status_code == 200
+    assert client.get(reverse("api:project-detail", kwargs={"reference": records["project"].public_id}), **auth(bearer)).status_code == 200
     assert not LogReporting.objects.exists()
 
 

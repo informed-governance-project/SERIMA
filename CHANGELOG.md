@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The incidents API and the JSON sent by the webhook and GPG-encrypted JSON observer connectors now give the `public_id` of each incident and of each of its reports: a random identifier that, unlike the incident reference, is unique across SERIMA instances and names each report version, so a receiving system can match a notification with what it already holds. The API still looks incidents up by their reference (#936)
+- The security objectives API now gives the `public_id` of each declaration, which stays the same from one version of the declaration to the next, like its reference. The API still looks declarations up by their reference (#936)
 - Optional Self-registration administration for regulator administrators, controlled by role and regulator in **Functionalities**. Administrators can configure draft forms, pages, questions, and answer choices.
 - Reusable Self-registration template pages and questionnaire editing on each draft template version, with page order and question options configured per version.
 - Self-registration questionnaires show questions directly under their page. New pages and their questions can be saved together.
@@ -24,12 +26,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The addresses of an incident and of an incident report (download of the PDF, review, edition, access log, deletion) now name it by a random identifier instead of its sequential number in the database, which showed how many incidents the platform holds. Existing incidents and reports get their identifier when the platform is updated. Links to an incident saved before the update, such as bookmarks, no longer work; the incident is still found from the list (#936)
+- The addresses of a security objectives declaration (opening, copy, submission, review comment, download of the PDF, access log, deletion) and of a security objectives export now name it by a random identifier instead of its sequential number in the database. Existing declarations get their identifier when the platform is updated. Links to a declaration saved before the update no longer work; the declaration is still found from the list (#936)
+- The addresses of a reporting project (dashboard, edition, copy, deletion, report generation and download, access log), of a company in a project and of a recommendation in a report now name it by a random identifier instead of its sequential number in the database. A project keeps the identifier the API already gave it. Links to a project saved before the update no longer work; the project is still found from the list (#936)
+- The reporting projects API now names a project's identifier `public_id` instead of `reference`, like the incidents and security objectives APIs. Its value does not change, and `/api/v1/reporting/projects/{reference}/` still takes it; clients that read `reference` from a project must read `public_id` (#936)
 - Self-registration administration displays translated labels for related forms, versions, pages, questions, and choices. Forms use the regulator and regulation names.
 - Self-registration configuration lists use shorter labels for templates, template versions, questions, question orders, and answer choices.
 
 ### Fixed
 
+- A new version of an incident report submitted after its deadline is no longer shown as **Late submission** when the report was first submitted on time: a report is on time or late according to its first submission, and its later versions, including a revision asked for by the regulator, keep that status. A report first submitted late stays **Late submission** in its later versions (#946)
+- When a report of an incident is reviewed or viewed, the **Impacts** step now shows the impacts selected in that report instead of those of the latest report, and is marked in orange, with a **View previous version** button, when they differ from the impacts of the previous report (#914)
+- In the emails of incidents and security objectives declarations, each language version of the content now gives the placeholder values in its own language: the report name no longer stays in the language of the user who triggered the email, and the subject, sent in the default language, no longer mixes in values in that user's language. A template is shown only in the languages it is translated into, even when it contains a status or a report name (#947)
+- The access log of an incident no longer shows a **COMMENT** entry when a regulator saves the review of a report without writing a comment or without changing the existing one, nor a **REVIEW STATUS** entry when the status of the report stays the same (#916)
 - A security objective with no measure turned on is no longer shown as fully filled when its measures carry a justification and the planned measures are written: it is now partially filled, and the declaration cannot be submitted until at least one measure is on (#970)
+- Copying a reporting project no longer fails with an error: the copy gets its own public ID
+- The PDF of a whole incident lists its reports in the order of the workflow, instead of the order in which the reports were created in the administration. The JSON sent by the webhook and GPG-encrypted JSON observer connectors gives the reports in the same order (#950)
+- The status and the cancellation of a report generation, and the order of a report's recommendations, are now limited to the regulator users who may open the project or the report, as the other reporting actions already were
+- Downloading the PDF of an incident with a long free-text answer no longer fails with a server error: the PDF took longer to build than the server allows. Long words and links in answers now wrap within the column instead of being split at any character
+- In the PDF of a security objectives declaration, a long word or link with no spaces in a measure, evidence, justification or review comment now wraps within its column, instead of stretching the table past the page and cutting off the rest of the declaration
 
 ## [0.6.2] - 2026-11-25
 

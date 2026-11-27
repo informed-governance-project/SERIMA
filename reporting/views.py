@@ -3,6 +3,7 @@ import tempfile
 import uuid
 from functools import partial
 from urllib.parse import quote as urlquote
+from uuid import UUID
 
 from celery import chain, chord, group
 from celery.exceptions import CeleryError
@@ -165,7 +166,7 @@ def reporting(request):
     page_number = reporting_filter_params.get("page")
     paginator = Paginator(project_filter_list, per_page)
     page_obj = paginator.get_page(page_number)
-    projects_running = list(project_filter_list.filter(task_status=CELERY_TASK_STATUS[3][0]).values("id"))
+    projects_running = list(project_filter_list.filter(task_status=CELERY_TASK_STATUS[3][0]).values("public_id"))
 
     is_filtered = {k: v for k, v in reporting_filter_params.items() if k not in ["page", "per_page", "sort_field", "sort_direction"]}
 
@@ -186,8 +187,8 @@ def reporting(request):
 
 @login_required
 @otp_required
-def dashboard_report_project(request, report_project_id: int):
-    project = get_object_or_404(Project, pk=report_project_id)
+def dashboard_report_project(request, report_project_id: UUID):
+    project = get_object_or_404(Project, public_id=report_project_id)
     if not has_change_permission(request, project, "edit"):
         return redirect("reporting")
 
@@ -307,8 +308,8 @@ def create_report_project(request):
 
 @login_required
 @otp_required
-def edit_report_project(request, report_project_id: int):
-    project = get_object_or_404(Project, pk=report_project_id)
+def edit_report_project(request, report_project_id: UUID):
+    project = get_object_or_404(Project, public_id=report_project_id)
     if not has_change_permission(request, project, "edit"):
         return redirect("reporting")
 
@@ -348,8 +349,8 @@ def edit_report_project(request, report_project_id: int):
 
 @login_required
 @otp_required
-def copy_report_project(request, report_project_id):
-    project = get_object_or_404(Project, pk=report_project_id)
+def copy_report_project(request, report_project_id: UUID):
+    project = get_object_or_404(Project, public_id=report_project_id)
     if not has_change_permission(request, project, "copy"):
         return redirect("reporting")
 
@@ -361,6 +362,7 @@ def copy_report_project(request, report_project_id):
         if form.is_valid():
             new_project = form.save(commit=False)
             new_project.pk = None
+            new_project.public_id = uuid.uuid4()
             new_project.task_id = None
             new_project.task_status = Project._meta.get_field("task_status").get_default()
             new_project.save()
@@ -376,9 +378,9 @@ def copy_report_project(request, report_project_id):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
-def delete_report_project(request, report_project_id: int):
+def delete_report_project(request, report_project_id: UUID):
     try:
-        project = Project.objects.get(pk=report_project_id)
+        project = Project.objects.get(public_id=report_project_id)
         if not has_change_permission(request, project, "delete"):
             return redirect("reporting")
 
@@ -391,7 +393,7 @@ def delete_report_project(request, report_project_id: int):
 
         chain(
             cleanup_files.si(
-                project_id=str(report_project_id),
+                project_id=str(project.id),
                 task_id=str(project.task_id) if project.task_id else None,
                 all_files=True,
             ),
@@ -408,10 +410,10 @@ def delete_report_project(request, report_project_id: int):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
-def generate_report_project(request, report_project_id: int):
+def generate_report_project(request, report_project_id: UUID):
     user = request.user
     try:
-        project = Project.objects.get(id=report_project_id)
+        project = Project.objects.get(public_id=report_project_id)
     except Project.DoesNotExist:
         messages.error(
             request,
@@ -422,14 +424,14 @@ def generate_report_project(request, report_project_id: int):
     if not celery_health_check(settings.REPORTS_QUEUE):
         project.task_status = CELERY_TASK_STATUS[0][0]
         messages.error(request, _("Failed to start report generation. Please try again."))
-        return redirect("dashboard_report_project", report_project_id=project.id)
+        return redirect("dashboard_report_project", report_project_id=project.public_id)
 
     if project.task_status == CELERY_TASK_STATUS[3][0]:
         messages.warning(
             request,
             _("Report generation is already in progress for this project."),
         )
-        return redirect("dashboard_report_project", report_project_id=project.id)
+        return redirect("dashboard_report_project", report_project_id=project.public_id)
 
     if not project.threshold_for_high_risk or not project.top_ranking:
         error_message = _("Missing high risk rate threshold or ranking value")
@@ -437,7 +439,7 @@ def generate_report_project(request, report_project_id: int):
             request,
             error_message,
         )
-        return redirect("dashboard_report_project", report_project_id=project.id)
+        return redirect("dashboard_report_project", report_project_id=project.public_id)
 
     project_id = project.id
     year = project.reference_year
@@ -449,7 +451,7 @@ def generate_report_project(request, report_project_id: int):
             request,
             error_message,
         )
-        return redirect("dashboard_report_project", report_project_id=project.id)
+        return redirect("dashboard_report_project", report_project_id=project.public_id)
 
     threshold_for_high_risk = project.threshold_for_high_risk
     top_ranking = project.top_ranking
@@ -496,7 +498,7 @@ def generate_report_project(request, report_project_id: int):
                 request,
                 _("No reporting data"),
             )
-            return redirect("dashboard_report_project", report_project_id=project.id)
+            return redirect("dashboard_report_project", report_project_id=project.public_id)
 
         security_objectives_declaration = StandardAnswer.objects.filter(
             submitter_company=company,
@@ -560,7 +562,7 @@ def generate_report_project(request, report_project_id: int):
             except Template.DoesNotExist:
                 no_template_msg = _("No report template")
                 messages.error(request, messages.error(request, f"{no_template_msg} [{language}]"))
-                return redirect("dashboard_report_project", report_project_id=project.id)
+                return redirect("dashboard_report_project", report_project_id=project.public_id)
 
             with override(language):
                 sector.set_current_language(language)
@@ -591,7 +593,7 @@ def generate_report_project(request, report_project_id: int):
         for error_message in error_messages:
             messages.error(request, error_message)
 
-        return redirect("dashboard_report_project", report_project_id=project.id)
+        return redirect("dashboard_report_project", report_project_id=project.public_id)
 
     Project.objects.filter(id=project_id).update(task_status=CELERY_TASK_STATUS[3][0], task_id=task_id)
 
@@ -613,7 +615,7 @@ def generate_report_project(request, report_project_id: int):
     except ConnectionError, RuntimeError, CeleryError:
         Project.objects.filter(id=project_id).update(task_status=CELERY_TASK_STATUS[0][0])
         messages.error(request, _("Failed to start report generation. Please try again."))
-        return redirect("dashboard_report_project", report_project_id=project.id)
+        return redirect("dashboard_report_project", report_project_id=project.public_id)
 
     if is_multiple_selected_companies and error_messages:
         messages.warning(request, warning_message)
@@ -626,13 +628,15 @@ def generate_report_project(request, report_project_id: int):
 @login_required
 @otp_required
 @require_http_methods(["GET"])
-def report_generation_status(request, report_project_id: int):
-    project = Project.objects.get(id=report_project_id)
+def report_generation_status(request, report_project_id: UUID):
+    project = get_object_or_404(Project, public_id=report_project_id)
+    if not has_change_permission(request, project, "download"):
+        return JsonResponse({"error": "Forbidden"}, status=403)
     failure_status = CELERY_TASK_STATUS[0][0]
     success_status = CELERY_TASK_STATUS[1][0]
     revoked_status = CELERY_TASK_STATUS[2][0]
     reponse = {
-        "project_id": project.id,
+        "project_id": project.public_id,
         "status": project.task_status,
     }
 
@@ -666,11 +670,13 @@ def report_generation_status(request, report_project_id: int):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
-def cancel_report_generation(request, report_project_id: int):
+def cancel_report_generation(request, report_project_id: UUID):
     user = request.user
-    project = Project.objects.get(id=report_project_id)
+    project = get_object_or_404(Project, public_id=report_project_id)
+    if not has_change_permission(request, project, "edit"):
+        return JsonResponse({"error": "Forbidden"}, status=403)
     task_id = str(project.task_id)
-    reponse = {"project_id": project.id, "status": project.task_status}
+    reponse = {"project_id": project.public_id, "status": project.task_status}
 
     if not task_id:
         project.task_status = "FAIL"
@@ -682,7 +688,7 @@ def cancel_report_generation(request, report_project_id: int):
     project.save()
 
     cleanup_files.apply_async(
-        kwargs={"project_id": str(report_project_id), "task_id": task_id},
+        kwargs={"project_id": str(project.id), "task_id": task_id},
         countdown=5,
     )
 
@@ -694,8 +700,8 @@ def cancel_report_generation(request, report_project_id: int):
 @login_required
 @otp_required
 @require_http_methods(["POST"])
-def update_company_project(request, company_project_id: int):
-    company_project = get_object_or_404(CompanyProject, pk=company_project_id)
+def update_company_project(request, company_project_id: UUID):
+    company_project = get_object_or_404(CompanyProject, public_id=company_project_id)
     project = company_project.project
     if not has_change_permission(request, project, "edit"):
         return redirect("reporting")
@@ -704,17 +710,17 @@ def update_company_project(request, company_project_id: int):
     if form.is_valid():
         field = request.POST.get("field")
         value = request.POST.get("value") == "true"
-        CompanyProject.objects.filter(pk=company_project_id).update(**{field: value})
-        reponse = {"company_project_id": company_project_id, field: value}
+        CompanyProject.objects.filter(pk=company_project.pk).update(**{field: value})
+        reponse = {"company_project_id": company_project.public_id, field: value}
         return JsonResponse(reponse)
-    return redirect("dashboard_report_project", report_project_id=project.id)
+    return redirect("dashboard_report_project", report_project_id=project.public_id)
 
 
 @login_required
 @otp_required
 @require_http_methods(["POST"])
-def bulk_update_company_project(request, report_project_id: int):
-    project = get_object_or_404(Project, pk=report_project_id)
+def bulk_update_company_project(request, report_project_id: UUID):
+    project = get_object_or_404(Project, public_id=report_project_id)
     if not has_change_permission(request, project, "edit"):
         return redirect("reporting")
 
@@ -727,7 +733,7 @@ def bulk_update_company_project(request, report_project_id: int):
     company_project_filter = CompanyProjectFilter(dashboard_project_filter_params, queryset=company_project_qs, project=project)
 
     company_project_filter.qs.filter(has_security_objectives=True, has_risk_assessment=True).update(**{field: value})
-    reponse = {"project_id": project.id, field: value}
+    reponse = {"project_id": project.public_id, field: value}
 
     return JsonResponse(reponse)
 
@@ -871,11 +877,18 @@ def delete_report_recommendation(request, company_id, sector_id, year, report_re
 
 @login_required
 @otp_required
-def update_report_recommendation(request, report_rec_id):
+def update_report_recommendation(request, report_rec_id: UUID):
     try:
-        report_recommendation = ObservationRecommendationThrough.objects.get(id=report_rec_id)
+        report_recommendation = ObservationRecommendationThrough.objects.get(public_id=report_rec_id)
     except ObservationRecommendationThrough.DoesNotExist:
         return JsonResponse({"error": "Observation not found."}, status=404)
+
+    company_reporting = report_recommendation.observation.company_reporting
+    if isinstance(
+        validate_url_arguments(request, company_reporting.company_id, company_reporting.sector_id, company_reporting.year),
+        HttpResponseRedirect,
+    ):
+        return JsonResponse({"error": "Forbidden"}, status=403)
 
     if request.method == "POST":
         form = ObservationRecommendationOrderForm(request.POST, instance=report_recommendation)
@@ -1091,8 +1104,8 @@ def import_risk_analysis_status(request, group_id):
 
 @login_required
 @otp_required
-def access_log(request, project_id):
-    project = get_object_or_404(Project, pk=project_id)
+def access_log(request, project_id: UUID):
+    project = get_object_or_404(Project, public_id=project_id)
     if not has_change_permission(request, project, "log"):
         return redirect("reporting")
     try:
@@ -1138,8 +1151,8 @@ def review_comment_report(request, company_id, sector_id, year):
 
 @login_required
 @otp_required
-def download_report(request, report_project_id: int, file_uuid):
-    report = get_object_or_404(GeneratedReport, file_uuid=file_uuid, project__id=report_project_id)
+def download_report(request, report_project_id: UUID, file_uuid: UUID):
+    report = get_object_or_404(GeneratedReport, file_uuid=file_uuid, project__public_id=report_project_id)
     user = request.user
     project = report.project
     if not has_change_permission(request, project, "download"):

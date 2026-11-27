@@ -24,7 +24,7 @@ def login(otp_client, populate_so_db, email):
 
 
 def pdf_url(populate_so_db):
-    return f"/securityobjectives/download/{populate_so_db['sas'][0].id}"
+    return f"/securityobjectives/download/{populate_so_db['sas'][0].public_id}"
 
 
 def queue_pdf(client, url):
@@ -70,7 +70,7 @@ def test_an_unknown_declaration_is_not_queued(otp_client, populate_so_db):
     client = login(otp_client, populate_so_db, "opadmin@com1.lu")
 
     with patch("securityobjectives.views.generate_declaration_pdf_task.delay") as delay:
-        response = client.post("/securityobjectives/download/999999")
+        response = client.post(f"/securityobjectives/download/{uuid4()}")
 
     assert response.status_code == 404
     delay.assert_not_called()

@@ -56,6 +56,14 @@ class ServicesListCheckboxSelectMultiple(ChoiceWidget):
             self.initial_data = kwargs.pop("initial")
         super().__init__(*args, **kwargs)
 
+    def create_option(self, *args, **kwargs):
+        # The modified-answer markers belong on the container, which the template renders;
+        # the option template already sets its own class.
+        option = super().create_option(*args, **kwargs)
+        option["attrs"].pop("class", None)
+        option["attrs"].pop("data-previous-choices", None)
+        return option
+
     def optgroups(self, name, value, attrs=None):
         """Return a list of optgroups for this widget."""
         groups = []
@@ -1005,6 +1013,41 @@ class ImpactForm(forms.Form):
 
         return impacts_array
 
+    def mark_modified_impacts(self, incident_workflow: IncidentWorkflow, current_ids: set[int]) -> None:
+        """Flag the impacts as modified when they differ from the latest earlier report
+        that disclosed impacts, and give the "View previous version" modal that selection."""
+        previous_incident_workflow = (
+            IncidentWorkflow.objects.filter(
+                incident=incident_workflow.incident,
+                workflow__is_impact_needed=True,
+                timestamp__lt=incident_workflow.timestamp,
+            )
+            .order_by("-timestamp")
+            .first()
+        )
+        if previous_incident_workflow is None:
+            return
+        previous_ids = set(previous_incident_workflow.impacts.values_list("id", flat=True))
+        if previous_ids == current_ids:
+            return
+
+        widget = self.fields["impacts"].widget
+        widget.attrs["class"] = "answer-modified"
+        widget.attrs["data-previous-choices"] = json.dumps(
+            {
+                "kind": "group",
+                "children": [
+                    {
+                        "question": str(sector_name),
+                        "kind": "choice",
+                        "type": "checkbox",
+                        "options": [{"label": label, "checked": impact_id in previous_ids} for impact_id, label in impacts],
+                    }
+                    for sector_name, impacts in self.fields["impacts"].choices
+                ],
+            }
+        )
+
     def __init__(self, *args, **kwargs):
         incident = None
         incident_workflow = None
@@ -1017,8 +1060,10 @@ class ImpactForm(forms.Form):
         if incident is not None:
             self.fields["impacts"].choices = self.construct_impact_array(incident)
         if incident_workflow is not None:
+            current_ids = set(incident_workflow.impacts.values_list("id", flat=True))
             # only with ServicesListCheckboxSelectMultiple
-            self.fields["impacts"].widget.initial_data = [i.id for i in incident_workflow.impacts.all()]
+            self.fields["impacts"].widget.initial_data = list(current_ids)
+            self.mark_modified_impacts(incident_workflow, current_ids)
         else:
             previous_incident_workflow = incident.get_latest_incident_workflow()
             if previous_incident_workflow is not None:
@@ -1204,8 +1249,8 @@ class IncidentStatusForm(forms.ModelForm):
 
         self.fields["is_significative_impact"].widget.attrs = {
             "class": "large-checkbox incident-input-field is_significative_impact_checkbox",
-            "data-incident-id": self.instance.pk,
-            "id": f"is_significative_impact_{self.instance.pk}",
+            "data-incident-id": self.instance.public_id,
+            "id": f"is_significative_impact_{self.instance.public_id}",
         }
 
         if self.instance.incident_status == "CLOSE":

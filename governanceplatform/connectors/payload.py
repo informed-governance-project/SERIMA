@@ -78,6 +78,7 @@ def _build_reports(incident) -> list[dict]:
     for incident_workflow in incident.get_latest_incident_workflows():
         timeline = incident_workflow.report_timeline
         report = {
+            "public_id": str(incident_workflow.public_id),
             "name": str(incident_workflow.workflow) if incident_workflow.workflow else "",
             "review_status": incident_workflow.get_review_status_display(),
             "timeline": {
@@ -108,6 +109,7 @@ def _build_incident_payload(incident) -> dict:
 
     return {
         "incident": {
+            "public_id": str(incident.public_id),
             "incident_id": incident.incident_id,
             "company_name": incident.company_name,
             "complaint_reference": incident.complaint_reference,

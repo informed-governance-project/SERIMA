@@ -31,56 +31,56 @@ urlpatterns = [
     # Report project
     path("project/create", create_report_project, name="create_report_project"),
     path(
-        "project/<int:report_project_id>/copy",
+        "project/<uuid:report_project_id>/copy",
         copy_report_project,
         name="copy_report_project",
     ),
     path(
-        "project/<int:report_project_id>/edit",
+        "project/<uuid:report_project_id>/edit",
         edit_report_project,
         name="edit_report_project",
     ),
     path(
-        "project/<int:report_project_id>/delete",
+        "project/<uuid:report_project_id>/delete",
         delete_report_project,
         name="delete_report_project",
     ),
     path(
-        "project/<int:report_project_id>/dashboard",
+        "project/<uuid:report_project_id>/dashboard",
         dashboard_report_project,
         name="dashboard_report_project",
     ),
     path(
-        "company_project/<int:company_project_id>/update",
+        "company_project/<uuid:company_project_id>/update",
         update_company_project,
         name="update_company_project",
     ),
     path(
-        "project/<int:report_project_id>/company_project/bulk_update",
+        "project/<uuid:report_project_id>/company_project/bulk_update",
         bulk_update_company_project,
         name="bulk_update_company_project",
     ),
     # Generate Reports
     path(
-        "project/<int:report_project_id>/report/generate",
+        "project/<uuid:report_project_id>/report/generate",
         generate_report_project,
         name="generate_report_project",
     ),
     # Download Reports
     path(
-        "project/<int:report_project_id>/report/download/<uuid:file_uuid>",
+        "project/<uuid:report_project_id>/report/download/<uuid:file_uuid>",
         download_report,
         name="download_report",
     ),
     # Report generation status
     path(
-        "project/<int:report_project_id>/report/status",
+        "project/<uuid:report_project_id>/report/status",
         report_generation_status,
         name="report_generation_status",
     ),
     # Cancel Report generation
     path(
-        "project/<int:report_project_id>/report/cancel",
+        "project/<uuid:report_project_id>/report/cancel",
         cancel_report_generation,
         name="cancel_report_generation",
     ),
@@ -110,12 +110,12 @@ urlpatterns = [
         name="copy_report_recommendations",
     ),
     path(
-        "recommendations/update/<int:report_rec_id>",
+        "recommendations/update/<uuid:report_rec_id>",
         update_report_recommendation,
         name="update_report_recommendation",
     ),
     path(
-        "access_log/<int:project_id>",
+        "access_log/<uuid:project_id>",
         access_log,
         name="reporting_access_log",
     ),

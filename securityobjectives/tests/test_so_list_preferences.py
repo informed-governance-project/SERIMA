@@ -103,7 +103,7 @@ def test_a_project_dashboard_filter_valid_for_another_project_is_kept(otp_client
     )
     set_preference(regulator, "reporting_project_dashboard", "filters", {"year": ["2023"]})
 
-    response = otp_client(regulator).get(reverse("dashboard_report_project", args=[project.pk]))
+    response = otp_client(regulator).get(reverse("dashboard_report_project", args=[project.public_id]))
 
     assert response.status_code == 200
     assert not response.context["filter"].errors
