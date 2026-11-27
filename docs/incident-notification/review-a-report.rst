@@ -37,6 +37,8 @@ Review the report
 2. Go through the forms of the report with **Next**. They show the operator's answers, which you cannot change.
    When the operator has submitted several versions, the steps whose answers changed since the previous version are marked in orange,
    and each changed answer is outlined, with a **View previous version** button.
+   The **Impacts** step is compared with the latest earlier report that also asked for impacts,
+   whichever report it was, so a change of the impacts selected between two reports is shown too.
 
    .. figure:: /_static/images/incident-notification/workflow-regulator-04.png
       :alt: Report step with a changed answer outlined in orange and the Regulation step marked as changed
